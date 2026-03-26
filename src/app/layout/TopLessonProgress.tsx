@@ -5,7 +5,7 @@
  * 更新触发：课时数量变化时；进度条样式调整时
  */
 
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { CheckCircle2, Lock, Circle } from "lucide-react"
 import { LESSON_REGISTRY } from "@/app/lesson-registry"
 import { usePortfolio } from "@/app/providers/AppProvider"
@@ -14,8 +14,11 @@ import { cn } from "@/shared/utils/cn"
 export function TopLessonProgress() {
   const { portfolio } = usePortfolio()
   const navigate = useNavigate()
-  const params = useParams<{ lessonId?: string }>()
-  const currentLessonId = params.lessonId ? parseInt(params.lessonId) : 0
+  // Bug3修复：路由使用字面量路径 lesson/1/* 而非 :lessonId 参数，
+  // 因此 useParams 无法获取 lessonId；改用 useLocation 从 pathname 解析
+  const location = useLocation()
+  const lessonMatch = location.pathname.match(/^\/lesson\/(\d+)/)
+  const currentLessonId = lessonMatch ? parseInt(lessonMatch[1]) : 0
 
   const getLessonStatus = (lessonId: number): "completed" | "current" | "available" | "locked" => {
     if (!portfolio) return lessonId === 1 ? "available" : "locked"

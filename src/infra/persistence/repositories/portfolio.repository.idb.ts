@@ -66,7 +66,9 @@ export class IdbPortfolioRepository implements PortfolioRepository {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(["portfolios", "settings"], "readwrite")
 
+      // 删除当前指针记录 + 清空所有 portfolio 数据
       tx.objectStore("settings").delete(CURRENT_PORTFOLIO_KEY)
+      tx.objectStore("portfolios").clear()
 
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)

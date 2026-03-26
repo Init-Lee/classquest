@@ -32,102 +32,84 @@ classquest/
 src/
 ├── app/                 # App 层：路由、布局、Provider、课时注册
 │   ├── layout/          #   全局布局组件
-│   │   ├── AppShell.tsx          # 顶层外壳，包裹所有页面
+│   │   ├── AppShell.tsx          # 顶层外壳，包裹所有页面；含教师模式金色横幅
 │   │   ├── TopLessonProgress.tsx # 顶部课时进度条（课时1~6）
-│   │   └── GlobalActions.tsx     # 右上角全局动作区（保存/导入/快照）
-│   ├── router/          #   路由定义与 Guard
-│   │   ├── index.tsx             # 路由表定义
-│   │   └── guards.ts             # 全局路由守卫
+│   │   └── GlobalActions.tsx     # 右上角全局动作区（保存/导入/快照/重置）
+│   ├── router/          #   路由定义
+│   │   └── index.tsx             # 路由表定义（懒加载，含 v7_startTransition future flag）
 │   ├── providers/       #   全局 Context Provider
-│   │   └── AppProvider.tsx
-│   └── lesson-registry.ts        # 课时注册表（统一管理课时配置）
+│   │   └── AppProvider.tsx       # PortfolioContext（含教师模式 isTeacherMode 状态）
+│   └── lesson-registry.ts        # 课时注册表（统一管理课时配置，enabled 控制开放状态）
 │
 ├── domains/             # Domain 层：领域模型与业务服务（纯逻辑，无 UI）
 │   ├── student/         #   学生身份模型
-│   │   ├── types.ts              # StudentProfile, StudentRole
-│   │   └── service.ts            # 身份相关业务逻辑
+│   │   └── types.ts              # StudentProfile, StudentRole
 │   ├── progress/        #   进度指针
-│   │   ├── types.ts              # ProgressPointer
-│   │   └── service.ts
+│   │   └── types.ts              # ProgressPointer
 │   ├── portfolio/       #   模块档案（核心聚合根）
-│   │   ├── types.ts              # ModulePortfolio（含 lesson1/2 state）
-│   │   └── service.ts
+│   │   └── types.ts              # ModulePortfolio（Lesson1State含groupMembers:string[]）、createNewPortfolio
 │   ├── group-plan/      #   小组计划与讨论
-│   │   ├── types.ts              # GroupConsensus, GroupEvidencePlanRow 等
-│   │   └── service.ts
+│   │   └── types.ts              # GroupConsensus, GroupEvidencePlanRow(owners:string[]), R1Record(含sourceRows)
 │   ├── evidence/        #   证据记录
-│   │   ├── types.ts              # PublicEvidenceRecord, FieldEvidenceTask 等
-│   │   └── service.ts
+│   │   └── types.ts              # PublicEvidenceRecord, FieldEvidenceTask, Lesson2Assignment(owners:string[]), QualityCheckResult
 │   ├── prompts/         #   AI 助手提示词模板
-│   │   ├── types.ts              # AIAssistLog, AIAssistKind
-│   │   └── templates.ts          # R2/R3 提示词模板文本
+│   │   └── types.ts              # AIAssistLog, AIAssistKind
 │   └── snapshot/        #   快照生成
-│       ├── types.ts              # SnapshotMeta, SnapshotInput
-│       └── service.ts            # buildLessonSnapshotHTML()
+│       └── types.ts              # SnapshotMeta
 │
 ├── lessons/             # Lesson 层：课时页面、步骤组件、课时级 Guard
-│   ├── lesson-1/        #   课时1：项目启动与定题
-│   │   ├── config.ts             # 课时配置（标题、步骤名称、AI助手开关等）
-│   │   ├── guards.ts             # 课时1步骤间 Guard 规则
-│   │   ├── routes.tsx            # 课时1路由定义
-│   │   ├── steps/               # 6个步骤组件
-│   │   │   ├── Step1Intro.tsx    # 步骤1：任务启动
-│   │   │   ├── Step2Profile.tsx  # 步骤2：我的信息
-│   │   │   ├── Step3R1.tsx       # 步骤3：个人R1
-│   │   │   ├── Step4Discussion.tsx # 步骤4：小组讨论留痕
-│   │   │   ├── Step5Checklist.tsx  # 步骤5：证据清单Wizard
-│   │   │   └── Step6Review.tsx   # 步骤6：回顾与导出
-│   │   └── components/          # 课时1专属UI组件
-│   │       ├── R1ResultCard.tsx
-│   │       ├── DiscussionTable.tsx
-│   │       ├── ConsensusCard.tsx
-│   │       ├── ChecklistWizard.tsx
-│   │       └── AIHelperDrawer.tsx
+│   ├── lesson-1/        #   课时1：项目启动与定题（共 5 关）
+│   │   ├── config.ts             # 课时配置（步骤名称、AI助手开关；5关）
+│   │   ├── guards.ts             # 课时1步骤间 Guard（步骤1~5，步骤2身份登记已合并到首页）
+│   │   ├── routes.tsx            # 课时1路由定义（step/1~step/5）
+│   │   ├── steps/
+│   │   │   ├── Step1Intro.tsx      # 第1关：任务启动（勾选知晓后进入第2关）
+│   │   │   ├── Step3R1.tsx         # 第2关：个人 R1（主题包+研究问题+证据构想；含个人辅助材料来源 sourceRows）
+│   │   │   ├── Step4Discussion.tsx # 第3关：小组讨论留痕（组长录入；组员导入组长文件同步groupMembers，后续无需再次导入）
+│   │   │   ├── Step5Checklist.tsx  # 第4关：证据清单 Wizard（sub0:组员登记→sub1:执行表multi-select owners→sub2-3；组员只读前3子步）
+│   │   │   └── Step6Review.tsx     # 第5关：回顾导出（含组员名单汇总；组长导出组长文件；一键完成并跳转课时2）
+│   │   └── components/
+│   │       └── AIHelperDrawer.tsx  # AI 助手内嵌右侧面板（R2/R3 提示词模板+豆包跳转）
 │   │
-│   └── lesson-2/        #   课时2：证据采集与规范记录
+│   └── lesson-2/        #   课时2：证据采集与规范记录（共 5 关；原第1+2关已合并）
 │       ├── config.ts
 │       ├── guards.ts
 │       ├── routes.tsx
 │       ├── steps/
-│       │   ├── Step1Resume.tsx   # 步骤1：恢复进度
-│       │   ├── Step2Sync.tsx     # 步骤2：同步小组任务
-│       │   ├── Step3MyTasks.tsx  # 步骤3：查看我的任务
-│       │   ├── Step4Evidence.tsx # 步骤4：公开资源入库
-│       │   ├── Step5Quality.tsx  # 步骤5：质检与课后采集
-│       │   └── Step6Review.tsx   # 步骤6：回顾与导出
-│       └── components/
-│           ├── LeaderFileImport.tsx
-│           ├── TaskAssignmentPanel.tsx
-│           ├── PublicEvidenceForm.tsx
-│           ├── QualityCheckPanel.tsx
-│           └── FieldTaskPanel.tsx
+│       │   ├── Step1Combined.tsx  # 第1关：进度确认与任务领取（身份卡+课时1摘要+角色任务确认；一次写入 resumeDone+leaderSyncDone+assignments）
+│       │   ├── Step2MyTasks.tsx   # 第2关：我的任务（高亮本人任务+全组规划始终展开的表格；含 evidenceRow 计划字段）
+│       │   ├── Step3Evidence.tsx  # 第3关：证据入库（公开资源/现场采集双模板；卡顶展示课时1执行表参考；自动生成引用条目）
+│       │   ├── Step4Quality.tsx   # 第4关：质检（3项硬检查；纯现场采集直接放行；有上一步回退）
+│       │   └── Step5Review.tsx    # 第5关：回顾（提示使用右上角保存；课后任务显示来自 lesson2.fieldTasks；完成后智能跳转）
+│       └── components/            # （预留，当前步骤逻辑直接写在 steps/ 内）
 │
 ├── features/            # Feature 层：跨课时功能模块
-│   ├── save-resume/     #   保存与恢复进度（继续学习包）
-│   ├── snapshot-export/ #   阶段快照导出
-│   ├── role-branch/     #   组长/组员角色分支逻辑
-│   ├── progress-ui/     #   进度条 UI 相关
-│   └── ai-helper/       #   AI助手抽屉（提示词模板+外部跳转）
+│   └── progress-ui/     #   进度条 UI 相关
+│       └── InnerStepProgress.tsx # 课时内步骤进度条
 │
 ├── infra/               # Infra 层：基础设施，禁止在此层外直接访问
 │   └── persistence/
 │       ├── indexeddb/
-│       │   ├── db.ts             # DB 连接、版本管理（DB_NAME, DB_VERSION）
-│       │   ├── schema.ts         # Object store 定义
-│       │   └── migrations.ts     # 版本迁移（当前 v1）
+│       │   └── db.ts             # DB 连接、版本管理（DB_NAME, DB_VERSION, object stores）
 │       ├── repositories/
 │       │   ├── portfolio.repository.ts      # PortfolioRepository 接口
-│       │   └── portfolio.repository.idb.ts  # IndexedDB 实现
+│       │   └── portfolio.repository.idb.ts  # IndexedDB 实现（含 clear() 清空全部）
 │       └── serializers/
-│           ├── continue-package.ts  # 继续学习包序列化/反序列化
+│           ├── continue-package.ts  # 继续学习包序列化/反序列化；downloadLeaderFile（组长文件）
 │           └── snapshot-html.ts     # 阶段快照 HTML 生成
 │
 └── shared/              # Shared 层：共享 UI、工具，无业务逻辑
     ├── ui/              #   通用 UI 组件（shadcn/ui 包装）
-    ├── hooks/           #   通用 hooks
-    ├── utils/           #   工具函数（cn、日期格式化等）
-    ├── constants/       #   全局常量
-    └── types/           #   跨层共享的基础类型
+    │   ├── button.tsx, card.tsx, badge.tsx
+    │   ├── input.tsx, textarea.tsx, progress.tsx
+    │   ├── dialog.tsx, sheet.tsx
+    │   └── ...
+    ├── utils/           #   工具函数
+    │   ├── cn.ts                 # clsx + tailwind-merge
+    │   ├── format.ts             # 日期格式化、文件名生成（含 buildLeaderFilename）
+    │   └── pointer.ts            # 进度指针工具：advancePointer（只前进不后退）、resolvePointerFromState（导入修正）
+    └── constants/
+        └── demo-portfolio.ts     # 教师演示模式预填档案（不持久化，仅内存使用）
 ```
 
 ---
@@ -153,16 +135,49 @@ Infra 层
 
 ---
 
+## 关键功能说明
+
+### 教师演示模式
+- 入口：首页底部「教师入口」区块，口令 `xnwy`
+- 进入后：`AppProvider` 中 `isTeacherMode = true`，`portfolio` 切换为 `createDemoPortfolio()` 内存对象
+- 效果：所有 Guard 绕过，`savePortfolio` 为 no-op，顶部显示金色横幅，右上角仅保留「阶段快照」
+- 退出：点击横幅「退出演示」或 Logo 跳首页
+
+### 数据流（学生模式）
+```
+首页登记（createNewPortfolio → profileDone:true）
+  → L1第1关：任务启动
+  → L1第2关：个人R1（含辅助材料 sourceRows 存入 R1Record）
+  → L1第3关：小组讨论；组员导入组长文件（同步 groupConsensus/evidenceRows/groupMembers；确认 confirmedOwnerName）
+  → L1第4关：组长录入 groupMembers → 生成执行表（owners:string[]）→ 安全承诺
+  → L1第5关：组长导出组长文件（downloadLeaderFile）
+  → L2第1关（合并）：确认进度 + 自动/手动认领任务 → 同时写入 resumeDone+leaderSyncDone+assignments
+  → L2第2关：查看我的任务（含全组规划表格）
+  → L2第3关：证据入库（公开资源 / 现场采集双模板）
+  → L2第4~5关 → 完成后跳首页（或课时3，视 lesson-registry 开放状态）
+```
+
+### 保存/导出体系
+| 操作 | 入口 | 用途 |
+|---|---|---|
+| 保存进度 | 右上角蓝色按钮 | 下载继续学习包 JSON，换设备后导入恢复 |
+| 阶段快照 | 右上角绿色按钮 | 生成 HTML 文件，上传 Moodle 作过程材料 |
+| 导入进度 | 右上角 | 恢复继续学习包 |
+| 组长文件 | 课时1第5关（仅组长） | 组员导入后可看小组分工 |
+| 重置数据 | 右上角红色重置 | 清空 IndexedDB，回到初始状态 |
+
+---
+
 ## 命名规范
 
 | 类型 | 规范 | 示例 |
 |------|------|------|
-| 组件文件 | PascalCase | `AppShell.tsx`, `R1ResultCard.tsx` |
+| 组件文件 | PascalCase | `AppShell.tsx`, `Step3R1.tsx` |
 | 非组件文件 | kebab-case | `portfolio.repository.ts`, `continue-package.ts` |
-| 目录 | kebab-case | `lesson-1/`, `group-plan/`, `save-resume/` |
+| 目录 | kebab-case | `lesson-1/`, `group-plan/`, `progress-ui/` |
 | 类型/接口 | PascalCase | `ModulePortfolio`, `StudentProfile` |
 | 常量 | UPPER_SNAKE_CASE | `DB_NAME`, `DB_VERSION` |
-| hooks | camelCase 以 `use` 开头 | `usePortfolio`, `useProgress` |
+| hooks | camelCase 以 `use` 开头 | `usePortfolio` |
 
 ---
 
@@ -177,12 +192,13 @@ Infra 层
 5. 如有新域类型，在 `domains/` 对应模块的 `types.ts` 中添加
 6. 更新本文件（FILE-STRUCTURE.md）
 
-### 新增一个 Domain
+### 新增一个课时（如课时3）
 
-1. 在 `domains/` 下新建目录（kebab-case）
-2. 创建 `types.ts`（领域类型）和 `service.ts`（业务逻辑）
-3. 如需持久化，在 `infra/persistence/repositories/` 下新建 repository 接口和实现
-4. 更新本文件
+1. 在 `lesson-registry.ts` 中将对应课时 `enabled: true`
+2. 在 `lessons/` 下新建 `lesson-3/` 目录（参考 lesson-2 结构）
+3. 在 `app/router/index.tsx` 中注册懒加载路由
+4. 课时2第6关的完成跳转会自动感知（检查 lesson-registry 的 enabled 状态）
+5. 更新本文件
 
 ### 新增一个共享 UI 组件
 
@@ -197,8 +213,9 @@ Infra 层
 - 页面组件禁止直接操作 IndexedDB，必须通过 `PortfolioRepository` 接口
 - 学生端 UI 禁止出现以下词汇：JSON、schema、IndexedDB、migration、repository、database
 - 课时业务逻辑禁止写入 `shared/ui` 或 `app/layout`
-- `lesson-1` 的记录字段保持粗粒度，不得引入课时 2 的严格字段约束
+- `lesson-1` 的记录字段保持粗粒度，不得引入课时2的严格字段约束
+- 教师模式下所有写操作（savePortfolio、importPortfolio）均为 no-op，不得持久化演示数据
 
 ---
 
-*最后更新：2026-03-19*
+*最后更新：2026-03-26*

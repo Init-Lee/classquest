@@ -25,7 +25,7 @@ export const LESSON_REGISTRY: LessonConfig[] = [
     title: "项目启动与定题",
     subtitle: "确定研究方向，制定采证计划",
     enabled: true,
-    totalSteps: 6,
+    totalSteps: 5,
   },
   {
     id: 2,

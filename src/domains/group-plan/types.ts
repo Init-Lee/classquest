@@ -20,6 +20,8 @@ export interface R1Record {
   roughRecordIdea: string
   /** 跑偏提醒摘要列表 */
   driftWarnings: string[]
+  /** 个人辅助材料来源（课时1第2关填写，每人独立维护） */
+  sourceRows: GroupSourceRow[]
   /** AI 助手输入内容（可选，来自学生粘贴的提示词） */
   aiPrompt?: string
   /** AI 助手输出内容（可选，来自学生粘贴的 AI 回复） */
@@ -84,6 +86,12 @@ export interface GroupEvidencePlanRow {
   method: string
   /** 记录思路（粗粒度，课时1阶段不做严格约束） */
   recordIdea: string
-  /** 负责人姓名 */
-  owner: string
+  /** 负责人姓名列表（支持多人协作，至少1人） */
+  owners: string[]
+  /**
+   * 是否为系统锁定行（对应组员登记中每人的默认任务行）
+   * true：负责人由系统预填，不可修改；只能在"组员登记"减人时删除
+   * false / undefined：用户手动新增行，负责人可多选
+   */
+  locked?: boolean
 }

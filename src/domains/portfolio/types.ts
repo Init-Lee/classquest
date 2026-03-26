@@ -7,7 +7,7 @@
 
 import type { StudentProfile } from "@/domains/student/types"
 import type { ProgressPointer } from "@/domains/progress/types"
-import type { R1Record, GroupDiscussionEntry, GroupConsensus, GroupSourceRow, GroupEvidencePlanRow } from "@/domains/group-plan/types"
+import type { R1Record, GroupDiscussionEntry, GroupConsensus, GroupEvidencePlanRow } from "@/domains/group-plan/types"
 import type { Lesson2Assignment, PublicEvidenceRecord, FieldEvidenceTask, QualityCheckResult } from "@/domains/evidence/types"
 import type { AIAssistLog } from "@/domains/prompts/types"
 import type { SnapshotMeta } from "@/domains/snapshot/types"
@@ -16,22 +16,29 @@ import type { SnapshotMeta } from "@/domains/snapshot/types"
 export interface Lesson1State {
   /** 步骤1是否已完成引导 */
   introDone: boolean
-  /** 步骤2是否已完成信息填写 */
-  profileDone: boolean
-  /** 本组所有成员的 R1 记录 */
+  /** 本组所有成员的 R1 记录（每人一条，含个人辅助材料 sourceRows） */
   r1ByMember: R1Record[]
-  /** 小组讨论留痕（步骤4） */
+  /** 小组讨论留痕（步骤3） */
   groupDiscussion: GroupDiscussionEntry[]
-  /** 小组共识卡（步骤4，组长填写） */
+  /** 小组共识卡（步骤3，组长填写） */
   groupConsensus?: GroupConsensus
-  /** 辅助材料来源行（步骤5） */
-  sourceRows: GroupSourceRow[]
-  /** 证据收集清单行（步骤5） */
+  /**
+   * 组长在第4关"组员登记"子步录入的小组成员姓名列表
+   * 用于执行表行自动生成和负责人多选
+   */
+  groupMembers: string[]
+  /** 证据收集清单行（步骤4，owners 支持多人） */
   evidenceRows: GroupEvidencePlanRow[]
   /** 承诺已勾选 */
   declarationAgreed: boolean
   /** AI 助手交互日志 */
   aiAssistLogs: AIAssistLog[]
+  /**
+   * 组员确认的"分工中对应自己的名字"（可选）
+   * 新流程中用 student.studentName 直接在 owners 数组中匹配；
+   * 仅在注册名与小组名单不一致时（手动选择后）有值
+   */
+  confirmedOwnerName?: string
   /** 课时1是否已完成 */
   completed: boolean
 }
@@ -90,11 +97,10 @@ export interface ModulePortfolio {
 export function createEmptyLesson1State(): Lesson1State {
   return {
     introDone: false,
-    profileDone: false,
     r1ByMember: [],
     groupDiscussion: [],
     groupConsensus: undefined,
-    sourceRows: [],
+    groupMembers: [],
     evidenceRows: [],
     declarationAgreed: false,
     aiAssistLogs: [],

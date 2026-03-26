@@ -1,26 +1,36 @@
 /**
  * 文件说明：全局应用 Provider
- * 职责：挂载 PortfolioContext，向全应用提供档案读写能力
+ * 职责：挂载 PortfolioContext，向全应用提供档案读写能力和教师模式开关
  *       是应用状态的顶层容器
- * 更新触发：需要新增全局 Context 时（如主题切换、教师模式等）
+ * 更新触发：需要新增全局 Context 时（如主题切换）；教师模式逻辑调整时；
+ *           新增全局操作（如 clearPortfolio）时
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
 import type { ModulePortfolio } from "@/domains/portfolio/types"
 import { portfolioRepository } from "@/infra/persistence/repositories/portfolio.repository.idb"
+import { createDemoPortfolio } from "@/shared/constants/demo-portfolio"
 
 /** Portfolio Context 的 Shape */
 interface PortfolioContextValue {
-  /** 当前档案，null 表示尚未创建 */
+  /** 当前档案：学生模式为真实档案，教师模式为演示档案，null 表示尚未创建 */
   portfolio: ModulePortfolio | null
   /** 是否正在加载 */
   loading: boolean
-  /** 保存档案（自动更新 updatedAt） */
+  /** 保存档案（教师模式下为 no-op） */
   savePortfolio: (updated: ModulePortfolio) => Promise<void>
-  /** 替换为导入的档案 */
+  /** 替换为导入的档案（教师模式下为 no-op） */
   importPortfolio: (imported: ModulePortfolio) => Promise<void>
   /** 重新从 DB 加载（一般在导入后调用） */
   reload: () => Promise<void>
+  /** 清空所有持久化数据并重置状态 */
+  clearPortfolio: () => Promise<void>
+  /** 是否处于教师演示模式 */
+  isTeacherMode: boolean
+  /** 进入教师演示模式（传入演示档案，不写入 DB） */
+  enterTeacherMode: () => void
+  /** 退出教师演示模式，恢复正常学生视图 */
+  exitTeacherMode: () => void
 }
 
 const PortfolioContext = createContext<PortfolioContextValue | null>(null)
@@ -28,6 +38,9 @@ const PortfolioContext = createContext<PortfolioContextValue | null>(null)
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [portfolio, setPortfolio] = useState<ModulePortfolio | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isTeacherMode, setIsTeacherMode] = useState(false)
+  /** 教师模式下显示的演示档案（不持久化） */
+  const [demoPortfolio, setDemoPortfolio] = useState<ModulePortfolio | null>(null)
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -44,21 +57,58 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const savePortfolio = useCallback(async (updated: ModulePortfolio) => {
+    // 教师模式下不持久化，仅更新演示档案内存状态
+    if (isTeacherMode) {
+      setDemoPortfolio({ ...updated, updatedAt: new Date().toISOString() })
+      return
+    }
     const withTimestamp: ModulePortfolio = {
       ...updated,
       updatedAt: new Date().toISOString(),
     }
     await portfolioRepository.save(withTimestamp)
     setPortfolio(withTimestamp)
-  }, [])
+  }, [isTeacherMode])
 
   const importPortfolio = useCallback(async (imported: ModulePortfolio) => {
+    // 教师模式下跳过导入
+    if (isTeacherMode) return
     await portfolioRepository.replaceWithImported(imported)
     setPortfolio(imported)
+  }, [isTeacherMode])
+
+  const clearPortfolio = useCallback(async () => {
+    await portfolioRepository.clear()
+    setPortfolio(null)
   }, [])
 
+  const enterTeacherMode = useCallback(() => {
+    setDemoPortfolio(createDemoPortfolio())
+    setIsTeacherMode(true)
+  }, [])
+
+  const exitTeacherMode = useCallback(() => {
+    setIsTeacherMode(false)
+    setDemoPortfolio(null)
+  }, [])
+
+  /** 教师模式下暴露演示档案，否则暴露真实档案 */
+  const effectivePortfolio = isTeacherMode ? demoPortfolio : portfolio
+
   return (
-    <PortfolioContext.Provider value={{ portfolio, loading, savePortfolio, importPortfolio, reload }}>
+    <PortfolioContext.Provider
+      value={{
+        portfolio: effectivePortfolio,
+        loading,
+        savePortfolio,
+        importPortfolio,
+        reload,
+        clearPortfolio,
+        isTeacherMode,
+        enterTeacherMode,
+        exitTeacherMode,
+      }}
+    >
       {children}
     </PortfolioContext.Provider>
   )

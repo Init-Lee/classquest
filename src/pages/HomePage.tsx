@@ -2,12 +2,13 @@
  * 文件说明：首页
  * 职责：应用入口页面，展示模块标题、当前进度卡、课时入口卡片
  *       未创建档案时引导学生新建档案；已有档案时展示进度并引导继续学习
- * 更新触发：首页展示内容变化时；新增课时卡片时
+ *       同时提供教师演示模式入口（口令验证）
+ * 更新触发：首页展示内容变化时；新增课时卡片时；教师入口 UI 调整时
  */
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { BookOpen, ArrowRight, CheckCircle2, Lock, User, Users } from "lucide-react"
+import { BookOpen, ArrowRight, CheckCircle2, Lock, User, Users, GraduationCap, Eye } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Input } from "@/shared/ui/input"
@@ -17,6 +18,94 @@ import { LESSON_REGISTRY } from "@/app/lesson-registry"
 import { createNewPortfolio } from "@/domains/portfolio/types"
 import type { StudentProfile } from "@/domains/student/types"
 import { formatDateReadable } from "@/shared/utils/format"
+
+/** 教师模式入口卡片 */
+function TeacherModeEntry() {
+  const { enterTeacherMode } = usePortfolio()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [showInput, setShowInput] = useState(false)
+
+  const TEACHER_PASSWORD = "xnwy"
+
+  const handleEnter = () => {
+    if (password === TEACHER_PASSWORD) {
+      enterTeacherMode()
+      navigate("/lesson/1/step/1")
+    } else {
+      setError("口令错误，请重试")
+      setPassword("")
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleEnter()
+  }
+
+  return (
+    <Card className="max-w-md mx-auto border-amber-200 bg-amber-50">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-amber-800">
+          <GraduationCap className="h-5 w-5" />
+          教师演示模式
+        </CardTitle>
+        <CardDescription className="text-amber-700/80">
+          浏览全部页面，预填演示数据，所有操作不影响学生数据
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!showInput ? (
+          <Button
+            variant="outline"
+            className="w-full border-amber-400 text-amber-800 hover:bg-amber-100"
+            onClick={() => setShowInput(true)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            进入演示模式
+          </Button>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-amber-800">请输入教师口令</label>
+              <Input
+                type="password"
+                placeholder="输入口令后按回车"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError("") }}
+                onKeyDown={handleKeyDown}
+                autoFocus
+                className="border-amber-300 focus:border-amber-500"
+              />
+              {error && <p className="text-xs text-red-600">{error}</p>}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => { setShowInput(false); setPassword(""); setError("") }}
+              >
+                取消
+              </Button>
+              <Button
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs"
+                onClick={handleEnter}
+                disabled={!password}
+              >
+                确认进入
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** 班级选项：初一（1）班 ~ 初一（12）班 */
+const CLASS_OPTIONS = Array.from({ length: 12 }, (_, i) => `初一（${i + 1}）班`)
+/** 小组选项：第1组 ~ 第15组 */
+const GROUP_OPTIONS = Array.from({ length: 15 }, (_, i) => `第${i + 1}组`)
 
 /** 新建学生档案表单 */
 function NewProfileForm({ onCreated }: { onCreated: () => void }) {
@@ -29,9 +118,11 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
   })
   const [saving, setSaving] = useState(false)
 
+  const isValid = form.clazz && form.studentName.trim() && form.groupName
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.clazz.trim() || !form.studentName.trim() || !form.groupName.trim()) return
+    if (!isValid) return
 
     setSaving(true)
     try {
@@ -42,6 +133,8 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
       setSaving(false)
     }
   }
+
+  const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
 
   return (
     <Card className="max-w-md mx-auto">
@@ -55,16 +148,19 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium">班级</label>
-            <Input
-              placeholder="如：七年级2班"
+            <label className="text-sm font-medium">班级 <span className="text-destructive">*</span></label>
+            <select
               value={form.clazz}
               onChange={e => setForm(f => ({ ...f, clazz: e.target.value }))}
               required
-            />
+              className={selectClass}
+            >
+              <option value="">请选择班级</option>
+              {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">姓名</label>
+            <label className="text-sm font-medium">姓名 <span className="text-destructive">*</span></label>
             <Input
               placeholder="你的名字"
               value={form.studentName}
@@ -73,16 +169,19 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">小组名</label>
-            <Input
-              placeholder="你们小组的名字"
+            <label className="text-sm font-medium">小组 <span className="text-destructive">*</span></label>
+            <select
               value={form.groupName}
               onChange={e => setForm(f => ({ ...f, groupName: e.target.value }))}
               required
-            />
+              className={selectClass}
+            >
+              <option value="">请选择小组</option>
+              {GROUP_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium">我的角色</label>
+            <label className="text-sm font-medium">我的角色 <span className="text-destructive">*</span></label>
             <div className="flex gap-3">
               {(["leader", "member"] as const).map(role => (
                 <button
@@ -104,7 +203,7 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
               {form.role === "leader" ? "组长可编辑小组共识和证据清单，并导出组长文件给组员" : "组员完成个人部分，导入组长文件后查看小组分工"}
             </p>
           </div>
-          <Button type="submit" className="w-full" disabled={saving}>
+          <Button type="submit" className="w-full" disabled={!isValid || saving}>
             {saving ? "创建中..." : "开始闯关"}
             <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
@@ -181,6 +280,17 @@ export default function HomePage() {
             </ul>
           </CardContent>
         </Card>
+
+        {/* 分隔线 + 教师入口 */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-muted" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
+          </div>
+        </div>
+        <TeacherModeEntry />
       </div>
     )
   }
@@ -193,6 +303,15 @@ export default function HomePage() {
           <p className="text-muted-foreground text-sm mt-1">填写后系统会记住你，随时可以保存和恢复进度</p>
         </div>
         <NewProfileForm onCreated={handleCreated} />
+        {/* 返回首页 */}
+        <div className="text-center">
+          <button
+            onClick={() => setShowNewForm(false)}
+            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            ← 返回首页
+          </button>
+        </div>
       </div>
     )
   }
@@ -268,6 +387,17 @@ export default function HomePage() {
           })}
         </div>
       </div>
+
+      {/* 教师入口（有档案时也保留，但折叠显示） */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-muted" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
+        </div>
+      </div>
+      <TeacherModeEntry />
     </div>
   )
 }

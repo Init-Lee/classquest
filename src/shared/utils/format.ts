@@ -41,6 +41,16 @@ export function buildContinuePackageFilename(
 }
 
 /**
+ * 生成组长文件名（供组员导入使用）
+ */
+export function buildLeaderFilename(
+  groupName: string,
+  version: number
+): string {
+  return `组长文件_${groupName}_v${version}_${formatDateForFilename()}.json`
+}
+
+/**
  * 生成阶段快照文件名
  */
 export function buildSnapshotFilename(
