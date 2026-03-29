@@ -9,6 +9,7 @@ import { createBrowserRouter } from "react-router-dom"
 import { AppShell } from "@/app/layout/AppShell"
 
 const HomePage = lazy(() => import("@/pages/HomePage"))
+const LegacyImportPage = lazy(() => import("@/pages/LegacyImportPage"))
 const Lesson1Page = lazy(() => import("@/lessons/lesson-1/routes"))
 const Lesson2Page = lazy(() => import("@/lessons/lesson-2/routes"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
@@ -29,6 +30,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <HomePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "legacy-import",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <LegacyImportPage />
           </Suspense>
         ),
       },

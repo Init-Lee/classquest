@@ -8,7 +8,7 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { BookOpen, ArrowRight, CheckCircle2, Lock, User, Users, GraduationCap, Eye } from "lucide-react"
+import { BookOpen, ArrowRight, CheckCircle2, Lock, User, Users, GraduationCap, Eye, Upload } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Input } from "@/shared/ui/input"
@@ -236,10 +236,18 @@ export default function HomePage() {
             这是一个闯关式学习项目。你将带领（或配合）小组，从提出一个 AI 相关的科学问题开始，
             一步步收集证据，形成有说服力的结论。
           </p>
-          <div className="flex items-center justify-center gap-4 pt-2">
+          <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
             <Button onClick={() => setShowNewForm(true)} size="lg">
               开始新的闯关
               <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate("/legacy-import")}
+            >
+              <Upload className="h-4 w-4 mr-1" />
+              导入旧版数据
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">

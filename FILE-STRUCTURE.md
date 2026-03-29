@@ -83,9 +83,18 @@ src/
 │       │   └── Step5Review.tsx    # 第5关：回顾（提示使用右上角保存；课后任务显示来自 lesson2.fieldTasks；完成后智能跳转）
 │       └── components/            # （预留，当前步骤逻辑直接写在 steps/ 内）
 │
+├── pages/               # 页面层：顶级路由页面组件
+│   ├── HomePage.tsx              # 首页（无档案时引导注册/导入；有档案时展示进度）
+│   ├── LegacyImportPage.tsx      # 【临时功能】旧版数据导入独立页（路由 /legacy-import）
+│   └── NotFoundPage.tsx          # 404 页
+│
 ├── features/            # Feature 层：跨课时功能模块
-│   └── progress-ui/     #   进度条 UI 相关
-│       └── InnerStepProgress.tsx # 课时内步骤进度条
+│   ├── progress-ui/     #   进度条 UI 相关
+│   │   └── InnerStepProgress.tsx # 课时内步骤进度条
+│   └── legacy-import/   #   【临时功能 · 全班迁移完成后整目录+LegacyImportPage.tsx一并删除】
+│       ├── legacy-import.ts      # LegacyL1/LegacyL2 输入类型定义 + buildPortfolioFromLegacy 映射函数
+│       ├── LegacyImportSection.tsx # 4步向导核心组件（导出 LegacyImportWizard）
+│       └── index.ts              # re-export 入口（外部只需 @/features/legacy-import）
 │
 ├── infra/               # Infra 层：基础设施，禁止在此层外直接访问
 │   └── persistence/
@@ -165,6 +174,7 @@ Infra 层
 | 导入进度 | 右上角 | 恢复继续学习包 |
 | 组长文件 | 课时1第5关（仅组长） | 组员导入后可看小组分工 |
 | 重置数据 | 右上角红色重置 | 清空 IndexedDB，回到初始状态 |
+| 旧版迁移 | 首页「导入旧版数据」按钮 → `/legacy-import` 独立页（临时功能） | 导入旧版工具 JSON，自动跳转对应进度 |
 
 ---
 
