@@ -7,6 +7,7 @@
  */
 
 import type { ModulePortfolio } from "@/domains/portfolio/types"
+import { createEmptyLesson3State } from "@/domains/portfolio/types"
 
 /** 创建教师演示用的预填档案（每次进入教师模式时调用，避免引用同一对象） */
 export function createDemoPortfolio(): ModulePortfolio {
@@ -198,6 +199,24 @@ export function createDemoPortfolio(): ModulePortfolio {
         },
       ],
       completed: false,
+    },
+    lesson3: {
+      ...createEmptyLesson3State(),
+      // 演示模式：步骤1~3已完成，供教师展示课时3各步骤内容
+      missionAcknowledged: true,
+      toolboxCompleted: true,
+      selectedMaterials: [
+        {
+          sourceType: "public",
+          sourceIndex: 0,
+          explanation: "该数据显示学校所在区饮用水达标率略低于全市均值，说明存在潜在水质风险",
+        },
+        {
+          sourceType: "field",
+          sourceIndex: 0,
+          explanation: "现场检测读数与年报数值接近，可作为印证年报的现场一手证据",
+        },
+      ],
     },
     snapshotHistory: [],
     groupPlanVersion: 1,

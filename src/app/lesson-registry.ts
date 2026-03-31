@@ -36,10 +36,10 @@ export const LESSON_REGISTRY: LessonConfig[] = [
   },
   {
     id: 3,
-    title: "数据整理与分析",
-    subtitle: "即将开放",
-    enabled: false,
-    totalSteps: 6,
+    title: "素材整理与证据加工",
+    subtitle: "整理个人材料，加工证据卡",
+    enabled: true,
+    totalSteps: 5,
   },
   {
     id: 4,

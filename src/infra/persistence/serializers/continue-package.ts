@@ -6,6 +6,7 @@
  */
 
 import type { ModulePortfolio } from "@/domains/portfolio/types"
+import { createEmptyLesson3State } from "@/domains/portfolio/types"
 import { buildContinuePackageFilename, buildLeaderFilename } from "@/shared/utils/format"
 
 /** 导出继续学习包为 Blob（JSON 格式） */
@@ -20,6 +21,7 @@ export function serializeContinuePackage(portfolio: ModulePortfolio): Blob {
  * - assignments.owner (string) → owners (string[])
  * - lesson1.groupMembers 缺失时补空数组
  * - R1Record.sourceRows 缺失时补空数组
+ * - lesson3 字段缺失时补默认初始状态（v0.3 → v0.4 迁移）
  * 保持向后兼容，旧文件导入后可正常使用
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,6 +68,11 @@ function migratePortfolioData(raw: unknown): ModulePortfolio {
       }
       return asg
     })
+  }
+
+  // v0.3 → v0.4：补充 lesson3 字段（旧版继续学习包无此字段）
+  if (!data?.lesson3) {
+    data.lesson3 = createEmptyLesson3State()
   }
 
   return data as ModulePortfolio

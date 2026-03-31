@@ -8,6 +8,7 @@
  */
 
 import type { ModulePortfolio, Lesson1State, Lesson2State } from "@/domains/portfolio/types"
+import { createEmptyLesson3State } from "@/domains/portfolio/types"
 import type { StudentProfile } from "@/domains/student/types"
 import type { GroupEvidencePlanRow, GroupConsensus, R1Record, GroupSourceRow } from "@/domains/group-plan/types"
 import type { PublicEvidenceRecord, FieldEvidenceTask, Lesson2Assignment } from "@/domains/evidence/types"
@@ -337,6 +338,7 @@ export function buildPortfolioFromLegacy(params: LegacyImportParams): ModulePort
     pointer: { lessonId: 2, stepId, updatedAt: now },
     lesson1,
     lesson2,
+    lesson3: createEmptyLesson3State(),
     snapshotHistory: [],
     groupPlanVersion: 1,
     createdAt: now,

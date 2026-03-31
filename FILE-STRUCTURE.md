@@ -83,6 +83,15 @@ src/
 │       │   └── Step5Review.tsx    # 第5关：回顾（提示使用右上角保存；课后任务显示来自 lesson2.fieldTasks；完成后智能跳转）
 │       └── components/            # （预留，当前步骤逻辑直接写在 steps/ 内）
 │
+└── lesson-3/        #   课时3：素材整理与证据加工（共 5 关；第1~3关已实现，第4~5关待后续开发）
+    ├── config.ts             # 课时配置（步骤名称；5关）
+    ├── guards.ts             # 课时3步骤间 Guard（全5关守卫均已定义；步骤4/5暂为预留占位）
+    ├── routes.tsx            # 课时3路由定义（step/1~step/5；步骤4/5渲染 StepComingSoon）
+    └── steps/
+        ├── Step1InheritAnchor.tsx   # 第1关：继承前序成果与任务锚定（只读展示探究问题/辅助来源/条目摘要；四块海报预览卡；确认后写入 missionAcknowledged）
+        ├── Step2Toolbox.tsx         # 第2关：材料加工方法工具箱（统一处理逻辑总览；图片/文字/表格数据/视频四类Tab；零浪费食堂示例；常见错误；确认后写入 toolboxCompleted）
+        └── Step3SelectMaterials.tsx # 第3关：筛选我的材料（过滤个人课时2记录；勾选入选材料；填写现象说明句；保存后写入 selectedMaterials[]）
+
 ├── pages/               # 页面层：顶级路由页面组件
 │   ├── HomePage.tsx              # 首页（无档案时引导注册/导入；有档案时展示进度）
 │   ├── LegacyImportPage.tsx      # 【临时功能】旧版数据导入独立页（路由 /legacy-import）
@@ -163,7 +172,11 @@ Infra 层
   → L2第1关（合并）：确认进度 + 自动/手动认领任务 → 同时写入 resumeDone+leaderSyncDone+assignments
   → L2第2关：查看我的任务（含全组规划表格）
   → L2第3关：证据入库（公开资源 / 现场采集双模板）
-  → L2第4~5关 → 完成后跳首页（或课时3，视 lesson-registry 开放状态）
+  → L2第4~5关 → 完成后跳 /lesson/3/step/1（课时3已开放）
+  → L3第1关：继承前序成果，确认本课任务边界（missionAcknowledged）
+  → L3第2关：学习四类材料加工方法（toolboxCompleted）
+  → L3第3关：筛选个人材料，填写现象说明句（selectedMaterials[]）
+  → L3第4~5关（待实现）：证据加工工坊 + 个人预览与导出
 ```
 
 ### 保存/导出体系
@@ -228,4 +241,4 @@ Infra 层
 
 ---
 
-*最后更新：2026-03-26*
+*最后更新：2026-03-31*
