@@ -8,8 +8,10 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
 import type { ModulePortfolio } from "@/domains/portfolio/types"
+import { normalizeModulePortfolio } from "@/domains/portfolio/types"
 import { portfolioRepository } from "@/infra/persistence/repositories/portfolio.repository.idb"
 import { createDemoPortfolio } from "@/shared/constants/demo-portfolio"
+import { resolvePointerFromState } from "@/shared/utils/pointer"
 
 /** Portfolio Context 的 Shape */
 interface PortfolioContextValue {
@@ -46,7 +48,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     try {
       const current = await portfolioRepository.getCurrent()
-      setPortfolio(current)
+      // #region agent log
+      fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'AppProvider.tsx:reload',message:'reload from IDB',data:{pointer:current?.pointer,lesson3_missionAck:current?.lesson3?.missionAcknowledged,lesson3_toolboxDone:current?.lesson3?.toolboxCompleted},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
+      if (!current) { setPortfolio(null); return }
+      const normalized = normalizeModulePortfolio(current)
+      /** 修正可能落后的进度指针（与 importPortfolio 逻辑保持一致） */
+      const repairedPointer = resolvePointerFromState(normalized)
+      const repairedPortfolio = { ...normalized, pointer: repairedPointer }
+      // #region agent log
+      fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'AppProvider.tsx:reload-after-repair',message:'pointer after resolvePointerFromState',data:{pointerBefore:current.pointer,pointerAfter:repairedPointer,changed:repairedPointer!==normalized.pointer},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
+      /** 若指针发生变化则回写 IDB，避免下次仍需修正 */
+      if (repairedPointer !== normalized.pointer) {
+        const withTimestamp = { ...repairedPortfolio, updatedAt: new Date().toISOString() }
+        await portfolioRepository.save(withTimestamp)
+        setPortfolio(withTimestamp)
+      } else {
+        setPortfolio(repairedPortfolio)
+      }
     } finally {
       setLoading(false)
     }
@@ -73,8 +93,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const importPortfolio = useCallback(async (imported: ModulePortfolio) => {
     // 教师模式下跳过导入
     if (isTeacherMode) return
-    await portfolioRepository.replaceWithImported(imported)
-    setPortfolio(imported)
+    const normalized = normalizeModulePortfolio(imported)
+    await portfolioRepository.replaceWithImported(normalized)
+    setPortfolio(normalized)
   }, [isTeacherMode])
 
   const clearPortfolio = useCallback(async () => {

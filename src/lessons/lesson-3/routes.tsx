@@ -1,8 +1,7 @@
 /**
  * 文件说明：课时3路由入口
  * 职责：处理课时3的 URL 分发，渲染对应步骤组件，包含 Guard 检查
- * 更新触发：课时3新增或删除步骤时
- * 注：当前实现步骤1~3；步骤4/5占位，待后续课时实现
+ * 更新触发：课时3新增或删除步骤时；步骤组件路径变更时
  */
 
 import { useEffect } from "react"
@@ -14,16 +13,8 @@ import { InnerStepProgress } from "@/features/progress-ui/InnerStepProgress"
 import Step1InheritAnchor from "./steps/Step1InheritAnchor"
 import Step2Toolbox from "./steps/Step2Toolbox"
 import Step3SelectMaterials from "./steps/Step3SelectMaterials"
-
-/** 步骤4/5 占位组件，待后续课时实现 */
-function StepComingSoon({ stepId }: { stepId: number }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-      <div className="text-4xl">🔒</div>
-      <p className="text-muted-foreground text-sm">第 {stepId} 关即将开放，请先完成前面的步骤</p>
-    </div>
-  )
-}
+import Step4EvidenceWorkshop from "./steps/Step4EvidenceWorkshop"
+import Step5PreviewExport from "./steps/Step5PreviewExport"
 
 function StepContainer({ stepId, children }: { stepId: number; children: React.ReactNode }) {
   const { portfolio, isTeacherMode } = usePortfolio()
@@ -69,8 +60,8 @@ export default function Lesson3Routes() {
         <Route path="step/1" element={<Step1InheritAnchor />} />
         <Route path="step/2" element={<Step2Toolbox />} />
         <Route path="step/3" element={<Step3SelectMaterials />} />
-        <Route path="step/4" element={<StepComingSoon stepId={4} />} />
-        <Route path="step/5" element={<StepComingSoon stepId={5} />} />
+        <Route path="step/4" element={<Step4EvidenceWorkshop />} />
+        <Route path="step/5" element={<Step5PreviewExport />} />
         <Route path="*" element={<Step1InheritAnchor />} />
       </Routes>
     </StepContainer>

@@ -108,6 +108,12 @@ export interface Lesson3State {
   // ---- 第2关：材料加工方法工具箱 ----
   /** 学生已阅读并完成方法工具箱关卡 */
   toolboxCompleted: boolean
+  /** 第2关：这条材料让我注意到什么（个人填写） */
+  toolboxNoticeWhat: string
+  /** 第2关：海报上的「为何关注」表述草稿 */
+  toolboxWhyOnPoster: string
+  /** 第2关：是否已确认「为何关注预览」进入稳定稿（解锁前左侧可继续改） */
+  toolboxWhyPreviewLocked: boolean
 
   // ---- 第3关：筛选我的材料 ----
   /** 从课时2记录中筛选出来的入选材料（含现象说明句） */
@@ -194,11 +200,24 @@ export function createEmptyLesson3State(): Lesson3State {
   return {
     missionAcknowledged: false,
     toolboxCompleted: false,
+    toolboxNoticeWhat: "",
+    toolboxWhyOnPoster: "",
+    toolboxWhyPreviewLocked: false,
     selectedMaterials: [],
     evidenceCards: [],
     originExpression: "",
     personalPackageExported: false,
     completed: false,
+  }
+}
+
+/**
+ * 将档案中的 lesson3 与当前默认结构合并（IndexedDB/旧包缺字段时补齐）
+ */
+export function normalizeModulePortfolio(p: ModulePortfolio): ModulePortfolio {
+  return {
+    ...p,
+    lesson3: { ...createEmptyLesson3State(), ...p.lesson3 },
   }
 }
 

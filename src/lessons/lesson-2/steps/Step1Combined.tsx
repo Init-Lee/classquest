@@ -16,6 +16,7 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 import { formatDateReadable } from "@/shared/utils/format"
 import type { Lesson2Assignment } from "@/domains/evidence/types"
 
@@ -60,7 +61,7 @@ export default function Step1Combined() {
           leaderSyncDone: true,
           assignments: myAssignments,
         },
-        pointer: { ...pointer, lessonId: 2, stepId: 2 },
+        pointer: advancePointer(pointer, 2, 2),
       })
       navigate("/lesson/2/step/2")
     } finally {

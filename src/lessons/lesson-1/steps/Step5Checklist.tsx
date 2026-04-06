@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Input } from "@/shared/ui/input"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 import type { GroupEvidencePlanRow } from "@/domains/group-plan/types"
 import { AIHelperDrawer } from "../components/AIHelperDrawer"
 
@@ -187,7 +188,7 @@ export default function Step5Checklist() {
           evidenceRows: evidences,
           declarationAgreed: declaration,
         },
-        pointer: { ...portfolio.pointer, lessonId: 1, stepId: 5 },
+        pointer: advancePointer(portfolio.pointer, 1, 5),
       })
       navigate("/lesson/1/step/5")
     } finally {

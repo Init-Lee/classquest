@@ -1,107 +1,119 @@
 /**
  * 文件说明：课时3 · 第2关 · 材料加工方法工具箱
- * 职责：以"零浪费食堂"为统一示例，展示四类材料（图片/文字/表格数据/视频）
- *       的最小加工方法和常见错误；学生了解方法后点击确认进入第3关。
- * 更新触发：材料加工方法内容调整时；示例内容更新时
+ * 职责：顶部全宽展示「材料加工的统一逻辑」（四格漫画 + 课堂翻页）；其下左右双栏——左侧为本关操作区
+ *       （课时1 辅助材料来源 + 两条填写 + 确认表述/解锁 + 海报弹窗）；右侧为材料处理参考（仅文字 Tab；无右侧预览卡）。
+ * 更新触发：统一逻辑或双栏布局调整时；第2关持久化字段增减时；右侧参考组件契约变化时
  */
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle, ImageIcon, FileText, BarChart2, Video } from "lucide-react"
+import { ArrowRight, ArrowLeft, Presentation, ClipboardList, LayoutTemplate } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Textarea } from "@/shared/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
+import type { Lesson3State } from "@/domains/portfolio/types"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
+import { MaterialProcessingReferencePanel } from "@/features/material-processing-reference"
+import { PosterSketchPreview } from "../components/PosterSketchPreview"
+import { UnifiedLogicPresentation } from "../components/UnifiedLogicPresentation"
+import { UNIFIED_LOGIC_STEPS, stepCaptionLine } from "../lib/unified-logic-content"
+import { useComicPanelUrls } from "../lib/useComicPanelUrls"
 
-/** 四类材料的配置数据 */
-const MATERIAL_TYPES = [
-  {
-    id: "image" as const,
-    label: "图片",
-    icon: ImageIcon,
-    color: "text-orange-600",
-    bgActive: "bg-orange-50 border-orange-300 text-orange-800",
-    bgInactive: "bg-white border-gray-200 text-gray-600",
-    goal: "让观众一眼看出图片里最关键的现象",
-    actions: ["裁切掉无关背景，突出主体", "用箭头或圆圈标出关键位置", "写一句客观说明：「这张图显示了……」"],
-    posterForm: "含标注箭头的图片 + 一句说明文字",
-    example: {
-      raw: "一张学校食堂的全景照片",
-      process: "圈出剩菜明显的餐盘区域，标注「高峰期剩菜集中区」箭头",
-      result: "「每日餐后高峰，主菜区平均约 1/3 餐盘有明显剩余」",
-    },
-    mistakes: ["只上传原图不做任何处理", "标注太多，重点反而不突出", "用截图或网络图代替现场拍摄"],
-  },
-  {
-    id: "text" as const,
-    label: "文字",
-    icon: FileText,
-    color: "text-blue-600",
-    bgActive: "bg-blue-50 border-blue-300 text-blue-800",
-    bgInactive: "bg-white border-gray-200 text-gray-600",
-    goal: "把原始文字压缩成一句可展示的客观表述",
-    actions: ["摘录最能说明现象的关键句", "删去修饰性词语，保留事实", "压缩成不超过 30 字的客观表述"],
-    posterForm: "引用句 + 来源标注",
-    example: {
-      raw: "采访记录：「其实很多同学点的时候觉得都想吃，但是吃到一半就饱了，剩下的也不好意思打包……」",
-      process: "提炼关键信息：学生食量与点餐量不匹配导致剩余",
-      result: "「受访学生反映：点餐时高估食量，实际食量不足，导致约半数情况有剩余」",
-    },
-    mistakes: ["直接大段复制粘贴", "没有注明来源", "把转述的话写成「已经证明了」"],
-  },
-  {
-    id: "data" as const,
-    label: "表格数据",
-    icon: BarChart2,
-    color: "text-green-600",
-    bgActive: "bg-green-50 border-green-300 text-green-800",
-    bgInactive: "bg-white border-gray-200 text-gray-600",
-    goal: "从一堆数字中提炼出清晰的趋势或对比，用文字或图表表达",
-    actions: ["选出最能说明问题的 2~3 个关键数字", "做简单对比（如：今天 vs 昨天，高峰 vs 平峰）", "转成一句趋势判断句，不直接跳到原因", "也可以用手绘或工具（如 WPS 图表）把数据做成简单柱状图或折线图，更直观"],
-    posterForm: "数据比较句 + 来源说明（或简单图表截图 + 一句说明）",
-    example: {
-      raw: "三天测量：周一剩余率 32%，周三 29%，周五 41%",
-      process: "发现周五剩余率明显高于其他两天，对比差值约 10%",
-      result: "「周五剩余率（41%）比周一、周三平均高约 10 个百分点，存在明显波动」",
-    },
-    mistakes: ["贴一整张表格不解释", "数字很多但不说明说明了什么", "直接从数字跳到「因此原因是……」"],
-  },
-  {
-    id: "video" as const,
-    label: "视频",
-    icon: Video,
-    color: "text-purple-600",
-    bgActive: "bg-purple-50 border-purple-300 text-purple-800",
-    bgInactive: "bg-white border-gray-200 text-gray-600",
-    goal: "用关键帧说明视频记录了什么现象",
-    actions: ["截取最能说明问题的 1~2 个关键帧", "标注帧的时间点和场景描述", "配一句客观观察说明：「这个画面显示了……」"],
-    posterForm: "关键帧截图 + 时间标注 + 一句说明",
-    example: {
-      raw: "3 分钟食堂收餐视频",
-      process: "截取 1:25 处餐盘归还画面，标注「收餐高峰，桶已满溢」",
-      result: "「视频 1:25 显示收餐桶已超出容量，说明高峰期剩余量超出收容能力」",
-    },
-    mistakes: ["只上传整个视频不截关键帧", "依赖 AI 解读整个视频内容", "没说明截这一帧是为了说明什么"],
-  },
-]
+const TEXT_SAVE_MS = 420
 
 export default function Step2Toolbox() {
   const { portfolio, savePortfolio } = usePortfolio()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<"image" | "text" | "data" | "video">("image")
   const [saving, setSaving] = useState(false)
+  const [logicPresentOpen, setLogicPresentOpen] = useState(false)
+  const [logicPresentNonce, setLogicPresentNonce] = useState(0)
+  const [posterPreviewOpen, setPosterPreviewOpen] = useState(false)
+  const comicImageUrls = useComicPanelUrls()
 
-  if (!portfolio) return null
+  const portfolioRef = useRef(portfolio)
+  portfolioRef.current = portfolio
 
-  const alreadyDone = portfolio.lesson3.toolboxCompleted
-  const activeMaterial = MATERIAL_TYPES.find((m) => m.id === activeTab)!
+  const l3 = portfolio?.lesson3
+  const [noticeWhat, setNoticeWhat] = useState("")
+  const [whyOnPoster, setWhyOnPoster] = useState("")
+  const noticeDraftRef = useRef(noticeWhat)
+  const whyDraftRef = useRef(whyOnPoster)
+  noticeDraftRef.current = noticeWhat
+  whyDraftRef.current = whyOnPoster
+
+  /** 仅在切换档案时从持久化恢复，避免与输入竞态把本地草稿写回空（勿监听 lesson3 全文） */
+  useEffect(() => {
+    if (!portfolio) return
+    setNoticeWhat(portfolio.lesson3.toolboxNoticeWhat)
+    setWhyOnPoster(portfolio.lesson3.toolboxWhyOnPoster)
+  }, [portfolio?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- 仅 id 变更同步，避免与防抖/确认预览竞态
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const p = portfolioRef.current
+      if (!p) return
+      if (noticeWhat === p.lesson3.toolboxNoticeWhat && whyOnPoster === p.lesson3.toolboxWhyOnPoster) return
+      void savePortfolio({
+        ...p,
+        lesson3: {
+          ...p.lesson3,
+          toolboxNoticeWhat: noticeWhat,
+          toolboxWhyOnPoster: whyOnPoster,
+        },
+      })
+    }, TEXT_SAVE_MS)
+    return () => window.clearTimeout(t)
+  }, [noticeWhat, whyOnPoster, savePortfolio])
+
+  const patchLesson3 = useCallback(
+    async (patch: Partial<Lesson3State>) => {
+      const p = portfolioRef.current
+      if (!p) return
+      await savePortfolio({
+        ...p,
+        lesson3: {
+          ...p.lesson3,
+          toolboxNoticeWhat: noticeDraftRef.current,
+          toolboxWhyOnPoster: whyDraftRef.current,
+          ...patch,
+        },
+      })
+    },
+    [savePortfolio]
+  )
+
+  if (!portfolio || !l3) return null
+
+  const { student, lesson1, lesson2 } = portfolio
+  const myName = lesson1.confirmedOwnerName || student.studentName
+  const myR1 = lesson1.r1ByMember.find((r) => r.author === myName)
+  const mySourceRows = myR1?.sourceRows ?? []
+  const myPublicRecords = lesson2.publicRecords.filter((r) => r.owner === myName)
+  const myFieldTasks = lesson2.fieldTasks.filter((t) => t.owner === myName)
+  const totalMyRecords = myPublicRecords.length + myFieldTasks.length
+  const researchQuestion = lesson1.groupConsensus?.finalResearchQuestion ?? null
+
+  const alreadyDone = l3.toolboxCompleted
+  const previewLocked = l3.toolboxWhyPreviewLocked
+  /** 步骤进行中且已确认预览时禁用输入；步骤已完成后始终可编辑（防抖保存） */
+  const inputsDisabled = !alreadyDone && previewLocked
 
   const handleConfirm = async () => {
     if (saving) return
+    if (!l3.toolboxWhyPreviewLocked) return
     setSaving(true)
     try {
       await savePortfolio({
         ...portfolio,
-        lesson3: { ...portfolio.lesson3, toolboxCompleted: true },
+        pointer: advancePointer(portfolio.pointer, 3, 2),
+        lesson3: {
+          ...portfolio.lesson3,
+          toolboxNoticeWhat: noticeDraftRef.current,
+          toolboxWhyOnPoster: whyDraftRef.current,
+          toolboxCompleted: true,
+        },
       })
       navigate("/lesson/3/step/3")
     } finally {
@@ -110,199 +122,265 @@ export default function Step2Toolbox() {
   }
 
   return (
-    <div className="space-y-5 max-w-2xl">
-      {/* 统一处理逻辑总览 */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">材料加工的统一逻辑</CardTitle>
+    <div className="space-y-5 w-full max-w-7xl mx-auto">
+      <Card className="w-full overflow-hidden border-stone-300 bg-[#faf8f3]">
+        <CardHeader className="pb-2 border-b border-dashed border-stone-300/80 space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-base">材料加工的统一逻辑</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal mt-1">
+                四步流程一览：上课时可点「内容详解」全屏逐张学习（← → 或空格翻页，Esc 退出）。
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="shrink-0 gap-1.5 border-stone-300 bg-amber-100/90 text-stone-900 hover:bg-amber-200/90"
+              onClick={() => {
+                setLogicPresentNonce((n) => n + 1)
+                setLogicPresentOpen(true)
+              }}
+            >
+              <Presentation className="h-4 w-4" aria-hidden />
+              内容详解
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-2 text-center text-xs">
-            {[
-              { step: "1", text: "原始材料\n是什么" },
-              { step: "2", text: "我看到了\n什么" },
-              { step: "3", text: "我做了什么\n最小加工" },
-              { step: "4", text: "海报上可以\n怎么说" },
-            ].map((item, i, arr) => (
-              <div key={item.step} className="flex items-center">
-                <div className="flex-1 bg-gray-100 rounded-md p-2">
-                  <div className="font-bold text-gray-500 mb-0.5">{item.step}</div>
-                  <div className="whitespace-pre-line text-gray-700 leading-tight">{item.text}</div>
+        <CardContent className="pt-4 px-2 sm:px-4">
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 w-full min-w-0"
+            role="list"
+            aria-label="材料加工统一逻辑四格示意"
+          >
+            {UNIFIED_LOGIC_STEPS.map((item, i) => {
+              const src = comicImageUrls[i]
+              const captionLine = stepCaptionLine(item)
+              return (
+                <div
+                  key={item.step}
+                  role="listitem"
+                  className="flex min-w-0 flex-col rounded-xl border-2 border-stone-800 bg-white overflow-hidden shadow-[5px_5px_0_0_rgba(28,25,23,0.88)]"
+                >
+                  <div className="relative aspect-[4/3] bg-stone-100 border-b-2 border-stone-800 min-h-0">
+                    {src ? (
+                      <img
+                        src={src}
+                        alt={`材料加工统一逻辑第 ${item.step} 步示意图`}
+                        className="absolute inset-0 w-full h-full object-contain p-1"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-foreground">
+                        请在 <code className="text-[10px] bg-stone-200/80 px-1 rounded">lesson-3/assets</code> 根目录放入第{" "}
+                        {item.step} 张 <code className="text-[10px] bg-stone-200/80 px-1 rounded">.jpg</code> /{" "}
+                        <code className="text-[10px] bg-stone-200/80 px-1 rounded">.jpeg</code>（按文件名排序对应本格；大图源可放{" "}
+                        <code className="text-[10px] bg-stone-200/80 px-1 rounded">assets/原图</code>）
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex min-h-[2.25rem] items-center gap-1.5 px-1.5 py-1 sm:gap-2 sm:px-2 sm:py-1.5 bg-amber-50/40">
+                    <span className="shrink-0 inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-stone-800 text-[10px] sm:text-xs font-bold text-amber-50">
+                      {item.step}
+                    </span>
+                    <span className="min-w-0 flex-1 text-left text-[10px] sm:text-xs text-stone-800 leading-tight font-medium">
+                      {captionLine}
+                    </span>
+                  </div>
                 </div>
-                {i < arr.length - 1 && <div className="text-gray-400 mx-1">→</div>}
-              </div>
-            ))}
+              )
+            })}
           </div>
         </CardContent>
       </Card>
 
-      {/* 四类材料标签页 */}
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-          选择材料类型，查看具体处理方法
-        </p>
-        {/* Tab 按钮 */}
-        <div className="flex gap-2 flex-wrap mb-4">
-          {MATERIAL_TYPES.map((m) => {
-            const Icon = m.icon
-            const isActive = activeTab === m.id
-            return (
-              <button
-                key={m.id}
-                onClick={() => setActiveTab(m.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                  isActive ? m.bgActive : m.bgInactive + " hover:bg-gray-50"
-                }`}
-              >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? "" : "text-gray-400"}`} />
-                {m.label}
-              </button>
-            )
-          })}
+      <UnifiedLogicPresentation
+        key={logicPresentNonce}
+        open={logicPresentOpen}
+        onOpenChange={setLogicPresentOpen}
+        imageUrls={comicImageUrls}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+        <div className="min-w-0 space-y-4 order-2 lg:order-1">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-emerald-600" aria-hidden />
+                <CardTitle className="text-base">本关操作区</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground font-normal">
+                结合你在课时1 记录的辅助来源，先写下观察与海报用语；右侧可对照文字类加工参考，并在预览区确认稳定稿。
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5 font-normal">
+                  我的辅助材料来源（课时1，共 {mySourceRows.length} 条）
+                </p>
+                {mySourceRows.length > 0 ? (
+                  <ul className="space-y-2">
+                    {mySourceRows.map((row, i) => (
+                      <li
+                        key={i}
+                        className="rounded-md border border-stone-200/90 bg-stone-50/90 px-3 py-2.5 text-sm font-normal text-stone-800 space-y-1.5 leading-relaxed"
+                      >
+                        <p className="text-xs font-normal text-muted-foreground">
+                          第 {i + 1} 条 · 资料类型：辅助材料来源（课时1 个人 R1 记录）
+                        </p>
+                        <p className="text-sm font-normal text-stone-800">{row.meta}</p>
+                        {(row.fact || row.inspire) && (
+                          <div className="text-sm font-normal text-stone-800 space-y-1 pt-0.5 border-t border-dashed border-stone-200/80">
+                            {row.fact ? (
+                              <p>
+                                <span className="text-muted-foreground">可核查事实：</span>
+                                {row.fact}
+                              </p>
+                            ) : null}
+                            {row.inspire ? (
+                              <p>
+                                <span className="text-muted-foreground">对本组计划的启发：</span>
+                                {row.inspire}
+                              </p>
+                            ) : null}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic border border-dashed rounded-md px-3 py-4 text-center">
+                    暂无辅助材料来源记录，可回到课时1 补记后再整理本关表述。
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="toolbox-notice" className="text-sm font-normal leading-snug">
+                  这条材料让我注意到什么
+                </label>
+                <Textarea
+                  id="toolbox-notice"
+                  rows={4}
+                  disabled={inputsDisabled}
+                  value={noticeWhat}
+                  onChange={(e) => setNoticeWhat(e.target.value)}
+                  placeholder="例如：这组数据里周五的剩余率明显偏高……"
+                  className="resize-y min-h-[5rem]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="toolbox-why" className="text-sm font-normal leading-snug">
+                  海报上的「为何关注」我可以这样写
+                </label>
+                <Textarea
+                  id="toolbox-why"
+                  rows={4}
+                  disabled={inputsDisabled}
+                  value={whyOnPoster}
+                  onChange={(e) => setWhyOnPoster(e.target.value)}
+                  placeholder="压缩成一句适合贴在海报上的话，客观、可核对……"
+                  className="resize-y min-h-[5rem]"
+                />
+              </div>
+
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setPosterPreviewOpen(true)}
+                >
+                  <LayoutTemplate className="h-4 w-4 shrink-0" aria-hidden />
+                  在海报上预览「为何关注」位置
+                </Button>
+              </div>
+
+              {!alreadyDone && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {!previewLocked ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-violet-700 hover:bg-violet-800 text-white"
+                      onClick={() => void patchLesson3({ toolboxWhyPreviewLocked: true })}
+                    >
+                      确认本条表述
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void patchLesson3({ toolboxWhyPreviewLocked: false })}
+                    >
+                      解锁修改
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {previewLocked && !alreadyDone && (
+                <p className="text-xs text-violet-800 bg-violet-50 border border-violet-200 rounded-md px-3 py-2">
+                  表述已确认。若要改动请先点「解锁修改」，编辑后再点「确认本条表述」。
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Tab 内容 */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              {(() => {
-                const Icon = activeMaterial.icon
-                return <Icon className={`h-4 w-4 ${activeMaterial.color}`} />
-              })()}
-              <CardTitle className="text-sm">{activeMaterial.label}的处理方法</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* 处理目标 */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-1">处理目标</p>
-              <p className="text-sm text-gray-700">{activeMaterial.goal}</p>
-            </div>
-
-            {/* 最小加工动作 */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-1">最小加工动作</p>
-              <ul className="space-y-1">
-                {activeMaterial.actions.map((a, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                    <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-green-500 shrink-0" />
-                    {a}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 加工后形态 */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-1">加工后在海报上的形态</p>
-              <p className="text-sm text-gray-700 bg-gray-50 rounded px-2 py-1.5">{activeMaterial.posterForm}</p>
-            </div>
-
-            {/* 「零浪费食堂」示例 */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">
-                示例：「零浪费食堂」课题
-              </p>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex gap-2">
-                  <span className="shrink-0 text-xs text-muted-foreground w-16">原始材料</span>
-                  <span className="text-gray-600">{activeMaterial.example.raw}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="shrink-0 text-xs text-muted-foreground w-16">加工过程</span>
-                  <span className="text-gray-700">{activeMaterial.example.process}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="shrink-0 text-xs text-muted-foreground w-16">加工结果</span>
-                  <span className="font-medium text-gray-800">{activeMaterial.example.result}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 图表类型演示（仅表格数据 Tab 显示） */}
-            {activeTab === "data" && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
-                  三种常用图表类型 · 怎么选？
-                </p>
-                <div className="space-y-2">
-                  {/* 柱状图 */}
-                  <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2.5 space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-green-700">📊 柱状图</span>
-                      <span className="text-xs text-green-600">— 对比多个类别 / 时间点的数量</span>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      <span className="font-medium">零浪费食堂示例：</span>
-                      周一 32%、周三 29%、周五 41% → 画三根柱子，高低一目了然
-                    </p>
-                    <p className="text-xs text-gray-500 italic">说明句写法：「如柱状图所示，周五剩余率最高（41%），比周一高约 9 个百分点」</p>
-                  </div>
-
-                  {/* 折线图 */}
-                  <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-blue-700">📈 折线图</span>
-                      <span className="text-xs text-blue-600">— 展示随时间变化的趋势</span>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      <span className="font-medium">零浪费食堂示例：</span>
-                      连续 5 天每天的剩余量（周一→周二→…→周五）→ 折线走势，看出是否呈上升或下降规律
-                    </p>
-                    <p className="text-xs text-gray-500 italic">说明句写法：「如折线图所示，剩余量整体呈周末前上升趋势，周五达到峰值」</p>
-                  </div>
-
-                  {/* 饼图 */}
-                  <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2.5 space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-orange-700">🥧 饼图</span>
-                      <span className="text-xs text-orange-600">— 展示各部分的占比构成</span>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      <span className="font-medium">零浪费食堂示例：</span>
-                      剩余类型：主菜 52%、主食 28%、汤 14%、其他 6% → 饼图扇形，哪类浪费最多一眼看出
-                    </p>
-                    <p className="text-xs text-gray-500 italic">说明句写法：「如饼图所示，主菜剩余占总浪费量的 52%，是最主要的浪费类型」</p>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground pt-1">
-                    💡 工具推荐：WPS 表格 / Excel 插入图表 → 截图放入海报，记得配一句说明
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* 常见错误 */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-1">常见错误</p>
-              <ul className="space-y-1">
-                {activeMaterial.mistakes.map((err, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-red-700">
-                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 text-red-400 shrink-0" />
-                    {err}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="min-w-0 order-1 lg:order-2 lg:sticky lg:top-4">
+          <MaterialProcessingReferencePanel unlockedTabIds={["text"]} />
+        </div>
       </div>
 
-      {/* 导航按钮 */}
-      <div className="flex justify-between items-center">
+      <Dialog open={posterPreviewOpen} onOpenChange={setPosterPreviewOpen}>
+        <DialogContent
+          className="max-w-lg max-h-[90vh] overflow-hidden gap-3 p-4 sm:p-5"
+          aria-describedby={undefined}
+        >
+          <DialogHeader className="shrink-0 space-y-0 text-left">
+            <DialogTitle>海报草图预览</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 overflow-hidden flex justify-center [&_.font-poster-display]:origin-top [&_.font-poster-display]:scale-[0.92] sm:[&_.font-poster-display]:scale-100">
+            <PosterSketchPreview
+              embedded
+              spotlightCard="why"
+              researchQuestion={researchQuestion}
+              evidenceEntryCount={totalMyRecords}
+              whyBodyOverride={whyOnPoster}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <Button variant="outline" size="sm" onClick={() => navigate("/lesson/3/step/1")}>
           <ArrowLeft className="mr-1 h-4 w-4" /> 上一步
         </Button>
-        {alreadyDone ? (
-          <Button onClick={() => navigate("/lesson/3/step/3")}>
-            继续第3关 <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        ) : (
-          <Button onClick={handleConfirm} disabled={saving}>
-            {saving ? "保存中…" : "我已了解处理方法，开始筛选材料"}
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex flex-col items-stretch sm:items-end gap-1">
+          {!alreadyDone && !l3.toolboxWhyPreviewLocked && (
+            <p className="text-xs text-muted-foreground text-right">请先填写左侧内容，并点击「确认本条表述」后再进入下一关。</p>
+          )}
+          {alreadyDone ? (
+            <Button onClick={() => {
+              // #region agent log (post-fix verify)
+              fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'Step2Toolbox.tsx:continue-btn',message:'[post-fix] navigate only, no pointer update',data:{pointer:portfolio.pointer},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
+              // #endregion
+              navigate("/lesson/3/step/3")
+            }}>
+              继续第3关 <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleConfirm} disabled={saving || !l3.toolboxWhyPreviewLocked}>
+              {saving ? "保存中…" : "我已了解处理方法，开始筛选材料"}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

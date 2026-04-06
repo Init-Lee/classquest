@@ -47,7 +47,7 @@ src/
 │   ├── progress/        #   进度指针
 │   │   └── types.ts              # ProgressPointer
 │   ├── portfolio/       #   模块档案（核心聚合根）
-│   │   └── types.ts              # ModulePortfolio（Lesson1State含groupMembers:string[]）、createNewPortfolio
+│   │   └── types.ts              # ModulePortfolio、createNewPortfolio、normalizeModulePortfolio（lesson3 缺字段合并）
 │   ├── group-plan/      #   小组计划与讨论
 │   │   └── types.ts              # GroupConsensus, GroupEvidencePlanRow(owners:string[]), R1Record(含sourceRows)
 │   ├── evidence/        #   证据记录
@@ -83,14 +83,23 @@ src/
 │       │   └── Step5Review.tsx    # 第5关：回顾（提示使用右上角保存；课后任务显示来自 lesson2.fieldTasks；完成后智能跳转）
 │       └── components/            # （预留，当前步骤逻辑直接写在 steps/ 内）
 │
-└── lesson-3/        #   课时3：素材整理与证据加工（共 5 关；第1~3关已实现，第4~5关待后续开发）
-    ├── config.ts             # 课时配置（步骤名称；5关）
-    ├── guards.ts             # 课时3步骤间 Guard（全5关守卫均已定义；步骤4/5暂为预留占位）
-    ├── routes.tsx            # 课时3路由定义（step/1~step/5；步骤4/5渲染 StepComingSoon）
+└── lesson-3/        #   课时3：素材整理与证据加工（共 5 关；全部已实现）
+    ├── config.ts             # 课时配置（步骤名称；5关：继承成果/方法工具箱/筛选材料/加工工坊/预览导出）
+    ├── guards.ts             # 课时3步骤间 Guard（全5关守卫均已定义）
+    ├── routes.tsx            # 课时3路由定义（step/1~step/5；全部渲染实际组件）
+    ├── assets/               # 本课静态插图：根目录四格为 jpg/jpeg（省流量）；子目录「原图」可存 PNG 等大体积源文件（不参与 glob、不打包）
+    ├── lib/                  # 课时3 专用小模块（无 UI）
+    │   ├── unified-logic-content.ts  # 统一逻辑四步文案 + 课堂讲稿（金句/解析/避坑等）
+    │   └── useComicPanelUrls.ts      # assets 配图 URL 列表（Vite glob）
+    ├── components/
+    │   ├── PosterSketchPreview.tsx   # 海报草图预览（Cormorant + Noto；四块状态区）；支持 embedded / spotlightCard=why + whyBodyOverride（第2关弹窗压暗非「为何关注」区）
+    │   └── UnifiedLogicPresentation.tsx # 统一逻辑全屏翻页演示（键盘/侧缘翻页；配图+讲稿）
     └── steps/
-        ├── Step1InheritAnchor.tsx   # 第1关：继承前序成果与任务锚定（只读展示探究问题/辅助来源/条目摘要；四块海报预览卡；确认后写入 missionAcknowledged）
-        ├── Step2Toolbox.tsx         # 第2关：材料加工方法工具箱（统一处理逻辑总览；图片/文字/表格数据/视频四类Tab；零浪费食堂示例；常见错误；确认后写入 toolboxCompleted）
-        └── Step3SelectMaterials.tsx # 第3关：筛选我的材料（过滤个人课时2记录；勾选入选材料；填写现象说明句；保存后写入 selectedMaterials[]）
+        ├── Step1InheritAnchor.tsx    # 第1关：左右栏（左：已带来材料+本课说明；右：PosterSketchPreview）；确认后写入 missionAcknowledged
+        ├── Step2Toolbox.tsx          # 第2关：顶栏统一逻辑；左右栏（左：来源+填写+确认表述+海报弹窗；右：材料参考仅文字Tab）；toolboxWhyPreviewLocked 后过关
+        ├── Step3SelectMaterials.tsx  # 第3关：筛选材料（资料池增强卡片；勾选+现象说明句；已入选清单汇总；保存写入 selectedMaterials[]）
+        ├── Step4EvidenceWorkshop.tsx # 第4关：证据加工工坊（目标带+左右双栏；逐条加工为证据卡；右侧全Tab解锁+卡片预览；写入 evidenceCards[]）
+        └── Step5PreviewExport.tsx    # 第5关：个人预览与导出（为何关注+证据卡总览；检查清单+可能原因锁定；导出HTML快照+完成课时3）
 
 ├── pages/               # 页面层：顶级路由页面组件
 │   ├── HomePage.tsx              # 首页（无档案时引导注册/导入；有档案时展示进度）
@@ -100,6 +109,10 @@ src/
 ├── features/            # Feature 层：跨课时功能模块
 │   ├── progress-ui/     #   进度条 UI 相关
 │   │   └── InnerStepProgress.tsx # 课时内步骤进度条
+│   ├── material-processing-reference/ # 材料处理参考（跨课时复用：四类 Tab + 加工说明文案；不含个人填写区）
+│   │   ├── materialTypes.ts              # 四类材料结构化配置（零浪费示例）
+│   │   ├── MaterialProcessingReferencePanel.tsx # 仅 Tab + 加工说明；确认表述由 Step2 左侧负责
+│   │   └── index.ts
 │   └── legacy-import/   #   【临时功能 · 全班迁移完成后整目录+LegacyImportPage.tsx一并删除】
 │       ├── legacy-import.ts      # LegacyL1/LegacyL2 输入类型定义 + buildPortfolioFromLegacy 映射函数
 │       ├── LegacyImportSection.tsx # 4步向导核心组件（导出 LegacyImportWizard）
@@ -113,7 +126,7 @@ src/
 │       │   ├── portfolio.repository.ts      # PortfolioRepository 接口
 │       │   └── portfolio.repository.idb.ts  # IndexedDB 实现（含 clear() 清空全部）
 │       └── serializers/
-│           ├── continue-package.ts  # 继续学习包序列化/反序列化；downloadLeaderFile（组长文件）
+│           ├── continue-package.ts  # 继续学习包序列化/反序列化；导入时 lesson3 与默认状态合并；downloadLeaderFile（组长文件）
 │           └── snapshot-html.ts     # 阶段快照 HTML 生成
 │
 └── shared/              # Shared 层：共享 UI、工具，无业务逻辑
@@ -174,9 +187,10 @@ Infra 层
   → L2第3关：证据入库（公开资源 / 现场采集双模板）
   → L2第4~5关 → 完成后跳 /lesson/3/step/1（课时3已开放）
   → L3第1关：继承前序成果，确认本课任务边界（missionAcknowledged）
-  → L3第2关：学习四类材料加工方法（toolboxCompleted）
+  → L3第2关：统一逻辑 + 双栏（左：R1 来源 + 两句持久化 + 确认表述 + 海报聚光灯弹窗；右：材料参考）；toolboxWhyPreviewLocked 且点过关后 toolboxCompleted
   → L3第3关：筛选个人材料，填写现象说明句（selectedMaterials[]）
-  → L3第4~5关（待实现）：证据加工工坊 + 个人预览与导出
+  → L3第4关：逐条加工证据卡（evidenceCards[]；左：加工区；右：全Tab解锁参考）
+  → L3第5关：总览+检查清单+导出个人整理包（personalPackageExported+completed）
 ```
 
 ### 保存/导出体系
@@ -188,6 +202,60 @@ Infra 层
 | 组长文件 | 课时1第5关（仅组长） | 组员导入后可看小组分工 |
 | 重置数据 | 右上角红色重置 | 清空 IndexedDB，回到初始状态 |
 | 旧版迁移 | 首页「导入旧版数据」按钮 → `/legacy-import` 独立页（临时功能） | 导入旧版工具 JSON，自动跳转对应进度 |
+
+---
+
+## 课时3 · 结构摘要（除 UI 布局外的实现汇总）
+
+本节汇总**数据模型、兼容策略、分层职责与关卡语义**，便于评审与后续关扩展；具体控件样式见各步骤组件。
+
+### 1. 领域状态 `Lesson3State`（`domains/portfolio/types.ts`）
+
+| 字段 | 语义 | 主要写入步骤 |
+|------|------|----------------|
+| `missionAcknowledged` | 已确认本课任务边界 | L3 Step1 |
+| `toolboxCompleted` | 已完成第2关（可进第3关） | L3 Step2 底部过关按钮 |
+| `toolboxNoticeWhat` | 「这条材料让我注意到什么」 | L3 Step2，防抖持久化 |
+| `toolboxWhyOnPoster` | 海报「为何关注」表述草稿 | L3 Step2，防抖持久化 |
+| `toolboxWhyPreviewLocked` | 是否已确认表述（锁定左侧输入直至解锁） | L3 Step2 左侧「确认本条表述」/「解锁修改」 |
+| `selectedMaterials[]` | 入选材料 + 现象说明句 | L3 Step3 |
+| `evidenceCards` | 第4关证据卡列表 | L3 Step4 |
+| `originExpression` | 关注缘起表达文本（预留，暂未使用） | — |
+| `personalPackageExported` / `completed` | 课时3个人导出与完成标记 | L3 Step5 |
+
+`createEmptyLesson3State()` 为上述字段提供默认值；新建档案与缺字段合并均依赖此函数。
+
+### 2. 档案兼容与合并（非 UI）
+
+| 机制 | 位置 | 行为 |
+|------|------|------|
+| `normalizeModulePortfolio` | `domains/portfolio/types.ts` | `lesson3` 与 `createEmptyLesson3State()` 浅合并，补齐 IndexedDB 旧记录缺失字段 |
+| 应用入口 | `app/providers/AppProvider.tsx` | `getCurrent` / `importPortfolio` 后对档案做一次规范化再写入 React 状态 |
+| 继续学习包导入 | `infra/persistence/serializers/continue-package.ts` | 若 JSON 中已有 `lesson3`，仍与默认状态合并，避免旧包缺键 |
+
+### 3. 跨课时 Feature：`material-processing-reference`
+
+- **职责**：四类材料（图/文/表/视频）的**静态**加工说明（目标、动作、示例、常见错误）；`unlockedTabIds` prop 控制解锁范围（第2关仅开放「文字」Tab，第4关全部解锁）；`defaultTab` prop 支持外部指定初始激活 Tab（第4关根据当前材料类型自动切换）。
+- **不负责**：学生个人文案、确认锁定、海报预览（均在 `Step2Toolbox` 与 `PosterSketchPreview`）。
+- **依赖方向**：Lesson 层引用 Feature；Feature 仅依赖 `shared/ui` 与本地 `materialTypes.ts`。
+
+### 4. 课时3 组件（语义能力）
+
+| 组件 | 路径 | 结构向能力 |
+|------|------|------------|
+| `PosterSketchPreview` | `lesson-3/components/` | `researchQuestion` / `evidenceEntryCount` 驱动分区文案；`embedded` 去 sticky；`spotlightCard="why"` + `whyBodyOverride` 用于第2关弹窗聚光灯与草稿注入 |
+| `UnifiedLogicPresentation` | 同上 | 全屏翻页讲稿 + 四格配图，与 `unified-logic-content.ts` / `useComicPanelUrls` 配套 |
+
+### 5. 第2关持久化与竞态注意（Step2Toolbox）
+
+- 两句文案以**本地 state + 防抖**写入 `savePortfolio`，避免每次键入全量写盘过频。
+- **仅从 `portfolio.id` 变化**时把 `toolboxNoticeWhat` / `toolboxWhyOnPoster` 从档案同步回本地，避免与「确认表述」等保存竞态把输入冲掉。
+- `patchLesson3`、过关保存时通过 **ref** 携带当前草稿，避免锁状态保存覆盖未落盘的输入。
+
+### 6. Guard 与进度判定（`lesson-3/guards.ts`）
+
+- 进入 Step3：`lesson3.toolboxCompleted === true`。
+- Step2 过关前：需 `toolboxWhyPreviewLocked === true`（由 UI 按钮写入，与 `toolboxCompleted` 分步）。
 
 ---
 
@@ -241,4 +309,4 @@ Infra 层
 
 ---
 
-*最后更新：2026-03-31*
+*最后更新：2026-04-02（课时3第4~5关实现完成；MaterialProcessingReferencePanel 新增 defaultTab prop；SnapshotMeta 类型补充 lesson3-toolbox）*

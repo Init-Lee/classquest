@@ -24,7 +24,7 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 
 | Feature | Description |
 |---------|-------------|
-| Gamified learning | Structured unit progression (Unit 1: 5 levels, Unit 2: 5 levels), each with Guards — students advance step by step |
+| Gamified learning | Structured unit progression (Units 1–2: 5 levels each; Unit 3: levels 1–3 shipped), each with Guards |
 | Offline-first | Built on IndexedDB — works without internet |
 | Portable progress | Export a "Continue Package" (JSON) anytime; import it on any device to resume |
 | Group collaboration | Leader-member workflow — leader exports a group file, members import and see their assignments |
@@ -40,7 +40,10 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 
 - **Unit 1**: Project Launch & Topic Framing (5 levels)
 - **Unit 2**: Evidence Collection & Documentation (5 levels)
-- Units 3–6: Architecture scaffolded, currently under development
+- **Unit 3**: Asset organization & evidence processing — **levels 1–3 implemented** (inherit anchor → toolbox & wording lock → select materials); levels 4–5 are placeholders
+- Units 4–6: Architecture scaffolded
+
+> Unit 3 level 2 persists “what I noticed” and “why it matters on the poster” drafts plus a confirmation flag in `Lesson3State`, with merge-on-import/load for older packages — see **“课时3 · 结构摘要”** in [FILE-STRUCTURE.md](FILE-STRUCTURE.md) (Chinese; structural truth source).
 
 ---
 
@@ -51,6 +54,7 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 | Build | Vite |
 | Framework | React 18 + TypeScript |
 | UI Library | shadcn/ui + Tailwind CSS v3 |
+| Display fonts | `@fontsource/noto-serif-sc` / `@fontsource/cormorant-garamond` (bundled via npm + Vite; **no online font CDN**) |
 | Routing | React Router v6 (lazy loading) |
 | Data Layer | IndexedDB (local-first) |
 | State Management | React Context + Reducer |
@@ -87,7 +91,7 @@ Open `http://localhost:5173` in your browser.
 | Phase 3: Unit 1 (5 levels + AI assistant + snapshots) | ✅ Done |
 | Phase 4: Unit 2 (5 levels + group sync + dual evidence templates + quality check) | ✅ Done |
 | Phase 5: Polish (bug fixes, Guard optimization, data model refactor) | ✅ Done |
-| Phase 6: Unit 3 development | 🚧 In Progress |
+| Phase 6: Unit 3 development | 🚧 In Progress (levels 1–3 live; level 2: cross-unit material reference feature, wording lock, poster spotlight dialog) |
 | Phase 7: UI/UX visual polish (color system, typography, responsive) | 📋 Planned |
 
 ---
@@ -98,7 +102,8 @@ Open `http://localhost:5173` in your browser.
 - [x] Unit 2 full progression (5 levels)
 - [x] Group collaboration (leader file export / member import)
 - [x] Legacy data migration wizard (temporary feature)
-- [ ] Units 3–6 implementation
+- [🚧] Unit 3 (levels 1–3 done; levels 4–5 pending)
+- [ ] Units 4–6 implementation
 - [ ] AI assistant API integration (currently prompt templates + external links)
 - [ ] Teacher dashboard
 - [ ] Backend sync support

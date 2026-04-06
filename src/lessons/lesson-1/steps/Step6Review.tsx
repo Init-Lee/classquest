@@ -13,6 +13,7 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 import { downloadLeaderFile } from "@/infra/persistence/serializers/continue-package"
 
 export default function Step6Review() {
@@ -29,7 +30,7 @@ export default function Step6Review() {
       await savePortfolio({
         ...portfolio,
         lesson1: { ...portfolio.lesson1, completed: true },
-        pointer: { lessonId: 2, stepId: 1, updatedAt: new Date().toISOString() },
+        pointer: advancePointer(portfolio.pointer, 2, 1),
       })
       navigate("/lesson/2/step/1")
     } finally {

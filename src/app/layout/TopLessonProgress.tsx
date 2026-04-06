@@ -27,6 +27,7 @@ export function TopLessonProgress() {
     if (!isEnabled) return "locked"
     if (lessonId === 1 && portfolio.lesson1.completed) return "completed"
     if (lessonId === 2 && portfolio.lesson2.completed) return "completed"
+    if (lessonId === 3 && portfolio.lesson3.completed) return "completed"
     if (lessonId === currentLessonId) return "current"
     if (lessonId < (portfolio.pointer.lessonId)) return "completed"
     return "available"

@@ -8,8 +8,8 @@
 export interface SnapshotMeta {
   /** 快照唯一 ID */
   id: string
-  /** 快照类型：R1个人快照 / 课时1完整 / 课时2公开资源 / 课时2完整 */
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full"
+  /** 快照类型：R1个人快照 / 课时1完整 / 课时2公开资源 / 课时2完整 / 课时3工具箱与证据卡 */
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox"
   /** 所属课时 */
   lessonId: number
   /** 生成时间 */
@@ -20,7 +20,7 @@ export interface SnapshotMeta {
 
 /** 生成快照所需的输入参数 */
 export interface SnapshotInput {
-  /** 快照类型 */
+  /** 快照类型（与 SnapshotMeta.type 保持同步） */
   type: SnapshotMeta["type"]
   /** 当前学生的完整档案（Portfolio 序列化后的数据） */
   portfolioSnapshot: unknown

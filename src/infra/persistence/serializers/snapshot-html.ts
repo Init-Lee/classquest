@@ -333,9 +333,126 @@ function buildLesson2PublicSnapshot(portfolio: ModulePortfolio): string {
 </html>`
 }
 
+/** 生成课时3阶段快照（材料整理与表述加工进度） */
+function buildLesson3Snapshot(portfolio: ModulePortfolio): string {
+  const { student, lesson1, lesson2, lesson3 } = portfolio
+  const now = new Date().toLocaleString("zh-CN")
+  const myName = lesson1.confirmedOwnerName || student.studentName
+  const myPublicRecords = lesson2.publicRecords.filter(r => r.owner === myName)
+  const myFieldTasks = lesson2.fieldTasks.filter(t => t.owner === myName)
+  const researchQuestion = lesson1.groupConsensus?.finalResearchQuestion ?? ""
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>课时3阶段快照 — ${student.studentName}</title>${SNAPSHOT_STYLES}</head>
+<body>
+  <h1>AI科学传播站 · 课时3 · 素材整理与证据加工阶段快照</h1>
+  <table class="meta-table">
+    <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
+    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
+    <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
+    <tr><td>当前进度</td><td colspan="3">课时${portfolio.pointer.lessonId} · 第${portfolio.pointer.stepId}关</td></tr>
+    <tr><td>本课完成度</td><td colspan="3">${lesson3.toolboxCompleted ? "✓ 第2关已完成" : "第2关进行中"}${lesson3.selectedMaterials.length > 0 ? `，第3关已选 ${lesson3.selectedMaterials.length} 条材料` : ""}${lesson3.evidenceCards.length > 0 ? `，第4关已完成 ${lesson3.evidenceCards.length} 张证据卡` : ""}${lesson3.completed ? "，✓ 课时3已完成" : ""}</td></tr>
+  </table>
+
+  ${researchQuestion ? `
+  <div class="section">
+    <div class="section-title">🔍 小组探究问题（来自课时1）</div>
+    <div class="field-value">${researchQuestion}</div>
+  </div>
+  ` : ""}
+
+  <div class="section">
+    <div class="section-title">🧰 材料加工方法工具箱（第2关）</div>
+    <div class="field"><div class="field-label">这条材料让我注意到什么</div>
+      <div class="field-value">${lesson3.toolboxNoticeWhat || "（未填写）"}</div></div>
+    <div class="field"><div class="field-label">海报上的「为何关注」表述草稿</div>
+      <div class="field-value">${lesson3.toolboxWhyOnPoster || "（未填写）"}</div></div>
+    <div class="field"><div class="field-label">表述状态</div>
+      <div class="field-value">${lesson3.toolboxWhyPreviewLocked ? "✓ 已确认稳定稿" : "草稿中（未确认）"}</div></div>
+  </div>
+
+  ${lesson3.selectedMaterials.length > 0 ? `
+  <div class="section">
+    <div class="section-title">📋 已筛选入选材料（第3关，共 ${lesson3.selectedMaterials.length} 条）</div>
+    <table class="evidence-table">
+      <thead><tr><th>#</th><th>来源类型</th><th>材料摘要</th><th>现象说明句</th></tr></thead>
+      <tbody>
+        ${lesson3.selectedMaterials.map((sm, i) => {
+          const rec = sm.sourceType === "public"
+            ? myPublicRecords[sm.sourceIndex]
+            : myFieldTasks[sm.sourceIndex]
+          const title = rec
+            ? ("materialName" in rec ? rec.materialName : rec.item)
+            : `（来源 #${sm.sourceIndex}）`
+          return `<tr>
+            <td>${i + 1}</td>
+            <td>${sm.sourceType === "public" ? "公开资源" : "现场采集"}</td>
+            <td>${title || "—"}</td>
+            <td>${sm.explanation || "（未填写）"}</td>
+          </tr>`
+        }).join("")}
+      </tbody>
+    </table>
+  </div>
+  ` : ""}
+
+  ${lesson3.evidenceCards.length > 0 ? `
+  <div class="section">
+    <div class="section-title">🃏 个人证据卡（第4关，共 ${lesson3.evidenceCards.length} 张）</div>
+    ${lesson3.evidenceCards.map((card, i) => {
+      const sm = lesson3.selectedMaterials[card.materialIndex]
+      const rawRec = sm?.sourceType === "public"
+        ? myPublicRecords[sm.sourceIndex]
+        : sm ? myFieldTasks[sm.sourceIndex] : undefined
+      const title = rawRec
+        ? ("item" in rawRec ? rawRec.item : ("materialName" in rawRec ? (rawRec as {materialName?:string}).materialName ?? "" : ""))
+        : card.title
+      const typeLabel = card.materialType === "image" ? "图片" : card.materialType === "data" ? "表格数据" : card.materialType === "video" ? "视频" : "文字"
+      return `<div style="border:1px solid #d8b4fe;border-radius:8px;padding:12px;margin-bottom:10px;background:#faf5ff">
+        <p style="font-weight:600;margin:0 0 6px">${i + 1}. ${title || card.title} <span style="font-size:12px;color:#7c3aed;background:#ede9fe;padding:2px 6px;border-radius:4px">${typeLabel}</span></p>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="width:120px;color:#6b7280;font-size:12px;padding:3px 0">我看见了什么</td><td style="font-size:13px">${card.objectiveStatement || "（未填写）"}</td></tr>
+          <tr><td style="color:#6b7280;font-size:12px;padding:3px 0">最小加工</td><td style="font-size:13px">${card.processingResult || "（未填写）"}</td></tr>
+          <tr><td style="color:#6b7280;font-size:12px;padding:3px 0">海报展示句</td><td style="font-weight:600;font-size:13px;color:#4c1d95">${card.posterExpression || "（未填写）"}</td></tr>
+        </table>
+      </div>`
+    }).join("")}
+  </div>
+  ` : ""}
+
+  <div class="section">
+    <div class="section-title">📚 课时2证据库摘要（共 ${myPublicRecords.length + myFieldTasks.length} 条）</div>
+    ${myPublicRecords.length > 0 ? `
+    <h3>公开资源（${myPublicRecords.length} 条）</h3>
+    <table class="evidence-table">
+      <thead><tr><th>证据项</th><th>来源平台</th><th>摘要/引用</th></tr></thead>
+      <tbody>
+        ${myPublicRecords.map(r => `<tr><td>${r.item}</td><td>${r.sourcePlatform || "—"}</td><td>${r.quoteOrNote || "—"}</td></tr>`).join("")}
+      </tbody>
+    </table>` : ""}
+    ${myFieldTasks.length > 0 ? `
+    <h3 style="margin-top:12px">现场采集（${myFieldTasks.length} 条）</h3>
+    <table class="evidence-table">
+      <thead><tr><th>材料名称</th><th>场景/地点</th><th>日期</th></tr></thead>
+      <tbody>
+        ${myFieldTasks.map(t => `<tr><td>${t.materialName || t.item}</td><td>${t.scene}${t.location ? " · " + t.location : ""}</td><td>${t.date}</td></tr>`).join("")}
+      </tbody>
+    </table>` : ""}
+    ${myPublicRecords.length === 0 && myFieldTasks.length === 0 ? "<p style='color:#999'>暂无课时2证据记录</p>" : ""}
+  </div>
+
+  <div class="footer">
+    <p>文件由 ClassQuest 自动生成 · ${now}</p>
+    <p>说明：本快照为课时3（素材整理与证据加工）阶段过程性评价材料。</p>
+  </div>
+</body>
+</html>`
+}
+
 /** 根据快照类型分发到对应的生成函数 */
 export function buildSnapshotHTML(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox",
   portfolio: ModulePortfolio
 ): string {
   switch (type) {
@@ -347,6 +464,8 @@ export function buildSnapshotHTML(
       return buildLesson2PublicSnapshot(portfolio)
     case "lesson2-full":
       return buildLesson1FullSnapshot(portfolio) // 占位，实际使用时替换
+    case "lesson3-toolbox":
+      return buildLesson3Snapshot(portfolio)
     default:
       return buildLesson1FullSnapshot(portfolio)
   }
@@ -354,13 +473,17 @@ export function buildSnapshotHTML(
 
 /** 触发浏览器下载快照 HTML */
 export function downloadSnapshot(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox",
   portfolio: ModulePortfolio
 ): void {
   const html = buildSnapshotHTML(type, portfolio)
   const blob = new Blob([html], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)
-  const filename = buildSnapshotFilename(portfolio.student.studentName, portfolio.pointer.lessonId)
+  /** 用快照类型推导课时编号，避免依赖可能落后的 pointer */
+  const lessonIdForFilename = type === "lesson3-toolbox" ? 3
+    : type.startsWith("lesson2") ? 2
+    : 1
+  const filename = buildSnapshotFilename(portfolio.student.studentName, lessonIdForFilename)
 
   const a = document.createElement("a")
   a.href = url

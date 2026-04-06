@@ -12,6 +12,7 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 
 export default function Step2MyTasks() {
   const { portfolio, savePortfolio } = usePortfolio()
@@ -34,7 +35,7 @@ export default function Step2MyTasks() {
   const handleNext = async () => {
     await savePortfolio({
       ...portfolio,
-      pointer: { ...portfolio.pointer, lessonId: 2, stepId: 3 },
+      pointer: advancePointer(portfolio.pointer, 2, 3),
     })
     navigate("/lesson/2/step/3")
   }

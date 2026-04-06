@@ -12,6 +12,7 @@ import { CheckCircle2, XCircle, ArrowRight } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 
 const DELIVERABLES = [
   { num: "①", title: "个人 R1", desc: "你个人对研究问题的初步判断" },
@@ -32,7 +33,7 @@ export default function Step1Intro() {
     await savePortfolio({
       ...portfolio,
       lesson1: { ...portfolio.lesson1, introDone: true },
-      pointer: { ...portfolio.pointer, lessonId: 1, stepId: 2 },
+      pointer: advancePointer(portfolio.pointer, 1, 2),
     })
     navigate("/lesson/1/step/2")
   }

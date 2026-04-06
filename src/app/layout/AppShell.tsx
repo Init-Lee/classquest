@@ -73,7 +73,7 @@ export function AppShell() {
             <span className="text-border">|</span>
             <span>{portfolio.student.role === "leader" ? "组长" : "组员"}</span>
             <span className="text-border">|</span>
-            <span>当前：课时{portfolio.pointer.lessonId} · 第{portfolio.pointer.stepId}关</span>
+            <span>任务进度：课时{portfolio.pointer.lessonId} · 第{portfolio.pointer.stepId}关</span>
           </div>
         )}
       </header>

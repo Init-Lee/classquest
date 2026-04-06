@@ -40,6 +40,30 @@ export function resolvePointerFromState(portfolio: ModulePortfolio): ProgressPoi
   const now = new Date().toISOString()
   const p = portfolio.pointer
 
+  // 课时3已完成 → 指针至少应为 {3, 3}（课时3第3关为当前最后可用关）
+  if (portfolio.lesson3?.completed) {
+    if (p.lessonId < 3 || (p.lessonId === 3 && p.stepId < 3)) {
+      return { lessonId: 3, stepId: 3, updatedAt: now }
+    }
+    return p
+  }
+
+  // 课时3第2关已完成 → 指针至少应为 {3, 2}
+  if (portfolio.lesson3?.toolboxCompleted) {
+    if (p.lessonId < 3 || (p.lessonId === 3 && p.stepId < 2)) {
+      return { lessonId: 3, stepId: 2, updatedAt: now }
+    }
+    return p
+  }
+
+  // 课时3第1关已确认 → 指针至少应为 {3, 1}
+  if (portfolio.lesson3?.missionAcknowledged) {
+    if (p.lessonId < 3) {
+      return { lessonId: 3, stepId: 1, updatedAt: now }
+    }
+    return p
+  }
+
   // 课时2已完成 → 指针至少应为 {2, 5}（课时2共5关）
   if (portfolio.lesson2?.completed) {
     if (p.lessonId < 2 || (p.lessonId === 2 && p.stepId < 5)) {

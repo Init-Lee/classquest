@@ -13,6 +13,7 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 import type { QualityCheckResult } from "@/domains/evidence/types"
 
 export default function Step4Quality() {
@@ -74,7 +75,7 @@ export default function Step4Quality() {
           publicRecords: updatedRecords,
           qualityChecks: results,
         },
-        pointer: allPassed ? { ...portfolio.pointer, lessonId: 2, stepId: 6 } : portfolio.pointer,
+        pointer: allPassed ? advancePointer(portfolio.pointer, 2, 4) : portfolio.pointer,
       })
       setChecked(true)
     } finally {

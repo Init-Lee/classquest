@@ -15,6 +15,7 @@ import { Input } from "@/shared/ui/input"
 import { Textarea } from "@/shared/ui/textarea"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
+import { advancePointer } from "@/shared/utils/pointer"
 import type { GroupDiscussionEntry, GroupConsensus } from "@/domains/group-plan/types"
 import { deserializeContinuePackage } from "@/infra/persistence/serializers/continue-package"
 
@@ -221,7 +222,7 @@ function LeaderView() {
             confirmedAt: new Date().toISOString(),
           },
         },
-        pointer: { ...portfolio.pointer, lessonId: 1, stepId: 3 },
+        pointer: advancePointer(portfolio.pointer, 1, 3),
       })
       navigate("/lesson/1/step/4")
     } finally {

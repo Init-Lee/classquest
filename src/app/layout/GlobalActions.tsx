@@ -85,13 +85,19 @@ export function GlobalActions() {
     const currentLessonId = routeMatch ? parseInt(routeMatch[1]) : portfolio.pointer.lessonId
     const currentStepId = routeMatch ? parseInt(routeMatch[2]) : portfolio.pointer.stepId
 
-    let type: "r1-personal" | "lesson1-full" | "lesson2-public"
+    let type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson3-toolbox"
     if (currentLessonId === 1) {
       // 课时1 第1-2关只有个人 R1 数据；第3关起有小组数据，生成完整课时1快照
       type = currentStepId <= 2 ? "r1-personal" : "lesson1-full"
-    } else {
+    } else if (currentLessonId === 2) {
       type = "lesson2-public"
+    } else {
+      // 课时3及以上：生成课时3阶段快照（含课时2证据摘要）
+      type = "lesson3-toolbox"
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'GlobalActions.tsx:handleSnapshot',message:'snapshot triggered [post-fix]',data:{pathname:location.pathname,currentLessonId,currentStepId,chosenType:type,pointer:portfolio.pointer},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     downloadSnapshot(type, portfolio)
   }
 

@@ -73,6 +73,9 @@ function migratePortfolioData(raw: unknown): ModulePortfolio {
   // v0.3 → v0.4：补充 lesson3 字段（旧版继续学习包无此字段）
   if (!data?.lesson3) {
     data.lesson3 = createEmptyLesson3State()
+  } else {
+    // 合并默认项：新增 lesson3 字段时旧包可自动补齐
+    data.lesson3 = { ...createEmptyLesson3State(), ...data.lesson3 }
   }
 
   return data as ModulePortfolio
