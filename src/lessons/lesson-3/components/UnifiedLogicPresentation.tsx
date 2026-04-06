@@ -132,7 +132,7 @@ export function UnifiedLogicPresentation({
                   />
                 ) : (
                   <div className="flex max-h-full min-h-[12rem] w-full items-center justify-center rounded-xl border border-dashed border-stone-400/70 bg-stone-200/40 px-4 text-center text-sm text-stone-600">
-                    本页暂无配图：请将第 {flowStep.step} 格对应的 .jpg / .jpeg 放在 lesson-3/assets 根目录（按文件名排序）；大体积源文件可放 assets/原图
+                    本页暂无配图：请将第 {flowStep.step} 格对应的 .jpg / .jpeg 放在 lesson-3/assets 根目录（按文件名排序）
                   </div>
                 )}
               </div>

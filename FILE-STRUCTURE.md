@@ -87,7 +87,7 @@ src/
     ├── config.ts             # 课时配置（步骤名称；5关：继承成果/方法工具箱/筛选材料/加工工坊/预览导出）
     ├── guards.ts             # 课时3步骤间 Guard（全5关守卫均已定义）
     ├── routes.tsx            # 课时3路由定义（step/1~step/5；全部渲染实际组件）
-    ├── assets/               # 本课静态插图：根目录四格为 jpg/jpeg（省流量）；子目录「原图」可存 PNG 等大体积源文件（不参与 glob、不打包）
+    ├── assets/               # 本课静态插图：根目录四格 jpg/jpeg（由 useComicPanelUrls 取前 4 张）
     ├── lib/                  # 课时3 专用小模块（无 UI）
     │   ├── unified-logic-content.ts  # 统一逻辑四步文案 + 课堂讲稿（金句/解析/避坑等）
     │   └── useComicPanelUrls.ts      # assets 配图 URL 列表（Vite glob）

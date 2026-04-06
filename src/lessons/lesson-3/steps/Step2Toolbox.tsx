@@ -175,8 +175,7 @@ export default function Step2Toolbox() {
                       <div className="absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-foreground">
                         请在 <code className="text-[10px] bg-stone-200/80 px-1 rounded">lesson-3/assets</code> 根目录放入第{" "}
                         {item.step} 张 <code className="text-[10px] bg-stone-200/80 px-1 rounded">.jpg</code> /{" "}
-                        <code className="text-[10px] bg-stone-200/80 px-1 rounded">.jpeg</code>（按文件名排序对应本格；大图源可放{" "}
-                        <code className="text-[10px] bg-stone-200/80 px-1 rounded">assets/原图</code>）
+                        <code className="text-[10px] bg-stone-200/80 px-1 rounded">.jpeg</code>（按文件名排序对应本格）
                       </div>
                     )}
                   </div>

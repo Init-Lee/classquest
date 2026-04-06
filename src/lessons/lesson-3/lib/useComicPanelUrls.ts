@@ -1,7 +1,6 @@
 /**
  * 文件说明：课时3 四格漫画配图 URL 列表（Vite glob）
- * 职责：仅从 lesson-3/assets 根目录加载 jpg/jpeg（按文件名排序取前 4 张），供 Step2 栅格与课堂翻页共用；
- *       大体积源文件（如 PNG）请放在 assets/原图/，该子目录不在 glob 内、不会打进前端包。
+ * 职责：仅从 lesson-3/assets 根目录加载 jpg/jpeg（按文件名排序取前 4 张），供 Step2 栅格与课堂翻页共用。
  * 更新触发：assets 目录约定、扩展名或排序规则变化时
  */
 
