@@ -5,6 +5,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![中文](https://img.shields.io/badge/README-中文-red)](README.md)
+[![Release](https://img.shields.io/badge/release-v0.4.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+
+---
+
+## Versioning (SemVer)
+
+- **Current release**: `v0.4.0` (matches root `version` in `package.json`; `0.x` = rapid iteration).
+- **Git tags**: see **Tags / Releases** on GitHub; locally: `git describe --tags` or `git show v0.4.0`.
+- **Next release**: bump `package.json` / `package-lock.json` (e.g. `0.5.0`), commit, then `git tag v0.5.0 && git push origin v0.5.0`, and publish release notes on GitHub.
+
+> Note: `appVersion` inside student portfolios (e.g. `1.0.0`) tracks **data package format**, not the product release number above.
 
 ---
 

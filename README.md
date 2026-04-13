@@ -5,6 +5,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![English](https://img.shields.io/badge/README-English-blue)](README_EN.md)
+[![Release](https://img.shields.io/badge/release-v0.4.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+
+---
+
+## 版本与发布（SemVer）
+
+- **当前发布**：`v0.4.0`（与 `package.json` 中 `version` 一致；`0.x` 表示快速迭代期）。
+- **Git 标签**：在 GitHub 仓库 **Tags / Releases** 可查看；本地核对：`git describe --tags` 或 `git show v0.4.0`。
+- **以后发新版**：合并到 `main` 后，将 `package.json` / `package-lock.json` 根版本 bump 为下一号（如 `0.5.0`），提交后执行 `git tag v0.5.0 && git push origin v0.5.0`，并在 GitHub 上写 Release 说明即可。
+
+> 说明：学生档案里的 `appVersion`（如 `1.0.0`）表示**数据包格式口径**，与上述**产品发布号**分开维护。
 
 ---
 

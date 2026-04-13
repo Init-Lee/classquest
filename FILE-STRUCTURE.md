@@ -311,6 +311,12 @@ Infra 层
 
 ---
 
+## 产品发布版本号（SemVer）
+
+- **发布号**：以 `package.json` 的 `version` 为准（如 `0.4.0`），与 Git 标签 `v0.4.0` 一一对应；`0.x` 表示快速迭代期。
+- **发版流程摘要**：在 `main` 上 bump `package.json` 与 `package-lock.json` 根 `version` → 提交 → `git tag vX.Y.Z` → `git push origin main` 与 `git push origin vX.Y.Z` → 可选在 GitHub **Releases** 写说明。
+- **与档案字段区分**：`ModulePortfolio.appVersion` 表示**继续学习包等数据格式口径**，与 npm 发布号独立维护。
+
 ## 重要约束
 
 - 页面组件禁止直接操作 IndexedDB，必须通过 `PortfolioRepository` 接口
@@ -383,4 +389,4 @@ Infra 层
 
 ---
 
-*最后更新：2026-04-07（课时4全5关完整实现；双栏编辑/预览布局统一；跨角色文件分发链路完整：个人整理包→骨架包→制作方案单→HTML；快照含骨架包数据节）*
+*最后更新：2026-04-13（产品发布号 v0.4.0 / SemVer 与 Git 标签对齐；课时4全5关完整实现；快照含骨架包数据节）*
