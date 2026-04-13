@@ -23,7 +23,7 @@ export function createDemoPortfolio(): ModulePortfolio {
       groupName: "科学探索组",
       role: "leader",
     },
-    pointer: { lessonId: 1, stepId: 2, updatedAt: now },
+    pointer: { lessonId: 4, stepId: 5, updatedAt: now },
     lesson1: {
       introDone: true,
       r1ByMember: [
@@ -202,9 +202,11 @@ export function createDemoPortfolio(): ModulePortfolio {
     },
     lesson3: {
       ...createEmptyLesson3State(),
-      // 演示模式：步骤1~3已完成，供教师展示课时3各步骤内容
+      // 演示模式：步骤1~5全部已完成，供教师展示课时3全关内容
       missionAcknowledged: true,
       toolboxCompleted: true,
+      toolboxNoticeWhat: "学校附近多个取水点的检测数据存在差异，部分指标超出正常范围",
+      toolboxWhyOnPoster: "学校周边水质参差不齐，最高超标点 pH 偏低约 0.3，值得深入调查以保障师生用水安全",
       selectedMaterials: [
         {
           sourceType: "public",
@@ -217,6 +219,211 @@ export function createDemoPortfolio(): ModulePortfolio {
           explanation: "现场检测读数与年报数值接近，可作为印证年报的现场一手证据",
         },
       ],
+      evidenceCards: [
+        {
+          materialIndex: 0,
+          materialType: "data",
+          title: "市环保局公开水质数据（年报）",
+          objectiveStatement: "该数据显示学校所在区饮用水达标率为96.2%，略低于全市97.8%的均值，说明存在潜在水质风险",
+          processingResult: "截取了年报中学校所在区的达标率与全市均值两列数据，删去其他行政区数据，保留 pH 均值（7.1）与浑浊度均值（0.8NTU）字段",
+          posterExpression: "「市年报数据显示，我区饮用水达标率（96.2%）低于全市均值（97.8%），存在一定改善空间」",
+          evidenceShows: "",
+          relationToQuestion: "",
+          limitedClaim: "",
+        },
+        {
+          materialIndex: 1,
+          materialType: "data",
+          title: "饮水台出水水质读数",
+          objectiveStatement: "现场检测读数显示主楼一楼饮水台出水 pH 值为 7.0，浑浊度 0.9NTU，与年报数值接近",
+          processingResult: "保留了 pH 值和浑浊度两项核心检测数值，记录了采样时间和地点，删去无关的设备型号备注",
+          posterExpression: "「实地测量：主楼饮水台 pH=7.0、浑浊度=0.9NTU，与官方年报数据吻合，印证了数据的可靠性」",
+          evidenceShows: "",
+          relationToQuestion: "",
+          limitedClaim: "",
+        },
+      ],
+      personalPackageExported: true,
+      completed: true,
+    },
+    lesson4: {
+      // 演示模式：课时4全部5关已完成（组长视角）
+      memberPackagesImported: 3,
+      groupMergeCompleted: true,
+      possibleCauses: "初步推测可能原因：①周边管网老化导致二次污染；②部分取水点附近存在工业排放；③学校东侧河道上游存在面源污染。以上均为初步推测，需后续数据印证。",
+      posterTitle: "学校周边水质问题调查——我们喝的水安全吗？",
+      posterSubtitle: "基于7年级3班对校区取水点的实地采样与多源资料分析",
+      skeletonExported: true,
+      skeletonImported: false,
+      importedPackagesJson: "[]",
+      skeletonPackageJson: JSON.stringify({
+        packageType: "skeleton-package-v1",
+        groupName: "科学探索组",
+        leaderName: "演示同学",
+        researchQuestion: "学校附近的主要水源地水质是否达标？与国家标准值相差多少？",
+        posterTitle: "学校周边水质问题调查——我们喝的水安全吗？",
+        posterSubtitle: "基于7年级3班对校区取水点的实地采样与多源资料分析",
+        mergedWhyCare:
+          "【演示同学】学校周边水质参差不齐，最高超标点 pH 偏低约 0.3，值得深入调查以保障师生用水安全",
+        mergedWhatWeSee: [
+          "【演示同学】「市年报数据显示，我区饮用水达标率（96.2%）低于全市均值（97.8%），存在一定改善空间」",
+          "【演示同学】「实地测量：主楼饮水台 pH=7.0、浑浊度=0.9NTU，与官方年报数据吻合，印证了数据的可靠性」",
+        ],
+        mergedSources: [
+          "演示同学（2026-03-15）。政府/机构官网·机构报告：市环保局公开水质数据（年报）【数据/图像】。方法：截图/数据整理。链接：https://example-env.gov.cn/water-report-2023（发布：2024-03-01）",
+          "演示同学（2026-03-20）。饮水台出水水质读数【数据/图像】。地点：校园 主楼一楼走廊饮水台。采集方法：拍照/测量。",
+        ],
+        memberPackages: [],
+        possibleCauses:
+          "初步推测可能原因：①周边管网老化导致二次污染；②部分取水点附近存在工业排放；③学校东侧河道上游存在面源污染。以上均为初步推测，需后续数据印证。",
+        exportedAt: "2026-03-22T10:00:00.000Z",
+      }),
+      personalDraftHtml: `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>学校周边水质探究报告</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #1e40af; }
+    .section { margin: 20px 0; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .evidence-card { background: #f5f3ff; padding: 12px; margin: 8px 0; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>探究问题：学校附近的主要水源地水质是否达标？</h1>
+  <div class="section">
+    <h2>为什么关注这个问题</h2>
+    <p>学校周边水质参差不齐，最高超标点 pH 偏低约 0.3，值得深入调查以保障师生用水安全。</p>
+  </div>
+  <div class="section">
+    <h2>我们看见了什么（证据）</h2>
+    <div class="evidence-card">
+      <p>市年报数据显示，我区饮用水达标率（96.2%）低于全市均值（97.8%）。</p>
+    </div>
+    <div class="evidence-card">
+      <p>实地测量：主楼饮水台 pH=7.0、浑浊度=0.9NTU，与官方年报数据吻合。</p>
+    </div>
+  </div>
+  <div class="section">
+    <h2>可能的原因</h2>
+    <p>初步推测：①管网老化；②工业排放；③面源污染。以上均为推测，需后续验证。</p>
+  </div>
+  <footer style="margin-top: 40px; font-size: 12px; color: #9ca3af;">
+    <p>AI 使用声明：使用豆包生成了 HTML 骨架结构，内容由小组自行填写</p>
+    <p>来源：市环保局年报（2024-03-01）；现场采集（2026-03-20）</p>
+  </footer>
+</body>
+</html>`,
+      personalDraftCompleted: true,
+      productionPlan: {
+        baseAuthor: "演示同学",
+        operatorName: "演示同学",
+        evidenceCheckerName: "小明",
+        sourceCheckerName: "小红",
+        aiVerifierName: "演示同学",
+        mediaReplacementPlan: "将证据区两张占位图替换为实测水质检测仪截图",
+        aiUsageBoundary: "允许AI生成HTML骨架和CSS样式，禁止AI填充事实性内容",
+        manualCheckPoints: "证据数据必须与原始记录核对；来源说明必须人工逐条核查",
+      },
+      planCompleted: true,
+      groupWebpageV1: `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>学校周边水质探究 · 小组网页 v1</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #1e40af; text-align: center; }
+    .section { margin: 20px 0; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .evidence-card { background: #f5f3ff; padding: 12px; margin: 10px 0; border-radius: 8px; border-left: 3px solid #7c3aed; }
+    footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>学校附近的主要水源地水质是否达标？</h1>
+  <div class="section">
+    <h2>🔍 为什么关注这个问题</h2>
+    <p>学校周边水质参差不齐，最高超标点 pH 偏低约 0.3，影响师生用水安全，值得深入探究。</p>
+  </div>
+  <div class="section">
+    <h2>📊 我们看见了什么</h2>
+    <div class="evidence-card">
+      <strong>公开数据：</strong>市年报显示我区达标率（96.2%）低于全市均值（97.8%）
+      <p style="font-size:12px;color:#6b7280">来源：市生态环境局年报（2024-03-01）</p>
+    </div>
+    <div class="evidence-card">
+      <strong>现场测量：</strong>主楼饮水台 pH=7.0、浑浊度=0.9NTU，在标准范围内
+      <p style="font-size:12px;color:#6b7280">来源：现场采集（2026-03-20）</p>
+    </div>
+  </div>
+  <div class="section">
+    <h2>💡 可能的原因</h2>
+    <p>初步推测（非定论）：①管网老化；②工业排放；③面源污染。</p>
+  </div>
+  <footer>
+    <p>AI 使用声明：AI 辅助生成了 HTML/CSS 骨架，事实内容均由小组填写核实</p>
+    <p>来源追溯：市环保局年报 | 学校现场检测记录</p>
+  </footer>
+</body>
+</html>`,
+      collabCompleted: true,
+      finalHtml: `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>学校周边水质探究 · 最终版</title>
+  <style>
+    body { font-family: "Noto Sans SC", sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f9fafb; }
+    h1 { color: #1e40af; text-align: center; padding: 20px; }
+    .section { margin: 20px 0; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .evidence-card { background: #f0fdf4; padding: 14px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #16a34a; }
+    .cause-block { background: #eff6ff; padding: 14px; border-radius: 8px; }
+    footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>📍 学校附近的主要水源地水质探究报告</h1>
+  <div class="section">
+    <h2>🔍 探究问题</h2>
+    <p>学校附近的主要水源地水质是否达标？与国家标准值相差多少？</p>
+  </div>
+  <div class="section">
+    <h2>❤️ 为什么关注</h2>
+    <p>学校周边水质参差不齐，师生饮用水安全值得关注。我们团队来自不同采样视角，共同探究这一问题。</p>
+  </div>
+  <div class="section">
+    <h2>📊 我们看见了什么</h2>
+    <div class="evidence-card">
+      <strong>官方数据：</strong>市年报显示我区达标率（96.2%）低于全市均值（97.8%）
+      <p style="font-size:12px;color:#6b7280;margin-top:6px">来源：市生态环境局年报（2024-03-01）</p>
+    </div>
+    <div class="evidence-card">
+      <strong>现场实测：</strong>主楼饮水台 pH=7.0、浑浊度=0.9NTU，均在国家标准范围内
+      <p style="font-size:12px;color:#6b7280;margin-top:6px">来源：现场采集（2026-03-20，便携式检测仪）</p>
+    </div>
+  </div>
+  <div class="section">
+    <h2>💡 可能的原因</h2>
+    <div class="cause-block">
+      <p>基于上述证据，我们<strong>初步推测</strong>（非定论）可能的原因包括：</p>
+      <ul>
+        <li>①部分管网老化，存在二次污染风险</li>
+        <li>②河道上游存在面源污染</li>
+        <li>③达标率统计口径与实测点位可能存在差异</li>
+      </ul>
+    </div>
+  </div>
+  <footer>
+    <p>AI 使用声明：AI 辅助生成了 HTML/CSS 结构和样式，所有事实内容均由小组核实填写，未使用 AI 填充数据</p>
+    <p>来源追溯：①市生态环境局年报（2024-03-01）②学校现场检测记录（2026-03-20）</p>
+    <p>小组成员：演示同学、小明、小红 | 制作日期：2026-04-07</p>
+  </footer>
+</body>
+</html>`,
+      verificationPassed: true,
+      finalExported: true,
+      completed: true,
     },
     snapshotHistory: [],
     groupPlanVersion: 1,

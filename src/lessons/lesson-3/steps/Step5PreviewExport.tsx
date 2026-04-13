@@ -10,14 +10,14 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-  ArrowLeft, CheckCircle2, Circle, Lock, FileText, Download, Sparkles,
+  ArrowLeft, ArrowRight, CheckCircle2, Circle, Lock, FileText, Download, Sparkles,
 } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
 import { advancePointer } from "@/shared/utils/pointer"
-import { downloadSnapshot } from "@/infra/persistence/serializers/snapshot-html"
+import { downloadPersonalPackage } from "@/infra/persistence/serializers/continue-package"
 import type { EvidenceCard, SelectedMaterial } from "@/domains/portfolio/types"
 import type { PublicEvidenceRecord, FieldEvidenceTask } from "@/domains/evidence/types"
 
@@ -55,13 +55,14 @@ export default function Step5PreviewExport() {
   const { portfolio, savePortfolio } = usePortfolio()
   const navigate = useNavigate()
   const [saving, setSaving] = useState(false)
-  const [completing, setCompleting] = useState(false)
+  const [proceeding, setProceeding] = useState(false)
   const [manualChecks, setManualChecks] = useState<Record<string, boolean>>({})
 
   if (!portfolio) return null
 
-  const { lesson2, lesson3 } = portfolio
+  const { lesson2, lesson3, student } = portfolio
   const { toolboxWhyOnPoster, toolboxNoticeWhat, evidenceCards, selectedMaterials } = lesson3
+  const isLeader = student.role === "leader"
 
   /** 获取 selectedMaterial 对应的原始标题 */
   const getMaterialTitle = (sm: SelectedMaterial): string => {
@@ -85,32 +86,39 @@ export default function Step5PreviewExport() {
   const allChecked =
     hasWhy && hasCards && MANUAL_CHECK_ITEMS.every((item) => manualChecks[item.id])
 
-  /** 完成课时3：写入 personalPackageExported=true, completed=true，推进指针 */
-  const handleComplete = async () => {
-    if (completing) return
-    setCompleting(true)
+  /**
+   * 导出个人整理包（JSON 格式，仅组员）
+   * 同时标记 personalPackageExported=true，供组长在课时4第1关导入合并。
+   */
+  const handleExport = async () => {
+    setSaving(true)
+    try {
+      downloadPersonalPackage(portfolio)
+      await savePortfolio({
+        ...portfolio,
+        lesson3: { ...lesson3, personalPackageExported: true },
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /**
+   * 标记课时3完成并进入课时4。
+   * 同时推进指针到 {3, 5}，供进度条显示正确关卡。
+   */
+  const handleProceed = async () => {
+    if (proceeding) return
+    setProceeding(true)
     try {
       await savePortfolio({
         ...portfolio,
         pointer: advancePointer(portfolio.pointer, 3, 5),
-        lesson3: {
-          ...lesson3,
-          personalPackageExported: true,
-          completed: true,
-        },
+        lesson3: { ...lesson3, completed: true },
       })
+      navigate("/lesson/4/step/1")
     } finally {
-      setCompleting(false)
-    }
-  }
-
-  /** 导出个人整理包（HTML 快照） */
-  const handleExport = () => {
-    setSaving(true)
-    try {
-      downloadSnapshot("lesson3-toolbox", portfolio)
-    } finally {
-      setSaving(false)
+      setProceeding(false)
     }
   }
 
@@ -269,68 +277,88 @@ export default function Step5PreviewExport() {
         </CardContent>
       </Card>
 
-      {/* ── 下部：导出区 ── */}
+      {/* ── 下部：导出与进入课时4 ── */}
       <Card className="border-blue-200">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Download className="h-4 w-4 text-blue-600" />
-            导出与完成
+            {isLeader ? "完成并进入课时4" : "导出整理包并进入课时4"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* 导出个人整理包（HTML 快照） */}
-            <Button
-              variant="outline"
-              className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-              onClick={handleExport}
-              disabled={saving}
-            >
-              <FileText className="h-4 w-4 shrink-0" />
-              导出个人整理包
-            </Button>
-
-            {/* 完成课时3 */}
-            <Button
-              onClick={handleComplete}
-              disabled={completing || !allChecked}
-              className="gap-2"
-            >
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              {completing
-                ? "保存中…"
-                : lesson3.completed
-                  ? "已完成课时3"
-                  : "完成课时3"}
-            </Button>
-          </div>
-
-          {!allChecked && (
-            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
-              请先完成上方检查清单中的所有项目，再点「完成课时3」。
-            </p>
+          {/* 组员：先导出个人整理包（JSON，供课时4组长导入合并） */}
+          {!isLeader && (
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                onClick={handleExport}
+                disabled={saving}
+              >
+                <FileText className="h-4 w-4 shrink-0" />
+                {lesson3.personalPackageExported ? "重新导出个人整理包" : "导出个人整理包（.json）"}
+              </Button>
+              {lesson3.personalPackageExported && (
+                <p className="text-xs text-emerald-700 flex items-center gap-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> 已导出，请将文件交给组长
+                </p>
+              )}
+            </div>
           )}
 
-          <div className="border-t pt-3">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              下节课组长会汇总每位成员的「为何关注」与「个人证据卡」，再继续网页制作与「可能原因」的小组讨论。
-              导出的个人整理包请在下节课携带备用。
-            </p>
+          {/* 进入课时4（主操作） */}
+          {lesson3.completed ? (
+            /* 已完成：直接导航，无需重新勾清单 */
+            <Button
+              onClick={() => navigate("/lesson/4/step/1")}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <ArrowRight className="h-4 w-4 shrink-0" />
+              前往课时4
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={handleProceed}
+                disabled={proceeding || !allChecked}
+                className="gap-2 w-full sm:w-auto"
+              >
+                {proceeding ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 animate-pulse" />
+                ) : (
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                )}
+                完成课时3，进入课时4
+              </Button>
+              {!allChecked && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                  请先完成上方检查清单中的所有项目，再进入课时4。
+                </p>
+              )}
+            </>
+          )}
+
+          <div className="border-t pt-3 space-y-1.5">
+            {isLeader ? (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                下节课（课时4）你作为组长，需要汇总组员的个人整理包，完成小组合并。
+                请提醒组员在本课结束前完成导出。
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                导出的个人整理包（.json 文件）请保存好，下节课带来交给组长。
+                如需留存 HTML 版记录，请使用右上角「阶段快照」按钮。
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* ── 底部导航 ── */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-start">
         <Button variant="outline" size="sm" onClick={() => navigate("/lesson/3/step/4")}>
           <ArrowLeft className="mr-1 h-4 w-4" /> 上一步
         </Button>
-        {lesson3.completed && (
-          <p className="text-sm text-emerald-700 font-medium flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4" />
-            课时3已完成
-          </p>
-        )}
       </div>
     </div>
   )

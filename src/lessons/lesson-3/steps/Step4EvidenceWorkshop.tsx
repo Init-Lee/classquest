@@ -499,15 +499,10 @@ export default function Step4EvidenceWorkshop() {
       </div>
 
       {/* ── 底部导航 ── */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+      <div className="flex justify-start">
         <Button variant="outline" size="sm" onClick={() => navigate("/lesson/3/step/3")}>
           <ArrowLeft className="mr-1 h-4 w-4" /> 上一步
         </Button>
-        {allDone && (
-          <Button onClick={() => navigate("/lesson/3/step/5")}>
-            进入第5关 <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        )}
       </div>
     </div>
   )

@@ -83,8 +83,8 @@ export function getLesson3CompletedSteps(portfolio: ModulePortfolio | null): num
   // 步骤4完成（预留）：已有证据卡
   if (lesson3.evidenceCards.length > 0) completed.push(4)
 
-  // 步骤5完成（预留）：已导出
-  if (lesson3.personalPackageExported) completed.push(5)
+  // 步骤5完成：已完成课时3（组长和组员均以 completed 为准）
+  if (lesson3.completed) completed.push(5)
 
   return completed
 }

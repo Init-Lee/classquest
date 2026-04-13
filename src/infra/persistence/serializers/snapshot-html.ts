@@ -450,9 +450,106 @@ function buildLesson3Snapshot(portfolio: ModulePortfolio): string {
 </html>`
 }
 
+/** 生成课时4阶段快照（结论形成与网页传播进度） */
+function buildLesson4Snapshot(portfolio: ModulePortfolio): string {
+  const { student, lesson1, lesson4 } = portfolio
+  const now = new Date().toLocaleString("zh-CN")
+  const researchQuestion = lesson1.groupConsensus?.finalResearchQuestion ?? ""
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>课时4阶段快照 — ${student.studentName}</title>${SNAPSHOT_STYLES}</head>
+<body>
+  <h1>AI科学传播站 · 课时4 · 结论形成与网页传播阶段快照</h1>
+  <table class="meta-table">
+    <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
+    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
+    <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
+    <tr><td>当前进度</td><td colspan="3">课时${portfolio.pointer.lessonId} · 第${portfolio.pointer.stepId}关</td></tr>
+    <tr><td>本课完成度</td><td colspan="3">
+      ${lesson4.groupMergeCompleted ? "✓ 第1关已完成（小组合并）" : "第1关进行中"}
+      ${lesson4.personalDraftCompleted ? "，✓ 第2关已完成（个人草稿）" : ""}
+      ${lesson4.planCompleted ? "，✓ 第3关已完成（制作方案）" : ""}
+      ${lesson4.collabCompleted ? "，✓ 第4关已完成（协商生成）" : ""}
+      ${lesson4.completed ? "，✓ 课时4已完成" : ""}
+    </td></tr>
+  </table>
+
+  ${researchQuestion ? `
+  <div class="section">
+    <div class="section-title">🔍 小组探究问题（来自课时1）</div>
+    <div class="field-value">${researchQuestion}</div>
+  </div>` : ""}
+
+  ${lesson4.possibleCauses ? `
+  <div class="section">
+    <div class="section-title">💡 可能的原因（第1关小组讨论）</div>
+    <div class="field-value">${lesson4.possibleCauses}</div>
+  </div>` : ""}
+
+  ${(() => {
+    if (!lesson4.skeletonPackageJson) return ""
+    try {
+      const sk = JSON.parse(lesson4.skeletonPackageJson)
+      return `
+  <div class="section">
+    <div class="section-title">🗂️ 小组骨架包内容（第1关合并，组长导出 / 组员导入后可见）</div>
+    ${sk.posterTitle ? `<div class="field"><div class="field-label">海报标题</div><div class="field-value" style="font-weight:600">${sk.posterTitle}</div></div>` : ""}
+    ${sk.posterSubtitle ? `<div class="field"><div class="field-label">海报副标题</div><div class="field-value">${sk.posterSubtitle}</div></div>` : ""}
+    ${sk.mergedWhyCare ? `<div class="field"><div class="field-label">为何关注（合并）</div><div class="field-value" style="white-space:pre-line">${sk.mergedWhyCare}</div></div>` : ""}
+    ${(sk.mergedWhatWeSee ?? []).length > 0 ? `<div class="field"><div class="field-label">我们看见了什么（${sk.mergedWhatWeSee.length} 条）</div><div class="field-value">${sk.mergedWhatWeSee.map((s: string) => `· ${s}`).join("<br>")}</div></div>` : ""}
+    ${sk.possibleCauses ? `<div class="field"><div class="field-label">可能的线索/原因</div><div class="field-value">${sk.possibleCauses}</div></div>` : ""}
+    ${(sk.mergedSources ?? []).length > 0 ? `<div class="field"><div class="field-label">来源资料（${sk.mergedSources.length} 条）</div><div class="field-value">${sk.mergedSources.map((s: string) => `· ${s}`).join("<br>")}</div></div>` : ""}
+  </div>`
+    } catch { return "" }
+  })()}
+
+  ${lesson4.productionPlan ? `
+  <div class="section">
+    <div class="section-title">📋 小组制作方案单（第3关）</div>
+    <table class="evidence-table">
+      <tbody>
+        <tr><td>底稿作者</td><td>${lesson4.productionPlan.baseAuthor}</td></tr>
+        <tr><td>主操手</td><td>${lesson4.productionPlan.operatorName}</td></tr>
+        <tr><td>证据核对</td><td>${lesson4.productionPlan.evidenceCheckerName || "—"}</td></tr>
+        <tr><td>来源说明</td><td>${lesson4.productionPlan.sourceCheckerName || "—"}</td></tr>
+        <tr><td>AI声明核查</td><td>${lesson4.productionPlan.aiVerifierName || "—"}</td></tr>
+        <tr><td>AI使用边界</td><td>${lesson4.productionPlan.aiUsageBoundary || "—"}</td></tr>
+      </tbody>
+    </table>
+  </div>` : ""}
+
+  ${lesson4.personalDraftHtml ? `
+  <div class="section">
+    <div class="section-title">📄 个人网页草稿 v0（第2关，代码）</div>
+    <pre style="background:#f8f8f8;border:1px solid #e5e7eb;border-radius:6px;padding:10px;font-size:11px;overflow-x:auto;white-space:pre-wrap;max-height:200px;overflow-y:auto">${lesson4.personalDraftHtml.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+  </div>` : ""}
+
+  ${lesson4.finalHtml ? `
+  <div class="section">
+    <div class="section-title">🌐 小组网页最终版（第5关）</div>
+    <div style="border:1px solid #d1d5db;border-radius:6px;overflow:hidden">
+      <iframe srcdoc="${lesson4.finalHtml.replace(/"/g, "&quot;")}" style="width:100%;height:300px;border:none;" sandbox="allow-same-origin" title="小组网页最终版"></iframe>
+    </div>
+  </div>` : lesson4.groupWebpageV1 ? `
+  <div class="section">
+    <div class="section-title">🌐 小组网页 v1（第4关）</div>
+    <div style="border:1px solid #d1d5db;border-radius:6px;overflow:hidden">
+      <iframe srcdoc="${lesson4.groupWebpageV1.replace(/"/g, "&quot;")}" style="width:100%;height:300px;border:none;" sandbox="allow-same-origin" title="小组网页v1"></iframe>
+    </div>
+  </div>` : ""}
+
+  <div class="footer">
+    <p>文件由 ClassQuest 自动生成 · ${now}</p>
+    <p>说明：本快照为课时4（结论形成与网页传播）阶段过程性评价材料。</p>
+  </div>
+</body>
+</html>`
+}
+
 /** 根据快照类型分发到对应的生成函数 */
 export function buildSnapshotHTML(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full",
   portfolio: ModulePortfolio
 ): string {
   switch (type) {
@@ -466,6 +563,8 @@ export function buildSnapshotHTML(
       return buildLesson1FullSnapshot(portfolio) // 占位，实际使用时替换
     case "lesson3-toolbox":
       return buildLesson3Snapshot(portfolio)
+    case "lesson4-full":
+      return buildLesson4Snapshot(portfolio)
     default:
       return buildLesson1FullSnapshot(portfolio)
   }
@@ -473,14 +572,15 @@ export function buildSnapshotHTML(
 
 /** 触发浏览器下载快照 HTML */
 export function downloadSnapshot(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full",
   portfolio: ModulePortfolio
 ): void {
   const html = buildSnapshotHTML(type, portfolio)
   const blob = new Blob([html], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)
   /** 用快照类型推导课时编号，避免依赖可能落后的 pointer */
-  const lessonIdForFilename = type === "lesson3-toolbox" ? 3
+  const lessonIdForFilename = type === "lesson4-full" ? 4
+    : type === "lesson3-toolbox" ? 3
     : type.startsWith("lesson2") ? 2
     : 1
   const filename = buildSnapshotFilename(portfolio.student.studentName, lessonIdForFilename)

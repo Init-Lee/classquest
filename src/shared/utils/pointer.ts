@@ -40,10 +40,10 @@ export function resolvePointerFromState(portfolio: ModulePortfolio): ProgressPoi
   const now = new Date().toISOString()
   const p = portfolio.pointer
 
-  // 课时3已完成 → 指针至少应为 {3, 3}（课时3第3关为当前最后可用关）
+  // 课时3已完成 → 指针至少应为 {3, 5}（课时3共5关）
   if (portfolio.lesson3?.completed) {
-    if (p.lessonId < 3 || (p.lessonId === 3 && p.stepId < 3)) {
-      return { lessonId: 3, stepId: 3, updatedAt: now }
+    if (p.lessonId < 3 || (p.lessonId === 3 && p.stepId < 5)) {
+      return { lessonId: 3, stepId: 5, updatedAt: now }
     }
     return p
   }

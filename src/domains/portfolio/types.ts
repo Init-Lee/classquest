@@ -2,7 +2,7 @@
  * 文件说明：模块档案（Portfolio）领域类型定义
  * 职责：ModulePortfolio 是整个应用的核心聚合根，串联所有课时数据
  *       采用"链式 Portfolio 模型"——一个学生对应一条完整记录
- * 更新触发：新增课时（如课时4+）时在此扩展；调整课时数据结构时同步更新
+ * 更新触发：新增课时（如课时5+）时在此扩展；调整课时数据结构时同步更新
  */
 
 import type { StudentProfile } from "@/domains/student/types"
@@ -133,6 +133,88 @@ export interface Lesson3State {
   completed: boolean
 }
 
+/**
+ * 课时4第3关：小组制作方案单
+ * 由组长记录，指导第4关协作生成网页的执行说明
+ */
+export interface ProductionPlan {
+  /** 底稿作者：选用哪位成员的网页草稿作为底稿 */
+  baseAuthor: string
+  /** 主操手姓名（不一定是组长） */
+  operatorName: string
+  /** 证据核对负责人姓名 */
+  evidenceCheckerName: string
+  /** 来源说明负责人姓名 */
+  sourceCheckerName: string
+  /** AI声明核查负责人姓名 */
+  aiVerifierName: string
+  /** 多媒体替换计划：哪些占位图需替换为真实内容 */
+  mediaReplacementPlan: string
+  /** AI使用边界：哪些地方允许AI参与局部生成 */
+  aiUsageBoundary: string
+  /** 必须人工核查的要点说明 */
+  manualCheckPoints: string
+}
+
+/** 课时4状态数据（小组合并、个人草稿、协商生成、升级提交） */
+export interface Lesson4State {
+  // ---- 第1关：小组合并与补齐"可能的原因" ----
+  /** 组长已导入的成员个人整理包数量（累计，含重复导入会覆盖同名） */
+  memberPackagesImported: number
+  /** 小组内容合并是否已完成（组长勾选确认） */
+  groupMergeCompleted: boolean
+  /** 小组讨论后填写的"可能的原因"（谨慎表述） */
+  possibleCauses: string
+  /** 组长填写的海报标题 */
+  posterTitle: string
+  /** 组长填写的海报副标题 */
+  posterSubtitle: string
+  /** 是否已导出小组网页文字骨架包 v1（供组员在第2关导入） */
+  skeletonExported: boolean
+
+  // ---- 第2关：每个人独立完成 HTML + AI 草稿 ----
+  /** 是否已导入组长分发的小组骨架包 v1（仅组员在第1关导入时设为 true） */
+  skeletonImported: boolean
+  /**
+   * 骨架包 JSON 字符串：
+   * - 组员：第1关导入骨架包时写入，用于第2关展示合并内容
+   * - 组长：第1关导出骨架包时同步写入，用于第2关展示同等合并内容
+   */
+  skeletonPackageJson: string
+  /**
+   * 组长在第1关已导入的成员整理包 JSON 数组字符串（PersonalPackage[]）
+   * 用于页面刷新后恢复导入状态，避免重复导入
+   */
+  importedPackagesJson: string
+  /** 个人网页草稿 HTML 内容（v0） */
+  personalDraftHtml: string
+  /** 个人草稿是否已完成并确认提交 */
+  personalDraftCompleted: boolean
+
+  // ---- 第3关：组长记录小组讨论与制作方案 ----
+  /** 小组制作方案单（null = 尚未填写） */
+  productionPlan: ProductionPlan | null
+  /** 制作方案单是否已完成（组长确认） */
+  planCompleted: boolean
+
+  // ---- 第4关：按流程协商完成小组网页生成 ----
+  /** 小组网页 v1 HTML 内容（协商生成版） */
+  groupWebpageV1: string
+  /** 组长是否已完成第4关协作流程确认 */
+  collabCompleted: boolean
+
+  // ---- 第5关：升级校验与最终导出 ----
+  /** 最终 HTML 内容（升级后）*/
+  finalHtml: string
+  /** 可信发布校验清单是否全部通过 */
+  verificationPassed: boolean
+  /** 是否已导出最终提交版 HTML */
+  finalExported: boolean
+
+  /** 课时4是否已完成 */
+  completed: boolean
+}
+
 /** 模块档案——整个模块所有课时数据的聚合根 */
 export interface ModulePortfolio {
   /** 档案唯一 ID（UUID） */
@@ -155,6 +237,8 @@ export interface ModulePortfolio {
   lesson2: Lesson2State
   /** 课时3数据 */
   lesson3: Lesson3State
+  /** 课时4数据 */
+  lesson4: Lesson4State
 
   /** 已生成的快照记录 */
   snapshotHistory: SnapshotMeta[]
@@ -211,13 +295,39 @@ export function createEmptyLesson3State(): Lesson3State {
   }
 }
 
+/** 创建一个空的课时4初始状态 */
+export function createEmptyLesson4State(): Lesson4State {
+  return {
+    memberPackagesImported: 0,
+    groupMergeCompleted: false,
+    possibleCauses: "",
+    posterTitle: "",
+    posterSubtitle: "",
+    skeletonExported: false,
+    skeletonImported: false,
+    skeletonPackageJson: "",
+    importedPackagesJson: "",
+    personalDraftHtml: "",
+    personalDraftCompleted: false,
+    productionPlan: null,
+    planCompleted: false,
+    groupWebpageV1: "",
+    collabCompleted: false,
+    finalHtml: "",
+    verificationPassed: false,
+    finalExported: false,
+    completed: false,
+  }
+}
+
 /**
- * 将档案中的 lesson3 与当前默认结构合并（IndexedDB/旧包缺字段时补齐）
+ * 将档案中的 lesson3/lesson4 与当前默认结构合并（IndexedDB/旧包缺字段时补齐）
  */
 export function normalizeModulePortfolio(p: ModulePortfolio): ModulePortfolio {
   return {
     ...p,
     lesson3: { ...createEmptyLesson3State(), ...p.lesson3 },
+    lesson4: { ...createEmptyLesson4State(), ...(p.lesson4 ?? {}) },
   }
 }
 
@@ -234,6 +344,7 @@ export function createNewPortfolio(student: StudentProfile): ModulePortfolio {
     lesson1: createEmptyLesson1State(),
     lesson2: createEmptyLesson2State(),
     lesson3: createEmptyLesson3State(),
+    lesson4: createEmptyLesson4State(),
     snapshotHistory: [],
     groupPlanVersion: 1,
     createdAt: now,

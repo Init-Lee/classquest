@@ -2,7 +2,7 @@
  * 文件说明：课时注册表
  * 职责：统一管理所有课时的配置信息（标题、状态、步骤数等）
  *       是课时进度条和路由守卫的配置来源
- * 更新触发：新增课时（如课时3）时在此注册；课时标题或状态变化时
+ * 更新触发：新增课时（如课时5+）时在此注册；课时标题或状态变化时
  */
 
 export interface LessonConfig {
@@ -43,10 +43,10 @@ export const LESSON_REGISTRY: LessonConfig[] = [
   },
   {
     id: 4,
-    title: "结论形成与传播",
-    subtitle: "即将开放",
-    enabled: false,
-    totalSteps: 6,
+    title: "结论形成与网页传播",
+    subtitle: "小组合并成果，协商完成网页作品",
+    enabled: true,
+    totalSteps: 5,
   },
   {
     id: 5,

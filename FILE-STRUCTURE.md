@@ -83,7 +83,7 @@ src/
 │       │   └── Step5Review.tsx    # 第5关：回顾（提示使用右上角保存；课后任务显示来自 lesson2.fieldTasks；完成后智能跳转）
 │       └── components/            # （预留，当前步骤逻辑直接写在 steps/ 内）
 │
-└── lesson-3/        #   课时3：素材整理与证据加工（共 5 关；全部已实现）
+    └── lesson-3/        #   课时3：素材整理与证据加工（共 5 关；全部已实现）
     ├── config.ts             # 课时配置（步骤名称；5关：继承成果/方法工具箱/筛选材料/加工工坊/预览导出）
     ├── guards.ts             # 课时3步骤间 Guard（全5关守卫均已定义）
     ├── routes.tsx            # 课时3路由定义（step/1~step/5；全部渲染实际组件）
@@ -99,7 +99,19 @@ src/
         ├── Step2Toolbox.tsx          # 第2关：顶栏统一逻辑；左右栏（左：来源+填写+确认表述+海报弹窗；右：材料参考仅文字Tab）；toolboxWhyPreviewLocked 后过关
         ├── Step3SelectMaterials.tsx  # 第3关：筛选材料（资料池增强卡片；勾选+现象说明句；已入选清单汇总；保存写入 selectedMaterials[]）
         ├── Step4EvidenceWorkshop.tsx # 第4关：证据加工工坊（目标带+左右双栏；逐条加工为证据卡；右侧全Tab解锁+卡片预览；写入 evidenceCards[]）
-        └── Step5PreviewExport.tsx    # 第5关：个人预览与导出（为何关注+证据卡总览；检查清单+可能原因锁定；导出HTML快照+完成课时3）
+        └── Step5PreviewExport.tsx    # 第5关：个人预览与导出（为何关注+证据卡总览；检查清单+可能原因锁定；导出JSON个人整理包+完成课时3）
+    │
+    └── lesson-4/        #   课时4：结论形成与网页传播（共 5 关；全部实现）
+        ├── config.ts             # 课时配置（步骤名称；5关：小组合并/个人草稿/制作方案/协商生成/升级提交）
+        ├── guards.ts             # 课时4步骤间 Guard（全5关守卫；含组长/组员角色差异判定）
+        ├── routes.tsx            # 课时4路由定义（step/1~step/5）
+        ├── components/           # 预留组件目录
+        └── steps/
+            ├── Step1GroupMerge.tsx    # 第1关：组长双栏（左：说明+标题副标题+可能原因+导出骨架包；右：成员整理包导入+合并预览）；组员导入骨架包v1（支持重新导入）+预览含来源资料
+            ├── Step2PersonalDraft.tsx # 第2关：双栏（左：骨架包内容参考+AI提示词+HTML模板；右：sticky编辑/预览Tab）
+            ├── Step3PlanRecord.tsx    # 第3关：组长填写制作方案单+导出JSON供组员分发；组员导入方案单+告知书查看+已知悉勾选
+            ├── Step4CollabBuild.tsx   # 第4关：组长双栏（左：说明+AI原则+协作流程勾选；右：sticky编辑/预览Tab）；组员查看协作步骤（无预览）+已知悉勾选
+            └── Step5UpgradeVerify.tsx # 第5关：组长双栏（左：说明+校验清单+导出完成；右：sticky编辑/预览Tab）；组员查看校验要点（无预览）+已知悉勾选
 
 ├── pages/               # 页面层：顶级路由页面组件
 │   ├── HomePage.tsx              # 首页（无档案时引导注册/导入；有档案时展示进度）
@@ -126,8 +138,8 @@ src/
 │       │   ├── portfolio.repository.ts      # PortfolioRepository 接口
 │       │   └── portfolio.repository.idb.ts  # IndexedDB 实现（含 clear() 清空全部）
 │       └── serializers/
-│           ├── continue-package.ts  # 继续学习包序列化/反序列化；导入时 lesson3 与默认状态合并；downloadLeaderFile（组长文件）
-│           └── snapshot-html.ts     # 阶段快照 HTML 生成
+│           ├── continue-package.ts  # 继续学习包序列化/反序列化；导入时 lesson3/lesson4 缺字段补齐；downloadLeaderFile（组长文件）；PersonalPackage/SkeletonPackageV1 序列化（课时4数据传递）
+│           └── snapshot-html.ts     # 阶段快照 HTML 生成（含 lesson4-full 类型；课时4快照包含骨架包合并数据节）
 │
 └── shared/              # Shared 层：共享 UI、工具，无业务逻辑
     ├── ui/              #   通用 UI 组件（shadcn/ui 包装）
@@ -309,4 +321,66 @@ Infra 层
 
 ---
 
-*最后更新：2026-04-02（课时3第4~5关实现完成；MaterialProcessingReferencePanel 新增 defaultTab prop；SnapshotMeta 类型补充 lesson3-toolbox）*
+---
+
+## 课时4 · 结构摘要
+
+### 1. 领域状态 `Lesson4State`（`domains/portfolio/types.ts`）
+
+| 字段 | 语义 | 主要写入步骤 |
+|------|------|-------------|
+| `memberPackagesImported` | 已导入成员整理包数量 | L4 Step1 |
+| `groupMergeCompleted` | 小组合并是否完成 | L4 Step1 |
+| `possibleCauses` | 可能的原因（谨慎表述） | L4 Step1 |
+| `posterTitle` | 组长填写的海报标题 | L4 Step1 |
+| `posterSubtitle` | 组长填写的海报副标题 | L4 Step1 |
+| `skeletonExported` | 是否已导出骨架包 v1 | L4 Step1 |
+| `skeletonImported` | 组员是否已导入骨架包 v1 | L4 Step1（组员） |
+| `skeletonPackageJson` | 骨架包 JSON 字符串（组长导出时写入 / 组员导入时写入），第2关统一从此字段读取合并内容 | L4 Step1 |
+| `importedPackagesJson` | 组长已导入的成员整理包 JSON 数组字符串，刷新后恢复导入状态 | L4 Step1（组长） |
+| `personalDraftHtml` | 个人网页草稿 HTML 内容（v0） | L4 Step2 |
+| `personalDraftCompleted` | 个人草稿是否已完成 | L4 Step2 |
+| `productionPlan` | 小组制作方案单（含底稿选择/分工/AI边界/人工核查要点） | L4 Step3 |
+| `planCompleted` | 方案单是否已完成 | L4 Step3 |
+| `groupWebpageV1` | 小组网页 v1 HTML 内容 | L4 Step4 |
+| `collabCompleted` | 协作生成是否完成 | L4 Step4 |
+| `finalHtml` | 最终版 HTML 内容 | L4 Step5 |
+| `verificationPassed` | 可信发布校验是否通过 | L4 Step5 |
+| `finalExported` | 是否已导出最终版 | L4 Step5 |
+| `completed` | 课时4是否已完成 | L4 Step5 |
+
+### 2. 跨角色数据包类型（`infra/persistence/serializers/continue-package.ts`）
+
+| 类型 | 产生 | 消费 | 说明 |
+|------|------|------|------|
+| `PersonalPackage` | L3 Step5「导出个人整理包」（仅组员） | L4 Step1 组长导入 | 含学生身份、lesson2 完整资料条目（`citationFull`）、lesson3 加工结果 |
+| `SkeletonPackageV1` | L4 Step1 组长「导出骨架包 v1」 | L4 Step1 组员导入（支持重新导入） | 含 posterTitle/posterSubtitle、mergedWhyCare、mergedWhatWeSee[]、mergedSources[]（完整 citationFull）、possibleCauses、memberPackages[] |
+| `production-plan-v1` | L4 Step3 组长「导出方案单」 | L4 Step3 组员导入 | 含 ProductionPlan 完整字段 + groupName/leaderName/exportedAt |
+
+### 3. 角色分离与 UI 布局
+
+| 关卡 | 组长视图 | 组员视图 |
+|------|---------|---------|
+| 第1关 | 双栏：左（说明+标题副标题+可能原因+导出骨架包）/右（成员导入+合并预览 sticky） | 导入骨架包（支持重新导入）→ 预览含来源资料 → 进入第2关 |
+| 第2关 | 双栏：左（骨架包内容参考+AI提示词+HTML模板）/右（编辑/预览Tab sticky）| 同组长（均从 skeletonPackageJson 读取） |
+| 第3关 | 单栏表单 + 保存 + 导出方案单按钮 | 导入方案单 → 告知书查看 → 已知悉勾选 |
+| 第4关 | 双栏：左（说明+AI原则+协作流程勾选+完成）/右（编辑/预览Tab sticky）| 协作步骤只读列表（无网页预览）→ 已知悉勾选 |
+| 第5关 | 双栏：左（说明+校验清单+导出完成）/右（编辑/预览Tab sticky）| 校验要点只读列表（无网页预览）→ 已知悉勾选 |
+
+判断依据：`portfolio.student.role === "leader"` vs `"member"`
+
+### 4. 阶段快照（`snapshot-html.ts`）
+
+`"lesson4-full"` 类型 → `buildLesson4Snapshot()` 函数：
+- 覆盖课时4各关产出（进度、可能原因、制作方案单、个人草稿代码、最终网页 iframe）
+- 新增**骨架包合并数据节**：解析 `lesson4.skeletonPackageJson`，展示标题/副标题/为何关注/我们看见了什么/可能线索/来源资料（完整 citationFull）
+- `GlobalActions.tsx` 的 `handleSnapshot` 含 `currentLessonId === 4` 分支
+
+### 5. 教师演示数据（`demo-portfolio.ts`）
+
+- `lesson4` 字段已与 `Lesson4State` 完整对齐（含 `posterTitle`/`posterSubtitle`/`importedPackagesJson`）
+- `skeletonPackageJson` 使用 `JSON.stringify(...)` 预填完整骨架包（含 mergedSources 的 citationFull），确保组长和组员视图均可显示
+
+---
+
+*最后更新：2026-04-07（课时4全5关完整实现；双栏编辑/预览布局统一；跨角色文件分发链路完整：个人整理包→骨架包→制作方案单→HTML；快照含骨架包数据节）*
