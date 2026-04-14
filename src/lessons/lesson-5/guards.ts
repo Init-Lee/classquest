@@ -15,7 +15,7 @@ export const LESSON5_GUARDS: Record<number, GuardFn> = {
     return portfolio.lesson4.completed
   },
 
-  /** 第2关：改动落地，需第1关已完成（至少填写2条优先修改点并导出过） */
+  /** 第2关：改动落地，需第1关已完成（填写一条优先修改等校验后点「完成」） */
   2: (portfolio) => {
     if (!portfolio) return false
     return portfolio.lesson5.feedbackCompleted
@@ -34,7 +34,7 @@ export function checkLesson5Guard(
 
   const reasons: Record<number, string> = {
     1: "请先完成课时4的所有关卡",
-    2: "请先完成第1关（意见入池），整理出至少2条优先修改点",
+    2: "请先完成第1关：填写四维度与「本轮优先修改」后，再点「完成」进入第2关",
   }
 
   return { allowed: false, reason: reasons[stepId] || "请先完成前置步骤" }

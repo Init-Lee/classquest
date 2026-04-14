@@ -18,6 +18,7 @@ import { LESSON_REGISTRY } from "@/app/lesson-registry"
 import { createNewPortfolio } from "@/domains/portfolio/types"
 import type { StudentProfile } from "@/domains/student/types"
 import { formatDateReadable } from "@/shared/utils/format"
+import { getPortfolioGroupDisplayLabel } from "@/shared/utils/group-display"
 
 /** 教师模式入口卡片 */
 function TeacherModeEntry() {
@@ -341,7 +342,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-muted-foreground">姓名：</span>{portfolio!.student.studentName}</div>
             <div><span className="text-muted-foreground">班级：</span>{portfolio!.student.clazz}</div>
-            <div><span className="text-muted-foreground">小组：</span>{portfolio!.student.groupName}</div>
+            <div><span className="text-muted-foreground">小组：</span>{getPortfolioGroupDisplayLabel(portfolio!)}</div>
             <div><span className="text-muted-foreground">角色：</span>{portfolio!.student.role === "leader" ? "组长" : "组员"}</div>
           </div>
           <div className="border-t pt-3 text-sm">

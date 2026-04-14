@@ -5,15 +5,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![中文](https://img.shields.io/badge/README-中文-red)](README.md)
-[![Release](https://img.shields.io/badge/release-v0.4.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.5.0-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ---
 
 ## Versioning (SemVer)
 
-- **Current release**: `v0.4.0` (matches root `version` in `package.json`; `0.x` = rapid iteration).
-- **Git tags**: see **Tags / Releases** on GitHub; locally: `git describe --tags` or `git show v0.4.0`.
-- **Next release**: bump `package.json` / `package-lock.json` (e.g. `0.5.0`), commit, then `git tag v0.5.0 && git push origin v0.5.0`, and publish release notes on GitHub.
+- **Current release**: `v0.5.0` (matches root `version` in `package.json`; `0.x` = rapid iteration).
+- **Git tags**: see **Tags / Releases** on GitHub; locally: `git describe --tags` or `git show v0.5.0`.
+- **Next release**: bump `package.json` / `package-lock.json` (e.g. `0.6.0`), commit, then `git tag v0.6.0 && git push origin v0.6.0`, and publish release notes on GitHub.
 
 > Note: `appVersion` inside student portfolios (e.g. `1.0.0`) tracks **data package format**, not the product release number above.
 
@@ -35,7 +35,7 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 
 | Feature | Description |
 |---------|-------------|
-| Gamified learning | Structured unit progression (Units 1–2: 5 levels each; Unit 3: levels 1–3 shipped), each with Guards |
+| Gamified learning | Structured unit progression (**Units 1–4: 5 levels each; Unit 5: 2 levels**, all shipped), Guards on every step |
 | Offline-first | Built on IndexedDB — works without internet |
 | Portable progress | Export a "Continue Package" (JSON) anytime; import it on any device to resume |
 | Group collaboration | Leader-member workflow — leader exports a group file, members import and see their assignments |
@@ -49,12 +49,14 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 
 ## Current Coverage
 
-- **Unit 1**: Project Launch & Topic Framing (5 levels)
-- **Unit 2**: Evidence Collection & Documentation (5 levels)
-- **Unit 3**: Asset organization & evidence processing — **levels 1–3 implemented** (inherit anchor → toolbox & wording lock → select materials); levels 4–5 are placeholders
-- Units 4–6: Architecture scaffolded
+- **Unit 1**: Project launch & topic framing (5 levels)
+- **Unit 2**: Evidence collection & documentation (5 levels)
+- **Unit 3**: Asset organization & evidence processing (5 levels)
+- **Unit 4**: Conclusions & web publishing (5 levels)
+- **Unit 5**: Rehearsal feedback & revision (2 levels) — members export peer opinion JSON; leaders import; **leaders must export the “version change” JSON at least once before first unit completion** (no re-export after the unit is marked complete); group label prefers leader name
+- **Unit 6**: Types scaffolded; disabled in the lesson registry until enabled
 
-> Unit 3 level 2 persists “what I noticed” and “why it matters on the poster” drafts plus a confirmation flag in `Lesson3State`, with merge-on-import/load for older packages — see **“课时3 · 结构摘要”** in [FILE-STRUCTURE.md](FILE-STRUCTURE.md) (Chinese; structural truth source).
+> Authoritative routing, data packages, and field-level notes: [FILE-STRUCTURE.md](FILE-STRUCTURE.md) (Chinese; structural source of truth). Product-facing bullet list: [README.md](README.md) (Chinese).
 
 ---
 
@@ -102,8 +104,10 @@ Open `http://localhost:5173` in your browser.
 | Phase 3: Unit 1 (5 levels + AI assistant + snapshots) | ✅ Done |
 | Phase 4: Unit 2 (5 levels + group sync + dual evidence templates + quality check) | ✅ Done |
 | Phase 5: Polish (bug fixes, Guard optimization, data model refactor) | ✅ Done |
-| Phase 6: Unit 3 development | 🚧 In Progress (levels 1–3 live; level 2: cross-unit material reference feature, wording lock, poster spotlight dialog) |
-| Phase 7: UI/UX visual polish (color system, typography, responsive) | 📋 Planned |
+| Phase 6: Unit 3 development | ✅ Done (5 levels; personal package export → Unit 4) |
+| Phase 7: Unit 4 development | ✅ Done (5 levels; skeleton → draft → plan → collab → verify/export) |
+| Phase 8: Unit 5 development | ✅ Done (2 levels; peer opinion + version-change package; leader export gate on first completion) |
+| Phase 9: UI/UX visual polish (color system, typography, responsive) | 📋 Planned |
 
 ---
 
@@ -113,8 +117,10 @@ Open `http://localhost:5173` in your browser.
 - [x] Unit 2 full progression (5 levels)
 - [x] Group collaboration (leader file export / member import)
 - [x] Legacy data migration wizard (temporary feature)
-- [🚧] Unit 3 (levels 1–3 done; levels 4–5 pending)
-- [ ] Units 4–6 implementation
+- [x] Unit 3 (5 levels; personal package JSON)
+- [x] Unit 4 (5 levels; skeleton → final HTML export)
+- [x] Unit 5 (2 levels; opinion + version-change JSON; leader export gate)
+- [ ] Unit 6 implementation
 - [ ] AI assistant API integration (currently prompt templates + external links)
 - [ ] Teacher dashboard
 - [ ] Backend sync support

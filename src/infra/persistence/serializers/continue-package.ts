@@ -2,12 +2,19 @@
  * 文件说明：继续学习包序列化/反序列化
  * 职责：将 ModulePortfolio 序列化为可携带的 JSON 文件（继续学习包）；
  *       以及将导入的 JSON 文件解析还原为 ModulePortfolio；
- *       同时提供课时3个人整理包（PersonalPackage）和课时4小组骨架包（SkeletonPackageV1）的序列化与反序列化。
+ *       同时提供课时3个人整理包（PersonalPackage）、课时4小组骨架包（SkeletonPackageV1）、
+ *       课时5第2关组长汇总包（Lesson5VersionChangeLeaderPackageV1）的序列化与反序列化。
  * 更新触发：ModulePortfolio 结构发生变化时；个人整理包/骨架包格式调整时；新增课时时
  */
 
-import type { ModulePortfolio, EvidenceCard, SelectedMaterial } from "@/domains/portfolio/types"
-import { createEmptyLesson3State, createEmptyLesson4State, createEmptyLesson5State, createEmptyLesson6State } from "@/domains/portfolio/types"
+import type { ModulePortfolio, EvidenceCard, SelectedMaterial, FeedbackDimension, ChangeRecord } from "@/domains/portfolio/types"
+import {
+  createEmptyLesson3State,
+  createEmptyLesson4State,
+  createEmptyLesson5State,
+  createEmptyLesson6State,
+  normalizeLesson5State,
+} from "@/domains/portfolio/types"
 import type { PublicEvidenceRecord, FieldEvidenceTask } from "@/domains/evidence/types"
 import { buildContinuePackageFilename, buildLeaderFilename } from "@/shared/utils/format"
 
@@ -72,6 +79,181 @@ export interface SkeletonPackageV1 {
   possibleCauses: string
   /** 生成时间戳 */
   exportedAt: string
+}
+
+/**
+ * 课时5第1关 · 组员「同伴意见包」
+ * 组员填写四维度与一条优先修改后导出，供组长在课时5第1关右侧导入汇总。
+ */
+export interface PeerFeedbackOpinionPackage {
+  /** 文件类型标识 */
+  packageType: "peer-feedback-opinion-v1"
+  /** 学生姓名 */
+  studentName: string
+  /** 学生角色 */
+  role: string
+  /** 班级 */
+  clazz: string
+  /** 小组名称 */
+  groupName: string
+  /** 四维度判断与建议 */
+  feedbackDimensions: FeedbackDimension[]
+  /** 一条优先修改表述 */
+  priorityChange: string
+  /** 生成时间戳 */
+  exportedAt: string
+}
+
+/** 从文件解析同伴意见包；格式不符时抛出可读中文错误 */
+export function parsePeerFeedbackOpinionPackageJson(text: string): PeerFeedbackOpinionPackage {
+  const raw = JSON.parse(text) as unknown
+  if (!raw || typeof raw !== "object") throw new Error("文件内容为空或无法解析")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const o = raw as any
+  if (o.packageType !== "peer-feedback-opinion-v1") {
+    throw new Error("请选择由本关「导出意见包」生成的文件")
+  }
+  if (!o.studentName || !o.groupName) throw new Error("意见包缺少姓名或小组信息，无法导入")
+  if (!Array.isArray(o.feedbackDimensions)) throw new Error("意见包格式不完整")
+  return o as PeerFeedbackOpinionPackage
+}
+
+/** 根据当前档案生成同伴意见包对象（供下载） */
+export function buildPeerFeedbackOpinionPackage(portfolio: ModulePortfolio): PeerFeedbackOpinionPackage {
+  const { student, lesson5 } = portfolio
+  return {
+    packageType: "peer-feedback-opinion-v1",
+    studentName: student.studentName,
+    role: student.role,
+    clazz: student.clazz,
+    groupName: student.groupName,
+    feedbackDimensions: lesson5.feedbackDimensions,
+    priorityChange: lesson5.priorityChange,
+    exportedAt: new Date().toISOString(),
+  }
+}
+
+/** 触发浏览器下载同伴意见包（组员交给组长） */
+export function downloadPeerFeedbackOpinionPackage(portfolio: ModulePortfolio): void {
+  const pkg = buildPeerFeedbackOpinionPackage(portfolio)
+  const json = JSON.stringify(pkg, null, 2)
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const safeName = `${portfolio.student.clazz ?? ""}_${portfolio.student.studentName}_同伴意见包`.replace(/[/\\?%*:|"<>]/g, "_")
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `${safeName}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * 课时5第2关 · 组长「改动落地汇总包」内嵌的组员意见摘要（与第1关导入的意见包对应）
+ */
+export interface Lesson5PeerSummaryInLeaderPackage {
+  /** 组员姓名 */
+  studentName: string
+  /** 该组员一条优先修改 */
+  priorityChange: string
+  /** 四维度判断与建议的拼接摘要（多行） */
+  dimensionsSummary: string
+}
+
+/**
+ * 课时5第2关 · 组长导出、组员导入的改动落地汇总包 v1
+ */
+export interface Lesson5VersionChangeLeaderPackageV1 {
+  packageType: "lesson5-version-change-leader-v1"
+  /** 组长姓名 */
+  leaderName: string
+  clazz: string
+  /** 档案中的小组字段（与意见包一致，便于核对） */
+  groupName: string
+  /** 课时1共识探究问题 */
+  finalResearchQuestion: string
+  /** 第1关组长定稿：本轮优先修改 */
+  leaderPriorityChange: string
+  /** 第1关已导入的各组员意见摘要 */
+  peerSummaries: Lesson5PeerSummaryInLeaderPackage[]
+  /** 第2关详细改动表（至少完整行由组长在导出前填好） */
+  changeRecords: ChangeRecord[]
+  exportedAt: string
+}
+
+/** 解析组长汇总包 JSON */
+export function parseLesson5VersionChangeLeaderPackageJson(text: string): Lesson5VersionChangeLeaderPackageV1 {
+  const raw = JSON.parse(text) as unknown
+  if (!raw || typeof raw !== "object") throw new Error("文件内容为空或无法解析")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const o = raw as any
+  if (o.packageType !== "lesson5-version-change-leader-v1") {
+    throw new Error("请选择组长在本关导出的「改动落地汇总包」JSON 文件")
+  }
+  if (!Array.isArray(o.changeRecords)) throw new Error("汇总包缺少改动表，请让组长重新导出")
+  return o as Lesson5VersionChangeLeaderPackageV1
+}
+
+/**
+ * 根据当前档案构建组长汇总包
+ * @param changeRecordsOverride 若传入，则用其代替档案中的 changeRecords（便于导出前尚未写回 IDB 的编辑态）
+ */
+export function buildLesson5VersionChangeLeaderPackage(
+  portfolio: ModulePortfolio,
+  changeRecordsOverride?: ChangeRecord[]
+): Lesson5VersionChangeLeaderPackageV1 {
+  const { student, lesson1, lesson5 } = portfolio
+  const rows = changeRecordsOverride ?? lesson5.changeRecords
+  let pkgs: PeerFeedbackOpinionPackage[] = []
+  try {
+    const arr = JSON.parse(lesson5.peerFeedbackImportedPackagesJson || "[]") as unknown
+    if (Array.isArray(arr)) pkgs = arr as PeerFeedbackOpinionPackage[]
+  } catch {
+    /* 忽略 */
+  }
+  const peerSummaries: Lesson5PeerSummaryInLeaderPackage[] = pkgs.map(p => ({
+    studentName: p.studentName,
+    priorityChange: p.priorityChange ?? "",
+    dimensionsSummary: (p.feedbackDimensions ?? [])
+      .filter(d => d.status !== "" || (d.suggestion && d.suggestion.trim()))
+      .map(d => {
+        const st = d.status === "needs-change" ? "需改" : d.status === "clear" ? "清楚" : "未判断"
+        const sug = d.suggestion?.trim() ? `；${d.suggestion.trim()}` : ""
+        return `${d.name}：${st}${sug}`
+      })
+      .join("\n") || "（未填写维度判断）",
+  }))
+  return {
+    packageType: "lesson5-version-change-leader-v1",
+    leaderName: student.studentName,
+    clazz: student.clazz,
+    groupName: student.groupName,
+    finalResearchQuestion: lesson1.groupConsensus?.finalResearchQuestion ?? "",
+    leaderPriorityChange: lesson5.priorityChange,
+    peerSummaries,
+    changeRecords: rows.filter(r => r.item.trim() && r.before.trim() && r.after.trim() && r.reason.trim()),
+    exportedAt: new Date().toISOString(),
+  }
+}
+
+/** 下载组长改动落地汇总包 */
+export function downloadLesson5VersionChangeLeaderPackage(
+  portfolio: ModulePortfolio,
+  changeRecordsOverride?: ChangeRecord[]
+): void {
+  const pkg = buildLesson5VersionChangeLeaderPackage(portfolio, changeRecordsOverride)
+  const json = JSON.stringify(pkg, null, 2)
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const safe = `${portfolio.student.clazz ?? ""}_${pkg.leaderName}_改动落地汇总包`.replace(/[/\\?%*:|"<>]/g, "_")
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `${safe}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 /** 导出继续学习包为 Blob（JSON 格式） */
@@ -153,7 +335,7 @@ function migratePortfolioData(raw: unknown): ModulePortfolio {
   if (!data?.lesson5) {
     data.lesson5 = createEmptyLesson5State()
   } else {
-    data.lesson5 = { ...createEmptyLesson5State(), ...data.lesson5 }
+    data.lesson5 = normalizeLesson5State(data.lesson5)
   }
 
   // 预埋 lesson6 字段（课时6上线前的旧包无此字段）

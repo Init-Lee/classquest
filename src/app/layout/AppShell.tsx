@@ -10,6 +10,7 @@ import { TopLessonProgress } from "./TopLessonProgress"
 import { GlobalActions } from "./GlobalActions"
 import { usePortfolio } from "@/app/providers/AppProvider"
 import { Button } from "@/shared/ui/button"
+import { getPortfolioGroupDisplayLabel } from "@/shared/utils/group-display"
 
 export function AppShell() {
   const { portfolio, isTeacherMode, exitTeacherMode } = usePortfolio()
@@ -69,7 +70,7 @@ export function AppShell() {
             )}
             <span>{portfolio.student.clazz} · {portfolio.student.studentName}</span>
             <span className="text-border">|</span>
-            <span>小组：{portfolio.student.groupName}</span>
+            <span>小组：{getPortfolioGroupDisplayLabel(portfolio)}</span>
             <span className="text-border">|</span>
             <span>{portfolio.student.role === "leader" ? "组长" : "组员"}</span>
             <span className="text-border">|</span>

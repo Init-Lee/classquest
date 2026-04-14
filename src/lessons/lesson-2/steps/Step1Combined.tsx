@@ -18,6 +18,7 @@ import { Badge } from "@/shared/ui/badge"
 import { usePortfolio } from "@/app/providers/AppProvider"
 import { advancePointer } from "@/shared/utils/pointer"
 import { formatDateReadable } from "@/shared/utils/format"
+import { getPortfolioGroupDisplayLabel } from "@/shared/utils/group-display"
 import type { Lesson2Assignment } from "@/domains/evidence/types"
 
 export default function Step1Combined() {
@@ -83,7 +84,7 @@ export default function Step1Combined() {
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div><span className="text-muted-foreground">姓名：</span>{student.studentName}</div>
             <div><span className="text-muted-foreground">班级：</span>{student.clazz}</div>
-            <div><span className="text-muted-foreground">小组：</span>{student.groupName}</div>
+            <div><span className="text-muted-foreground">小组：</span>{getPortfolioGroupDisplayLabel(portfolio)}</div>
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">角色：</span>
               <Badge variant={isLeader ? "default" : "secondary"}>

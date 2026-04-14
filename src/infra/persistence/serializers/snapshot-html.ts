@@ -2,11 +2,17 @@
  * 文件说明：阶段快照 HTML 生成器
  * 职责：将 ModulePortfolio 的某一阶段数据渲染为可打印的单文件 HTML 快照
  *       快照面向教师阅读评分，不要求可回写系统
- * 更新触发：快照内容字段变化时；需要新增快照类型时；调整打印样式时
+ * 更新触发：快照内容字段变化时；需要新增快照类型时；调整打印样式时；元信息表中「小组」展示规则（组长姓名）变化时
  */
 
 import type { ModulePortfolio } from "@/domains/portfolio/types"
 import { buildSnapshotFilename } from "@/shared/utils/format"
+import { getPortfolioGroupDisplayLabel } from "@/shared/utils/group-display"
+
+/** 快照元信息表格单元格转义，避免 HTML 注入 */
+function metaEsc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
 
 const SNAPSHOT_STYLES = `
   <style>
@@ -48,7 +54,7 @@ function buildR1PersonalSnapshot(portfolio: ModulePortfolio): string {
   <h1>AI科学传播站 · 课时1 · 个人研究方向（R1）快照</h1>
   <table class="meta-table">
     <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
-    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
     <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
     <tr><td>快照阶段</td><td colspan="3">课时1 · 第2关完成（个人R1阶段）</td></tr>
   </table>
@@ -101,7 +107,7 @@ function buildLesson1FullSnapshot(portfolio: ModulePortfolio): string {
   <h1>AI科学传播站 · 课时1 · 完整阶段快照</h1>
   <table class="meta-table">
     <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
-    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${isLeader ? "组长" : "组员"}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>角色</td><td>${isLeader ? "组长" : "组员"}</td></tr>
     <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
     <tr><td>当前进度</td><td colspan="3">课时${portfolio.pointer.lessonId} · 第${portfolio.pointer.stepId}关</td></tr>
     ${isMember && lesson1.confirmedOwnerName ? `<tr><td>分工确认名</td><td colspan="3">${lesson1.confirmedOwnerName}（组长文件中与本人对应的名字）</td></tr>` : ""}
@@ -262,7 +268,7 @@ function buildLesson2PublicSnapshot(portfolio: ModulePortfolio): string {
   <h1>AI科学传播站 · 课时2 · 证据采集阶段快照</h1>
   <table class="meta-table">
     <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${myName}</td></tr>
-    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
     <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
     <tr><td>当前进度</td><td colspan="3">课时${portfolio.pointer.lessonId} · 第${portfolio.pointer.stepId}关</td></tr>
     ${lesson1.confirmedOwnerName && student.role === "member" ? `<tr><td>分工确认名</td><td colspan="3">${lesson1.confirmedOwnerName}</td></tr>` : ""}
@@ -349,7 +355,7 @@ function buildLesson3Snapshot(portfolio: ModulePortfolio): string {
   <h1>AI科学传播站 · 课时3 · 素材整理与证据加工阶段快照</h1>
   <table class="meta-table">
     <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
-    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
     <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
     <tr><td>当前进度</td><td colspan="3">课时${portfolio.pointer.lessonId} · 第${portfolio.pointer.stepId}关</td></tr>
     <tr><td>本课完成度</td><td colspan="3">${lesson3.toolboxCompleted ? "✓ 第2关已完成" : "第2关进行中"}${lesson3.selectedMaterials.length > 0 ? `，第3关已选 ${lesson3.selectedMaterials.length} 条材料` : ""}${lesson3.evidenceCards.length > 0 ? `，第4关已完成 ${lesson3.evidenceCards.length} 张证据卡` : ""}${lesson3.completed ? "，✓ 课时3已完成" : ""}</td></tr>
@@ -463,7 +469,7 @@ function buildLesson4Snapshot(portfolio: ModulePortfolio): string {
   <h1>AI科学传播站 · 课时4 · 结论形成与网页传播阶段快照</h1>
   <table class="meta-table">
     <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
-    <tr><td>小组</td><td>${student.groupName}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>角色</td><td>${student.role === "leader" ? "组长" : "组员"}</td></tr>
     <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
     <tr><td>当前进度</td><td colspan="3">课时${portfolio.pointer.lessonId} · 第${portfolio.pointer.stepId}关</td></tr>
     <tr><td>本课完成度</td><td colspan="3">
@@ -562,10 +568,28 @@ function buildLesson5Snapshot(portfolio: ModulePortfolio): string {
     </tr>
   `).join("")
 
-  const priorityItems = lesson5.priorityChanges
-    .filter(p => p.trim())
-    .map((p, i) => `<li>${i + 1}. ${p}</li>`)
-    .join("")
+  const priorityHtml = lesson5.priorityChange.trim()
+    ? `<p class="field-value">${lesson5.priorityChange.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`
+    : "<p class='text-muted'>（未填写）</p>"
+
+  let importedPeerHtml = ""
+  try {
+    const raw = JSON.parse(lesson5.peerFeedbackImportedPackagesJson || "[]") as { studentName?: string; priorityChange?: string }[]
+    if (Array.isArray(raw) && raw.length > 0) {
+      const lis = raw.map(p => {
+        const n = (p.studentName ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        const t = (p.priorityChange ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        return `<li><strong>${n}</strong>：${t || "—"}</li>`
+      }).join("")
+      importedPeerHtml = `
+  <div class="section">
+    <div class="section-title">📎 组长已导入的组员意见包</div>
+    <ul style="padding-left:20px;line-height:2">${lis}</ul>
+  </div>`
+    }
+  } catch {
+    /* 忽略解析错误 */
+  }
 
   const changeRows = lesson5.changeRecords
     .filter(r => r.item.trim())
@@ -586,7 +610,7 @@ function buildLesson5Snapshot(portfolio: ModulePortfolio): string {
   <h1>AI科学传播站 · 课时5 · 预演展示与反馈优化 快照</h1>
   <table class="meta-table">
     <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
-    <tr><td>小组</td><td>${student.groupName}</td><td>主题包</td><td>${themePack}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>主题包</td><td>${themePack}</td></tr>
     <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
   </table>
 
@@ -599,14 +623,10 @@ function buildLesson5Snapshot(portfolio: ModulePortfolio): string {
   </div>
 
   <div class="section">
-    <div class="section-title">🎯 本轮优先修改清单</div>
-    <ul style="padding-left:20px;line-height:2">${priorityItems || "<li>（未填写）</li>"}</ul>
-    ${lesson5.overallSuggestion ? `
-    <div class="field" style="margin-top:12px">
-      <div class="field-label">总体建议</div>
-      <div class="field-value">${lesson5.overallSuggestion}</div>
-    </div>` : ""}
+    <div class="section-title">🎯 本轮优先修改</div>
+    ${priorityHtml}
   </div>
+  ${importedPeerHtml}
 
   <div class="section">
     <div class="section-title">🔧 第2关 · 版本改动说明</div>

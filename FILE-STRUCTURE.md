@@ -138,7 +138,7 @@ src/
 │       │   ├── portfolio.repository.ts      # PortfolioRepository 接口
 │       │   └── portfolio.repository.idb.ts  # IndexedDB 实现（含 clear() 清空全部）
 │       └── serializers/
-│           ├── continue-package.ts  # 继续学习包序列化/反序列化；导入时 lesson3/lesson4 缺字段补齐；downloadLeaderFile（组长文件）；PersonalPackage/SkeletonPackageV1 序列化（课时4数据传递）
+│           ├── continue-package.ts  # 继续学习包序列化/反序列化；导入时 lesson3/lesson4/lesson5 缺字段补齐；downloadLeaderFile（组长文件）；PersonalPackage/SkeletonPackageV1/PeerFeedbackOpinionPackage（课时4~5 数据传递）
 │           └── snapshot-html.ts     # 阶段快照 HTML 生成（含 lesson4-full 类型；课时4快照包含骨架包合并数据节）
 │
 └── shared/              # Shared 层：共享 UI、工具，无业务逻辑
@@ -150,6 +150,7 @@ src/
     ├── utils/           #   工具函数
     │   ├── cn.ts                 # clsx + tailwind-merge
     │   ├── format.ts             # 日期格式化、文件名生成（含 buildLeaderFilename）
+    │   ├── group-display.ts      # 小组对外展示：getPortfolioGroupDisplayLabel（组长用本人名；组员优先骨架包 leaderName）
     │   └── pointer.ts            # 进度指针工具：advancePointer（只前进不后退）、resolvePointerFromState（导入修正）
     └── constants/
         └── demo-portfolio.ts     # 教师演示模式预填档案（不持久化，仅内存使用）
@@ -362,6 +363,8 @@ Infra 层
 | `PersonalPackage` | L3 Step5「导出个人整理包」（仅组员） | L4 Step1 组长导入 | 含学生身份、lesson2 完整资料条目（`citationFull`）、lesson3 加工结果 |
 | `SkeletonPackageV1` | L4 Step1 组长「导出骨架包 v1」 | L4 Step1 组员导入（支持重新导入） | 含 posterTitle/posterSubtitle、mergedWhyCare、mergedWhatWeSee[]、mergedSources[]（完整 citationFull）、possibleCauses、memberPackages[] |
 | `production-plan-v1` | L4 Step3 组长「导出方案单」 | L4 Step3 组员导入 | 含 ProductionPlan 完整字段 + groupName/leaderName/exportedAt |
+| `PeerFeedbackOpinionPackage`（`peer-feedback-opinion-v1`） | L5 Step1 组员「导出意见包」 | L5 Step1 组长导入 | 四维度 + `priorityChange` + 学生/班级/小组信息；组长侧写入 `peerFeedbackImportedPackagesJson` |
+| `Lesson5VersionChangeLeaderPackageV1`（`lesson5-version-change-leader-v1`） | L5 Step2 组长「导出改动落地汇总包」 | L5 Step2 组员导入 | 含第1关摘要 + `changeRecords`；组员写入 `importedVersionChangePackageJson` |
 
 ### 3. 角色分离与 UI 布局
 
@@ -395,28 +398,33 @@ Infra 层
 
 | 字段 | 语义 | 主要写入步骤 |
 |------|------|-------------|
-| `feedbackDimensions` | 四维度反馈判断（讲解逻辑/证据支撑/结论合理性/建议可行性），各含 status + suggestion | L5 Step1 |
-| `priorityChanges` | 优先修改点列表（前2条必填，第3条选填） | L5 Step1 |
-| `overallSuggestion` | 总体建议（选填） | L5 Step1 |
-| `feedbackExported` | 第1关文本是否已导出到剪贴板 | L5 Step1 |
-| `feedbackCompleted` | 第1关是否已完成（满足至少2条优先修改点） | L5 Step1 |
-| `changeRecords` | 改动说明记录行（至少2行四列完整才可过关） | L5 Step2 |
+| `feedbackDimensions` | 四维度反馈判断（海报逻辑/证据支撑/结论合理性/建议可行性），各含 status + suggestion | L5 Step1 |
+| `priorityChange` | 本轮优先修改（单条必填） | L5 Step1 |
+| `peerFeedbackImportedPackagesJson` | 组长侧：已导入的组员「同伴意见包」JSON 数组字符串（`PeerFeedbackOpinionPackage[]`） | L5 Step1 |
+| `feedbackExported` | 第1关组员是否已导出同伴意见包；点「完成」时亦置 true | L5 Step1 |
+| `feedbackCompleted` | 第1关是否已完成（满足一条优先修改 + 表单校验后点「完成」） | L5 Step1 |
+| `changeRecords` | 改动说明（组长编辑；`item` 为海报五部分之一；`reason` 为第1关闭环下拉值） | L5 Step2 |
+| `versionChangeLeaderPackageExported` | 组长是否已导出「改动落地汇总包」JSON；与 `lesson5.completed` 共同用于 Step2「首次完成前须导出一次」门禁 | L5 Step2 |
+| `importedVersionChangePackageJson` | 组员：已导入的组长汇总包 JSON 全文 | L5 Step2 |
+| `versionChangeMemberAcknowledged` | 组员：已勾选核对汇总包 | L5 Step2 |
 | `completed` | 课时5是否已完成 | L5 Step2 |
 
 辅助类型：
 - `FeedbackDimension`：`{ name, status: "clear" | "needs-change" | "", suggestion }`
-- `ChangeRecord`：`{ item, before, after, reason }`
+- `ChangeRecord`：`{ item, before, after, reason }`（`item` 枚举见 `lesson-5/config.ts` 的 `LESSON5_POSTER_SECTION_OPTIONS`）
+
+**第1关角色**：`student.role === "leader"` 为双栏（左同组员表单，右为按课时1名单核对组员意见包导入（多选文件）+ 汇总预览，组长本机填写自动计入汇总，**不导出**同伴意见包）；组员为单栏，仅组员显示「导出意见包」，无复制文本留痕。顶栏/首页「小组」展示用 `getPortfolioGroupDisplayLabel`（组长名；组员读 `lesson4.skeletonPackageJson.leaderName`）。
 
 ### 2. 目录结构
 
 ```
 src/lessons/lesson-5/
-├── config.ts                    # 课时配置（2关：意见入池/改动落地）
+├── config.ts                    # 课时配置（2关）+ 第2关海报五部分枚举 `LESSON5_POSTER_SECTION_OPTIONS`
 ├── guards.ts                    # Guard：Step1 需 lesson4.completed；Step2 需 feedbackCompleted
 ├── routes.tsx                   # 路由（step/1 → step/2），含课时5绿色标签
 └── steps/
-    ├── Step1PeerFeedback.tsx    # 第1关：四维度卡片 + 优先修改清单 + 文本导出
-    └── Step2VersionChange.tsx   # 第2关：改动说明表格 + 文本/JSON 导出
+    ├── Step1PeerFeedback.tsx    # 第1关：组员/组长模式；四维度 + 单条优先修改；仅组员导出意见包；组长导入汇总
+    └── Step2VersionChange.tsx   # 第2关：组长左汇总右表格+导出汇总包（首次完成前须导出一次；导出按钮琥珀强调/已导出绿色弱提示）；组员仅「导入汇总包」天青描边；「完成课时5」与组长同款主按钮；核对条单层边框
 ```
 
 ### 3. 课时4 → 课时5 跳转
@@ -428,7 +436,7 @@ src/lessons/lesson-5/
 ### 4. 阶段快照
 
 `"lesson5-full"` 类型 → `buildLesson5Snapshot()` 函数：
-- 展示四维度判断表格、优先修改清单、改动说明表格
+- 展示四维度判断表格、单条优先修改、（若有）组长已导入组员意见摘要、改动说明表格
 - `GlobalActions.tsx` 的 `handleSnapshot` 含 `currentLessonId === 5` 分支
 
 ### 5. 课时6 预埋
@@ -439,4 +447,4 @@ src/lessons/lesson-5/
 
 ---
 
-*最后更新：2026-04-14（产品发布号 v0.5.0 / lesson-5-dev 分支；课时5全2关完整实现；课时6类型预埋；课时4→5智能跳转）*
+*最后更新：2026-04-14（产品发布号 v0.5.0 / lesson-5-dev；课时5 组员/组长分流与意见包；Lesson5State；L5 Step2 组长首次完成前导出门禁、导出按钮琥珀强调、改动表布局与校验；组员仅「导入汇总包」天青描边、「完成课时5」与组长主按钮一致、核对条单层边框；课时6 类型预埋；课时4→5 智能跳转）*

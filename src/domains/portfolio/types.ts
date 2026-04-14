@@ -217,7 +217,7 @@ export interface Lesson4State {
 
 /**
  * 课时5第1关：四维度反馈判断
- * 对应同伴反馈单的四个评估维度（讲解逻辑/证据支撑/结论合理性/建议可行性）
+ * 对应同伴反馈单的四个评估维度（海报逻辑/证据支撑/结论合理性/建议可行性）
  */
 export interface FeedbackDimension {
   /** 维度名称 */
@@ -233,33 +233,39 @@ export interface FeedbackDimension {
  * 记录海报修改前后的对比，至少需要 2 行完整填写
  */
 export interface ChangeRecord {
-  /** 修改项目：改的是哪一块 */
+  /** 修改项目：海报五部分之一（标题、探究问题、为何关注、我们看见了什么、可能的线索） */
   item: string
   /** 修改前：原来怎么写/怎么讲 */
   before: string
   /** 修改后：现在改成什么 */
   after: string
-  /** 为什么改：依据哪条反馈/证据 */
+  /** 依据哪条反馈：须与第1关下拉选项值一致（存完整选项文案） */
   reason: string
 }
 
 /** 课时5状态数据（预演展示与反馈优化） */
 export interface Lesson5State {
   // ---- 第1关：意见入池 ----
-  /** 四维度反馈（讲解逻辑/证据支撑/结论合理性/建议可行性） */
+  /** 四维度反馈（海报逻辑/证据支撑/结论合理性/建议可行性）；组员为个人意见，组长为小组汇总表 */
   feedbackDimensions: FeedbackDimension[]
-  /** 优先修改点列表（第1、2条必填，第3条选填） */
-  priorityChanges: string[]
-  /** 总体建议（选填） */
-  overallSuggestion: string
-  /** 第1关文本是否已导出到剪贴板 */
+  /** 本轮优先修改（一条）；组员写个人最关注的一条，组长写汇总后定稿 */
+  priorityChange: string
+  /** 组长：已导入的组员「同伴意见包」JSON 数组字符串（与课时4导入成员包类似） */
+  peerFeedbackImportedPackagesJson: string
+  /** 第1关是否已导出过同伴意见包（仅组员）；或已点「完成」时一并置 true */
   feedbackExported: boolean
-  /** 第1关是否已完成（满足至少2条优先修改点） */
+  /** 第1关是否已完成（组员/组长各自在自己设备上点完成） */
   feedbackCompleted: boolean
 
   // ---- 第2关：改动落地 ----
-  /** 改动说明记录（至少2行四列完整才可导出） */
+  /** 改动说明记录（至少2行；组长编辑；组员不依赖此字段展示） */
   changeRecords: ChangeRecord[]
+  /** 组长：是否已导出「改动落地汇总包」JSON；与 completed 配合实现「首次完成第2关前须至少导出一次」 */
+  versionChangeLeaderPackageExported: boolean
+  /** 组员：已导入的组长汇总包 JSON 全文（packageType: lesson5-version-change-leader-v1） */
+  importedVersionChangePackageJson: string
+  /** 组员：已勾选「已核对组长汇总」后可完成课时5 */
+  versionChangeMemberAcknowledged: boolean
 
   /** 课时5是否已完成 */
   completed: boolean
@@ -417,21 +423,85 @@ export function createEmptyLesson4State(): Lesson4State {
 export function createEmptyLesson5State(): Lesson5State {
   return {
     feedbackDimensions: [
-      { name: "讲解逻辑", status: "", suggestion: "" },
+      { name: "海报逻辑", status: "", suggestion: "" },
       { name: "证据支撑", status: "", suggestion: "" },
       { name: "结论合理性", status: "", suggestion: "" },
       { name: "建议可行性", status: "", suggestion: "" },
     ],
-    priorityChanges: ["", "", ""],
-    overallSuggestion: "",
+    priorityChange: "",
+    peerFeedbackImportedPackagesJson: "[]",
     feedbackExported: false,
     feedbackCompleted: false,
     changeRecords: [
       { item: "", before: "", after: "", reason: "" },
       { item: "", before: "", after: "", reason: "" },
-      { item: "", before: "", after: "", reason: "" },
     ],
+    versionChangeLeaderPackageExported: false,
+    importedVersionChangePackageJson: "",
+    versionChangeMemberAcknowledged: false,
     completed: false,
+  }
+}
+
+/**
+ * 合并旧版 lesson5 字段（priorityChanges / overallSuggestion / 讲解逻辑）并补齐缺键
+ * 触发：IndexedDB 旧记录、继续学习包导入、normalizeModulePortfolio
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeLesson5State(raw: any): Lesson5State {
+  const base = createEmptyLesson5State()
+  if (!raw || typeof raw !== "object") return base
+
+  let priorityChange = typeof raw.priorityChange === "string" ? raw.priorityChange : ""
+  if (!priorityChange.trim() && Array.isArray(raw.priorityChanges)) {
+    priorityChange = raw.priorityChanges
+      .filter((x: unknown) => typeof x === "string" && x.trim())
+      .join("；")
+  }
+  if (!priorityChange.trim() && typeof raw.overallSuggestion === "string" && raw.overallSuggestion.trim()) {
+    priorityChange = raw.overallSuggestion.trim()
+  }
+
+  let dims: FeedbackDimension[] = Array.isArray(raw.feedbackDimensions) && raw.feedbackDimensions.length > 0
+    ? raw.feedbackDimensions.map((d: FeedbackDimension, i: number) => ({
+      name: typeof d.name === "string" ? d.name : base.feedbackDimensions[i]?.name ?? "",
+      status: d.status === "clear" || d.status === "needs-change" || d.status === "" ? d.status : "",
+      suggestion: typeof d.suggestion === "string" ? d.suggestion : "",
+    }))
+    : [...base.feedbackDimensions]
+
+  while (dims.length < 4) {
+    dims.push({ ...base.feedbackDimensions[dims.length] })
+  }
+  dims = dims.slice(0, 4).map((d, i) => {
+    const name = i === 0 && d.name === "讲解逻辑" ? "海报逻辑" : (d.name || base.feedbackDimensions[i].name)
+    return { ...d, name }
+  })
+
+  const imported = typeof raw.peerFeedbackImportedPackagesJson === "string"
+    ? raw.peerFeedbackImportedPackagesJson
+    : "[]"
+
+  return {
+    feedbackDimensions: dims,
+    priorityChange,
+    peerFeedbackImportedPackagesJson: imported,
+    feedbackExported: Boolean(raw.feedbackExported),
+    feedbackCompleted: Boolean(raw.feedbackCompleted),
+    changeRecords: Array.isArray(raw.changeRecords) && raw.changeRecords.length > 0
+      ? raw.changeRecords.map((r: ChangeRecord) => ({
+        item: String(r?.item ?? ""),
+        before: String(r?.before ?? ""),
+        after: String(r?.after ?? ""),
+        reason: String(r?.reason ?? ""),
+      }))
+      : base.changeRecords,
+    versionChangeLeaderPackageExported: Boolean(raw.versionChangeLeaderPackageExported),
+    importedVersionChangePackageJson: typeof raw.importedVersionChangePackageJson === "string"
+      ? raw.importedVersionChangePackageJson
+      : "",
+    versionChangeMemberAcknowledged: Boolean(raw.versionChangeMemberAcknowledged),
+    completed: Boolean(raw.completed),
   }
 }
 
@@ -461,7 +531,7 @@ export function normalizeModulePortfolio(p: ModulePortfolio): ModulePortfolio {
     ...p,
     lesson3: { ...createEmptyLesson3State(), ...p.lesson3 },
     lesson4: { ...createEmptyLesson4State(), ...(p.lesson4 ?? {}) },
-    lesson5: { ...createEmptyLesson5State(), ...(p.lesson5 ?? {}) },
+    lesson5: normalizeLesson5State(p.lesson5 ?? {}),
     lesson6: { ...createEmptyLesson6State(), ...(p.lesson6 ?? {}) },
   }
 }
