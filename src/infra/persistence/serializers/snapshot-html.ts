@@ -547,9 +547,87 @@ function buildLesson4Snapshot(portfolio: ModulePortfolio): string {
 </html>`
 }
 
+/** 生成课时5阶段快照 HTML（反馈单 + 版本改动说明） */
+function buildLesson5Snapshot(portfolio: ModulePortfolio): string {
+  const { student, lesson5 } = portfolio
+  const now = new Date().toLocaleString("zh-CN")
+
+  const themePack = portfolio.lesson1.r1ByMember[0]?.themePack ?? "—"
+
+  const dimensionRows = lesson5.feedbackDimensions.map(d => `
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.status === "clear" ? "基本清楚" : d.status === "needs-change" ? "需要修改" : "未填写"}</td>
+      <td>${d.suggestion || "—"}</td>
+    </tr>
+  `).join("")
+
+  const priorityItems = lesson5.priorityChanges
+    .filter(p => p.trim())
+    .map((p, i) => `<li>${i + 1}. ${p}</li>`)
+    .join("")
+
+  const changeRows = lesson5.changeRecords
+    .filter(r => r.item.trim())
+    .map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${r.item || "—"}</td>
+        <td>${r.before || "—"}</td>
+        <td>${r.after || "—"}</td>
+        <td>${r.reason || "—"}</td>
+      </tr>
+    `).join("")
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>课时5快照 — ${student.studentName}</title>${SNAPSHOT_STYLES}</head>
+<body>
+  <h1>AI科学传播站 · 课时5 · 预演展示与反馈优化 快照</h1>
+  <table class="meta-table">
+    <tr><td>班级</td><td>${student.clazz}</td><td>姓名</td><td>${student.studentName}</td></tr>
+    <tr><td>小组</td><td>${student.groupName}</td><td>主题包</td><td>${themePack}</td></tr>
+    <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
+  </table>
+
+  <div class="section">
+    <div class="section-title">📝 第1关 · 同伴反馈单（四维度判断）</div>
+    <table class="evidence-table">
+      <thead><tr><th>维度</th><th>判断</th><th>关键建议</th></tr></thead>
+      <tbody>${dimensionRows}</tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎯 本轮优先修改清单</div>
+    <ul style="padding-left:20px;line-height:2">${priorityItems || "<li>（未填写）</li>"}</ul>
+    ${lesson5.overallSuggestion ? `
+    <div class="field" style="margin-top:12px">
+      <div class="field-label">总体建议</div>
+      <div class="field-value">${lesson5.overallSuggestion}</div>
+    </div>` : ""}
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔧 第2关 · 版本改动说明</div>
+    ${changeRows ? `
+    <table class="evidence-table">
+      <thead><tr><th>#</th><th>修改项目</th><th>修改前</th><th>修改后</th><th>为什么改</th></tr></thead>
+      <tbody>${changeRows}</tbody>
+    </table>` : "<p style='color:#9ca3af'>（尚未填写改动记录）</p>"}
+  </div>
+
+  <div class="footer">
+    <p>文件由 ClassQuest 自动生成 · ${now}</p>
+    <p>说明：本快照为课时5（预演展示与反馈优化）阶段过程性评价材料。</p>
+  </div>
+</body>
+</html>`
+}
+
 /** 根据快照类型分发到对应的生成函数 */
 export function buildSnapshotHTML(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full",
   portfolio: ModulePortfolio
 ): string {
   switch (type) {
@@ -565,6 +643,8 @@ export function buildSnapshotHTML(
       return buildLesson3Snapshot(portfolio)
     case "lesson4-full":
       return buildLesson4Snapshot(portfolio)
+    case "lesson5-full":
+      return buildLesson5Snapshot(portfolio)
     default:
       return buildLesson1FullSnapshot(portfolio)
   }
@@ -572,14 +652,15 @@ export function buildSnapshotHTML(
 
 /** 触发浏览器下载快照 HTML */
 export function downloadSnapshot(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full",
   portfolio: ModulePortfolio
 ): void {
   const html = buildSnapshotHTML(type, portfolio)
   const blob = new Blob([html], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)
   /** 用快照类型推导课时编号，避免依赖可能落后的 pointer */
-  const lessonIdForFilename = type === "lesson4-full" ? 4
+  const lessonIdForFilename = type === "lesson5-full" ? 5
+    : type === "lesson4-full" ? 4
     : type === "lesson3-toolbox" ? 3
     : type.startsWith("lesson2") ? 2
     : 1

@@ -7,7 +7,7 @@
  */
 
 import type { ModulePortfolio, EvidenceCard, SelectedMaterial } from "@/domains/portfolio/types"
-import { createEmptyLesson3State, createEmptyLesson4State } from "@/domains/portfolio/types"
+import { createEmptyLesson3State, createEmptyLesson4State, createEmptyLesson5State, createEmptyLesson6State } from "@/domains/portfolio/types"
 import type { PublicEvidenceRecord, FieldEvidenceTask } from "@/domains/evidence/types"
 import { buildContinuePackageFilename, buildLeaderFilename } from "@/shared/utils/format"
 
@@ -147,6 +147,20 @@ function migratePortfolioData(raw: unknown): ModulePortfolio {
     data.lesson4 = createEmptyLesson4State()
   } else {
     data.lesson4 = { ...createEmptyLesson4State(), ...data.lesson4 }
+  }
+
+  // v0.5 → v0.5+：补充 lesson5 字段（课时5上线前的旧包无此字段）
+  if (!data?.lesson5) {
+    data.lesson5 = createEmptyLesson5State()
+  } else {
+    data.lesson5 = { ...createEmptyLesson5State(), ...data.lesson5 }
+  }
+
+  // 预埋 lesson6 字段（课时6上线前的旧包无此字段）
+  if (!data?.lesson6) {
+    data.lesson6 = createEmptyLesson6State()
+  } else {
+    data.lesson6 = { ...createEmptyLesson6State(), ...data.lesson6 }
   }
 
   return data as ModulePortfolio

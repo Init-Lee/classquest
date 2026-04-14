@@ -85,7 +85,7 @@ export function GlobalActions() {
     const currentLessonId = routeMatch ? parseInt(routeMatch[1]) : portfolio.pointer.lessonId
     const currentStepId = routeMatch ? parseInt(routeMatch[2]) : portfolio.pointer.stepId
 
-    let type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson3-toolbox" | "lesson4-full"
+    let type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full"
     if (currentLessonId === 1) {
       // 课时1 第1-2关只有个人 R1 数据；第3关起有小组数据，生成完整课时1快照
       type = currentStepId <= 2 ? "r1-personal" : "lesson1-full"
@@ -93,6 +93,8 @@ export function GlobalActions() {
       type = "lesson2-public"
     } else if (currentLessonId === 4) {
       type = "lesson4-full"
+    } else if (currentLessonId === 5) {
+      type = "lesson5-full"
     } else {
       // 课时3：生成课时3阶段快照（含课时2证据摘要）
       type = "lesson3-toolbox"

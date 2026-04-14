@@ -50,17 +50,17 @@ export const LESSON_REGISTRY: LessonConfig[] = [
   },
   {
     id: 5,
-    title: "科学展示准备",
-    subtitle: "即将开放",
-    enabled: false,
-    totalSteps: 6,
+    title: "预演展示与反馈优化",
+    subtitle: "先听清问题，再决定改哪里",
+    enabled: true,
+    totalSteps: 2,
   },
   {
     id: 6,
-    title: "成果汇报与反思",
-    subtitle: "即将开放",
+    title: "终版海报路演与表达设计",
+    subtitle: "所有成员按同一路径讲",
     enabled: false,
-    totalSteps: 6,
+    totalSteps: 2,
   },
 ]
 

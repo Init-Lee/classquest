@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Textarea } from "@/shared/ui/textarea"
 import { usePortfolio } from "@/app/providers/AppProvider"
 import { advancePointer } from "@/shared/utils/pointer"
+import { LESSON_REGISTRY } from "@/app/lesson-registry"
 
 /** 可信发布校验清单 */
 const VERIFY_ITEMS = [
@@ -101,7 +102,12 @@ export default function Step5UpgradeVerify() {
           completed: true,
         },
       })
-      navigate("/")
+      const lesson5Config = LESSON_REGISTRY.find(l => l.id === 5)
+      if (lesson5Config?.enabled) {
+        navigate("/lesson/5/step/1")
+      } else {
+        navigate("/")
+      }
     } finally {
       setCompleting(false)
     }
@@ -116,7 +122,12 @@ export default function Step5UpgradeVerify() {
         pointer: advancePointer(portfolio.pointer, 4, 5),
         lesson4: { ...lesson4, completed: true },
       })
-      navigate("/")
+      const lesson5Config = LESSON_REGISTRY.find(l => l.id === 5)
+      if (lesson5Config?.enabled) {
+        navigate("/lesson/5/step/1")
+      } else {
+        navigate("/")
+      }
     } finally {
       setCompleting(false)
     }

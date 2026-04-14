@@ -7,7 +7,7 @@
  */
 
 import type { ModulePortfolio } from "@/domains/portfolio/types"
-import { createEmptyLesson3State } from "@/domains/portfolio/types"
+import { createEmptyLesson3State, createEmptyLesson6State } from "@/domains/portfolio/types"
 
 /** 创建教师演示用的预填档案（每次进入教师模式时调用，避免引用同一对象） */
 export function createDemoPortfolio(): ModulePortfolio {
@@ -425,6 +425,44 @@ export function createDemoPortfolio(): ModulePortfolio {
       finalExported: true,
       completed: true,
     },
+    lesson5: {
+      feedbackDimensions: [
+        { name: "讲解逻辑", status: "needs-change", suggestion: "先说研究背景再说结论，目前顺序有些跳跃" },
+        { name: "证据支撑", status: "needs-change", suggestion: "「浪费很严重」这句结论缺乏数据支撑，建议补充具体数字" },
+        { name: "结论合理性", status: "clear", suggestion: "" },
+        { name: "建议可行性", status: "clear", suggestion: "" },
+      ],
+      priorityChanges: [
+        "「浪费很严重」结论需补充实测数据或缩小结论范围，不能凭感受定论",
+        "讲解顺序调整：先点题→再出证据→再说结论，不要一上来就念海报",
+        "建议部分可以更具体，说明学生能做什么而不是泛泛的「节约用水」",
+      ],
+      overallSuggestion: "整体逻辑清晰，证据真实，主要需要解决「结论跳跃」和「泛泛建议」两个问题。",
+      feedbackExported: true,
+      feedbackCompleted: true,
+      changeRecords: [
+        {
+          item: "结论表述",
+          before: "「我们学校浪费很严重」",
+          after: "「根据实测，食堂高峰期每桌剩餐约300g，以每天8桌计算，约2400g/天」",
+          reason: "依据反馈第1条：结论需有数据支撑，不能凭感受定论",
+        },
+        {
+          item: "讲解顺序",
+          before: "直接念海报文字，先说结论再说证据",
+          after: "按「点题→证据→判断与建议」顺序重新排练，在海报上用便利贴标注顺序",
+          reason: "依据反馈第2条：讲解逻辑需要先呈现问题再给出证据",
+        },
+        {
+          item: "建议内容",
+          before: "「大家要节约用水」（泛泛口号）",
+          after: "「建议食堂设置打餐指引，按人数参考量打餐；建议学生记录自己的剩餐量」",
+          reason: "依据反馈第3条：建议需具体可行，针对学生和食堂分别提出",
+        },
+      ],
+      completed: true,
+    },
+    lesson6: createEmptyLesson6State(),
     snapshotHistory: [],
     groupPlanVersion: 1,
     createdAt: now,

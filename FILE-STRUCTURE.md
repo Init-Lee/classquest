@@ -389,4 +389,54 @@ Infra 层
 
 ---
 
-*最后更新：2026-04-13（产品发布号 v0.4.0 / SemVer 与 Git 标签对齐；课时4全5关完整实现；快照含骨架包数据节）*
+## 课时5 · 结构摘要
+
+### 1. 领域状态 `Lesson5State`（`domains/portfolio/types.ts`）
+
+| 字段 | 语义 | 主要写入步骤 |
+|------|------|-------------|
+| `feedbackDimensions` | 四维度反馈判断（讲解逻辑/证据支撑/结论合理性/建议可行性），各含 status + suggestion | L5 Step1 |
+| `priorityChanges` | 优先修改点列表（前2条必填，第3条选填） | L5 Step1 |
+| `overallSuggestion` | 总体建议（选填） | L5 Step1 |
+| `feedbackExported` | 第1关文本是否已导出到剪贴板 | L5 Step1 |
+| `feedbackCompleted` | 第1关是否已完成（满足至少2条优先修改点） | L5 Step1 |
+| `changeRecords` | 改动说明记录行（至少2行四列完整才可过关） | L5 Step2 |
+| `completed` | 课时5是否已完成 | L5 Step2 |
+
+辅助类型：
+- `FeedbackDimension`：`{ name, status: "clear" | "needs-change" | "", suggestion }`
+- `ChangeRecord`：`{ item, before, after, reason }`
+
+### 2. 目录结构
+
+```
+src/lessons/lesson-5/
+├── config.ts                    # 课时配置（2关：意见入池/改动落地）
+├── guards.ts                    # Guard：Step1 需 lesson4.completed；Step2 需 feedbackCompleted
+├── routes.tsx                   # 路由（step/1 → step/2），含课时5绿色标签
+└── steps/
+    ├── Step1PeerFeedback.tsx    # 第1关：四维度卡片 + 优先修改清单 + 文本导出
+    └── Step2VersionChange.tsx   # 第2关：改动说明表格 + 文本/JSON 导出
+```
+
+### 3. 课时4 → 课时5 跳转
+
+`lesson-4/steps/Step5UpgradeVerify.tsx` 完成后检查 `LESSON_REGISTRY.find(l => l.id === 5)?.enabled`：
+- `true` → `navigate("/lesson/5/step/1")`
+- `false` → `navigate("/")`（与课时2→3 模式一致）
+
+### 4. 阶段快照
+
+`"lesson5-full"` 类型 → `buildLesson5Snapshot()` 函数：
+- 展示四维度判断表格、优先修改清单、改动说明表格
+- `GlobalActions.tsx` 的 `handleSnapshot` 含 `currentLessonId === 5` 分支
+
+### 5. 课时6 预埋
+
+- `Lesson6State` / `RoadshowStep` 类型已定义在 `domains/portfolio/types.ts`
+- `createEmptyLesson6State()` 已实现，`normalizeModulePortfolio` / `createNewPortfolio` 已包含 `lesson6` 字段
+- `lesson-registry.ts` 课时6 `enabled: false`（待 lesson-6-dev 分支开启）
+
+---
+
+*最后更新：2026-04-14（产品发布号 v0.5.0 / lesson-5-dev 分支；课时5全2关完整实现；课时6类型预埋；课时4→5智能跳转）*

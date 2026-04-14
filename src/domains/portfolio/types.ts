@@ -215,6 +215,95 @@ export interface Lesson4State {
   completed: boolean
 }
 
+/**
+ * 课时5第1关：四维度反馈判断
+ * 对应同伴反馈单的四个评估维度（讲解逻辑/证据支撑/结论合理性/建议可行性）
+ */
+export interface FeedbackDimension {
+  /** 维度名称 */
+  name: string
+  /** 当前判断：基本清楚 | 需要修改 | 未填写 */
+  status: "clear" | "needs-change" | ""
+  /** 关键建议（选填） */
+  suggestion: string
+}
+
+/**
+ * 课时5第2关：版本改动记录行
+ * 记录海报修改前后的对比，至少需要 2 行完整填写
+ */
+export interface ChangeRecord {
+  /** 修改项目：改的是哪一块 */
+  item: string
+  /** 修改前：原来怎么写/怎么讲 */
+  before: string
+  /** 修改后：现在改成什么 */
+  after: string
+  /** 为什么改：依据哪条反馈/证据 */
+  reason: string
+}
+
+/** 课时5状态数据（预演展示与反馈优化） */
+export interface Lesson5State {
+  // ---- 第1关：意见入池 ----
+  /** 四维度反馈（讲解逻辑/证据支撑/结论合理性/建议可行性） */
+  feedbackDimensions: FeedbackDimension[]
+  /** 优先修改点列表（第1、2条必填，第3条选填） */
+  priorityChanges: string[]
+  /** 总体建议（选填） */
+  overallSuggestion: string
+  /** 第1关文本是否已导出到剪贴板 */
+  feedbackExported: boolean
+  /** 第1关是否已完成（满足至少2条优先修改点） */
+  feedbackCompleted: boolean
+
+  // ---- 第2关：改动落地 ----
+  /** 改动说明记录（至少2行四列完整才可导出） */
+  changeRecords: ChangeRecord[]
+
+  /** 课时5是否已完成 */
+  completed: boolean
+}
+
+/**
+ * 课时6第2关：路演四步中的单步路径
+ * 顺序固定为 1-4，不可拖拽或删除
+ */
+export interface RoadshowStep {
+  /** 步骤编号（1-4，只读） */
+  step: number
+  /** 步骤名称（只读） */
+  name: string
+  /** 对应海报位置（必填；如"左上角标题区"） */
+  posterArea: string
+  /** 必说句：所有成员都要守住的核心句（必填） */
+  mustSay: string
+  /** 可展开点：不同成员可以自由详略（选填） */
+  expand: string
+}
+
+/** 课时6状态数据（终版海报路演与表达设计） */
+export interface Lesson6State {
+  // ---- 第1关：示例拆解与路径定标 ----
+  /** 已确认理解四步讲解流程 */
+  exampleAcknowledged: boolean
+
+  // ---- 第2关：讲解路径定稿与轮流试讲 ----
+  /** 四步讲解路径（固定四行，顺序锁定） */
+  roadshowSteps: RoadshowStep[]
+  /** 最可能被追问的问题（必填） */
+  challengeQuestion: string
+  /** 准备回到哪条证据（必填） */
+  evidenceBack: string
+  /** 最后一句收束话（必填） */
+  closingSentence: string
+  /** 路径单文本是否已导出 */
+  pathExported: boolean
+
+  /** 课时6是否已完成 */
+  completed: boolean
+}
+
 /** 模块档案——整个模块所有课时数据的聚合根 */
 export interface ModulePortfolio {
   /** 档案唯一 ID（UUID） */
@@ -239,6 +328,10 @@ export interface ModulePortfolio {
   lesson3: Lesson3State
   /** 课时4数据 */
   lesson4: Lesson4State
+  /** 课时5数据 */
+  lesson5: Lesson5State
+  /** 课时6数据（预埋；lesson-6-dev 开发时填充） */
+  lesson6: Lesson6State
 
   /** 已生成的快照记录 */
   snapshotHistory: SnapshotMeta[]
@@ -320,14 +413,56 @@ export function createEmptyLesson4State(): Lesson4State {
   }
 }
 
+/** 创建一个空的课时5初始状态 */
+export function createEmptyLesson5State(): Lesson5State {
+  return {
+    feedbackDimensions: [
+      { name: "讲解逻辑", status: "", suggestion: "" },
+      { name: "证据支撑", status: "", suggestion: "" },
+      { name: "结论合理性", status: "", suggestion: "" },
+      { name: "建议可行性", status: "", suggestion: "" },
+    ],
+    priorityChanges: ["", "", ""],
+    overallSuggestion: "",
+    feedbackExported: false,
+    feedbackCompleted: false,
+    changeRecords: [
+      { item: "", before: "", after: "", reason: "" },
+      { item: "", before: "", after: "", reason: "" },
+      { item: "", before: "", after: "", reason: "" },
+    ],
+    completed: false,
+  }
+}
+
+/** 创建一个空的课时6初始状态（预埋，lesson-6-dev 开发时完善） */
+export function createEmptyLesson6State(): Lesson6State {
+  return {
+    exampleAcknowledged: false,
+    roadshowSteps: [
+      { step: 1, name: "点题", posterArea: "", mustSay: "", expand: "" },
+      { step: 2, name: "指证据", posterArea: "", mustSay: "", expand: "" },
+      { step: 3, name: "说判断与建议", posterArea: "", mustSay: "", expand: "" },
+      { step: 4, name: "应追问并收束", posterArea: "", mustSay: "", expand: "" },
+    ],
+    challengeQuestion: "",
+    evidenceBack: "",
+    closingSentence: "",
+    pathExported: false,
+    completed: false,
+  }
+}
+
 /**
- * 将档案中的 lesson3/lesson4 与当前默认结构合并（IndexedDB/旧包缺字段时补齐）
+ * 将档案中的 lesson3~lesson6 与当前默认结构合并（IndexedDB/旧包缺字段时补齐）
  */
 export function normalizeModulePortfolio(p: ModulePortfolio): ModulePortfolio {
   return {
     ...p,
     lesson3: { ...createEmptyLesson3State(), ...p.lesson3 },
     lesson4: { ...createEmptyLesson4State(), ...(p.lesson4 ?? {}) },
+    lesson5: { ...createEmptyLesson5State(), ...(p.lesson5 ?? {}) },
+    lesson6: { ...createEmptyLesson6State(), ...(p.lesson6 ?? {}) },
   }
 }
 
@@ -345,6 +480,8 @@ export function createNewPortfolio(student: StudentProfile): ModulePortfolio {
     lesson2: createEmptyLesson2State(),
     lesson3: createEmptyLesson3State(),
     lesson4: createEmptyLesson4State(),
+    lesson5: createEmptyLesson5State(),
+    lesson6: createEmptyLesson6State(),
     snapshotHistory: [],
     groupPlanVersion: 1,
     createdAt: now,

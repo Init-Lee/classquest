@@ -14,6 +14,7 @@ const Lesson1Page = lazy(() => import("@/lessons/lesson-1/routes"))
 const Lesson2Page = lazy(() => import("@/lessons/lesson-2/routes"))
 const Lesson3Page = lazy(() => import("@/lessons/lesson-3/routes"))
 const Lesson4Page = lazy(() => import("@/lessons/lesson-4/routes"))
+const Lesson5Page = lazy(() => import("@/lessons/lesson-5/routes"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 
 const LoadingFallback = () => (
@@ -72,6 +73,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <Lesson4Page />
+          </Suspense>
+        ),
+      },
+      {
+        path: "lesson/5/*",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Lesson5Page />
           </Suspense>
         ),
       },
