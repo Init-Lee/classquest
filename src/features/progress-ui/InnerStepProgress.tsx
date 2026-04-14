@@ -36,9 +36,7 @@ export function InnerStepProgress({
   return (
     <div className="flex items-center gap-1 flex-wrap">
       {steps.map((step, index) => {
-        // Guard 体系保证能进入第 N 关则前 N-1 关均已满足条件，
-        // 因此"当前步骤之前的关卡"都显示为已完成，无需依赖各步骤的 completed flag
-        const isCompleted = completedStepIds.includes(step.id) || step.id < currentStepId
+        const isCompleted = completedStepIds.includes(step.id)
         const isCurrent = step.id === currentStepId
         const isLocked = lockedStepIds.includes(step.id) && !isCompleted
         const isClickable = isCompleted && !isCurrent

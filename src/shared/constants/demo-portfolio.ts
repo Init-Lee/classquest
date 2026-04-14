@@ -23,7 +23,8 @@ export function createDemoPortfolio(): ModulePortfolio {
       groupName: "科学探索组",
       role: "leader",
     },
-    pointer: { lessonId: 4, stepId: 5, updatedAt: now },
+    /** 与 resolvePortfolioPointer 一致：课时4、5 均已完成时指针落在课时5末关 */
+    pointer: { lessonId: 5, stepId: 2, updatedAt: now },
     lesson1: {
       introDone: true,
       r1ByMember: [

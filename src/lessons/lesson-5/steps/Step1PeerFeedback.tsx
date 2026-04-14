@@ -158,7 +158,8 @@ export default function Step1PeerFeedback() {
     try {
       await savePortfolio({
         ...portfolio!,
-        pointer: advancePointer(portfolio!.pointer, 5, 1),
+        /** 第1关完成后指针落在第2关，与「继续闯关」定位一致 */
+        pointer: advancePointer(portfolio!.pointer, 5, 2),
         lesson5: {
           ...portfolio!.lesson5,
           feedbackDimensions: dimensions,

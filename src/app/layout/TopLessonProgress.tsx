@@ -25,12 +25,13 @@ export function TopLessonProgress() {
     const isEnabled = LESSON_REGISTRY.find(l => l.id === lessonId)?.enabled
 
     if (!isEnabled) return "locked"
-    // 优先检查各课时自身的 completed 字段，避免 pointer 尚未更新时判断错误
+    // 先按各课 completed 标志判「已通关」，避免指针仍停在上一课最后一关时顶栏不显示绿色
     if (lessonId === 1 && portfolio.lesson1.completed) return "completed"
     if (lessonId === 2 && portfolio.lesson2.completed) return "completed"
     if (lessonId === 3 && portfolio.lesson3.completed) return "completed"
     if (lessonId === 4 && portfolio.lesson4.completed) return "completed"
     if (lessonId === 5 && portfolio.lesson5.completed) return "completed"
+    if (lessonId === 6 && portfolio.lesson6.completed) return "completed"
     if (lessonId === currentLessonId) return "current"
     if (lessonId < portfolio.pointer.lessonId) return "completed"
     return "available"

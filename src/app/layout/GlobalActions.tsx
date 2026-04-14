@@ -14,7 +14,7 @@ import { usePortfolio } from "@/app/providers/AppProvider"
 import { downloadContinuePackage, deserializeContinuePackage } from "@/infra/persistence/serializers/continue-package"
 import { downloadSnapshot } from "@/infra/persistence/serializers/snapshot-html"
 import { formatDateReadable } from "@/shared/utils/format"
-import { resolvePointerFromState } from "@/shared/utils/pointer"
+import { resolvePortfolioPointer } from "@/app/lesson-registry"
 import { useNavigate, useLocation } from "react-router-dom"
 
 export function GlobalActions() {
@@ -59,7 +59,7 @@ export function GlobalActions() {
     try {
       const imported = await deserializeContinuePackage(file)
       // 修正可能过期的进度指针（档案实际已完成的课时比指针更靠后）
-      const repairedPointer = resolvePointerFromState(imported)
+      const repairedPointer = resolvePortfolioPointer(imported)
       const repairedPortfolio = { ...imported, pointer: repairedPointer }
       await importPortfolio(repairedPortfolio)
       setImportResult({

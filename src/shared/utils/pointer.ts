@@ -40,6 +40,26 @@ export function resolvePointerFromState(portfolio: ModulePortfolio): ProgressPoi
   const now = new Date().toISOString()
   const p = portfolio.pointer
 
+  /**
+   * 必须从「更高课时已完成」向下判断，否则会出现：
+   * 课时3已完成时直接 return {3,5}，导致课时4/5 已完成但指针仍被锁在课时3的 BUG。
+   */
+  // 课时5已完成 → 指针至少应为 {5, 2}（课时5共2关）
+  if (portfolio.lesson5?.completed) {
+    if (p.lessonId < 5 || (p.lessonId === 5 && p.stepId < 2)) {
+      return { lessonId: 5, stepId: 2, updatedAt: now }
+    }
+    return p
+  }
+
+  // 课时4已完成 → 指针至少应为 {4, 5}（课时4共5关；若下一课开放则由注册表层再推进到 {5,1}）
+  if (portfolio.lesson4?.completed) {
+    if (p.lessonId < 4 || (p.lessonId === 4 && p.stepId < 5)) {
+      return { lessonId: 4, stepId: 5, updatedAt: now }
+    }
+    return p
+  }
+
   // 课时3已完成 → 指针至少应为 {3, 5}（课时3共5关）
   if (portfolio.lesson3?.completed) {
     if (p.lessonId < 3 || (p.lessonId === 3 && p.stepId < 5)) {

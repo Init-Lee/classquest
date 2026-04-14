@@ -11,7 +11,7 @@ import type { ModulePortfolio } from "@/domains/portfolio/types"
 import { normalizeModulePortfolio } from "@/domains/portfolio/types"
 import { portfolioRepository } from "@/infra/persistence/repositories/portfolio.repository.idb"
 import { createDemoPortfolio } from "@/shared/constants/demo-portfolio"
-import { resolvePointerFromState } from "@/shared/utils/pointer"
+import { resolvePortfolioPointer } from "@/app/lesson-registry"
 
 /** Portfolio Context 的 Shape */
 interface PortfolioContextValue {
@@ -54,7 +54,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!current) { setPortfolio(null); return }
       const normalized = normalizeModulePortfolio(current)
       /** 修正可能落后的进度指针（与 importPortfolio 逻辑保持一致） */
-      const repairedPointer = resolvePointerFromState(normalized)
+      const repairedPointer = resolvePortfolioPointer(normalized)
       const repairedPortfolio = { ...normalized, pointer: repairedPointer }
       // #region agent log
       fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'AppProvider.tsx:reload-after-repair',message:'pointer after resolvePointerFromState',data:{pointerBefore:current.pointer,pointerAfter:repairedPointer,changed:repairedPointer!==normalized.pointer},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});

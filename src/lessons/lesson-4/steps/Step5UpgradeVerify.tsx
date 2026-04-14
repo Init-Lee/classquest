@@ -11,7 +11,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   ShieldCheck, Download, CheckCircle2, Circle,
-  Loader2, Info, Code2, Eye,
+  Loader2, Info, Code2, Eye, ChevronRight,
 } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
@@ -31,6 +31,11 @@ const VERIFY_ITEMS = [
   { id: "reading-path", label: "页面阅读路径清楚，层级结构合理" },
   { id: "media-real", label: "占位图/示例图已替换为真实多媒体（或确认无多媒体部分）" },
 ]
+
+/** 课时5是否在注册表中开放（决定完成课时4后指针与按钮是否进入课时5） */
+function isLesson5Enabled(): boolean {
+  return Boolean(LESSON_REGISTRY.find(l => l.id === 5)?.enabled)
+}
 
 export default function Step5UpgradeVerify() {
   const { portfolio, savePortfolio } = usePortfolio()
@@ -91,9 +96,12 @@ export default function Step5UpgradeVerify() {
     if (completing) return
     setCompleting(true)
     try {
+      const nextPointer = isLesson5Enabled()
+        ? advancePointer(portfolio.pointer, 5, 1)
+        : advancePointer(portfolio.pointer, 4, 5)
       await savePortfolio({
         ...portfolio,
-        pointer: advancePointer(portfolio.pointer, 4, 5),
+        pointer: nextPointer,
         lesson4: {
           ...lesson4,
           finalHtml,
@@ -102,8 +110,7 @@ export default function Step5UpgradeVerify() {
           completed: true,
         },
       })
-      const lesson5Config = LESSON_REGISTRY.find(l => l.id === 5)
-      if (lesson5Config?.enabled) {
+      if (isLesson5Enabled()) {
         navigate("/lesson/5/step/1")
       } else {
         navigate("/")
@@ -117,13 +124,15 @@ export default function Step5UpgradeVerify() {
     if (completing) return
     setCompleting(true)
     try {
+      const nextPointer = isLesson5Enabled()
+        ? advancePointer(portfolio.pointer, 5, 1)
+        : advancePointer(portfolio.pointer, 4, 5)
       await savePortfolio({
         ...portfolio,
-        pointer: advancePointer(portfolio.pointer, 4, 5),
+        pointer: nextPointer,
         lesson4: { ...lesson4, completed: true },
       })
-      const lesson5Config = LESSON_REGISTRY.find(l => l.id === 5)
-      if (lesson5Config?.enabled) {
+      if (isLesson5Enabled()) {
         navigate("/lesson/5/step/1")
       } else {
         navigate("/")
@@ -184,9 +193,15 @@ export default function Step5UpgradeVerify() {
               </span>
             </button>
             {lesson4.completed ? (
-              <Button onClick={() => navigate("/")} className="w-full gap-2">
-                <CheckCircle2 className="h-4 w-4" /> 课时4已完成，返回首页
-              </Button>
+              isLesson5Enabled() ? (
+                <Button onClick={() => navigate("/lesson/5/step/1")} className="w-full gap-2">
+                  <ChevronRight className="h-4 w-4" /> 进入课时5
+                </Button>
+              ) : (
+                <Button onClick={() => navigate("/")} className="w-full gap-2">
+                  <CheckCircle2 className="h-4 w-4" /> 课时4已完成，返回首页
+                </Button>
+              )
             ) : (
               <Button
                 onClick={handleMemberComplete}
@@ -275,9 +290,15 @@ export default function Step5UpgradeVerify() {
                   下载最终版 HTML
                 </Button>
                 {lesson4.completed ? (
-                  <Button onClick={() => navigate("/")} className="gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> 课时4已完成，返回首页
-                  </Button>
+                  isLesson5Enabled() ? (
+                    <Button onClick={() => navigate("/lesson/5/step/1")} className="gap-2">
+                      <ChevronRight className="h-4 w-4" /> 进入课时5
+                    </Button>
+                  ) : (
+                    <Button onClick={() => navigate("/")} className="gap-2">
+                      <CheckCircle2 className="h-4 w-4" /> 课时4已完成，返回首页
+                    </Button>
+                  )
                 ) : (
                   <Button
                     onClick={handleComplete}
