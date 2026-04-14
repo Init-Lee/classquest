@@ -3,7 +3,7 @@
  * 职责：应用入口页面，展示模块标题、当前进度卡、课时入口卡片
  *       未创建档案时引导学生新建档案；已有档案时展示进度并引导继续学习
  *       同时提供教师演示模式入口（口令验证）
- * 更新触发：首页展示内容变化时；新增课时卡片时；教师入口 UI 调整时
+ * 更新触发：首页展示内容变化时；新增课时卡片时；「已完成」判定与课时 `completed` 字段对齐时；教师入口 UI 调整时
  */
 
 import { useState } from "react"
@@ -364,8 +364,15 @@ export default function HomePage() {
         <h2 className="text-lg font-semibold mb-4">全部课时</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {LESSON_REGISTRY.map(lesson => {
-            const isCompleted = (lesson.id === 1 && portfolio!.lesson1.completed) || (lesson.id === 2 && portfolio!.lesson2.completed)
-            const isCurrent = lesson.id === portfolio!.pointer.lessonId
+            const p = portfolio!
+            const isCompleted =
+              (lesson.id === 1 && p.lesson1.completed)
+              || (lesson.id === 2 && p.lesson2.completed)
+              || (lesson.id === 3 && p.lesson3.completed)
+              || (lesson.id === 4 && p.lesson4.completed)
+              || (lesson.id === 5 && p.lesson5.completed)
+              || (lesson.id === 6 && p.lesson6.completed)
+            const isCurrent = lesson.id === p.pointer.lessonId
 
             return (
               <Card key={lesson.id} className={`cursor-pointer transition-all ${lesson.enabled ? "hover:shadow-md" : "opacity-60"} ${isCurrent ? "border-primary" : ""}`}>
@@ -387,7 +394,7 @@ export default function HomePage() {
                       className="w-full"
                       onClick={() => navigate(`/lesson/${lesson.id}/step/1`)}
                     >
-                      {isCompleted ? "查看回顾" : isCurrent ? "继续闯关" : "进入课时"}
+                      {isCurrent ? "继续闯关" : isCompleted ? "查看回顾" : "进入课时"}
                     </Button>
                   </CardContent>
                 )}
