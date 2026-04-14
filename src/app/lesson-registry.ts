@@ -36,7 +36,7 @@ export const LESSON_REGISTRY: LessonConfig[] = [
     title: "证据采集与规范记录",
     subtitle: "把计划变成可追溯的真实证据",
     enabled: true,
-    totalSteps: 6,
+    totalSteps: 5,
   },
   {
     id: 3,

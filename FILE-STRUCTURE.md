@@ -1,450 +1,325 @@
+<!--
+文件说明：ClassQuest 仓库内「目录结构 + 分层边界」真相源。
+职责：记录 `src/` 下真实路径、依赖方向、命名与新增流程；补充各课时领域摘要与跨课数据包。
+更新触发：新增/移动目录或文件、增减课时与步骤、调整 `ModulePortfolio`/序列化/路由/注册表时，必须同步修订本文。
+-->
+
 # FILE-STRUCTURE — 目录结构与分层规范
 
-本文件是 ClassQuest 项目的**结构真相源**，定义目录职责、分层边界、依赖方向、命名规范与新增功能步骤。
+本文件是 **classquest** 仓库内的结构真相源。开发时须遵守下文分层与依赖方向，**禁止越层或反向依赖**。
 
-> 开发时必须先遵循本文档规定的分层与依赖方向。禁止越层或反向依赖。
+> 产品规格类 Markdown 若放在 monorepo 上级目录（如 `AI-Class/build_Plan/`），不在本仓库树内，此处不列举。
 
 ---
 
-## 顶层目录
+## 1. 仓库顶层（classquest/）
 
 ```
 classquest/
-├── build_Plan/          # 产品设计规格文档（只读参考，不含业务代码）
-├── src/                 # 应用源代码（主战场）
-├── public/              # 静态资源
-├── index.html           # 应用入口 HTML
-├── vite.config.ts       # Vite 构建配置
-├── tailwind.config.js   # Tailwind CSS 配置
-├── tsconfig.app.json    # TypeScript 配置
-├── package.json         # 依赖声明
-├── README.md            # 项目对外入口文档
-├── FILE-STRUCTURE.md    # 本文件（结构真相源）
-├── CONTRIBUTING.md      # 贡献指南
-└── LICENSE              # 开源许可（MIT）
+├── public/                 # 静态资源（favicon、icons）
+├── src/                    # 应用源代码（见第 2 节）
+├── eslint.config.js
+├── index.html
+├── package.json / package-lock.json
+├── postcss.config.js
+├── tailwind.config.js
+├── tsconfig.json / tsconfig.app.json / tsconfig.node.json
+├── vite.config.ts
+├── README.md / README_EN.md
+├── FILE-STRUCTURE.md       # 本文件
+├── CONTRIBUTING.md
+└── LICENSE
 ```
 
 ---
 
-## src/ 分层结构
+## 2. `src/` 总览与依赖方向
+
+### 2.1 依赖方向（简图）
+
+```
+app/          → lessons / features / domains / infra / shared
+lessons/      → features / domains / infra / shared
+features/     → domains / shared（避免依赖 lessons，除非确有跨课复用且单向）
+domains/      → shared（仅类型/纯函数层面；不依赖 infra）
+infra/        → domains（类型）/ shared；禁止依赖 app、lessons
+shared/       → 不依赖上述任何业务层
+```
+
+**禁止**：`infra` 依赖 `lessons`；`domains` 依赖 `app`/`lessons`；`shared` 依赖业务层。
+
+### 2.2 目录树（与磁盘一致）
+
+下列树为 **`find src -type f` 归纳**，按路径排序；注释为职责摘要。
 
 ```
 src/
-├── app/                 # App 层：路由、布局、Provider、课时注册
-│   ├── layout/          #   全局布局组件
-│   │   ├── AppShell.tsx          # 顶层外壳，包裹所有页面；含教师模式金色横幅
-│   │   ├── TopLessonProgress.tsx # 顶部课时进度条（课时1~6）
-│   │   └── GlobalActions.tsx     # 右上角全局动作区（保存/导入/快照/重置）
-│   ├── router/          #   路由定义
-│   │   └── index.tsx             # 路由表定义（懒加载，含 v7_startTransition future flag）
-│   ├── providers/       #   全局 Context Provider
-│   │   └── AppProvider.tsx       # PortfolioContext（含教师模式 isTeacherMode 状态）
-│   └── lesson-registry.ts        # 课时注册表（统一管理课时配置，enabled 控制开放状态）
+├── main.tsx                      # React 入口
+├── index.css                     # 全局样式（Tailwind 入口）
+├── assets/                       # 全局静态图（如 hero；与课时内 assets 区分）
+│   ├── hero.png
+│   ├── react.svg
+│   └── vite.svg
 │
-├── domains/             # Domain 层：领域模型与业务服务（纯逻辑，无 UI）
-│   ├── student/         #   学生身份模型
-│   │   └── types.ts              # StudentProfile, StudentRole
-│   ├── progress/        #   进度指针
-│   │   └── types.ts              # ProgressPointer
-│   ├── portfolio/       #   模块档案（核心聚合根）
-│   │   └── types.ts              # ModulePortfolio、createNewPortfolio、normalizeModulePortfolio（lesson3 缺字段合并）
-│   ├── group-plan/      #   小组计划与讨论
-│   │   └── types.ts              # GroupConsensus, GroupEvidencePlanRow(owners:string[]), R1Record(含sourceRows)
-│   ├── evidence/        #   证据记录
-│   │   └── types.ts              # PublicEvidenceRecord, FieldEvidenceTask, Lesson2Assignment(owners:string[]), QualityCheckResult
-│   ├── prompts/         #   AI 助手提示词模板
-│   │   └── types.ts              # AIAssistLog, AIAssistKind
-│   └── snapshot/        #   快照生成
-│       └── types.ts              # SnapshotMeta
+├── app/                          # 应用壳：路由、布局、注册表、全局状态
+│   ├── lesson-registry.ts        # LESSON_REGISTRY：课时标题、enabled、totalSteps；resolvePortfolioPointer
+│   ├── layout/
+│   │   ├── AppShell.tsx          # 子路由出口、顶栏、教师模式横幅
+│   │   ├── TopLessonProgress.tsx # 课时级进度
+│   │   └── GlobalActions.tsx     # 保存 / 导入 / 快照 / 重置
+│   ├── providers/
+│   │   └── AppProvider.tsx       # Portfolio + 教师模式；规范化档案；对接 Repository
+│   └── router/
+│       └── index.tsx             # createBrowserRouter；课时 1~5 + 首页 + 旧版导入 + 404，皆懒加载
 │
-├── lessons/             # Lesson 层：课时页面、步骤组件、课时级 Guard
-│   ├── lesson-1/        #   课时1：项目启动与定题（共 5 关）
-│   │   ├── config.ts             # 课时配置（步骤名称、AI助手开关；5关）
-│   │   ├── guards.ts             # 课时1步骤间 Guard（步骤1~5，步骤2身份登记已合并到首页）
-│   │   ├── routes.tsx            # 课时1路由定义（step/1~step/5）
-│   │   ├── steps/
-│   │   │   ├── Step1Intro.tsx      # 第1关：任务启动（勾选知晓后进入第2关）
-│   │   │   ├── Step3R1.tsx         # 第2关：个人 R1（主题包+研究问题+证据构想；含个人辅助材料来源 sourceRows）
-│   │   │   ├── Step4Discussion.tsx # 第3关：小组讨论留痕（组长录入；组员导入组长文件同步groupMembers，后续无需再次导入）
-│   │   │   ├── Step5Checklist.tsx  # 第4关：证据清单 Wizard（sub0:组员登记→sub1:执行表multi-select owners→sub2-3；组员只读前3子步）
-│   │   │   └── Step6Review.tsx     # 第5关：回顾导出（含组员名单汇总；组长导出组长文件；一键完成并跳转课时2）
-│   │   └── components/
-│   │       └── AIHelperDrawer.tsx  # AI 助手内嵌右侧面板（R2/R3 提示词模板+豆包跳转）
-│   │
-│   └── lesson-2/        #   课时2：证据采集与规范记录（共 5 关；原第1+2关已合并）
-│       ├── config.ts
-│       ├── guards.ts
-│       ├── routes.tsx
-│       ├── steps/
-│       │   ├── Step1Combined.tsx  # 第1关：进度确认与任务领取（身份卡+课时1摘要+角色任务确认；一次写入 resumeDone+leaderSyncDone+assignments）
-│       │   ├── Step2MyTasks.tsx   # 第2关：我的任务（高亮本人任务+全组规划始终展开的表格；含 evidenceRow 计划字段）
-│       │   ├── Step3Evidence.tsx  # 第3关：证据入库（公开资源/现场采集双模板；卡顶展示课时1执行表参考；自动生成引用条目）
-│       │   ├── Step4Quality.tsx   # 第4关：质检（3项硬检查；纯现场采集直接放行；有上一步回退）
-│       │   └── Step5Review.tsx    # 第5关：回顾（提示使用右上角保存；课后任务显示来自 lesson2.fieldTasks；完成后智能跳转）
-│       └── components/            # （预留，当前步骤逻辑直接写在 steps/ 内）
+├── pages/                        # 与路由 path 直接对应的页面（非课时内步骤）
+│   ├── HomePage.tsx
+│   ├── LegacyImportPage.tsx      # /legacy-import
+│   └── NotFoundPage.tsx
 │
-    └── lesson-3/        #   课时3：素材整理与证据加工（共 5 关；全部已实现）
-    ├── config.ts             # 课时配置（步骤名称；5关：继承成果/方法工具箱/筛选材料/加工工坊/预览导出）
-    ├── guards.ts             # 课时3步骤间 Guard（全5关守卫均已定义）
-    ├── routes.tsx            # 课时3路由定义（step/1~step/5；全部渲染实际组件）
-    ├── assets/               # 本课静态插图：根目录四格 jpg/jpeg（由 useComicPanelUrls 取前 4 张）
-    ├── lib/                  # 课时3 专用小模块（无 UI）
-    │   ├── unified-logic-content.ts  # 统一逻辑四步文案 + 课堂讲稿（金句/解析/避坑等）
-    │   └── useComicPanelUrls.ts      # assets 配图 URL 列表（Vite glob）
-    ├── components/
-    │   ├── PosterSketchPreview.tsx   # 海报草图预览（Cormorant + Noto；四块状态区）；支持 embedded / spotlightCard=why + whyBodyOverride（第2关弹窗压暗非「为何关注」区）
-    │   └── UnifiedLogicPresentation.tsx # 统一逻辑全屏翻页演示（键盘/侧缘翻页；配图+讲稿）
-    └── steps/
-        ├── Step1InheritAnchor.tsx    # 第1关：左右栏（左：已带来材料+本课说明；右：PosterSketchPreview）；确认后写入 missionAcknowledged
-        ├── Step2Toolbox.tsx          # 第2关：顶栏统一逻辑；左右栏（左：来源+填写+确认表述+海报弹窗；右：材料参考仅文字Tab）；toolboxWhyPreviewLocked 后过关
-        ├── Step3SelectMaterials.tsx  # 第3关：筛选材料（资料池增强卡片；勾选+现象说明句；已入选清单汇总；保存写入 selectedMaterials[]）
-        ├── Step4EvidenceWorkshop.tsx # 第4关：证据加工工坊（目标带+左右双栏；逐条加工为证据卡；右侧全Tab解锁+卡片预览；写入 evidenceCards[]）
-        └── Step5PreviewExport.tsx    # 第5关：个人预览与导出（为何关注+证据卡总览；检查清单+可能原因锁定；导出JSON个人整理包+完成课时3）
-    │
-    └── lesson-4/        #   课时4：结论形成与网页传播（共 5 关；全部实现）
-        ├── config.ts             # 课时配置（步骤名称；5关：小组合并/个人草稿/制作方案/协商生成/升级提交）
-        ├── guards.ts             # 课时4步骤间 Guard（全5关守卫；含组长/组员角色差异判定）
-        ├── routes.tsx            # 课时4路由定义（step/1~step/5）
-        ├── components/           # 预留组件目录
-        └── steps/
-            ├── Step1GroupMerge.tsx    # 第1关：组长双栏（左：说明+标题副标题+可能原因+导出骨架包；右：成员整理包导入+合并预览）；组员导入骨架包v1（支持重新导入）+预览含来源资料
-            ├── Step2PersonalDraft.tsx # 第2关：双栏（左：骨架包内容参考+AI提示词+HTML模板；右：sticky编辑/预览Tab）
-            ├── Step3PlanRecord.tsx    # 第3关：组长填写制作方案单+导出JSON供组员分发；组员导入方案单+告知书查看+已知悉勾选
-            ├── Step4CollabBuild.tsx   # 第4关：组长双栏（左：说明+AI原则+协作流程勾选；右：sticky编辑/预览Tab）；组员查看协作步骤（无预览）+已知悉勾选
-            └── Step5UpgradeVerify.tsx # 第5关：组长双栏（左：说明+校验清单+导出完成；右：sticky编辑/预览Tab）；组员查看校验要点（无预览）+已知悉勾选
-
-├── pages/               # 页面层：顶级路由页面组件
-│   ├── HomePage.tsx              # 首页（无档案时引导注册/导入；有档案时展示进度）
-│   ├── LegacyImportPage.tsx      # 【临时功能】旧版数据导入独立页（路由 /legacy-import）
-│   └── NotFoundPage.tsx          # 404 页
+├── domains/                      # 领域类型与聚合（无 UI）
+│   ├── student/types.ts
+│   ├── progress/types.ts         # ProgressPointer
+│   ├── portfolio/types.ts        # ModulePortfolio、Lesson1~6State、normalize/create
+│   ├── group-plan/types.ts
+│   ├── evidence/types.ts
+│   ├── prompts/types.ts
+│   └── snapshot/types.ts
 │
-├── features/            # Feature 层：跨课时功能模块
-│   ├── progress-ui/     #   进度条 UI 相关
-│   │   └── InnerStepProgress.tsx # 课时内步骤进度条
-│   ├── material-processing-reference/ # 材料处理参考（跨课时复用：四类 Tab + 加工说明文案；不含个人填写区）
-│   │   ├── materialTypes.ts              # 四类材料结构化配置（零浪费示例）
-│   │   ├── MaterialProcessingReferencePanel.tsx # 仅 Tab + 加工说明；确认表述由 Step2 左侧负责
+├── lessons/                      # 按课时隔离：config / guards / routes / steps /（可选）components、lib、assets
+│   ├── lesson-1/
+│   │   ├── config.ts / guards.ts / routes.tsx
+│   │   ├── components/AIHelperDrawer.tsx
+│   │   └── steps/
+│   │       ├── Step1Intro.tsx
+│   │       ├── Step3R1.tsx           # 第 2 关（个人 R1）
+│   │       ├── Step4Discussion.tsx   # 第 3 关
+│   │       ├── Step5Checklist.tsx    # 第 4 关
+│   │       └── Step6Review.tsx       # 第 5 关
+│   ├── lesson-2/
+│   │   ├── config.ts / guards.ts / routes.tsx
+│   │   └── steps/
+│   │       ├── Step1Combined.tsx
+│   │       ├── Step2MyTasks.tsx
+│   │       ├── Step3Evidence.tsx
+│   │       ├── Step4Quality.tsx
+│   │       └── Step5Review.tsx
+│   ├── lesson-3/
+│   │   ├── config.ts / guards.ts / routes.tsx
+│   │   ├── lib/
+│   │   │   ├── unified-logic-content.ts
+│   │   │   └── useComicPanelUrls.ts  # glob: lesson-3/assets/*.{jpg,jpeg}（目录可空，构建时无图则列表为空）
+│   │   ├── components/
+│   │   │   ├── PosterSketchPreview.tsx
+│   │   │   └── UnifiedLogicPresentation.tsx
+│   │   └── steps/
+│   │       ├── Step1InheritAnchor.tsx
+│   │       ├── Step2Toolbox.tsx
+│   │       ├── Step3SelectMaterials.tsx
+│   │       ├── Step4EvidenceWorkshop.tsx
+│   │       └── Step5PreviewExport.tsx
+│   ├── lesson-4/
+│   │   ├── config.ts / guards.ts / routes.tsx
+│   │   └── steps/
+│   │       ├── Step1GroupMerge.tsx
+│   │       ├── Step2PersonalDraft.tsx
+│   │       ├── Step3PlanRecord.tsx
+│   │       ├── Step4CollabBuild.tsx
+│   │       └── Step5UpgradeVerify.tsx
+│   └── lesson-5/
+│       ├── config.ts / guards.ts / routes.tsx
+│       └── steps/
+│           ├── Step1PeerFeedback.tsx
+│           └── Step2VersionChange.tsx
+│
+├── features/
+│   ├── progress-ui/
+│   │   └── InnerStepProgress.tsx
+│   ├── material-processing-reference/
+│   │   ├── materialTypes.ts
+│   │   ├── MaterialProcessingReferencePanel.tsx
 │   │   └── index.ts
-│   └── legacy-import/   #   【临时功能 · 全班迁移完成后整目录+LegacyImportPage.tsx一并删除】
-│       ├── legacy-import.ts      # LegacyL1/LegacyL2 输入类型定义 + buildPortfolioFromLegacy 映射函数
-│       ├── LegacyImportSection.tsx # 4步向导核心组件（导出 LegacyImportWizard）
-│       └── index.ts              # re-export 入口（外部只需 @/features/legacy-import）
+│   └── legacy-import/
+│       ├── legacy-import.ts
+│       ├── LegacyImportSection.tsx
+│       └── index.ts
 │
-├── infra/               # Infra 层：基础设施，禁止在此层外直接访问
-│   └── persistence/
-│       ├── indexeddb/
-│       │   └── db.ts             # DB 连接、版本管理（DB_NAME, DB_VERSION, object stores）
-│       ├── repositories/
-│       │   ├── portfolio.repository.ts      # PortfolioRepository 接口
-│       │   └── portfolio.repository.idb.ts  # IndexedDB 实现（含 clear() 清空全部）
-│       └── serializers/
-│           ├── continue-package.ts  # 继续学习包序列化/反序列化；导入时 lesson3/lesson4/lesson5 缺字段补齐；downloadLeaderFile（组长文件）；PersonalPackage/SkeletonPackageV1/PeerFeedbackOpinionPackage（课时4~5 数据传递）
-│           └── snapshot-html.ts     # 阶段快照 HTML 生成（含 lesson4-full 类型；课时4快照包含骨架包合并数据节）
+├── infra/persistence/
+│   ├── indexeddb/db.ts
+│   ├── repositories/
+│   │   ├── portfolio.repository.ts
+│   │   └── portfolio.repository.idb.ts
+│   └── serializers/
+│       ├── continue-package.ts     # 继续学习包、组长文件、L3 个人包、L4 骨架包/方案单、L5 意见包/改动汇总包
+│       └── snapshot-html.ts        # 阶段快照 HTML（含 lesson4-full、lesson5-full 等）
 │
-└── shared/              # Shared 层：共享 UI、工具，无业务逻辑
-    ├── ui/              #   通用 UI 组件（shadcn/ui 包装）
-    │   ├── button.tsx, card.tsx, badge.tsx
-    │   ├── input.tsx, textarea.tsx, progress.tsx
-    │   ├── dialog.tsx, sheet.tsx
-    │   └── ...
-    ├── utils/           #   工具函数
-    │   ├── cn.ts                 # clsx + tailwind-merge
-    │   ├── format.ts             # 日期格式化、文件名生成（含 buildLeaderFilename）
-    │   ├── group-display.ts      # 小组对外展示：getPortfolioGroupDisplayLabel（组长用本人名；组员优先骨架包 leaderName）
-    │   └── pointer.ts            # 进度指针工具：advancePointer（只前进不后退）、resolvePointerFromState（导入修正）
+└── shared/
+    ├── ui/                         # shadcn 风格封装
+    │   ├── button.tsx / card.tsx / badge.tsx
+    │   ├── input.tsx / textarea.tsx / progress.tsx
+    │   └── dialog.tsx / sheet.tsx
+    ├── utils/
+    │   ├── cn.ts
+    │   ├── format.ts               # 含 buildLeaderFilename 等
+    │   ├── group-display.ts        # getPortfolioGroupDisplayLabel（顶栏/首页「小组」展示）
+    │   └── pointer.ts              # advancePointer、resolvePointerFromState
     └── constants/
-        └── demo-portfolio.ts     # 教师演示模式预填档案（不持久化，仅内存使用）
+        └── demo-portfolio.ts       # 教师演示用内存档案
 ```
 
 ---
 
-## 分层依赖方向
+## 3. 路由与懒加载（`app/router/index.tsx`）
 
-```
-App 层
-  ↓ 依赖
-Lesson 层  ←→  Feature 层
-  ↓ 依赖           ↓ 依赖
-Domain 层
-  ↓ 依赖
-Infra 层
+| Path | 组件来源 |
+|------|-----------|
+| `/` | `pages/HomePage` |
+| `/legacy-import` | `pages/LegacyImportPage` |
+| `/lesson/1/*` … `/lesson/5/*` | `lessons/lesson-N/routes` |
+| `*` | `pages/NotFoundPage` |
 
-所有层均可依赖 Shared 层
-```
-
-**禁止方向：**
-- Infra 层不得依赖 Domain/Lesson/App 层
-- Domain 层不得依赖 Lesson/App 层
-- Shared 层不得依赖任何业务层
+课时 6 未注册路由；`LESSON_REGISTRY` 中 `id: 6, enabled: false`。
 
 ---
 
-## 关键功能说明
+## 4. 跨角色数据包（`infra/.../continue-package.ts`）
 
-### 教师演示模式
-- 入口：首页底部「教师入口」区块，口令 `xnwy`
-- 进入后：`AppProvider` 中 `isTeacherMode = true`，`portfolio` 切换为 `createDemoPortfolio()` 内存对象
-- 效果：所有 Guard 绕过，`savePortfolio` 为 no-op，顶部显示金色横幅，右上角仅保留「阶段快照」
-- 退出：点击横幅「退出演示」或 Logo 跳首页
-
-### 数据流（学生模式）
-```
-首页登记（createNewPortfolio → profileDone:true）
-  → L1第1关：任务启动
-  → L1第2关：个人R1（含辅助材料 sourceRows 存入 R1Record）
-  → L1第3关：小组讨论；组员导入组长文件（同步 groupConsensus/evidenceRows/groupMembers；确认 confirmedOwnerName）
-  → L1第4关：组长录入 groupMembers → 生成执行表（owners:string[]）→ 安全承诺
-  → L1第5关：组长导出组长文件（downloadLeaderFile）
-  → L2第1关（合并）：确认进度 + 自动/手动认领任务 → 同时写入 resumeDone+leaderSyncDone+assignments
-  → L2第2关：查看我的任务（含全组规划表格）
-  → L2第3关：证据入库（公开资源 / 现场采集双模板）
-  → L2第4~5关 → 完成后跳 /lesson/3/step/1（课时3已开放）
-  → L3第1关：继承前序成果，确认本课任务边界（missionAcknowledged）
-  → L3第2关：统一逻辑 + 双栏（左：R1 来源 + 两句持久化 + 确认表述 + 海报聚光灯弹窗；右：材料参考）；toolboxWhyPreviewLocked 且点过关后 toolboxCompleted
-  → L3第3关：筛选个人材料，填写现象说明句（selectedMaterials[]）
-  → L3第4关：逐条加工证据卡（evidenceCards[]；左：加工区；右：全Tab解锁参考）
-  → L3第5关：总览+检查清单+导出个人整理包（personalPackageExported+completed）
-```
-
-### 保存/导出体系
-| 操作 | 入口 | 用途 |
-|---|---|---|
-| 保存进度 | 右上角蓝色按钮 | 下载继续学习包 JSON，换设备后导入恢复 |
-| 阶段快照 | 右上角绿色按钮 | 生成 HTML 文件，上传 Moodle 作过程材料 |
-| 导入进度 | 右上角 | 恢复继续学习包 |
-| 组长文件 | 课时1第5关（仅组长） | 组员导入后可看小组分工 |
-| 重置数据 | 右上角红色重置 | 清空 IndexedDB，回到初始状态 |
-| 旧版迁移 | 首页「导入旧版数据」按钮 → `/legacy-import` 独立页（临时功能） | 导入旧版工具 JSON，自动跳转对应进度 |
+| 类型 / packageType | 产出 | 消费 |
+|--------------------|------|------|
+| 继续学习包（整份 Portfolio） | 全局「保存进度」 | 全局「导入」 |
+| 组长文件（课时1） | L1 Step6 | 组员导入 → 讨论等 |
+| PersonalPackage（JSON） | L3 Step5 | L4 Step1 组长导入 |
+| SkeletonPackageV1 | L4 Step1 组长导出 | L4 Step1 组员导入 |
+| production-plan-v1 | L4 Step3 组长 | L4 Step3 组员 |
+| peer-feedback-opinion-v1 | L5 Step1 组员导出意见包 | L5 Step1 组长导入 → `peerFeedbackImportedPackagesJson` |
+| lesson5-version-change-leader-v1 | L5 Step2 组长导出 | L5 Step2 组员导入 → `importedVersionChangePackageJson` |
 
 ---
 
-## 课时3 · 结构摘要（除 UI 布局外的实现汇总）
+## 5. 课时领域摘要（字段级见 `domains/portfolio/types.ts`）
 
-本节汇总**数据模型、兼容策略、分层职责与关卡语义**，便于评审与后续关扩展；具体控件样式见各步骤组件。
+### 5.1 课时 3 · `Lesson3State`
 
-### 1. 领域状态 `Lesson3State`（`domains/portfolio/types.ts`）
+| 字段 | 语义要点 |
+|------|-----------|
+| `missionAcknowledged` / `toolboxCompleted` / `toolboxWhyPreviewLocked` | 第 1~2 关边界与表述锁定 |
+| `toolboxNoticeWhat` / `toolboxWhyOnPoster` | 第 2 关两句草稿（防抖写回） |
+| `selectedMaterials` / `evidenceCards` | 第 3~4 关产出 |
+| `personalPackageExported` / `completed` | 第 5 关导出与课时完成 |
+
+兼容：`normalizeModulePortfolio`、`continue-package` 导入时对 `lesson3` 做缺字段合并。
+
+### 5.2 课时 4 · `Lesson4State`（字段以 `domains/portfolio/types.ts` 为准）
 
 | 字段 | 语义 | 主要写入步骤 |
 |------|------|----------------|
-| `missionAcknowledged` | 已确认本课任务边界 | L3 Step1 |
-| `toolboxCompleted` | 已完成第2关（可进第3关） | L3 Step2 底部过关按钮 |
-| `toolboxNoticeWhat` | 「这条材料让我注意到什么」 | L3 Step2，防抖持久化 |
-| `toolboxWhyOnPoster` | 海报「为何关注」表述草稿 | L3 Step2，防抖持久化 |
-| `toolboxWhyPreviewLocked` | 是否已确认表述（锁定左侧输入直至解锁） | L3 Step2 左侧「确认本条表述」/「解锁修改」 |
-| `selectedMaterials[]` | 入选材料 + 现象说明句 | L3 Step3 |
-| `evidenceCards` | 第4关证据卡列表 | L3 Step4 |
-| `originExpression` | 关注缘起表达文本（预留，暂未使用） | — |
-| `personalPackageExported` / `completed` | 课时3个人导出与完成标记 | L3 Step5 |
-
-`createEmptyLesson3State()` 为上述字段提供默认值；新建档案与缺字段合并均依赖此函数。
-
-### 2. 档案兼容与合并（非 UI）
-
-| 机制 | 位置 | 行为 |
-|------|------|------|
-| `normalizeModulePortfolio` | `domains/portfolio/types.ts` | `lesson3` 与 `createEmptyLesson3State()` 浅合并，补齐 IndexedDB 旧记录缺失字段 |
-| 应用入口 | `app/providers/AppProvider.tsx` | `getCurrent` / `importPortfolio` 后对档案做一次规范化再写入 React 状态 |
-| 继续学习包导入 | `infra/persistence/serializers/continue-package.ts` | 若 JSON 中已有 `lesson3`，仍与默认状态合并，避免旧包缺键 |
-
-### 3. 跨课时 Feature：`material-processing-reference`
-
-- **职责**：四类材料（图/文/表/视频）的**静态**加工说明（目标、动作、示例、常见错误）；`unlockedTabIds` prop 控制解锁范围（第2关仅开放「文字」Tab，第4关全部解锁）；`defaultTab` prop 支持外部指定初始激活 Tab（第4关根据当前材料类型自动切换）。
-- **不负责**：学生个人文案、确认锁定、海报预览（均在 `Step2Toolbox` 与 `PosterSketchPreview`）。
-- **依赖方向**：Lesson 层引用 Feature；Feature 仅依赖 `shared/ui` 与本地 `materialTypes.ts`。
-
-### 4. 课时3 组件（语义能力）
-
-| 组件 | 路径 | 结构向能力 |
-|------|------|------------|
-| `PosterSketchPreview` | `lesson-3/components/` | `researchQuestion` / `evidenceEntryCount` 驱动分区文案；`embedded` 去 sticky；`spotlightCard="why"` + `whyBodyOverride` 用于第2关弹窗聚光灯与草稿注入 |
-| `UnifiedLogicPresentation` | 同上 | 全屏翻页讲稿 + 四格配图，与 `unified-logic-content.ts` / `useComicPanelUrls` 配套 |
-
-### 5. 第2关持久化与竞态注意（Step2Toolbox）
-
-- 两句文案以**本地 state + 防抖**写入 `savePortfolio`，避免每次键入全量写盘过频。
-- **仅从 `portfolio.id` 变化**时把 `toolboxNoticeWhat` / `toolboxWhyOnPoster` 从档案同步回本地，避免与「确认表述」等保存竞态把输入冲掉。
-- `patchLesson3`、过关保存时通过 **ref** 携带当前草稿，避免锁状态保存覆盖未落盘的输入。
-
-### 6. Guard 与进度判定（`lesson-3/guards.ts`）
-
-- 进入 Step3：`lesson3.toolboxCompleted === true`。
-- Step2 过关前：需 `toolboxWhyPreviewLocked === true`（由 UI 按钮写入，与 `toolboxCompleted` 分步）。
-
----
-
-## 命名规范
-
-| 类型 | 规范 | 示例 |
-|------|------|------|
-| 组件文件 | PascalCase | `AppShell.tsx`, `Step3R1.tsx` |
-| 非组件文件 | kebab-case | `portfolio.repository.ts`, `continue-package.ts` |
-| 目录 | kebab-case | `lesson-1/`, `group-plan/`, `progress-ui/` |
-| 类型/接口 | PascalCase | `ModulePortfolio`, `StudentProfile` |
-| 常量 | UPPER_SNAKE_CASE | `DB_NAME`, `DB_VERSION` |
-| hooks | camelCase 以 `use` 开头 | `usePortfolio` |
-
----
-
-## 新增功能步骤
-
-### 新增一个课时步骤
-
-1. 在对应 `lessons/lesson-N/steps/` 下新建 `StepNXxx.tsx`
-2. 更新 `lessons/lesson-N/config.ts` 中的步骤配置
-3. 更新 `lessons/lesson-N/guards.ts` 中的 Guard 规则
-4. 更新 `lessons/lesson-N/routes.tsx` 中的路由
-5. 如有新域类型，在 `domains/` 对应模块的 `types.ts` 中添加
-6. 更新本文件（FILE-STRUCTURE.md）
-
-### 新增一个课时（如课时3）
-
-1. 在 `lesson-registry.ts` 中将对应课时 `enabled: true`
-2. 在 `lessons/` 下新建 `lesson-3/` 目录（参考 lesson-2 结构）
-3. 在 `app/router/index.tsx` 中注册懒加载路由
-4. 课时2第6关的完成跳转会自动感知（检查 lesson-registry 的 enabled 状态）
-5. 更新本文件
-
-### 新增一个共享 UI 组件
-
-1. 在 `shared/ui/` 下新建组件文件
-2. 组件只能依赖 Shared 层，不得引入业务逻辑
-3. 更新本文件（如目录结构有变化）
-
----
-
-## 产品发布版本号（SemVer）
-
-- **发布号**：以 `package.json` 的 `version` 为准（如 `0.4.0`），与 Git 标签 `v0.4.0` 一一对应；`0.x` 表示快速迭代期。
-- **发版流程摘要**：在 `main` 上 bump `package.json` 与 `package-lock.json` 根 `version` → 提交 → `git tag vX.Y.Z` → `git push origin main` 与 `git push origin vX.Y.Z` → 可选在 GitHub **Releases** 写说明。
-- **与档案字段区分**：`ModulePortfolio.appVersion` 表示**继续学习包等数据格式口径**，与 npm 发布号独立维护。
-
-## 重要约束
-
-- 页面组件禁止直接操作 IndexedDB，必须通过 `PortfolioRepository` 接口
-- 学生端 UI 禁止出现以下词汇：JSON、schema、IndexedDB、migration、repository、database
-- 课时业务逻辑禁止写入 `shared/ui` 或 `app/layout`
-- `lesson-1` 的记录字段保持粗粒度，不得引入课时2的严格字段约束
-- 教师模式下所有写操作（savePortfolio、importPortfolio）均为 no-op，不得持久化演示数据
-
----
-
----
-
-## 课时4 · 结构摘要
-
-### 1. 领域状态 `Lesson4State`（`domains/portfolio/types.ts`）
-
-| 字段 | 语义 | 主要写入步骤 |
-|------|------|-------------|
-| `memberPackagesImported` | 已导入成员整理包数量 | L4 Step1 |
-| `groupMergeCompleted` | 小组合并是否完成 | L4 Step1 |
+| `memberPackagesImported` | 组长已导入成员整理包数量 | L4 Step1 |
+| `groupMergeCompleted` | 小组合并完成 | L4 Step1 |
 | `possibleCauses` | 可能的原因（谨慎表述） | L4 Step1 |
-| `posterTitle` | 组长填写的海报标题 | L4 Step1 |
-| `posterSubtitle` | 组长填写的海报副标题 | L4 Step1 |
+| `posterTitle` / `posterSubtitle` | 海报标题与副标题 | L4 Step1 |
 | `skeletonExported` | 是否已导出骨架包 v1 | L4 Step1 |
-| `skeletonImported` | 组员是否已导入骨架包 v1 | L4 Step1（组员） |
-| `skeletonPackageJson` | 骨架包 JSON 字符串（组长导出时写入 / 组员导入时写入），第2关统一从此字段读取合并内容 | L4 Step1 |
-| `importedPackagesJson` | 组长已导入的成员整理包 JSON 数组字符串，刷新后恢复导入状态 | L4 Step1（组长） |
-| `personalDraftHtml` | 个人网页草稿 HTML 内容（v0） | L4 Step2 |
-| `personalDraftCompleted` | 个人草稿是否已完成 | L4 Step2 |
-| `productionPlan` | 小组制作方案单（含底稿选择/分工/AI边界/人工核查要点） | L4 Step3 |
-| `planCompleted` | 方案单是否已完成 | L4 Step3 |
-| `groupWebpageV1` | 小组网页 v1 HTML 内容 | L4 Step4 |
-| `collabCompleted` | 协作生成是否完成 | L4 Step4 |
-| `finalHtml` | 最终版 HTML 内容 | L4 Step5 |
-| `verificationPassed` | 可信发布校验是否通过 | L4 Step5 |
-| `finalExported` | 是否已导出最终版 | L4 Step5 |
-| `completed` | 课时4是否已完成 | L4 Step5 |
+| `skeletonImported` | 组员是否已导入骨架包 | L4 Step1 |
+| `skeletonPackageJson` | 骨架包 JSON（组长导出/组员导入时写入） | L4 Step1 |
+| `importedPackagesJson` | 组长侧已导入成员包数组 JSON，用于刷新恢复 | L4 Step1 |
+| `personalDraftHtml` / `personalDraftCompleted` | 个人 HTML 草稿 | L4 Step2 |
+| `productionPlan` / `planCompleted` | 制作方案单 | L4 Step3 |
+| `groupWebpageV1` / `collabCompleted` | 小组网页 v1 与协作完成 | L4 Step4 |
+| `finalHtml` / `verificationPassed` / `finalExported` | 最终 HTML 与校验导出 | L4 Step5 |
+| `completed` | 课时 4 完成 | L4 Step5 |
 
-### 2. 跨角色数据包类型（`infra/persistence/serializers/continue-package.ts`）
+**阶段快照**：`snapshot-html.ts` 中 `lesson4-full`；`GlobalActions` 在 `currentLessonId === 4` 时调用。
 
-| 类型 | 产生 | 消费 | 说明 |
-|------|------|------|------|
-| `PersonalPackage` | L3 Step5「导出个人整理包」（仅组员） | L4 Step1 组长导入 | 含学生身份、lesson2 完整资料条目（`citationFull`）、lesson3 加工结果 |
-| `SkeletonPackageV1` | L4 Step1 组长「导出骨架包 v1」 | L4 Step1 组员导入（支持重新导入） | 含 posterTitle/posterSubtitle、mergedWhyCare、mergedWhatWeSee[]、mergedSources[]（完整 citationFull）、possibleCauses、memberPackages[] |
-| `production-plan-v1` | L4 Step3 组长「导出方案单」 | L4 Step3 组员导入 | 含 ProductionPlan 完整字段 + groupName/leaderName/exportedAt |
-| `PeerFeedbackOpinionPackage`（`peer-feedback-opinion-v1`） | L5 Step1 组员「导出意见包」 | L5 Step1 组长导入 | 四维度 + `priorityChange` + 学生/班级/小组信息；组长侧写入 `peerFeedbackImportedPackagesJson` |
-| `Lesson5VersionChangeLeaderPackageV1`（`lesson5-version-change-leader-v1`） | L5 Step2 组长「导出改动落地汇总包」 | L5 Step2 组员导入 | 含第1关摘要 + `changeRecords`；组员写入 `importedVersionChangePackageJson` |
-
-### 3. 角色分离与 UI 布局
-
-| 关卡 | 组长视图 | 组员视图 |
-|------|---------|---------|
-| 第1关 | 双栏：左（说明+标题副标题+可能原因+导出骨架包）/右（成员导入+合并预览 sticky） | 导入骨架包（支持重新导入）→ 预览含来源资料 → 进入第2关 |
-| 第2关 | 双栏：左（骨架包内容参考+AI提示词+HTML模板）/右（编辑/预览Tab sticky）| 同组长（均从 skeletonPackageJson 读取） |
-| 第3关 | 单栏表单 + 保存 + 导出方案单按钮 | 导入方案单 → 告知书查看 → 已知悉勾选 |
-| 第4关 | 双栏：左（说明+AI原则+协作流程勾选+完成）/右（编辑/预览Tab sticky）| 协作步骤只读列表（无网页预览）→ 已知悉勾选 |
-| 第5关 | 双栏：左（说明+校验清单+导出完成）/右（编辑/预览Tab sticky）| 校验要点只读列表（无网页预览）→ 已知悉勾选 |
-
-判断依据：`portfolio.student.role === "leader"` vs `"member"`
-
-### 4. 阶段快照（`snapshot-html.ts`）
-
-`"lesson4-full"` 类型 → `buildLesson4Snapshot()` 函数：
-- 覆盖课时4各关产出（进度、可能原因、制作方案单、个人草稿代码、最终网页 iframe）
-- 新增**骨架包合并数据节**：解析 `lesson4.skeletonPackageJson`，展示标题/副标题/为何关注/我们看见了什么/可能线索/来源资料（完整 citationFull）
-- `GlobalActions.tsx` 的 `handleSnapshot` 含 `currentLessonId === 4` 分支
-
-### 5. 教师演示数据（`demo-portfolio.ts`）
-
-- `lesson4` 字段已与 `Lesson4State` 完整对齐（含 `posterTitle`/`posterSubtitle`/`importedPackagesJson`）
-- `skeletonPackageJson` 使用 `JSON.stringify(...)` 预填完整骨架包（含 mergedSources 的 citationFull），确保组长和组员视图均可显示
-
----
-
-## 课时5 · 结构摘要
-
-### 1. 领域状态 `Lesson5State`（`domains/portfolio/types.ts`）
+### 5.3 课时 5 · `Lesson5State`
 
 | 字段 | 语义 | 主要写入步骤 |
-|------|------|-------------|
-| `feedbackDimensions` | 四维度反馈判断（海报逻辑/证据支撑/结论合理性/建议可行性），各含 status + suggestion | L5 Step1 |
-| `priorityChange` | 本轮优先修改（单条必填） | L5 Step1 |
-| `peerFeedbackImportedPackagesJson` | 组长侧：已导入的组员「同伴意见包」JSON 数组字符串（`PeerFeedbackOpinionPackage[]`） | L5 Step1 |
-| `feedbackExported` | 第1关组员是否已导出同伴意见包；点「完成」时亦置 true | L5 Step1 |
-| `feedbackCompleted` | 第1关是否已完成（满足一条优先修改 + 表单校验后点「完成」） | L5 Step1 |
-| `changeRecords` | 改动说明（组长编辑；`item` 为海报五部分之一；`reason` 为第1关闭环下拉值） | L5 Step2 |
-| `versionChangeLeaderPackageExported` | 组长是否已导出「改动落地汇总包」JSON；与 `lesson5.completed` 共同用于 Step2「首次完成前须导出一次」门禁 | L5 Step2 |
-| `importedVersionChangePackageJson` | 组员：已导入的组长汇总包 JSON 全文 | L5 Step2 |
-| `versionChangeMemberAcknowledged` | 组员：已勾选核对汇总包 | L5 Step2 |
-| `completed` | 课时5是否已完成 | L5 Step2 |
+|------|------|----------------|
+| `feedbackDimensions` | 四维度判断 + 建议 | L5 Step1 |
+| `priorityChange` | 本轮优先修改（单条） | L5 Step1 |
+| `peerFeedbackImportedPackagesJson` | 组长已导入的组员意见包 JSON 数组字符串 | L5 Step1 |
+| `feedbackExported` | 组员是否已导出意见包 | L5 Step1 |
+| `feedbackCompleted` | 第 1 关完成 | L5 Step1 |
+| `changeRecords` | 改动行；`item` 为海报五部分之一；`reason` 为第 1 关闭环下拉值 | L5 Step2 |
+| `versionChangeLeaderPackageExported` | 组长是否已导出改动汇总包；与 `completed` 实现「首次完成前须导出一次」 | L5 Step2 |
+| `importedVersionChangePackageJson` | 组员已导入的组长汇总包全文 | L5 Step2 |
+| `versionChangeMemberAcknowledged` | 组员已勾选核对 | L5 Step2 |
+| `completed` | 课时 5 完成 | L5 Step2 |
 
-辅助类型：
-- `FeedbackDimension`：`{ name, status: "clear" | "needs-change" | "", suggestion }`
-- `ChangeRecord`：`{ item, before, after, reason }`（`item` 枚举见 `lesson-5/config.ts` 的 `LESSON5_POSTER_SECTION_OPTIONS`）
+**角色**：`student.role === "leader"|"member"`；第 1 关仅组员导出意见包；顶栏「小组」用 `getPortfolioGroupDisplayLabel`（`shared/utils/group-display.ts`）。
 
-**第1关角色**：`student.role === "leader"` 为双栏（左同组员表单，右为按课时1名单核对组员意见包导入（多选文件）+ 汇总预览，组长本机填写自动计入汇总，**不导出**同伴意见包）；组员为单栏，仅组员显示「导出意见包」，无复制文本留痕。顶栏/首页「小组」展示用 `getPortfolioGroupDisplayLabel`（组长名；组员读 `lesson4.skeletonPackageJson.leaderName`）。
+**Guard**（`lesson-5/guards.ts`）：Step1 需 `lesson4.completed`；Step2 需 `lesson5.feedbackCompleted`。
 
-### 2. 目录结构
+**跳转**：`lesson-4/steps/Step5UpgradeVerify.tsx` 完成后若课时 5 `enabled` → `/lesson/5/step/1`。
 
-```
-src/lessons/lesson-5/
-├── config.ts                    # 课时配置（2关）+ 第2关海报五部分枚举 `LESSON5_POSTER_SECTION_OPTIONS`
-├── guards.ts                    # Guard：Step1 需 lesson4.completed；Step2 需 feedbackCompleted
-├── routes.tsx                   # 路由（step/1 → step/2），含课时5绿色标签
-└── steps/
-    ├── Step1PeerFeedback.tsx    # 第1关：组员/组长模式；四维度 + 单条优先修改；仅组员导出意见包；组长导入汇总
-    └── Step2VersionChange.tsx   # 第2关：组长左汇总右表格+导出汇总包（首次完成前须导出一次；导出按钮琥珀强调/已导出绿色弱提示）；组员仅「导入汇总包」天青描边；「完成课时5」与组长同款主按钮；核对条单层边框
-```
+**快照**：`lesson5-full`；`GlobalActions` 中 `currentLessonId === 5`。
 
-### 3. 课时4 → 课时5 跳转
+### 5.4 课时 6 · 预埋
 
-`lesson-4/steps/Step5UpgradeVerify.tsx` 完成后检查 `LESSON_REGISTRY.find(l => l.id === 5)?.enabled`：
-- `true` → `navigate("/lesson/5/step/1")`
-- `false` → `navigate("/")`（与课时2→3 模式一致）
-
-### 4. 阶段快照
-
-`"lesson5-full"` 类型 → `buildLesson5Snapshot()` 函数：
-- 展示四维度判断表格、单条优先修改、（若有）组长已导入组员意见摘要、改动说明表格
-- `GlobalActions.tsx` 的 `handleSnapshot` 含 `currentLessonId === 5` 分支
-
-### 5. 课时6 预埋
-
-- `Lesson6State` / `RoadshowStep` 类型已定义在 `domains/portfolio/types.ts`
-- `createEmptyLesson6State()` 已实现，`normalizeModulePortfolio` / `createNewPortfolio` 已包含 `lesson6` 字段
-- `lesson-registry.ts` 课时6 `enabled: false`（待 lesson-6-dev 分支开启）
+- `domains/portfolio/types.ts`：`Lesson6State`、`RoadshowStep`、`createEmptyLesson6State()`，`ModulePortfolio.lesson6` 与 `normalize` / 新建档案已接入。
+- `LESSON_REGISTRY`：`id: 6`，`enabled: false`，`totalSteps: 2`。
+- 尚无 `src/lessons/lesson-6/` 与路由注册。
 
 ---
 
-*最后更新：2026-04-14（产品发布号 v0.5.0 / lesson-5-dev；课时5 组员/组长分流与意见包；Lesson5State；L5 Step2 组长首次完成前导出门禁、导出按钮琥珀强调、改动表布局与校验；组员仅「导入汇总包」天青描边、「完成课时5」与组长主按钮一致、核对条单层边框；课时6 类型预埋；课时4→5 智能跳转）*
+## 6. 教师演示模式与持久化约束
+
+- **入口**：`HomePage.tsx` 底部「教师入口」；口令常量 `TEACHER_PASSWORD`（与 `enterTeacherMode()` 联动，实现以代码为准）。
+- **行为**：`AppProvider` 中 `isTeacherMode === true` 时使用 `createDemoPortfolio()` 作为有效档案；Guard 在各路 `routes.tsx` 中与 `isTeacherMode` 组合判断；`savePortfolio` / 导入在教师模式下不写 IndexedDB。
+- **持久化**：业务代码不直接访问 IndexedDB，统一经 `PortfolioRepository`（`portfolio.repository.idb.ts`）。
+
+学生可见文案避免技术词：JSON、schema、IndexedDB、repository 等（见第 10 节）。
+
+---
+
+## 7. 命名规范
+
+| 类别 | 规范 | 示例 |
+|------|------|------|
+| React 组件文件 | PascalCase | `AppShell.tsx` |
+| 工具、仓库、序列化 | kebab-case | `continue-package.ts` |
+| 目录 | kebab-case | `lesson-5/`、`material-processing-reference/` |
+| 类型/接口 | PascalCase | `ModulePortfolio` |
+| 常量 | UPPER_SNAKE_CASE | `LESSON_REGISTRY`（导出常量对象名可 PascalCase 与项目一致） |
+
+---
+
+## 8. 新增功能时的操作清单
+
+### 8.1 新增某课时的某一关
+
+1. `lessons/lesson-N/steps/StepX....tsx`
+2. 更新 `lesson-N/config.ts`、`guards.ts`、`routes.tsx`
+3. 若持久化字段变化：改 `domains/portfolio/types.ts` 及 `normalize` / `createEmpty`；必要时改 `continue-package.ts`
+4. 更新 `app/lesson-registry.ts` 的 `totalSteps`（须与该课 `config` 步骤数一致）
+5. 更新本文档
+
+### 8.2 新增整课时
+
+1. `lessons/lesson-N/` 目录（config / guards / routes / steps）
+2. `app/router/index.tsx` 懒加载路由
+3. `app/lesson-registry.ts`：`enabled`、`totalSteps`、标题
+4. `domains/portfolio/types.ts`：`LessonNState` 与 `ModulePortfolio`
+5. `continue-package.ts` / `snapshot-html.ts` 按需扩展
+6. 更新本文档
+
+### 8.3 新增 `shared/ui` 组件
+
+仅依赖 Radix/Tailwind 与 `shared` 内工具；不得 import `domains` / `lessons`。
+
+---
+
+## 9. 产品发布号（SemVer）
+
+- 以 **`package.json` 的 `version`** 为准（当前 **0.5.0**），与 Git 标签 `v0.5.0` 对应。
+- **`ModulePortfolio.appVersion`** 表示数据包格式口径，与 npm 版本独立。
+
+---
+
+## 10. 重要约束（摘录）
+
+- 页面与步骤组件不直接读写 IndexedDB。
+- 课时业务逻辑不塞进 `shared/ui` 或 `app/layout` 的纯展示层（布局内可组合子组件并传参）。
+- 教师模式下不得把演示档案写入 IndexedDB。
+
+---
+
+*最后更新：2026-04-14 — 重写 `src/` 树与分层说明；修正 `lesson-registry` 课时 2 `totalSteps` 为 5；与 `package.json` v0.5.0 对齐。*
