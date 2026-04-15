@@ -97,7 +97,7 @@ export function PosterSketchPreview({
       ? `你在课时2记下的 ${evidenceEntryCount} 条资料，会在本课里挑一挑、理一理，变成展板上「我们看见了什么」的证据卡。`
       : "课时2里记下的观察与资料，会在本课筛选、加工，变成海报上亮出来的「我们看见了什么」。"
 
-  const block4Body = "这一格先留白。下节课小组把资料并在一起后，再一起讨论「可能的线索」该怎么写。"
+  const block4Body = "这一格先留白。下节课小组把资料并在一起后，再一起讨论「可能的原因」该怎么写。"
 
   const dimForWhy = spotlightCard === "why"
   const shellClass = embedded
@@ -180,7 +180,7 @@ export function PosterSketchPreview({
           />
           <SketchCard
             icon={Link2}
-            title="可能的线索"
+            title="可能的原因"
             statusLabel="锁定"
             tone="purple"
             body={block4Body}

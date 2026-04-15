@@ -63,8 +63,9 @@ src/
 │
 ├── app/                          # 应用壳：路由、布局、注册表、全局状态
 │   ├── lesson-registry.ts        # LESSON_REGISTRY：课时标题、enabled、totalSteps；resolvePortfolioPointer
+│   ├── teacher-demo-presets.ts   # 教师模式：`applyTeacherDemoPreset` 恢复演示；`applyTeacherMemberImportDrill` 组员导入前/后（保指针）
 │   ├── layout/
-│   │   ├── AppShell.tsx          # 子路由出口、顶栏、教师模式横幅
+│   │   ├── AppShell.tsx          # 子路由出口、顶栏；教师横幅含视角切换与组员演练下拉
 │   │   ├── TopLessonProgress.tsx # 课时级进度
 │   │   └── GlobalActions.tsx     # 保存 / 导入 / 快照 / 重置
 │   ├── providers/
@@ -238,7 +239,7 @@ src/
 | `peerFeedbackImportedPackagesJson` | 组长已导入的组员意见包 JSON 数组字符串 | L5 Step1 |
 | `feedbackExported` | 组员是否已导出意见包 | L5 Step1 |
 | `feedbackCompleted` | 第 1 关完成 | L5 Step1 |
-| `changeRecords` | 改动行；`item` 为海报五部分之一；`reason` 为第 1 关闭环下拉值 | L5 Step2 |
+| `changeRecords` | 改动行；`item` 为海报五部分之一（枚举见 `lesson-5/config.ts`；旧存盘「可能的线索」会归一为「可能的原因」）；`reason` 为第 1 关闭环下拉值 | L5 Step2 |
 | `versionChangeLeaderPackageExported` | 组长是否已导出改动汇总包；与 `completed` 实现「首次完成前须导出一次」 | L5 Step2 |
 | `importedVersionChangePackageJson` | 组员已导入的组长汇总包全文 | L5 Step2 |
 | `versionChangeMemberAcknowledged` | 组员已勾选核对 | L5 Step2 |
@@ -263,7 +264,10 @@ src/
 ## 6. 教师演示模式与持久化约束
 
 - **入口**：`HomePage.tsx` 底部「教师入口」；口令常量 `TEACHER_PASSWORD`（与 `enterTeacherMode()` 联动，实现以代码为准）。
-- **行为**：`AppProvider` 中 `isTeacherMode === true` 时使用 `createDemoPortfolio()` 作为有效档案；Guard 在各路 `routes.tsx` 中与 `isTeacherMode` 组合判断；`savePortfolio` / 导入在教师模式下不写 IndexedDB。
+- **行为**：`AppProvider` 中 `isTeacherMode === true` 时使用 `createDemoPortfolio()` 作为有效档案；Guard 在各路 `routes.tsx` 中与 `isTeacherMode` 组合判断；`savePortfolio` 在教师模式下仅更新内存中的演示档案；`importPortfolio` 在教师模式下仍为 no-op。
+- **横幅工具**：`AppShell` 内 **组长|组员** 滑动样式切换（写回 `student.role` 后回首页）；**恢复演示数据** 调用 `applyTeacherDemoPreset("reset_full")` 并回首页；组员在 **课时4第1关**、**课时5第2关** 才显示 **导入前|导入后** 滑动条（`applyTeacherMemberImportDrill`，不跳转指针）。
+- **进入教师模式**：`HomePage` 口令成功后 **`navigate("/")`** 留在首页。
+- **首页课时卡片**：教师模式下已开放课时主按钮统一为 **「浏览本课」**（`HomePage.tsx`）。
 - **持久化**：业务代码不直接访问 IndexedDB，统一经 `PortfolioRepository`（`portfolio.repository.idb.ts`）。
 
 学生可见文案避免技术词：JSON、schema、IndexedDB、repository 等（见第 10 节）。
@@ -322,4 +326,4 @@ src/
 
 ---
 
-*最后更新：2026-04-14 — 重写 `src/` 树与分层说明；修正 `lesson-registry` 课时 2 `totalSteps` 为 5；与 `package.json` v0.5.0 对齐。*
+*最后更新：2026-04-15 — 教师模式：AppShell 组长/组员切换与组员演练预设（`teacher-demo-presets.ts`）；首页教师模式「浏览本课」；演示档案 `lesson2.completed` 与指针一致。*

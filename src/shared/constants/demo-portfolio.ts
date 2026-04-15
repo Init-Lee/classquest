@@ -3,7 +3,7 @@
  * 职责：为教师模式提供一份内容充实的模拟 ModulePortfolio，
  *       让老师演示时每个步骤页面均有可见内容，而非空状态
  * 更新触发：课时结构新增字段时需同步补充演示数据；
- *           演示文案需要调整时
+ *           演示文案需要调整时；与首页指针/「已完成」叙事冲突的字段（如 lesson2.completed）需修正时
  */
 
 import type { ModulePortfolio } from "@/domains/portfolio/types"
@@ -199,7 +199,8 @@ export function createDemoPortfolio(): ModulePortfolio {
           checkedAt: now,
         },
       ],
-      completed: false,
+      /** 与指针已到课时5 的演示叙事一致，须为 true，避免首页「课时2 待解锁」断层 */
+      completed: true,
     },
     lesson3: {
       ...createEmptyLesson3State(),

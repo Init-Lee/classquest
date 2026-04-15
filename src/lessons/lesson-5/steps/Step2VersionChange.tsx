@@ -21,7 +21,7 @@ import { usePortfolio } from "@/app/providers/AppProvider"
 import { cn } from "@/shared/utils/cn"
 import { advancePointer } from "@/shared/utils/pointer"
 import type { ChangeRecord, ModulePortfolio } from "@/domains/portfolio/types"
-import { LESSON5_POSTER_SECTION_OPTIONS } from "../config"
+import { LESSON5_POSTER_SECTION_OPTIONS, normalizeLesson5PosterSectionItem } from "../config"
 import {
   buildLesson5VersionChangeLeaderPackage,
   downloadLesson5VersionChangeLeaderPackage,
@@ -72,7 +72,8 @@ function buildFeedbackReasonOptions(portfolio: ModulePortfolio): { value: string
 }
 
 function isPosterSection(s: string): boolean {
-  return (LESSON5_POSTER_SECTION_OPTIONS as readonly string[]).includes(s)
+  const normalized = normalizeLesson5PosterSectionItem(s.trim())
+  return (LESSON5_POSTER_SECTION_OPTIONS as readonly string[]).includes(normalized)
 }
 
 function isRowCompleteLeader(row: ChangeRecord, reasonOptions: { value: string }[]): boolean {
@@ -89,14 +90,16 @@ export default function Step2VersionChange() {
   const lesson5 = portfolio?.lesson5
   const isLeader = portfolio?.student.role === "leader"
 
-  const [records, setRecords] = useState<ChangeRecord[]>(
-    lesson5?.changeRecords && lesson5.changeRecords.length > 0
-      ? lesson5.changeRecords
-      : [
-          { item: "", before: "", after: "", reason: "" },
-          { item: "", before: "", after: "", reason: "" },
-        ]
-  )
+  const [records, setRecords] = useState<ChangeRecord[]>(() => {
+    const base =
+      lesson5?.changeRecords && lesson5.changeRecords.length > 0
+        ? lesson5.changeRecords
+        : [
+            { item: "", before: "", after: "", reason: "" },
+            { item: "", before: "", after: "", reason: "" },
+          ]
+    return base.map(r => ({ ...r, item: normalizeLesson5PosterSectionItem(r.item) }))
+  })
   const [errors, setErrors] = useState<string[]>([])
   const [exportSuccess, setExportSuccess] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -410,7 +413,10 @@ export default function Step2VersionChange() {
               <div key={rowIdx} className="border rounded-lg p-4 space-y-2 bg-muted/10 text-sm">
                 <div className="font-medium text-muted-foreground">改动 {rowIdx + 1}</div>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-3 gap-y-1">
-                  <div className="min-w-0 sm:col-span-1"><span className="text-muted-foreground">修改项目：</span>{row.item}</div>
+                  <div className="min-w-0 sm:col-span-1">
+                    <span className="text-muted-foreground">修改项目：</span>
+                    {normalizeLesson5PosterSectionItem(row.item)}
+                  </div>
                   <div className="min-w-0 sm:col-span-3"><span className="text-muted-foreground">依据哪条反馈：</span><span className="whitespace-pre-wrap break-words">{row.reason}</span></div>
                 </div>
                 <div><span className="text-muted-foreground">修改前：</span><span className="whitespace-pre-wrap">{row.before}</span></div>
@@ -486,6 +492,10 @@ export default function Step2VersionChange() {
             <CardContent className="space-y-4">
               {records.map((row, rowIdx) => {
                 const complete = isRowCompleteLeader(row, reasonOptions)
+                const posterSelectValue = (() => {
+                  const n = normalizeLesson5PosterSectionItem(row.item.trim())
+                  return (LESSON5_POSTER_SECTION_OPTIONS as readonly string[]).includes(n) ? n : ""
+                })()
                 return (
                   <div
                     key={rowIdx}
@@ -503,7 +513,7 @@ export default function Step2VersionChange() {
                         <div className="text-xs text-muted-foreground mb-1 font-medium">修改项目</div>
                         <select
                           className={SELECT_CLASS}
-                          value={isPosterSection(row.item) ? row.item : ""}
+                          value={posterSelectValue}
                           onChange={e => updateRecord(rowIdx, "item", e.target.value)}
                         >
                           <option value="">请选择海报板块</option>

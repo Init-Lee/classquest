@@ -3,7 +3,7 @@
  * 职责：应用入口页面，展示模块标题、当前进度卡、课时入口卡片
  *       未创建档案时引导学生新建档案；已有档案时展示进度并引导继续学习
  *       同时提供教师演示模式入口（口令验证）
- * 更新触发：首页展示内容变化时；新增课时卡片时；「已完成」判定与课时 `completed` 字段对齐时；教师入口 UI 调整时
+ * 更新触发：首页展示内容变化时；新增课时卡片时；「已完成」判定与课时 `completed` 字段对齐时；教师模式下课时卡片主按钮文案；教师入口 UI 调整时
  */
 
 import { useState } from "react"
@@ -33,7 +33,7 @@ function TeacherModeEntry() {
   const handleEnter = () => {
     if (password === TEACHER_PASSWORD) {
       enterTeacherMode()
-      navigate("/lesson/1/step/1")
+      navigate("/")
     } else {
       setError("口令错误，请重试")
       setPassword("")
@@ -215,7 +215,7 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
 }
 
 export default function HomePage() {
-  const { portfolio } = usePortfolio()
+  const { portfolio, isTeacherMode } = usePortfolio()
   const navigate = useNavigate()
   const [showNewForm, setShowNewForm] = useState(false)
 
@@ -394,7 +394,13 @@ export default function HomePage() {
                       className="w-full"
                       onClick={() => navigate(`/lesson/${lesson.id}/step/1`)}
                     >
-                      {isCurrent ? "继续闯关" : isCompleted ? "查看回顾" : "进入课时"}
+                      {isTeacherMode
+                        ? "浏览本课"
+                        : isCurrent
+                          ? "继续闯关"
+                          : isCompleted
+                            ? "查看回顾"
+                            : "进入课时"}
                     </Button>
                   </CardContent>
                 )}

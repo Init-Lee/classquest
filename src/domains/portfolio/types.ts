@@ -233,7 +233,7 @@ export interface FeedbackDimension {
  * 记录海报修改前后的对比，至少需要 2 行完整填写
  */
 export interface ChangeRecord {
-  /** 修改项目：海报五部分之一（标题、探究问题、为何关注、我们看见了什么、可能的线索） */
+  /** 修改项目：海报五部分之一（标题、探究问题、为何关注、我们看见了什么、可能的原因） */
   item: string
   /** 修改前：原来怎么写/怎么讲 */
   before: string
