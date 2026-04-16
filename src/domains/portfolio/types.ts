@@ -286,6 +286,8 @@ export interface RoadshowStep {
   mustSay: string
   /** 可展开点：不同成员可以自由详略（选填） */
   expand: string
+  /** 本步演讲负责人（存姓名；来自课时1小组成员名单，不含「组长」等角色名） */
+  presenterBy: string
 }
 
 /** 课时6状态数据（终版海报路演与表达设计） */
@@ -305,6 +307,12 @@ export interface Lesson6State {
   closingSentence: string
   /** 路径单文本是否已导出 */
   pathExported: boolean
+  /** 组长是否已至少导出过一次讲解路径 JSON（首次完成课时6前须为 true；完成后不再强制） */
+  roadshowPathLeaderPackageExported: boolean
+  /** 组员导入的组长讲解路径 JSON 原文 */
+  importedRoadshowPathPackageJson: string
+  /** 组员是否已核对导入的路径单 */
+  roadshowPathMemberAcknowledged: boolean
 
   /** 课时6是否已完成 */
   completed: boolean
@@ -510,15 +518,18 @@ export function createEmptyLesson6State(): Lesson6State {
   return {
     exampleAcknowledged: false,
     roadshowSteps: [
-      { step: 1, name: "点题", posterArea: "", mustSay: "", expand: "" },
-      { step: 2, name: "指证据", posterArea: "", mustSay: "", expand: "" },
-      { step: 3, name: "说判断与建议", posterArea: "", mustSay: "", expand: "" },
-      { step: 4, name: "应追问并收束", posterArea: "", mustSay: "", expand: "" },
+      { step: 1, name: "点题", posterArea: "", mustSay: "", expand: "", presenterBy: "" },
+      { step: 2, name: "指证据", posterArea: "", mustSay: "", expand: "", presenterBy: "" },
+      { step: 3, name: "说判断与建议", posterArea: "", mustSay: "", expand: "", presenterBy: "" },
+      { step: 4, name: "应追问并收束", posterArea: "", mustSay: "", expand: "", presenterBy: "" },
     ],
     challengeQuestion: "",
     evidenceBack: "",
     closingSentence: "",
     pathExported: false,
+    roadshowPathLeaderPackageExported: false,
+    importedRoadshowPathPackageJson: "",
+    roadshowPathMemberAcknowledged: false,
     completed: false,
   }
 }
@@ -545,6 +556,7 @@ export function normalizeLesson6State(raw: any): Lesson6State {
       posterArea: typeof s.posterArea === "string" ? s.posterArea : "",
       mustSay: typeof s.mustSay === "string" ? s.mustSay : "",
       expand: typeof s.expand === "string" ? s.expand : "",
+      presenterBy: typeof s.presenterBy === "string" ? s.presenterBy : "",
     }
   })
 
@@ -555,6 +567,12 @@ export function normalizeLesson6State(raw: any): Lesson6State {
     evidenceBack: typeof raw.evidenceBack === "string" ? raw.evidenceBack : "",
     closingSentence: typeof raw.closingSentence === "string" ? raw.closingSentence : "",
     pathExported: Boolean(raw.pathExported),
+    roadshowPathLeaderPackageExported: Boolean(raw.roadshowPathLeaderPackageExported),
+    importedRoadshowPathPackageJson:
+      typeof raw.importedRoadshowPathPackageJson === "string"
+        ? raw.importedRoadshowPathPackageJson
+        : "",
+    roadshowPathMemberAcknowledged: Boolean(raw.roadshowPathMemberAcknowledged),
     completed: Boolean(raw.completed),
   }
 }

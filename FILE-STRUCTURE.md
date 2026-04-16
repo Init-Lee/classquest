@@ -63,7 +63,7 @@ src/
 │
 ├── app/                          # 应用壳：路由、布局、注册表、全局状态
 │   ├── lesson-registry.ts        # LESSON_REGISTRY：课时标题、enabled、totalSteps；resolvePortfolioPointer
-│   ├── teacher-demo-presets.ts   # 教师模式：`applyTeacherDemoPreset` 恢复演示；`applyTeacherMemberImportDrill` 组员导入前/后（保指针）
+│   ├── teacher-demo-presets.ts   # 教师模式：`applyTeacherDemoPreset` 恢复演示；`applyTeacherMemberImportDrill` 组员导入前/后（L4/L5/L6，保指针）
 │   ├── layout/
 │   │   ├── AppShell.tsx          # 子路由出口、顶栏；教师横幅含视角切换与组员演练下拉
 │   │   ├── TopLessonProgress.tsx # 课时级进度
@@ -264,14 +264,19 @@ src/
 | 字段 | 语义 | 主要写入步骤 |
 |------|------|----------------|
 | `exampleAcknowledged` | 已确认四步流程 | L6 Step1 |
-| `roadshowSteps` | 四行固定路演路径（`posterArea` / `mustSay` / `expand`） | L6 Step2 |
+| `roadshowSteps` | 四行固定路演路径（每行含 `posterArea` / `mustSay` / `expand` / **`presenterBy` 演讲负责人（姓名）**） | L6 Step2 |
 | `challengeQuestion` / `evidenceBack` / `closingSentence` | 追问区三字段 | L6 Step2 |
-| `pathExported` | 是否已触发过复制或 JSON 下载 | L6 Step2 |
+| `pathExported` | 是否已触发过 JSON 下载 | L6 Step2 |
+| `roadshowPathLeaderPackageExported` | 组长是否已至少导出过一次路径 JSON（首次完成课时6前须为 true） | L6 Step2 |
+| `importedRoadshowPathPackageJson` | 组员导入的组长路径 JSON 原文 | L6 Step2 |
+| `roadshowPathMemberAcknowledged` | 组员已核对导入内容 | L6 Step2 |
 | `completed` | 课时 6 完成 | L6 Step2 |
 
 **Guard**（`lesson-6/guards.ts`）：Step1 需 `lesson5.completed`；Step2 需 `lesson6.exampleAcknowledged`。
 
 **Step1 第 3 页（四步翻转卡）**：须按第 1→4 步顺序首次解锁；未轮到的步骤锁定；每步在弹窗中阅读后**关闭弹窗**计为该步已读；**已读步骤可重复点开**查看弹窗；卡片背面始终显示步骤标题（`meta.name`）。四步均读完前，**侧栏**「下一页」Chevron 不可用。分页为左右圆形 **Chevron** 按钮 + 主卡内一行页码（非底栏大按钮条）。进度为会话内 `useState`，不入 `Portfolio`。
+
+**Step2（`Step2RoadshowPath.tsx`）**：**组长**——分页卡片（与第1关同左右 Chevron + 主卡）：第1屏讲解路径单说明，第2–5屏对应四步（**每步卡片右上角**「演讲负责人」下拉，选项为课时1 **小组成员真实姓名** + 当前学生姓名去重，无「组长」角色项），第6屏追问区，第7屏「**预览海报说明流程**」弹窗（`Dialog`，与组员整合稿同版式）+ 琥珀/绿色「导出 JSON」+「完成课时6」。**组员**——未导入时天青按钮选 JSON；导入后以**整合稿**「海报路演说明流程」通读（非分框表单）+ 勾选核对 + 完成。`posterArea` 快捷 chips、软提示与 `validation.ts` 见上；`poster-roadshow-path-v1` JSON 的 `steps[]` 每步含 `presenterBy`；旧包仅有顶层 `presenter` 时解析会按步兜底；`export.ts` 提供 `parseLesson6RoadshowPathPackageJson`。
 
 **导出**：`lesson-6/export.ts`（纯文本、`poster-roadshow-path-v1` JSON）；`normalizeLesson6State` 在 `types.ts` 与 `continue-package` 迁移中保证四步行结构。
 
@@ -283,7 +288,7 @@ src/
 
 - **入口**：`HomePage.tsx` 底部「教师入口」（仅 `!isTeacherMode` 时渲染，已进入教师模式后隐藏，避免与顶栏横幅重复）；口令与 `enterTeacherMode()` 联动以代码为准。
 - **行为**：`AppProvider` 中 `isTeacherMode === true` 时使用 `createDemoPortfolio()` 作为有效档案；Guard 在各路 `routes.tsx` 中与 `isTeacherMode` 组合判断；`savePortfolio` 在教师模式下仅更新内存中的演示档案；`importPortfolio` 在教师模式下仍为 no-op。
-- **横幅工具**：`AppShell` 内 **组长|组员** 滑动样式切换（写回 `student.role` 后回首页）；**恢复演示数据** 调用 `applyTeacherDemoPreset("reset_full")` 并回首页；组员在 **课时4第1关**、**课时5第2关** 才显示 **导入前|导入后** 滑动条（`applyTeacherMemberImportDrill`，不跳转指针）。
+- **横幅工具**：`AppShell` 内 **组长|组员** 滑动样式切换（写回 `student.role` 后回首页）；**恢复演示数据** 调用 `applyTeacherDemoPreset("reset_full")` 并回首页；组员在 **课时4第1关**、**课时5第2关**、**课时6第2关** 才显示 **导入前|导入后** 滑动条（`applyTeacherMemberImportDrill`，不跳转指针）。
 - **进入教师模式**：`HomePage` 口令成功后 **`navigate("/")`** 留在首页。
 - **首页课时卡片**：教师模式下已开放课时主按钮统一为 **「浏览本课」**（`HomePage.tsx`）。
 - **持久化**：业务代码不直接访问 IndexedDB，统一经 `PortfolioRepository`（`portfolio.repository.idb.ts`）。

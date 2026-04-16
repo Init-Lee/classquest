@@ -657,6 +657,7 @@ function buildLesson6Snapshot(portfolio: ModulePortfolio): string {
     <tr>
       <td>${r.step}</td>
       <td>${esc(r.name)}</td>
+      <td>${esc(r.presenterBy || "—")}</td>
       <td>${esc(r.posterArea || "—")}</td>
       <td>${esc(r.mustSay || "—")}</td>
       <td>${esc(r.expand || "—")}</td>
@@ -677,7 +678,7 @@ function buildLesson6Snapshot(portfolio: ModulePortfolio): string {
   <div class="section">
     <div class="section-title">📣 四步讲解路径</div>
     <table class="evidence-table">
-      <thead><tr><th>步</th><th>名称</th><th>海报位置</th><th>必说句</th><th>可展开点</th></tr></thead>
+      <thead><tr><th>步</th><th>名称</th><th>演讲负责人</th><th>海报位置</th><th>必说句</th><th>可展开点</th></tr></thead>
       <tbody>${stepRows}</tbody>
     </table>
   </div>

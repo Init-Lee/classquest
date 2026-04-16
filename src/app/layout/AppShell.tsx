@@ -1,7 +1,7 @@
 /**
  * 文件说明：AppShell 全局外壳组件
  * 职责：包裹所有页面，提供顶部导航栏（课时进度条 + 全局动作区）和主内容区
- *       是应用视觉结构的顶层容器；教师模式下展示醒目横幅，含组长/组员滑动切换；组员仅在课时4第1关、课时5第2关显示「导入前/导入后」演练条
+ *       是应用视觉结构的顶层容器；教师模式下展示醒目横幅，含组长/组员滑动切换；组员仅在课时4第1关、课时5第2关、课时6第2关显示「导入前/导入后」演练条
  * 更新触发：顶部导航结构调整时；教师模式 UI、演练入口或路由解析规则变化时
  */
 
@@ -97,11 +97,16 @@ export function AppShell() {
     && portfolio
     && portfolio.student.role === "member"
     && pos
-    && ((pos.lessonId === 4 && pos.stepId === 1) || (pos.lessonId === 5 && pos.stepId === 2))
+    && (
+      (pos.lessonId === 4 && pos.stepId === 1)
+      || (pos.lessonId === 5 && pos.stepId === 2)
+      || (pos.lessonId === 6 && pos.stepId === 2)
+    )
 
   const l4ImportAfter =
     Boolean(portfolio?.lesson4.skeletonImported && portfolio.lesson4.skeletonPackageJson?.trim())
   const l5ImportAfter = Boolean(portfolio?.lesson5.importedVersionChangePackageJson?.trim())
+  const l6ImportAfter = Boolean(portfolio?.lesson6.importedRoadshowPathPackageJson?.trim())
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -165,6 +170,20 @@ export function AppShell() {
                       leftLabel="导入前"
                       rightLabel="导入后"
                       ariaLabel="组员演练：课时5改动汇总包导入前后"
+                    />
+                  </>
+                )}
+                {showMemberImportDrill && pos?.lessonId === 6 && (
+                  <>
+                    <span className="text-amber-800/70 hidden sm:inline">|</span>
+                    <span className="font-semibold text-amber-950 shrink-0 w-full sm:w-auto">组员·讲解路径单</span>
+                    <TeacherSegmentSwitch
+                      valueRight={l6ImportAfter}
+                      onChange={(right) =>
+                        applyImportDrill(portfolio, right ? "l6-after" : "l6-before")}
+                      leftLabel="导入前"
+                      rightLabel="导入后"
+                      ariaLabel="组员演练：课时6海报路演讲解路径单导入前后"
                     />
                   </>
                 )}

@@ -1,10 +1,11 @@
 /**
  * 文件说明：课时6「海报路演讲解路径单」导出
- * 职责：生成纯文本与 JSON 结构，供第2关复制/下载；与预案第九章格式一致
- * 更新触发：Lesson6State 字段、导出文件名规则或 JSON 结构变更时
+ * 职责：生成纯文本与 JSON 结构，供第2关导出/组员导入解析；与预案第九章格式一致；每步含 `presenterBy`
+ * 更新触发：Lesson6State / `RoadshowStep` 字段、导出文件名规则或 JSON 结构变更时
  */
 
-import type { ModulePortfolio } from "@/domains/portfolio/types"
+import type { ModulePortfolio, RoadshowStep } from "@/domains/portfolio/types"
+import { createEmptyLesson6State } from "@/domains/portfolio/types"
 import { getPortfolioGroupDisplayLabel } from "@/shared/utils/group-display"
 
 /** 主题包展示：优先当前学生 R1，否则首条成员 R1 */
@@ -31,6 +32,7 @@ export function buildLesson6PathText(portfolio: ModulePortfolio): string {
 
   for (const row of lesson6.roadshowSteps) {
     lines.push(`【第${row.step}步 ${row.name}】`)
+    lines.push(`本步演讲负责人：${row.presenterBy.trim() || "—"}`)
     lines.push(`海报位置：${row.posterArea.trim() || "—"}`)
     lines.push(`必说句：${row.mustSay.trim() || "—"}`)
     lines.push(`可展开点：${row.expand.trim() || "—"}`)
@@ -60,6 +62,7 @@ export function buildLesson6PathJsonPayload(portfolio: ModulePortfolio): Record<
       posterArea: r.posterArea,
       mustSay: r.mustSay,
       expand: r.expand,
+      presenterBy: r.presenterBy,
     })),
     challenge: {
       question: lesson6.challengeQuestion,
@@ -67,6 +70,64 @@ export function buildLesson6PathJsonPayload(portfolio: ModulePortfolio): Record<
       closing: lesson6.closingSentence,
     },
     exportedAt: new Date().toISOString(),
+  }
+}
+
+/** 解析组长导出的讲解路径 JSON（组员导入用） */
+export function parseLesson6RoadshowPathPackageJson(text: string): {
+  roadshowSteps: RoadshowStep[]
+  challengeQuestion: string
+  evidenceBack: string
+  closingSentence: string
+} {
+  let raw: Record<string, unknown>
+  try {
+    raw = JSON.parse(text) as Record<string, unknown>
+  } catch {
+    throw new Error("文件不是合法的 JSON")
+  }
+  if (raw.packageType !== "poster-roadshow-path-v1") {
+    throw new Error("请选择组长在本关导出的「海报路演讲解路径单」JSON")
+  }
+  const base = createEmptyLesson6State().roadshowSteps
+  const stepsRaw = raw.steps
+  if (!Array.isArray(stepsRaw) || stepsRaw.length !== 4) {
+    throw new Error("JSON 中 steps 须为 4 行")
+  }
+  /** 旧版 JSON 仅有顶层 presenter，无每步 presenterBy 时用于兜底（导入后可在界面补全） */
+  const legacyPresenter =
+    typeof raw.presenter === "string" ? raw.presenter.trim() : ""
+  const roadshowSteps: RoadshowStep[] = base.map((row, i) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const s = stepsRaw[i] as any
+    if (!s || typeof s !== "object") return { ...row }
+    const presenterBy =
+      typeof s.presenterBy === "string"
+        ? s.presenterBy
+        : legacyPresenter
+          ? legacyPresenter
+          : ""
+    return {
+      step: row.step,
+      name: row.name,
+      posterArea: typeof s.posterArea === "string" ? s.posterArea : "",
+      mustSay: typeof s.mustSay === "string" ? s.mustSay : "",
+      expand: typeof s.expand === "string" ? s.expand : "",
+      presenterBy,
+    }
+  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ch = raw.challenge as any
+  const challengeQuestion =
+    ch && typeof ch.question === "string" ? ch.question : ""
+  const evidenceBack = ch && typeof ch.evidenceBack === "string" ? ch.evidenceBack : ""
+  const closingSentence = ch && typeof ch.closing === "string" ? ch.closing : ""
+
+  return {
+    roadshowSteps,
+    challengeQuestion,
+    evidenceBack,
+    closingSentence,
   }
 }
 
