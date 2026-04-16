@@ -43,7 +43,16 @@ export function resolvePointerFromState(portfolio: ModulePortfolio): ProgressPoi
   /**
    * 必须从「更高课时已完成」向下判断，否则会出现：
    * 课时3已完成时直接 return {3,5}，导致课时4/5 已完成但指针仍被锁在课时3的 BUG。
+   * 同理：课时6已完成时必须先于课时5判断，否则指针会错误停在 {5,2}。
    */
+  // 课时6已完成 → 指针至少应为 {6, 2}（课时6共2关）
+  if (portfolio.lesson6?.completed) {
+    if (p.lessonId < 6 || (p.lessonId === 6 && p.stepId < 2)) {
+      return { lessonId: 6, stepId: 2, updatedAt: now }
+    }
+    return p
+  }
+
   // 课时5已完成 → 指针至少应为 {5, 2}（课时5共2关）
   if (portfolio.lesson5?.completed) {
     if (p.lessonId < 5 || (p.lessonId === 5 && p.stepId < 2)) {

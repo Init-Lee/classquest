@@ -63,7 +63,7 @@ export const LESSON_REGISTRY: LessonConfig[] = [
     id: 6,
     title: "终版海报路演与表达设计",
     subtitle: "所有成员按同一路径讲",
-    enabled: false,
+    enabled: true,
     totalSteps: 2,
   },
 ]

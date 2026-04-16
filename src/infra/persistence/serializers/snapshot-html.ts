@@ -645,9 +645,61 @@ function buildLesson5Snapshot(portfolio: ModulePortfolio): string {
 </html>`
 }
 
+/** 生成课时6阶段快照 HTML（海报路演讲解路径单） */
+function buildLesson6Snapshot(portfolio: ModulePortfolio): string {
+  const { student, lesson6 } = portfolio
+  const now = new Date().toLocaleString("zh-CN")
+  const themePack = portfolio.lesson1.r1ByMember[0]?.themePack ?? "—"
+
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+  const stepRows = lesson6.roadshowSteps.map(r => `
+    <tr>
+      <td>${r.step}</td>
+      <td>${esc(r.name)}</td>
+      <td>${esc(r.posterArea || "—")}</td>
+      <td>${esc(r.mustSay || "—")}</td>
+      <td>${esc(r.expand || "—")}</td>
+    </tr>
+  `).join("")
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>课时6快照 — ${esc(student.studentName)}</title>${SNAPSHOT_STYLES}</head>
+<body>
+  <h1>AI科学传播站 · 课时6 · 终版海报路演与表达设计 快照</h1>
+  <table class="meta-table">
+    <tr><td>班级</td><td>${esc(student.clazz)}</td><td>姓名</td><td>${esc(student.studentName)}</td></tr>
+    <tr><td>小组</td><td>${metaEsc(getPortfolioGroupDisplayLabel(portfolio))}</td><td>主题包</td><td>${themePack}</td></tr>
+    <tr><td>生成时间</td><td colspan="3">${now}</td></tr>
+  </table>
+
+  <div class="section">
+    <div class="section-title">📣 四步讲解路径</div>
+    <table class="evidence-table">
+      <thead><tr><th>步</th><th>名称</th><th>海报位置</th><th>必说句</th><th>可展开点</th></tr></thead>
+      <tbody>${stepRows}</tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">❓ 追问与收束</div>
+    <div class="field"><div class="field-label">最容易被追问的问题</div><div class="field-value">${esc(lesson6.challengeQuestion || "—")}</div></div>
+    <div class="field"><div class="field-label">准备回到哪条证据</div><div class="field-value">${esc(lesson6.evidenceBack || "—")}</div></div>
+    <div class="field"><div class="field-label">最后一句收束话</div><div class="field-value">${esc(lesson6.closingSentence || "—")}</div></div>
+  </div>
+
+  <div class="footer">
+    <p>文件由 ClassQuest 自动生成 · ${now}</p>
+    <p>说明：本快照为课时6（终版海报路演与表达设计）阶段过程性评价材料。</p>
+  </div>
+</body>
+</html>`
+}
+
 /** 根据快照类型分发到对应的生成函数 */
 export function buildSnapshotHTML(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full" | "lesson6-full",
   portfolio: ModulePortfolio
 ): string {
   switch (type) {
@@ -665,6 +717,8 @@ export function buildSnapshotHTML(
       return buildLesson4Snapshot(portfolio)
     case "lesson5-full":
       return buildLesson5Snapshot(portfolio)
+    case "lesson6-full":
+      return buildLesson6Snapshot(portfolio)
     default:
       return buildLesson1FullSnapshot(portfolio)
   }
@@ -672,14 +726,15 @@ export function buildSnapshotHTML(
 
 /** 触发浏览器下载快照 HTML */
 export function downloadSnapshot(
-  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full",
+  type: "r1-personal" | "lesson1-full" | "lesson2-public" | "lesson2-full" | "lesson3-toolbox" | "lesson4-full" | "lesson5-full" | "lesson6-full",
   portfolio: ModulePortfolio
 ): void {
   const html = buildSnapshotHTML(type, portfolio)
   const blob = new Blob([html], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)
   /** 用快照类型推导课时编号，避免依赖可能落后的 pointer */
-  const lessonIdForFilename = type === "lesson5-full" ? 5
+  const lessonIdForFilename = type === "lesson6-full" ? 6
+    : type === "lesson5-full" ? 5
     : type === "lesson4-full" ? 4
     : type === "lesson3-toolbox" ? 3
     : type.startsWith("lesson2") ? 2

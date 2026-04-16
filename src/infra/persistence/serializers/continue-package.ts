@@ -4,7 +4,8 @@
  *       以及将导入的 JSON 文件解析还原为 ModulePortfolio；
  *       同时提供课时3个人整理包（PersonalPackage）、课时4小组骨架包（SkeletonPackageV1）、
  *       课时5第2关组长汇总包（Lesson5VersionChangeLeaderPackageV1）的序列化与反序列化。
- * 更新触发：ModulePortfolio 结构发生变化时；个人整理包/骨架包格式调整时；新增课时时
+ * 更新触发：ModulePortfolio 结构发生变化时；个人整理包/骨架包格式调整时；新增课时时；
+ *           `normalizeLesson6State` 与课时6 字段迁移时
  */
 
 import type { ModulePortfolio, EvidenceCard, SelectedMaterial, FeedbackDimension, ChangeRecord } from "@/domains/portfolio/types"
@@ -14,6 +15,7 @@ import {
   createEmptyLesson5State,
   createEmptyLesson6State,
   normalizeLesson5State,
+  normalizeLesson6State,
 } from "@/domains/portfolio/types"
 import type { PublicEvidenceRecord, FieldEvidenceTask } from "@/domains/evidence/types"
 import { buildContinuePackageFilename, buildLeaderFilename } from "@/shared/utils/format"
@@ -271,7 +273,6 @@ export function serializeContinuePackage(portfolio: ModulePortfolio): Blob {
  * - lesson3 字段缺失时补默认初始状态（v0.3 → v0.4 迁移）
  * 保持向后兼容，旧文件导入后可正常使用
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migratePortfolioData(raw: unknown): ModulePortfolio {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = raw as any
@@ -342,7 +343,7 @@ function migratePortfolioData(raw: unknown): ModulePortfolio {
   if (!data?.lesson6) {
     data.lesson6 = createEmptyLesson6State()
   } else {
-    data.lesson6 = { ...createEmptyLesson6State(), ...data.lesson6 }
+    data.lesson6 = normalizeLesson6State(data.lesson6)
   }
 
   return data as ModulePortfolio

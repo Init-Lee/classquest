@@ -71,7 +71,7 @@ src/
 │   ├── providers/
 │   │   └── AppProvider.tsx       # Portfolio + 教师模式；规范化档案；对接 Repository
 │   └── router/
-│       └── index.tsx             # createBrowserRouter；课时 1~5 + 首页 + 旧版导入 + 404，皆懒加载
+│       └── index.tsx             # createBrowserRouter；课时 1~6 + 首页 + 旧版导入 + 404，皆懒加载
 │
 ├── pages/                        # 与路由 path 直接对应的页面（非课时内步骤）
 │   ├── HomePage.tsx
@@ -127,11 +127,16 @@ src/
 │   │       ├── Step3PlanRecord.tsx
 │   │       ├── Step4CollabBuild.tsx
 │   │       └── Step5UpgradeVerify.tsx
-│   └── lesson-5/
-│       ├── config.ts / guards.ts / routes.tsx
+│   ├── lesson-5/
+│   │   ├── config.ts / guards.ts / routes.tsx
+│   │   └── steps/
+│   │       ├── Step1PeerFeedback.tsx
+│   │       └── Step2VersionChange.tsx
+│   └── lesson-6/
+│       ├── config.ts / guards.ts / routes.tsx / export.ts / validation.ts
 │       └── steps/
-│           ├── Step1PeerFeedback.tsx
-│           └── Step2VersionChange.tsx
+│           ├── Step1ExampleAnalysis.tsx
+│           └── Step2RoadshowPath.tsx
 │
 ├── features/
 │   ├── progress-ui/
@@ -152,7 +157,7 @@ src/
 │   │   └── portfolio.repository.idb.ts
 │   └── serializers/
 │       ├── continue-package.ts     # 继续学习包、组长文件、L3 个人包、L4 骨架包/方案单、L5 意见包/改动汇总包
-│       └── snapshot-html.ts        # 阶段快照 HTML（含 lesson4-full、lesson5-full 等）
+│       └── snapshot-html.ts        # 阶段快照 HTML（含 lesson4-full、lesson5-full、lesson6-full 等）
 │
 └── shared/
     ├── ui/                         # shadcn 风格封装
@@ -176,10 +181,10 @@ src/
 |------|-----------|
 | `/` | `pages/HomePage` |
 | `/legacy-import` | `pages/LegacyImportPage` |
-| `/lesson/1/*` … `/lesson/5/*` | `lessons/lesson-N/routes` |
+| `/lesson/1/*` … `/lesson/6/*` | `lessons/lesson-N/routes` |
 | `*` | `pages/NotFoundPage` |
 
-课时 6 未注册路由；`LESSON_REGISTRY` 中 `id: 6, enabled: false`。
+`LESSON_REGISTRY` 中课时 6：`enabled: true`，`totalSteps: 2`。
 
 ---
 
@@ -194,6 +199,7 @@ src/
 | production-plan-v1 | L4 Step3 组长 | L4 Step3 组员 |
 | peer-feedback-opinion-v1 | L5 Step1 组员导出意见包 | L5 Step1 组长导入 → `peerFeedbackImportedPackagesJson` |
 | lesson5-version-change-leader-v1 | L5 Step2 组长导出 | L5 Step2 组员导入 → `importedVersionChangePackageJson` |
+| poster-roadshow-path-v1（课时6 JSON 导出） | L6 Step2 下载 | 课堂留存，非回写系统 |
 
 ---
 
@@ -253,17 +259,29 @@ src/
 
 **快照**：`lesson5-full`；`GlobalActions` 中 `currentLessonId === 5`。
 
-### 5.4 课时 6 · 预埋
+### 5.4 课时 6 · `Lesson6State`
 
-- `domains/portfolio/types.ts`：`Lesson6State`、`RoadshowStep`、`createEmptyLesson6State()`，`ModulePortfolio.lesson6` 与 `normalize` / 新建档案已接入。
-- `LESSON_REGISTRY`：`id: 6`，`enabled: false`，`totalSteps: 2`。
-- 尚无 `src/lessons/lesson-6/` 与路由注册。
+| 字段 | 语义 | 主要写入步骤 |
+|------|------|----------------|
+| `exampleAcknowledged` | 已确认四步流程 | L6 Step1 |
+| `roadshowSteps` | 四行固定路演路径（`posterArea` / `mustSay` / `expand`） | L6 Step2 |
+| `challengeQuestion` / `evidenceBack` / `closingSentence` | 追问区三字段 | L6 Step2 |
+| `pathExported` | 是否已触发过复制或 JSON 下载 | L6 Step2 |
+| `completed` | 课时 6 完成 | L6 Step2 |
+
+**Guard**（`lesson-6/guards.ts`）：Step1 需 `lesson5.completed`；Step2 需 `lesson6.exampleAcknowledged`。
+
+**Step1 第 3 页（四步翻转卡）**：须按第 1→4 步顺序首次解锁；未轮到的步骤锁定；每步在弹窗中阅读后**关闭弹窗**计为该步已读；**已读步骤可重复点开**查看弹窗；卡片背面始终显示步骤标题（`meta.name`）。四步均读完前，**侧栏**「下一页」Chevron 不可用。分页为左右圆形 **Chevron** 按钮 + 主卡内一行页码（非底栏大按钮条）。进度为会话内 `useState`，不入 `Portfolio`。
+
+**导出**：`lesson-6/export.ts`（纯文本、`poster-roadshow-path-v1` JSON）；`normalizeLesson6State` 在 `types.ts` 与 `continue-package` 迁移中保证四步行结构。
+
+**快照**：`lesson6-full`；`GlobalActions` 中 `currentLessonId === 6`。
 
 ---
 
 ## 6. 教师演示模式与持久化约束
 
-- **入口**：`HomePage.tsx` 底部「教师入口」；口令常量 `TEACHER_PASSWORD`（与 `enterTeacherMode()` 联动，实现以代码为准）。
+- **入口**：`HomePage.tsx` 底部「教师入口」（仅 `!isTeacherMode` 时渲染，已进入教师模式后隐藏，避免与顶栏横幅重复）；口令与 `enterTeacherMode()` 联动以代码为准。
 - **行为**：`AppProvider` 中 `isTeacherMode === true` 时使用 `createDemoPortfolio()` 作为有效档案；Guard 在各路 `routes.tsx` 中与 `isTeacherMode` 组合判断；`savePortfolio` 在教师模式下仅更新内存中的演示档案；`importPortfolio` 在教师模式下仍为 no-op。
 - **横幅工具**：`AppShell` 内 **组长|组员** 滑动样式切换（写回 `student.role` 后回首页）；**恢复演示数据** 调用 `applyTeacherDemoPreset("reset_full")` 并回首页；组员在 **课时4第1关**、**课时5第2关** 才显示 **导入前|导入后** 滑动条（`applyTeacherMemberImportDrill`，不跳转指针）。
 - **进入教师模式**：`HomePage` 口令成功后 **`navigate("/")`** 留在首页。
@@ -313,7 +331,7 @@ src/
 
 ## 9. 产品发布号（SemVer）
 
-- 以 **`package.json` 的 `version`** 为准（当前 **0.5.0**），与 Git 标签 `v0.5.0` 对应。
+- 以 **`package.json` 的 `version`** 为准（当前 **0.6.0**），与 Git 标签 `v0.6.0` 对应。
 - **`ModulePortfolio.appVersion`** 表示数据包格式口径，与 npm 版本独立。
 
 ---
@@ -326,4 +344,4 @@ src/
 
 ---
 
-*最后更新：2026-04-15 — 教师模式：AppShell 组长/组员切换与组员演练预设（`teacher-demo-presets.ts`）；首页教师模式「浏览本课」；演示档案 `lesson2.completed` 与指针一致。*
+*最后更新：2026-04-16 — 课时6 路由与「海报路演讲解路径单」；`resolvePointerFromState` 支持 `lesson6.completed`；快照 `lesson6-full`；发布号 0.6.0。*

@@ -336,7 +336,7 @@ export interface ModulePortfolio {
   lesson4: Lesson4State
   /** 课时5数据 */
   lesson5: Lesson5State
-  /** 课时6数据（预埋；lesson-6-dev 开发时填充） */
+  /** 课时6数据（终版海报路演与表达设计） */
   lesson6: Lesson6State
 
   /** 已生成的快照记录 */
@@ -505,7 +505,7 @@ export function normalizeLesson5State(raw: any): Lesson5State {
   }
 }
 
-/** 创建一个空的课时6初始状态（预埋，lesson-6-dev 开发时完善） */
+/** 创建一个空的课时6初始状态 */
 export function createEmptyLesson6State(): Lesson6State {
   return {
     exampleAcknowledged: false,
@@ -524,6 +524,42 @@ export function createEmptyLesson6State(): Lesson6State {
 }
 
 /**
+ * 合并旧包中的 lesson6（缺行/缺字段时按默认四步补齐）
+ * 触发：IndexedDB 旧记录、继续学习包导入、normalizeModulePortfolio
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function normalizeLesson6State(raw: any): Lesson6State {
+  const base = createEmptyLesson6State()
+  if (!raw || typeof raw !== "object") return base
+
+  const rows = Array.isArray(raw.roadshowSteps) ? raw.roadshowSteps : []
+  const roadshowSteps = base.roadshowSteps.map((row, i) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const s = rows[i] as any
+    if (!s || typeof s !== "object") {
+      return { ...row }
+    }
+    return {
+      step: row.step,
+      name: row.name,
+      posterArea: typeof s.posterArea === "string" ? s.posterArea : "",
+      mustSay: typeof s.mustSay === "string" ? s.mustSay : "",
+      expand: typeof s.expand === "string" ? s.expand : "",
+    }
+  })
+
+  return {
+    exampleAcknowledged: Boolean(raw.exampleAcknowledged),
+    roadshowSteps,
+    challengeQuestion: typeof raw.challengeQuestion === "string" ? raw.challengeQuestion : "",
+    evidenceBack: typeof raw.evidenceBack === "string" ? raw.evidenceBack : "",
+    closingSentence: typeof raw.closingSentence === "string" ? raw.closingSentence : "",
+    pathExported: Boolean(raw.pathExported),
+    completed: Boolean(raw.completed),
+  }
+}
+
+/**
  * 将档案中的 lesson3~lesson6 与当前默认结构合并（IndexedDB/旧包缺字段时补齐）
  */
 export function normalizeModulePortfolio(p: ModulePortfolio): ModulePortfolio {
@@ -532,7 +568,7 @@ export function normalizeModulePortfolio(p: ModulePortfolio): ModulePortfolio {
     lesson3: { ...createEmptyLesson3State(), ...p.lesson3 },
     lesson4: { ...createEmptyLesson4State(), ...(p.lesson4 ?? {}) },
     lesson5: normalizeLesson5State(p.lesson5 ?? {}),
-    lesson6: { ...createEmptyLesson6State(), ...(p.lesson6 ?? {}) },
+    lesson6: normalizeLesson6State(p.lesson6 ?? {}),
   }
 }
 

@@ -3,7 +3,7 @@
  * 职责：应用入口页面，展示模块标题、当前进度卡、课时入口卡片
  *       未创建档案时引导学生新建档案；已有档案时展示进度并引导继续学习
  *       同时提供教师演示模式入口（口令验证）
- * 更新触发：首页展示内容变化时；新增课时卡片时；「已完成」判定与课时 `completed` 字段对齐时；教师模式下课时卡片主按钮文案；教师入口 UI 调整时
+ * 更新触发：首页展示内容变化时；新增课时卡片时；「已完成」判定与课时 `completed` 字段对齐时；教师模式下课时卡片主按钮文案；教师入口 UI 调整时；已进入教师模式时是否隐藏入口
  */
 
 import { useState } from "react"
@@ -216,6 +216,8 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
 
 export default function HomePage() {
   const { portfolio, isTeacherMode } = usePortfolio()
+  /** 已进入教师演示模式时不再展示底部口令入口（顶栏已有横幅与退出方式） */
+  const showTeacherEntry = !isTeacherMode
   const navigate = useNavigate()
   const [showNewForm, setShowNewForm] = useState(false)
 
@@ -290,16 +292,20 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* 分隔线 + 教师入口 */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-muted" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
-          </div>
-        </div>
-        <TeacherModeEntry />
+        {showTeacherEntry && (
+          <>
+            {/* 分隔线 + 教师入口 */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-muted" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
+              </div>
+            </div>
+            <TeacherModeEntry />
+          </>
+        )}
       </div>
     )
   }
@@ -410,16 +416,20 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 教师入口（有档案时也保留，但折叠显示） */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-muted" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
-        </div>
-      </div>
-      <TeacherModeEntry />
+      {showTeacherEntry && (
+        <>
+          {/* 教师入口（学生模式且有档案时显示；已进入教师模式则隐藏） */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-muted" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
+            </div>
+          </div>
+          <TeacherModeEntry />
+        </>
+      )}
     </div>
   )
 }

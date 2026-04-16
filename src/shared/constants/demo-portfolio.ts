@@ -7,7 +7,7 @@
  */
 
 import type { ModulePortfolio } from "@/domains/portfolio/types"
-import { createEmptyLesson3State, createEmptyLesson6State } from "@/domains/portfolio/types"
+import { createEmptyLesson3State } from "@/domains/portfolio/types"
 
 /** 创建教师演示用的预填档案（每次进入教师模式时调用，避免引用同一对象） */
 export function createDemoPortfolio(): ModulePortfolio {
@@ -23,8 +23,8 @@ export function createDemoPortfolio(): ModulePortfolio {
       groupName: "科学探索组",
       role: "leader",
     },
-    /** 与 resolvePortfolioPointer 一致：课时4、5 均已完成时指针落在课时5末关 */
-    pointer: { lessonId: 5, stepId: 2, updatedAt: now },
+    /** 教师演示：课时5已完成，指针落在课时6第2关，便于直接预览「讲解路径单」填写态 */
+    pointer: { lessonId: 6, stepId: 2, updatedAt: now },
     lesson1: {
       introDone: true,
       r1ByMember: [
@@ -473,7 +473,44 @@ export function createDemoPortfolio(): ModulePortfolio {
       versionChangeMemberAcknowledged: false,
       completed: true,
     },
-    lesson6: createEmptyLesson6State(),
+    lesson6: {
+      exampleAcknowledged: true,
+      roadshowSteps: [
+        {
+          step: 1,
+          name: "点题",
+          posterArea: "标题区与探究问题区",
+          mustSay: "我们研究的问题是学校周边主要水源地的水质是否达标。",
+          expand: "可一句话点出与师生健康的关联",
+        },
+        {
+          step: 2,
+          name: "指证据",
+          posterArea: "中部数据图与脚注区",
+          mustSay: "请看海报这里，年报数据与现场实测可以对照阅读。",
+          expand: "",
+        },
+        {
+          step: 3,
+          name: "说判断与建议",
+          posterArea: "「可能的原因」与建议区",
+          mustSay: "因此我们认为需要同时关注管网老化与面源污染两类风险。",
+          expand: "",
+        },
+        {
+          step: 4,
+          name: "应追问并收束",
+          posterArea: "结论与行动建议区",
+          mustSay: "若被追问「你怎么证明」，我们会回到脚注与采样记录对应位置。",
+          expand: "",
+        },
+      ],
+      challengeQuestion: "你们怎么证明这和同学的健康直接有关？",
+      evidenceBack: "回到主楼饮水台实测与市年报对照那一块证据。",
+      closingSentence: "以上就是我们基于现有证据能负责任讲到的程度。",
+      pathExported: false,
+      completed: false,
+    },
     snapshotHistory: [],
     groupPlanVersion: 1,
     createdAt: now,

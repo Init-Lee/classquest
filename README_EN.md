@@ -5,14 +5,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![中文](https://img.shields.io/badge/README-中文-red)](README.md)
-[![Release](https://img.shields.io/badge/release-v0.5.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.6.0-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ---
 
 ## Versioning (SemVer)
 
-- **Current release**: `v0.5.0` (matches root `version` in `package.json`; `0.x` = rapid iteration).
-- **Git tags**: see **Tags / Releases** on GitHub; locally: `git describe --tags` or `git show v0.5.0`.
+- **Current release**: `v0.6.0` (matches root `version` in `package.json`; `0.x` = rapid iteration).
+- **Git tags**: see **Tags / Releases** on GitHub; locally: `git describe --tags` or `git show v0.6.0`.
 - **Next release**: bump `package.json` / `package-lock.json` (e.g. `0.6.0`), commit, then `git tag v0.6.0 && git push origin v0.6.0`, and publish release notes on GitHub.
 
 > Note: `appVersion` inside student portfolios (e.g. `1.0.0`) tracks **data package format**, not the product release number above.
@@ -35,7 +35,7 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 
 | Feature | Description |
 |---------|-------------|
-| Gamified learning | Structured unit progression (**Units 1–4: 5 levels each; Unit 5: 2 levels**, all shipped), Guards on every step |
+| Gamified learning | Structured unit progression (**Units 1–4: 5 levels each; Units 5–6: 2 levels each**, all shipped), Guards on every step |
 | Offline-first | Built on IndexedDB — works without internet |
 | Portable progress | Export a "Continue Package" (JSON) anytime; import it on any device to resume |
 | Group collaboration | Leader-member workflow — leader exports a group file, members import and see their assignments |
@@ -54,7 +54,7 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 - **Unit 3**: Asset organization & evidence processing (5 levels)
 - **Unit 4**: Conclusions & web publishing (5 levels)
 - **Unit 5**: Rehearsal feedback & revision (2 levels) — members export peer opinion JSON; leaders import; **leaders must export the “version change” JSON at least once before first unit completion** (no re-export after the unit is marked complete); group label prefers leader name
-- **Unit 6**: Types scaffolded; disabled in the lesson registry until enabled
+- **Unit 6**: Final poster roadshow & speaking design (2 levels) — four-step flow intro → shared path sheet + Q&A block; copy text / download JSON; requires Unit 5 complete
 
 > Authoritative routing, data packages, and field-level notes: [FILE-STRUCTURE.md](FILE-STRUCTURE.md) (Chinese; structural source of truth). Product-facing bullet list: [README.md](README.md) (Chinese).
 
