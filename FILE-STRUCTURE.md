@@ -349,4 +349,4 @@ src/
 
 ---
 
-*最后更新：2026-04-16 — 课时6 路由与「海报路演讲解路径单」；`resolvePointerFromState` 支持 `lesson6.completed`；快照 `lesson6-full`；发布号 0.6.0。*
+*最后更新：2026-04-16 — 课时6 路由与「海报路演讲解路径单」；`resolvePointerFromState` 支持 `lesson6.completed`；快照 `lesson6-full`；发布号 0.6.0；README 路线图与 Phase 表已标课时 6 完成。*

@@ -54,7 +54,7 @@ In traditional classrooms, teachers carry the full burden of lecturing and guida
 - **Unit 3**: Asset organization & evidence processing (5 levels)
 - **Unit 4**: Conclusions & web publishing (5 levels)
 - **Unit 5**: Rehearsal feedback & revision (2 levels) — members export peer opinion JSON; leaders import; **leaders must export the “version change” JSON at least once before first unit completion** (no re-export after the unit is marked complete); group label prefers leader name
-- **Unit 6**: Final poster roadshow & speaking design (2 levels) — four-step flow intro → shared path sheet + Q&A block; copy text / download JSON; requires Unit 5 complete
+- **Unit 6**: Final poster roadshow & speaking design (2 levels) — four-step intro; path sheet with per-step **presenter** (member names); leader **preview** of the integrated script; members read the **poster roadshow flow** document after import; copy text / download JSON; teacher demo has import before/after on step 2; requires Unit 5 complete
 
 > Authoritative routing, data packages, and field-level notes: [FILE-STRUCTURE.md](FILE-STRUCTURE.md) (Chinese; structural source of truth). Product-facing bullet list: [README.md](README.md) (Chinese).
 
@@ -107,7 +107,8 @@ Open `http://localhost:5173` in your browser.
 | Phase 6: Unit 3 development | ✅ Done (5 levels; personal package export → Unit 4) |
 | Phase 7: Unit 4 development | ✅ Done (5 levels; skeleton → draft → plan → collab → verify/export) |
 | Phase 8: Unit 5 development | ✅ Done (2 levels; peer opinion + version-change package; leader export gate on first completion) |
-| Phase 9: UI/UX visual polish (color system, typography, responsive) | 📋 Planned |
+| Phase 9: Unit 6 development | ✅ Done (2 levels; path sheet + integrated member view + leader preview; `poster-roadshow-path-v1` JSON) |
+| Phase 10: UI/UX visual polish (color system, typography, responsive) | 📋 Planned |
 
 ---
 
@@ -120,7 +121,7 @@ Open `http://localhost:5173` in your browser.
 - [x] Unit 3 (5 levels; personal package JSON)
 - [x] Unit 4 (5 levels; skeleton → final HTML export)
 - [x] Unit 5 (2 levels; opinion + version-change JSON; leader export gate)
-- [ ] Unit 6 implementation
+- [x] Unit 6 (2 levels; per-step presenter; integrated script / preview; teacher L6 import drill)
 - [ ] AI assistant API integration (currently prompt templates + external links)
 - [ ] Teacher dashboard
 - [ ] Backend sync support
