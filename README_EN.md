@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![Chinese](https://img.shields.io/badge/README-中文-red)](README.md)
-[![Release](https://img.shields.io/badge/stable-v0.6.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.7.0-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ## Current Architecture Goal
 
@@ -72,9 +72,8 @@ Before Module 4 connects to the real backend, the frontend should first validate
 
 ## Branching and Version Strategy
 
-- Stable release: `v0.6.0`, representing completed Module 3 lessons.
-- Current architecture branch: `refactor/module-platform-v1.5`, candidate version `0.7.0-rc1`.
-- After the architecture refactor is merged: mainline release `v0.7.0`.
+- Current mainline release: `v0.7.0`, after the platform refactor merge (Module 3 preserved, Module 4 placeholder, backend skeleton).
+- Previous milestone: `v0.6.0`, when Module 3 shipped as a single-app layout.
 - Later Module 4 work: one branch per lesson, for example `module-4-lesson-1-dev`.
 - After Module 4 mock workflows stabilize: move toward `v0.8.0`.
 - After Module 4 connects to the real backend: move toward `v0.9.0`.

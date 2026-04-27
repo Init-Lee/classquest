@@ -10,7 +10,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
-[![Release](https://img.shields.io/badge/stable-v0.6.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.7.0-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ## 当前架构目标
 
@@ -71,9 +71,8 @@ npm run build
 
 ## 分支与版本策略
 
-- 稳定发布：`v0.6.0`，对应模块 3 六课时完成。
-- 当前架构分支：`refactor/module-platform-v1.5`，候选版本 `0.7.0-rc1`。
-- 架构重构合并后：主线发布 `v0.7.0`。
+- 当前主线发布：`v0.7.0`，对应平台化架构合并（模块 3 行为保留 + 模块 4 占位 + backend 骨架）。
+- 上一稳定里程碑：`v0.6.0`，模块 3 六课时全部完成时的单应用形态。
 - 模块 4 后续开发：每个课时独立分支，例如 `module-4-lesson-1-dev`。
 - 模块 4 mock 流程稳定后：进入 `v0.8.0`。
 - 模块 4 接入真实后端后：进入 `v0.9.0`。
