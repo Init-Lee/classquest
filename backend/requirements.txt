@@ -1,0 +1,8 @@
+# 文件说明：ClassQuest V1.5 后端 Python 依赖清单。
+# 职责：声明本地运行 FastAPI 骨架所需的最小依赖。
+# 更新触发：新增后端框架、数据库、认证、测试或部署依赖时，需要同步更新本文件。
+
+fastapi
+uvicorn[standard]
+pydantic
+

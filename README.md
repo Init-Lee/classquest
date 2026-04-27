@@ -1,139 +1,93 @@
-# ClassQuest — 程序化教学闯关平台
+<!--
+文件说明：ClassQuest 仓库对外入口说明。
+职责：介绍项目定位、平台化架构、模块清单、运行方式、技术栈、版本策略和文档入口。
+更新触发：项目定位、功能范围、运行方式、技术栈、部署模型、模块状态或发布版本变化时，需要同步更新本文件。
+-->
 
-> 一个学生可自驱闯关、教师以引导为主、离线优先、可持续迭代的程序化教学课程应用。
+# ClassQuest — 程序化教学平台
+
+> 一个面向中学课堂的程序化教学平台。当前正在从「单一模块应用」升级为「平台门户 + 独立课程模块 + V1.5 轻量后端」结构。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
-[![English](https://img.shields.io/badge/README-English-blue)](README_EN.md)
-[![Release](https://img.shields.io/badge/release-v0.6.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.7.0-emerald)](https://github.com/Init-Lee/classquest/releases)
 
----
+## 当前架构目标
 
-## 版本与发布（SemVer）
+```text
+Platform Portal → Module → Lesson → Step
+```
 
-- **当前发布**：`v0.6.0`（与 `package.json` 中 `version` 一致；`0.x` 表示快速迭代期）。
-- **Git 标签**：在 GitHub 仓库 **Tags / Releases** 可查看；本地核对：`git describe --tags` 或 `git show v0.6.0`。
-- **以后发新版**：合并到 `main` 后，将 `package.json` / `package-lock.json` 根版本 bump 为下一号（如 `0.6.0`），提交后执行 `git tag v0.6.0 && git push origin v0.6.0`，并在 GitHub 上写 Release 说明即可。
+```text
+src/
+├── platform/                         # 平台门户、全局路由、模块注册表
+├── modules/
+│   ├── module-3-ai-science-station/   # 已完成的模块 3：AI 科学传播站
+│   └── module-4-ai-info-detective/    # 模块 4：AI 信息侦探，占位待逐课开发
+└── shared/                            # 业务无关 UI 与纯工具
 
-> 说明：学生档案里的 `appVersion`（如 `1.0.0`）表示**数据包格式口径**，与上述**产品发布号**分开维护。
+backend/                              # V1.5 FastAPI 轻量后端骨架
+```
 
----
+## 模块状态
 
-## 项目背景
+- **模块 3 · AI 科学传播站**：已完成 6 个课时、24 个关卡；保留本地优先学习进度、继续学习包、跨角色文件链路、阶段快照和教师演示模式。详见 `src/modules/module-3-ai-science-station/README.md`。
+- **模块 4 · AI 信息侦探**：当前仅架构占位；后续每个课时使用独立分支开发。详见 `src/modules/module-4-ai-info-detective/README.md`。
+- **V1.5 后端**：当前仅骨架和健康检查；真实提交、审核、试答、统计和画廊导出在模块 4 mock 流程稳定后实现。详见 `backend/README.md`。
 
-ClassQuest 是一次**程序化教学模式**的试探与测试，面向中学课堂，首版服务于七年级「AI 科学传播站」模块三的教学场景。
+## 运行方式
 
-传统课堂中，教师往往承担大量的串讲与引导工作，学生缺乏自驱学习的结构。ClassQuest 通过将课程拆解为「课时 → 关卡 → 子步骤」的结构，让学生在清晰的任务边界内推进，教师主要承担巡视与点拨，从而探索一种更可持续的程序化教学范式。
-
-**我们希望更多的老师今后可以将其作为教学辅助手段。**
-
-📖 [English Version →](README_EN.md)
-
----
-
-## 功能亮点
-
-| 功能 | 说明 |
-|------|------|
-| 闯关式自学 | 课时结构化闯关（**课时1~4 各5关 + 课时5~6 各2关**均已实现，合计 24 关），步步有 Guard，学生自驱推进 |
-| 离线优先 | 基于 IndexedDB 本地存储，无需网络也能学习 |
-| 进度随身带 | 随时导出「继续学习包」，换电脑导入即可续学 |
-| 小组协作 | 组长-组员分工，组长文件一键导出分发给组员 |
-| 阶段快照 | 关键节点生成 HTML 快照，可打印 / 上传 Moodle |
-| AI 助手引导 | 提供提示词模板，引导学生使用豆包等 AI 工具辅助思考 |
-| 教师演示模式 | 口令进入后**留在首页**；预填数据、绕过 Guard；顶栏**组长｜组员**分段开关切换；**课时4第1关 / 课时5第2关 / 课时6第2关**且为组员时显示**导入前｜导入后**分段开关（不写关卡指针）；可「恢复演示数据」；首页课时入口为「浏览本课」 |
-| 数据迁移支持 | 旧版工具 JSON 导入向导，帮助学生无缝衔接新版进度 |
-| 可扩展架构 | Repository 抽象隔离数据层，未来可平滑迁移到后端 |
-
----
-
-## 首版覆盖范围
-
-- **课时 1**：项目启动与定题（5 关闯关）
-- **课时 2**：证据采集与规范记录（5 关闯关）
-- **课时 3**：素材整理与证据加工（5 关全部实现 — 继承锚定 → 材料工具箱与表述确认 → 筛选材料 → 证据加工工坊 → 个人预览与导出）
-- **课时 4**：结论形成与网页传播（5 关全部实现 — 小组合并 → 个人 HTML 草稿 → 制作方案 → 协商生成 → 升级校验与最终导出）
-- **课时 5**：预演展示与反馈优化（2 关全部实现 — 意见入池·**仅组员**导出同伴意见包、组长按名单多选导入汇总 → 改动落地·组长填海报五部分改动表并导出汇总包 JSON、组员导入核对后完成；**组长首次完成本课前须至少导出一次汇总包**（本课已完成后改表不再强制重复导出）；顶栏「小组」优先显示组长姓名）
-- **课时 6**：终版海报路演与表达设计（2 关全部实现 — 四步流程只读定标 → 讲解路径单（**每步演讲负责人**为小组成员姓名，鼓励分工）+ 追问区；组长末页可**预览**整合稿、组员导入后通读**海报路演说明流程**；文本复制与 JSON 导出；进入需先完成课时5）
-
-> 课时 3-6 跨课时数据流：课时3第5关导出 JSON「个人整理包」→ 课时4第1关组长导入所有成员包、合并并导出「小组骨架包 v1」→ 组员导入骨架包 → 各自完成个人草稿 → 组长记录制作方案并导出供组员导入 → 协商生成网页 v1 → 升级校验并导出最终版 HTML → 课时5第1关组员导出「同伴意见包」、组长导入汇总 → 第2关组长导出「改动落地汇总包」、组员导入核对后完成 → **课时6** 填写「海报路演讲解路径单」（可复制文本 / 下载 JSON）。**结构说明见 [FILE-STRUCTURE.md](FILE-STRUCTURE.md)**。
-
----
-
-## 技术栈
-
-| 层次 | 技术 |
-|------|------|
-| 构建 | Vite |
-| 框架 | React 18 + TypeScript |
-| UI 库 | shadcn/ui + Tailwind CSS v3 |
-| 展示字体 | `@fontsource/noto-serif-sc` / `@fontsource/cormorant-garamond`（npm 本地字体，Vite 打包进产物，**不依赖在线字体 CDN**） |
-| 路由 | React Router v6（懒加载） |
-| 数据层 | IndexedDB（本地优先） |
-| 状态管理 | React Context + Reducer |
-
----
-
-## 快速开始
-
-**环境要求**：Node.js >= 18
+环境要求：Node.js >= 18。
 
 ```bash
-# 克隆项目
-git clone https://github.com/Init-Lee/classquest.git
-cd classquest
-
-# 安装依赖
 npm install
-
-# 启动开发服务器
 npm run dev
 ```
 
-打开浏览器访问 `http://localhost:5173`
+打开浏览器访问 `http://localhost:5173`。
 
----
+生产构建：
 
-## 项目状态
+```bash
+npm run build
+```
 
-| 阶段 | 状态 |
-|------|------|
-| Phase 0: 项目初始化 + 开源文件 | ✅ 完成 |
-| Phase 1: 壳与导航 | ✅ 完成 |
-| Phase 2: 数据底座（IndexedDB + 继续学习包） | ✅ 完成 |
-| Phase 3: 课时 1（5 关闯关 + AI 助手 + 快照） | ✅ 完成 |
-| Phase 4: 课时 2（5 关闯关 + 组长文件同步 + 双模板证据入库 + 质检） | ✅ 完成 |
-| Phase 5: 细节收口（Bug修复、Guard优化、数据结构重构） | ✅ 完成 |
-| Phase 6: 课时 3 开发 | ✅ 完成（5关全部实现；第5关导出 JSON 个人整理包，与课时4衔接） |
-| Phase 7: 课时 4 开发 | ✅ 完成（5关全部实现；组长/组员双视图；双栏编辑器布局；跨角色文件分发链路完整） |
-| Phase 8: 课时 5 开发 | ✅ 完成（2关；同伴意见包 + 改动落地汇总包 JSON；组长 Step2 **首次完成前须导出一次**；组员导入核对；顶栏小组展示组长名；课时4→5 智能跳转） |
-| Phase 9: 课时 6 开发 | ✅ 完成（2关；路径单每步演讲负责人；组员整合稿 / 组长预览；`poster-roadshow-path-v1` JSON；演示 L6 导入前｜后） |
-| Phase 10: UI/UX 视觉优化（色彩系统、排版、响应式） | 📋 规划中 |
+## 技术栈
 
----
+- 前端：React + TypeScript + Vite
+- 路由：React Router v6
+- UI：Tailwind CSS + shadcn 风格封装
+- 模块 3 本地数据：浏览器本地存储 + 继续学习包导出/导入
+- V1.5 后端目标：FastAPI + SQLite + 本地运行时文件 + Nginx + HTTPS
 
-## 路线图
+## 部署模型（V1.5）
 
-- [x] 课时 1 完整闯关流程（5 关）
-- [x] 课时 2 完整闯关流程（5 关）
-- [x] 小组协作（组长文件导出 / 组员导入）
-- [x] 旧版数据迁移向导（临时功能）
-- [x] 课时 3（5关全部实现；第5关导出 JSON 个人整理包）
-- [x] 课时 4（5关全部实现；个人整理包 → 骨架包 → 制作方案单 → HTML 编辑/预览 → 校验导出）
-- [x] 课时 5（2关；意见包/汇总包 JSON；组长首次完成前导出门禁；组长名展示）
-- [x] 课时 6（2 关；路径单每步演讲负责人；组员整合稿 / 组长预览弹窗；演示模式 L6 导入前｜后）
-- [ ] AI 助手 API 接入（当前为提示词模板 + 外部跳转）
-- [ ] 教师端后台
-- [ ] 后端同步支持
+```text
+前端：Vite build output → OSS 静态托管
+后端：轻量服务器 → Nginx → FastAPI → SQLite / 本地运行时文件
+```
 
----
+模块 4 真实后端联调前，前端应先使用本地状态和 mock API 完成流程验证。
 
-## 贡献指南
+## 分支与版本策略
 
-欢迎教师、教育技术研究者、开发者参与贡献，请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+- 当前主线发布：`v0.7.0`，对应平台化架构合并（模块 3 行为保留 + 模块 4 占位 + backend 骨架）。
+- 上一稳定里程碑：`v0.6.0`，模块 3 六课时全部完成时的单应用形态。
+- 模块 4 后续开发：每个课时独立分支，例如 `module-4-lesson-1-dev`。
+- 模块 4 mock 流程稳定后：进入 `v0.8.0`。
+- 模块 4 接入真实后端后：进入 `v0.9.0`。
 
----
+说明：学生学习包内的 `appVersion` 表示数据包格式口径，与产品发布号独立维护。
+
+## 文档入口
+
+- `FILE-STRUCTURE.md`：仓库结构真相源，只描述平台/模块级边界。
+- `docs/CURSOR-START-HERE.md`：开发前阅读入口。
+- `docs/MIGRATION-PLAN.md`：平台化迁移计划。
+- `docs/ARCHITECTURE-V1_5.md`：V1.5 总体架构。
+- `.cursor/rules/classquest-platform.mdc`：Cursor 开发规则。
 
 ## 开源许可
 
 [MIT License](LICENSE) © 2026 ClassQuest Contributors
+

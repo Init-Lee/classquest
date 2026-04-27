@@ -1,138 +1,92 @@
-# ClassQuest — A Programmatic Teaching Platform
+<!--
+文件说明：ClassQuest repository-facing English README.
+职责：Provide the English entry point for project positioning, platform architecture, module status, setup, stack, version strategy, and documentation links.
+更新触发：When README.md changes its project positioning, feature scope, setup steps, stack, deployment model, module status, or release/version policy, this file must be updated in sync.
+-->
 
-> A student-driven, gamified learning platform built for the classroom — offline-first, teacher-light, and built to scale.
+# ClassQuest — Programmatic Teaching Platform
+
+> A classroom-oriented programmatic teaching platform. ClassQuest is currently being refactored from a single-module app into a platform portal with independent curriculum modules and a lightweight V1.5 backend.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
-[![中文](https://img.shields.io/badge/README-中文-red)](README.md)
-[![Release](https://img.shields.io/badge/release-v0.6.0-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Chinese](https://img.shields.io/badge/README-中文-red)](README.md)
+[![Release](https://img.shields.io/badge/release-v0.7.0-emerald)](https://github.com/Init-Lee/classquest/releases)
 
----
+## Current Architecture Goal
 
-## Versioning (SemVer)
+```text
+Platform Portal → Module → Lesson → Step
+```
 
-- **Current release**: `v0.6.0` (matches root `version` in `package.json`; `0.x` = rapid iteration).
-- **Git tags**: see **Tags / Releases** on GitHub; locally: `git describe --tags` or `git show v0.6.0`.
-- **Next release**: bump `package.json` / `package-lock.json` (e.g. `0.6.0`), commit, then `git tag v0.6.0 && git push origin v0.6.0`, and publish release notes on GitHub.
+```text
+src/
+├── platform/                         # Platform portal, global routes, module registry
+├── modules/
+│   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
+│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, placeholder first
+└── shared/                            # Business-neutral UI and pure utilities
 
-> Note: `appVersion` inside student portfolios (e.g. `1.0.0`) tracks **data package format**, not the product release number above.
+backend/                              # V1.5 lightweight FastAPI backend skeleton
+```
 
----
+## Module Status
 
-## Background
-
-ClassQuest is an experiment in **programmatic teaching** — designed for middle school classrooms, with its first deployment serving a Grade 7 "AI Science Communication" curriculum (Module 3).
-
-In traditional classrooms, teachers carry the full burden of lecturing and guidance, leaving students with little structure for self-directed learning. ClassQuest restructures a course into **Units → Levels → Sub-steps**, allowing students to progress independently through clearly defined tasks while teachers shift to a facilitation and coaching role.
-
-**Our hope is that more teachers will adopt it as a teaching aid.**
-
-🇨🇳 [中文版本 →](README.md)
-
----
-
-## Key Features
-
-| Feature | Description |
-|---------|-------------|
-| Gamified learning | Structured unit progression (**Units 1–4: 5 levels each; Units 5–6: 2 levels each**, all shipped), Guards on every step |
-| Offline-first | Built on IndexedDB — works without internet |
-| Portable progress | Export a "Continue Package" (JSON) anytime; import it on any device to resume |
-| Group collaboration | Leader-member workflow — leader exports a group file, members import and see their assignments |
-| Stage snapshots | Generate HTML snapshots at key milestones for submission to Moodle or printing |
-| AI assistant guidance | Provides prompt templates and links to AI tools (e.g. Doubao) to scaffold student thinking |
-| Teacher demo mode | Password-protected demo mode with pre-filled data, bypassing all Guards for presentation use |
-| Legacy data migration | Import wizard for migrating data from previous tool versions into the new system |
-| Extensible architecture | Repository abstraction isolates the data layer — ready for a backend when needed |
-
----
-
-## Current Coverage
-
-- **Unit 1**: Project launch & topic framing (5 levels)
-- **Unit 2**: Evidence collection & documentation (5 levels)
-- **Unit 3**: Asset organization & evidence processing (5 levels)
-- **Unit 4**: Conclusions & web publishing (5 levels)
-- **Unit 5**: Rehearsal feedback & revision (2 levels) — members export peer opinion JSON; leaders import; **leaders must export the “version change” JSON at least once before first unit completion** (no re-export after the unit is marked complete); group label prefers leader name
-- **Unit 6**: Final poster roadshow & speaking design (2 levels) — four-step intro; path sheet with per-step **presenter** (member names); leader **preview** of the integrated script; members read the **poster roadshow flow** document after import; copy text / download JSON; teacher demo has import before/after on step 2; requires Unit 5 complete
-
-> Authoritative routing, data packages, and field-level notes: [FILE-STRUCTURE.md](FILE-STRUCTURE.md) (Chinese; structural source of truth). Product-facing bullet list: [README.md](README.md) (Chinese).
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Build | Vite |
-| Framework | React 18 + TypeScript |
-| UI Library | shadcn/ui + Tailwind CSS v3 |
-| Display fonts | `@fontsource/noto-serif-sc` / `@fontsource/cormorant-garamond` (bundled via npm + Vite; **no online font CDN**) |
-| Routing | React Router v6 (lazy loading) |
-| Data Layer | IndexedDB (local-first) |
-| State Management | React Context + Reducer |
-
----
+- **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
+- **Module 4 · AI Information Detective**: currently architecture placeholder only. Each lesson will be developed later on its own branch. See `src/modules/module-4-ai-info-detective/README.md`.
+- **V1.5 Backend**: currently a skeleton with a health check only. Real submission, review, quiz, stats, and gallery export features will be implemented after Module 4 mock workflows stabilize. See `backend/README.md`.
 
 ## Getting Started
 
-**Requirements**: Node.js >= 18
+Requirements: Node.js >= 18.
 
 ```bash
-# Clone the repo
-git clone https://github.com/Init-Lee/classquest.git
-cd classquest
-
-# Install dependencies
 npm install
-
-# Start the dev server
 npm run dev
 ```
 
 Open `http://localhost:5173` in your browser.
 
----
+Production build:
 
-## Project Status
+```bash
+npm run build
+```
 
-| Phase | Status |
-|-------|--------|
-| Phase 0: Project init + open source files | ✅ Done |
-| Phase 1: Shell & navigation | ✅ Done |
-| Phase 2: Data foundation (IndexedDB + continue package) | ✅ Done |
-| Phase 3: Unit 1 (5 levels + AI assistant + snapshots) | ✅ Done |
-| Phase 4: Unit 2 (5 levels + group sync + dual evidence templates + quality check) | ✅ Done |
-| Phase 5: Polish (bug fixes, Guard optimization, data model refactor) | ✅ Done |
-| Phase 6: Unit 3 development | ✅ Done (5 levels; personal package export → Unit 4) |
-| Phase 7: Unit 4 development | ✅ Done (5 levels; skeleton → draft → plan → collab → verify/export) |
-| Phase 8: Unit 5 development | ✅ Done (2 levels; peer opinion + version-change package; leader export gate on first completion) |
-| Phase 9: Unit 6 development | ✅ Done (2 levels; path sheet + integrated member view + leader preview; `poster-roadshow-path-v1` JSON) |
-| Phase 10: UI/UX visual polish (color system, typography, responsive) | 📋 Planned |
+## Tech Stack
 
----
+- Frontend: React + TypeScript + Vite
+- Routing: React Router v6
+- UI: Tailwind CSS + shadcn-style local wrappers
+- Module 3 local data: browser local storage + continue package export/import
+- V1.5 backend target: FastAPI + SQLite + local runtime files + Nginx + HTTPS
 
-## Roadmap
+## Deployment Model (V1.5)
 
-- [x] Unit 1 full progression (5 levels)
-- [x] Unit 2 full progression (5 levels)
-- [x] Group collaboration (leader file export / member import)
-- [x] Legacy data migration wizard (temporary feature)
-- [x] Unit 3 (5 levels; personal package JSON)
-- [x] Unit 4 (5 levels; skeleton → final HTML export)
-- [x] Unit 5 (2 levels; opinion + version-change JSON; leader export gate)
-- [x] Unit 6 (2 levels; per-step presenter; integrated script / preview; teacher L6 import drill)
-- [ ] AI assistant API integration (currently prompt templates + external links)
-- [ ] Teacher dashboard
-- [ ] Backend sync support
+```text
+Frontend: Vite build output → OSS static hosting
+Backend: lightweight server → Nginx → FastAPI → SQLite / local runtime files
+```
 
----
+Before Module 4 connects to the real backend, the frontend should first validate workflows with local state and mock API adapters.
 
-## Contributing
+## Branching and Version Strategy
 
-Teachers, education technology researchers, and developers are all welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md).
+- Current mainline release: `v0.7.0`, after the platform refactor merge (Module 3 preserved, Module 4 placeholder, backend skeleton).
+- Previous milestone: `v0.6.0`, when Module 3 shipped as a single-app layout.
+- Later Module 4 work: one branch per lesson, for example `module-4-lesson-1-dev`.
+- After Module 4 mock workflows stabilize: move toward `v0.8.0`.
+- After Module 4 connects to the real backend: move toward `v0.9.0`.
 
----
+Note: `appVersion` inside student learning packages tracks the data-package format and is maintained separately from the product release number.
+
+## Documentation Entry Points
+
+- `FILE-STRUCTURE.md`: repository structure source of truth, limited to platform/module-level boundaries.
+- `docs/CURSOR-START-HERE.md`: development entry guide.
+- `docs/MIGRATION-PLAN.md`: platform migration plan.
+- `docs/ARCHITECTURE-V1_5.md`: V1.5 architecture overview.
+- `.cursor/rules/classquest-platform.mdc`: Cursor development rules.
 
 ## License
 

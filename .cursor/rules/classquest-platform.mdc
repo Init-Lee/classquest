@@ -1,0 +1,131 @@
+---
+description: ClassQuest 平台、模块与 V1.5 后端规则
+alwaysApply: true
+---
+
+<!--
+文件说明：ClassQuest 平台化开发的 Cursor 规则。
+职责：约束平台层、模块层、shared 层与 V1.5 后端的依赖方向，避免模块 4 开发时破坏模块 3。
+更新触发：平台目录、模块边界、后端职责、学生可见语言规则或文档阅读顺序变化时，需要同步更新本文件。
+-->
+
+# ClassQuest 平台化开发规则
+
+## 编辑前必读
+
+修改任何文件前，按目标范围读取：
+
+1. 根 `README.md`
+2. 根 `FILE-STRUCTURE.md`
+3. `docs/CURSOR-START-HERE.md`
+4. `docs/MIGRATION-PLAN.md`
+5. 目标模块的 `README.md`
+6. 目标模块的 `FILE-STRUCTURE.md`
+
+编辑后端时，还必须读取：
+
+1. `backend/README.md`
+2. `backend/FILE-STRUCTURE.md`
+3. `backend/app/modules/module4/README.md`
+4. `backend/app/modules/module4/FILE-STRUCTURE.md`
+
+## 架构规则
+
+ClassQuest 采用：
+
+```text
+Platform Portal → Module → Lesson → Step
+```
+
+不要把新模块内容直接写到 `src/lessons`、`src/domains`、`src/features` 或 `src/infra`。这些旧顶层目录已迁入模块 3。
+
+## 模块边界规则
+
+模块业务代码留在自己的模块目录内：
+
+- 模块 3：`src/modules/module-3-ai-science-station/`
+- 模块 4：`src/modules/module-4-ai-info-detective/`
+
+禁止模块之间互相 import 业务代码：
+
+```ts
+// 禁止：模块 4 直接引用模块 3 业务组件
+import { Something } from '@/modules/module-3-ai-science-station/...'
+```
+
+允许的跨层引用：
+
+- `src/shared/ui/*`：业务无关 UI 原子组件
+- `src/shared/utils/*`：业务无关纯工具
+- `src/platform/*`：平台级路由、模块注册表和稳定类型
+
+## shared 规则
+
+`src/shared` 只能放业务中立内容。不要把以下内容放入 `shared`：
+
+- 题卡业务逻辑
+- 课时 Guard
+- 继续学习包格式
+- 小组合并逻辑
+- 教师评审逻辑
+- 模块 3 或模块 4 特有文案/数据结构
+
+## 后端规则
+
+V1.5 后端只服务模块 4 的运行时操作：
+
+- 提交题卡
+- 教师审核
+- 试答轮次
+- 匿名答题
+- 快速评分
+- 数据统计
+- 画廊/题库导出
+
+V1.5 不做：
+
+- 完整学生账号系统
+- Moodle SSO
+- WebSocket 实时同步
+- 云端完整学习进度同步
+
+## 数据库规则
+
+在模块 4 前端 mock 流程稳定前，不冻结 SQLite 最终 schema。`docs/DATABASE-DRAFT.md` 只是草案参考。
+
+## 文档规则
+
+每个模块目录必须包含：
+
+```text
+README.md
+FILE-STRUCTURE.md
+```
+
+目录结构变化时，更新最近一层的 `FILE-STRUCTURE.md`：
+
+- 平台/模块级变化：更新根 `FILE-STRUCTURE.md`
+- 模块内部变化：更新模块自己的 `FILE-STRUCTURE.md`
+- 后端内部变化：更新 `backend/FILE-STRUCTURE.md` 或 `backend/app/modules/module4/FILE-STRUCTURE.md`
+
+## 学生可见语言规则
+
+学生界面避免暴露技术词：
+
+- schema
+- repository
+- IndexedDB
+- JSON
+- API
+- database
+
+优先使用课堂友好的说法：
+
+- 学习包
+- 进度文件
+- 阶段快照
+- 导入
+- 导出
+- 提交
+- 审核
+
