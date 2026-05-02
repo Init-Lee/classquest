@@ -24,7 +24,7 @@ src/
 ├── platform/                         # Platform portal, global routes, module registry
 ├── modules/
 │   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
-│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, placeholder first
+│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lesson 1 open
 └── shared/                            # Business-neutral UI and pure utilities
 
 backend/                              # V1.5 lightweight FastAPI backend skeleton
@@ -33,7 +33,7 @@ backend/                              # V1.5 lightweight FastAPI backend skeleto
 ## Module Status
 
 - **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
-- **Module 4 · AI Information Detective**: currently architecture placeholder only. Each lesson will be developed later on its own branch. See `src/modules/module-4-ai-info-detective/README.md`.
+- **Module 4 · AI Information Detective**: Lesson 1 is now open with an independent local portfolio, continue packages, stage snapshots, and teacher demo mode. Lessons 2-6 will continue on one branch per lesson. See `src/modules/module-4-ai-info-detective/README.md`.
 - **V1.5 Backend**: currently a skeleton with a health check only. Real submission, review, quiz, stats, and gallery export features will be implemented after Module 4 mock workflows stabilize. See `backend/README.md`.
 
 ## Getting Started
@@ -58,7 +58,7 @@ npm run build
 - Frontend: React + TypeScript + Vite
 - Routing: React Router v6
 - UI: Tailwind CSS + shadcn-style local wrappers
-- Module 3 local data: browser local storage + continue package export/import
+- Module 3 / Module 4 local data: browser local storage + continue package export/import
 - V1.5 backend target: FastAPI + SQLite + local runtime files + Nginx + HTTPS
 
 ## Deployment Model (V1.5)
@@ -74,7 +74,7 @@ Before Module 4 connects to the real backend, the frontend should first validate
 
 - Current mainline release: `v0.7.0`, after the platform refactor merge (Module 3 preserved, Module 4 placeholder, backend skeleton).
 - Previous milestone: `v0.6.0`, when Module 3 shipped as a single-app layout.
-- Later Module 4 work: one branch per lesson, for example `module-4-lesson-1-dev`.
+- Later Module 4 work: one branch per lesson, for example `module-4-lesson-1-dev`; each completed lesson moves the patch release forward, with Lesson 1 targeting `v0.7.1`.
 - After Module 4 mock workflows stabilize: move toward `v0.8.0`.
 - After Module 4 connects to the real backend: move toward `v0.9.0`.
 

@@ -9,6 +9,7 @@ import { lazy, Suspense, type ReactNode } from "react"
 import { createBrowserRouter, Navigate, useLocation } from "react-router-dom"
 import { PlatformShell } from "@/platform/layout/PlatformShell"
 import { AppShell as Module3Shell } from "@/modules/module-3-ai-science-station/app/layout/AppShell"
+import { Module4Shell } from "@/modules/module-4-ai-info-detective/app/layout/Module4Shell"
 
 const PortalHomePage = lazy(() => import("@/platform/pages/PortalHomePage"))
 const PlatformNotFoundPage = lazy(() => import("@/platform/pages/NotFoundPage"))
@@ -45,7 +46,6 @@ export const router = createBrowserRouter([
       { index: true, element: withSuspense(<PortalHomePage />) },
       { path: "legacy-import", element: <Navigate to="/module/3/legacy-import" replace /> },
       { path: "lesson/*", element: <LegacyLessonRedirect /> },
-      { path: "module/4/*", element: withSuspense(<Module4Routes />) },
       { path: "*", element: withSuspense(<PlatformNotFoundPage />) },
     ],
   },
@@ -62,6 +62,14 @@ export const router = createBrowserRouter([
       { path: "lesson/5/*", element: withSuspense(<Lesson5Page />) },
       { path: "lesson/6/*", element: withSuspense(<Lesson6Page />) },
       { path: "*", element: withSuspense(<PlatformNotFoundPage />) },
+    ],
+  },
+  {
+    path: "/module/4",
+    element: <Module4Shell />,
+    children: [
+      { index: true, element: withSuspense(<Module4Routes />) },
+      { path: "*", element: withSuspense(<Module4Routes />) },
     ],
   },
 ])
