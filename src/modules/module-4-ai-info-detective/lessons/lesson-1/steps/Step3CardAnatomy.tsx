@@ -1,12 +1,12 @@
 /**
  * 文件说明：模块 4 课时 1 第 3 关结构拆解页面。
- * 职责：承接第 2 关两张样例观察，将田字型四部分结构配对作为第 3 关主任务，验证学生是否真正理解题目卡结构。
- * 更新触发：田字型结构配对规则、Step 3 完成字段或结构图标反馈变化时，需要同步更新本文件。
+ * 职责：承接第 2 关两张样例观察，将田字型四部分结构配对作为第 3 关主任务；教师讲解模式下结构答案默认隐藏，可按需显示参考配对。
+ * 更新触发：田字型结构配对规则、教师讲解答案显示规则、Step 3 完成字段或结构图标反馈变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import type { CardPartKey } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
@@ -36,21 +36,31 @@ function mergeMatched(news: Step2StructureMatched, image: Step2StructureMatched)
 }
 
 export default function Step3CardAnatomy() {
-  const { portfolio, savePortfolio } = useModule4Portfolio()
+  const { portfolio, savePortfolio, isTeacherMode } = useModule4Portfolio()
   const navigate = useNavigate()
-  const initialMatched = portfolio
+  const initialMatched = isTeacherMode
+    ? EMPTY_MATCHED
+    : portfolio
     ? mergeMatched(portfolio.lesson1.step2.news.structureMatched, portfolio.lesson1.step2.image.structureMatched)
     : EMPTY_MATCHED
   const [matchedParts, setMatchedParts] = useState<Step2StructureMatched>(initialMatched)
   const [activeLabelKey, setActiveLabelKey] = useState<CardPartKey | null>(null)
   const [feedback, setFeedback] = useState("")
   const [structureInteractionCount, setStructureInteractionCount] = useState(0)
+  const [showTeacherAnswer, setShowTeacherAnswer] = useState(false)
 
   if (!portfolio) return null
 
-  const canContinue = allMatched(matchedParts) || portfolio.lesson1.cardAnatomyCompleted
+  const teacherMatchedParts: Step2StructureMatched = { material: true, task: true, explanation: true, source: true }
+  const displayedMatchedParts = isTeacherMode && showTeacherAnswer ? teacherMatchedParts : matchedParts
+  const canContinue = isTeacherMode || allMatched(matchedParts) || portfolio.lesson1.cardAnatomyCompleted
 
   const handleComplete = async () => {
+    if (isTeacherMode) {
+      navigate("/module/4/lesson/1/step/4")
+      return
+    }
+
     if (!canContinue) return
     const now = new Date().toISOString()
     const completedMatched = allMatched(matchedParts)
@@ -111,13 +121,27 @@ export default function Step3CardAnatomy() {
     >
       <Step2SampleStructureStage
         hideStageHeader
-        matchedParts={matchedParts}
+        matchedParts={displayedMatchedParts}
         activeLabelKey={activeLabelKey}
-        feedback={feedback}
+        feedback={isTeacherMode && showTeacherAnswer ? "教师讲解模式：已显示参考配对。" : feedback}
         onSelectLabel={setActiveLabelKey}
         onDropLabel={handleDropLabel}
         onTargetClick={handleTargetClick}
       />
+      {isTeacherMode && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 rounded-full"
+            onClick={() => setShowTeacherAnswer(prev => !prev)}
+          >
+            {showTeacherAnswer ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showTeacherAnswer ? "隐藏参考配对" : "显示参考配对"}
+          </Button>
+        </div>
+      )}
     </Lesson1StepLayout>
   )
 }

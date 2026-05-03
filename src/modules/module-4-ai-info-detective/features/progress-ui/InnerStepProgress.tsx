@@ -23,6 +23,8 @@ interface InnerStepProgressProps {
   accessibleStepIds?: number[]
   /** 哪些步骤被锁定（Guard 未满足） */
   lockedStepIds?: number[]
+  /** 是否把当前关之前的步骤自动显示为已完成；教师讲解模式下应关闭，避免伪装成学生进度。 */
+  markPreviousStepsCompleted?: boolean
 }
 
 export function InnerStepProgress({
@@ -32,13 +34,14 @@ export function InnerStepProgress({
   completedStepIds,
   accessibleStepIds = [],
   lockedStepIds = [],
+  markPreviousStepsCompleted = true,
 }: InnerStepProgressProps) {
   const navigate = useNavigate()
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
       {steps.map((step, index) => {
-        const isCompleted = completedStepIds.includes(step.id) || step.id < currentStepId
+        const isCompleted = completedStepIds.includes(step.id) || (markPreviousStepsCompleted && step.id < currentStepId)
         const isCurrent = step.id === currentStepId
         const isLocked = lockedStepIds.includes(step.id) && !isCompleted
         const isAccessible = accessibleStepIds.includes(step.id) || isCompleted

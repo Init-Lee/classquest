@@ -21,6 +21,10 @@ export function Module4TopProgress() {
     const entry = MODULE4_LESSON_REGISTRY.find(l => l.id === lessonId)
     if (!entry) return "locked"
 
+    if (isTeacherMode) {
+      return lessonId === currentLessonId && currentLessonId > 0 ? "current" : "available"
+    }
+
     if (!portfolio && !isTeacherMode) {
       return lessonId === 1 ? "available" : "locked"
     }

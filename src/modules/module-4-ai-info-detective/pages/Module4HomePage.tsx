@@ -62,10 +62,10 @@ function TeacherModeEntry() {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-amber-800">
           <GraduationCap className="h-5 w-5" />
-          教师演示模式
+          教师讲解模式
         </CardTitle>
         <CardDescription className="text-amber-700/80">
-          浏览全部页面，预填演示数据，所有操作不影响学生数据
+          浏览全部页面；客观题答案默认隐藏，所有操作不影响学生数据
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -76,7 +76,7 @@ function TeacherModeEntry() {
             onClick={() => setShowInput(true)}
           >
             <Eye className="h-4 w-4 mr-2" />
-            进入演示模式
+            进入讲解模式
           </Button>
         ) : (
           <div className="space-y-3">

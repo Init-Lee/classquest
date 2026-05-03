@@ -70,10 +70,12 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
     )
   }
 
-  const completedSteps = getLesson1CompletedSteps(portfolio.lesson1)
-  const accessibleSteps = LESSON1_STEPS
-    .filter(step => canEnterLesson1Step(portfolio.lesson1, step.id))
-    .map(step => step.id)
+  const completedSteps = isTeacherMode ? [] : getLesson1CompletedSteps(portfolio.lesson1)
+  const accessibleSteps = isTeacherMode
+    ? LESSON1_STEPS.map(step => step.id)
+    : LESSON1_STEPS
+      .filter(step => canEnterLesson1Step(portfolio.lesson1, step.id))
+      .map(step => step.id)
 
   const chrome = (
     <div className="space-y-2">
@@ -87,6 +89,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
         steps={LESSON1_STEPS.map(step => ({ id: step.id, label: step.title }))}
         completedStepIds={completedSteps}
         accessibleStepIds={accessibleSteps}
+        markPreviousStepsCompleted={!isTeacherMode}
       />
     </div>
   )

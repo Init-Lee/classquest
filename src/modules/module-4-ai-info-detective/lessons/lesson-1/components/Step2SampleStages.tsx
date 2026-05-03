@@ -20,6 +20,9 @@ interface SampleObserveStageProps {
   onConfirmAnswer: () => void
   onContinue: () => void
   onPreviewOpen?: () => void
+  canConfirmWithoutSelection?: boolean
+  confirmLabel?: string
+  continueLabel?: string
 }
 
 interface SampleRevealStageProps {
@@ -77,8 +80,11 @@ export function Step2SampleObserveStage({
   onConfirmAnswer,
   onContinue,
   onPreviewOpen,
+  canConfirmWithoutSelection = false,
+  confirmLabel = "确认判断并查看解析",
+  continueLabel = "查看解析与核验入口",
 }: SampleObserveStageProps) {
-  const selected = selectedOptionKey !== undefined
+  const selected = selectedOptionKey !== undefined || canConfirmWithoutSelection
 
   return (
     <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-[1.05fr_0.95fr] xl:gap-10">
@@ -119,7 +125,7 @@ export function Step2SampleObserveStage({
           className="mt-6 w-full rounded-full"
           onClick={answered ? onContinue : onConfirmAnswer}
         >
-          {answered ? "查看解析与核验入口" : "确认判断并查看解析"}
+          {answered ? continueLabel : confirmLabel}
         </Button>
       </div>
     </div>

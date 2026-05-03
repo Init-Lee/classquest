@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 学习档案 Provider。
- * 职责：向模块 4 页面提供 local-first 档案读写、继续学习包导入、重置和教师演示模式状态，是模块 4 状态的顶层容器。
+ * 职责：向模块 4 页面提供 local-first 档案读写、继续学习包导入、重置和教师讲解模式状态，是模块 4 状态的顶层容器。
  * 更新触发：模块 4 档案字段、持久化仓库、教师模式或全局操作能力变化时，需要同步更新本文件。
  */
 /* eslint-disable react-refresh/only-export-components */
@@ -12,7 +12,7 @@ import {
   normalizeModule4Portfolio,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { module4PortfolioRepository } from "@/modules/module-4-ai-info-detective/infra/persistence/repositories/portfolio.repository.idb"
-import { applyModule4TeacherDemoPreset } from "@/modules/module-4-ai-info-detective/app/teacher-demo-presets"
+import { createModule4TeacherLecturePortfolio } from "@/modules/module-4-ai-info-detective/constants/demo-portfolio"
 import { resolveModule4PortfolioPointer } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
 
 interface Module4ContextValue {
@@ -26,7 +26,7 @@ interface Module4ContextValue {
   isTeacherMode: boolean
   enterTeacherMode: () => void
   exitTeacherMode: () => void
-  applyTeacherPreset: (preset: "reset_full" | "lesson1_blank" | "lesson1_in_progress" | "lesson1_completed") => void
+  resetTeacherMode: () => void
 }
 
 const Module4Context = createContext<Module4ContextValue | null>(null)
@@ -102,7 +102,7 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
   }, [isTeacherMode])
 
   const enterTeacherMode = useCallback(() => {
-    setDemoPortfolio(applyModule4TeacherDemoPreset("lesson1_completed"))
+    setDemoPortfolio(normalizeModule4Portfolio(createModule4TeacherLecturePortfolio()))
     setIsTeacherMode(true)
   }, [])
 
@@ -111,8 +111,8 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
     setDemoPortfolio(null)
   }, [])
 
-  const applyTeacherPreset = useCallback<Module4ContextValue["applyTeacherPreset"]>((preset) => {
-    setDemoPortfolio(applyModule4TeacherDemoPreset(preset))
+  const resetTeacherMode = useCallback(() => {
+    setDemoPortfolio(normalizeModule4Portfolio(createModule4TeacherLecturePortfolio()))
   }, [])
 
   const effectivePortfolio = isTeacherMode ? demoPortfolio : portfolio
@@ -130,7 +130,7 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
         isTeacherMode,
         enterTeacherMode,
         exitTeacherMode,
-        applyTeacherPreset,
+        resetTeacherMode,
       }}
     >
       {children}

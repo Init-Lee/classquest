@@ -1,7 +1,7 @@
 /**
- * 文件说明：模块 4 教师演示档案常量。
- * 职责：生成课堂讲解用的 Module4Portfolio，供教师模式预设和恢复演示数据使用，不写入学生真实数据。
- * 更新触发：Module4Portfolio 结构、课时 1 演示字段或教师讲解预设发生变化时，需要同步更新本文件。
+ * 文件说明：模块 4 教师讲解档案常量。
+ * 职责：生成课堂讲解用的 Module4Portfolio，供教师模式初始化和重置讲解状态使用，不写入学生真实数据。
+ * 更新触发：Module4Portfolio 结构、课时 1 示例字段或教师讲解状态策略发生变化时，需要同步更新本文件。
  */
 
 import type { Module4Portfolio } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -130,5 +130,13 @@ export function createModule4CompletedDemoPortfolio(): Module4Portfolio {
       imageSourcePlan: "选择一张校园宣传图或 AI 生成图，并保留来源记录或生成说明。",
       completed: true,
     },
+  }
+}
+
+export function createModule4TeacherLecturePortfolio(): Module4Portfolio {
+  const completed = createModule4CompletedDemoPortfolio()
+  return {
+    ...completed,
+    progress: { lessonId: 1, stepId: 1 },
   }
 }

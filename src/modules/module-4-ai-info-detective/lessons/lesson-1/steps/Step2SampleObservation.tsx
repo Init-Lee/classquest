@@ -1,11 +1,12 @@
 /**
  * 文件说明：模块 4 课时 1 第 2 关样例观察页面。
- * 职责：沿用第 1 关验证通过的全屏滚动样式，分屏完成新闻类/图片类观察判断与解析核验；四部分结构配对已迁移到第 3 关。
- * 更新触发：移除首屏按钮后的进度写入策略（滚动监听）、样例观察流程、全屏分屏顺序或 Step 2 状态字段变化时，需要同步更新本文件。
+ * 职责：沿用第 1 关验证通过的全屏滚动样式，分屏完成新闻类/图片类观察判断与解析核验；教师讲解模式下样例判断答案默认隐藏，由教师按钮按需显示；四部分结构配对已迁移到第 3 关。
+ * 更新触发：移除首屏按钮后的进度写入策略（滚动监听）、样例观察流程、教师讲解答案显示规则、全屏分屏顺序或 Step 2 状态字段变化时，需要同步更新本文件。
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Eye, EyeOff } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { createEmptyModule4Lesson1Step2State, type Module4Lesson1Step2SampleKey, type Module4Lesson1Step2State } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -50,7 +51,7 @@ function StageNotice({ message, targetId }: { message: string; targetId: string 
 }
 
 export default function Step2SampleObservation() {
-  const { portfolio, savePortfolio } = useModule4Portfolio()
+  const { portfolio, savePortfolio, isTeacherMode } = useModule4Portfolio()
   const navigate = useNavigate()
   const [step2State, setStep2State] = useState<Module4Lesson1Step2State>(
     portfolio?.lesson1.step2 ?? createEmptyModule4Lesson1Step2State(),
@@ -62,6 +63,10 @@ export default function Step2SampleObservation() {
   const [selectedAt, setSelectedAt] = useState<Record<Module4Lesson1Step2SampleKey, string>>({
     news: step2State.news.selectedAt,
     image: step2State.image.selectedAt,
+  })
+  const [teacherReveal, setTeacherReveal] = useState<Record<Module4Lesson1Step2SampleKey, boolean>>({
+    news: false,
+    image: false,
   })
 
   /** 供滚动监听读取最新 Step2 状态，避免 IntersectionObserver 闭包陈旧。 */
@@ -138,6 +143,12 @@ export default function Step2SampleObservation() {
   }
 
   const handleConfirmAnswer = async (sampleKey: Module4Lesson1Step2SampleKey, card: Step2SampleCard) => {
+    if (isTeacherMode) {
+      setTeacherReveal(prev => ({ ...prev, [sampleKey]: true }))
+      scrollToStep2Section(`step2-${sampleKey}-reveal`)
+      return
+    }
+
     const selectedOptionKey = selectedOptions[sampleKey]
     if (!selectedOptionKey) return
     const now = new Date().toISOString()
@@ -171,11 +182,21 @@ export default function Step2SampleObservation() {
   }
 
   const handleGoImage = async () => {
+    if (isTeacherMode) {
+      scrollToStep2Section("step2-image")
+      return
+    }
+
     await persistStep2({ ...step2State, currentPage: "image" })
     scrollToStep2Section("step2-image")
   }
 
   const handleComplete = async () => {
+    if (isTeacherMode) {
+      navigate("/module/4/lesson/1/step/3")
+      return
+    }
+
     if (!isStep2Completed(step2State)) return
     await savePortfolio({
       ...portfolio,
@@ -209,12 +230,15 @@ export default function Step2SampleObservation() {
       >
         <Step2SampleObserveStage
           card={STEP2_NEWS_SAMPLE_CARD}
-          selectedOptionKey={selectedOptions.news ?? step2State.news.selectedOptionKey}
-          answered={step2State.news.answered}
+          selectedOptionKey={isTeacherMode ? (teacherReveal.news ? STEP2_NEWS_SAMPLE_CARD.correctOptionKey : undefined) : selectedOptions.news ?? step2State.news.selectedOptionKey}
+          answered={isTeacherMode ? teacherReveal.news : step2State.news.answered}
           onSelectOption={(key) => handleSelectOption("news", key)}
           onConfirmAnswer={() => void handleConfirmAnswer("news", STEP2_NEWS_SAMPLE_CARD)}
           onContinue={() => scrollToStep2Section("step2-news-reveal")}
           onPreviewOpen={() => void handlePreviewOpen("news")}
+          canConfirmWithoutSelection={isTeacherMode}
+          confirmLabel="显示参考答案与解析"
+          continueLabel="查看已显示的解析"
         />
       </Lesson1ScreenSection>
 
@@ -223,7 +247,24 @@ export default function Step2SampleObservation() {
         bgClassName="bg-gradient-to-b from-sky-50/70 via-background to-background dark:from-sky-950/25"
         className="!justify-start scroll-mt-[calc(var(--module4-sticky-stack-height,7rem)+var(--module4-lesson1-chrome-h,8rem))]"
       >
-        {step2State.news.answered && step2State.news.selectedOptionKey ? (
+        {isTeacherMode ? (
+          <>
+            <TeacherAnswerToggle
+              shown={teacherReveal.news}
+              onToggle={() => setTeacherReveal(prev => ({ ...prev, news: !prev.news }))}
+            />
+            {teacherReveal.news ? (
+              <Step2SampleRevealStage
+                card={STEP2_NEWS_SAMPLE_CARD}
+                selectedOptionKey={STEP2_NEWS_SAMPLE_CARD.correctOptionKey}
+                continueLabel="继续观察图片类样例"
+                onContinue={() => void handleGoImage()}
+              />
+            ) : (
+              <StageNotice message="参考答案已隐藏" targetId="step2-news" />
+            )}
+          </>
+        ) : step2State.news.answered && step2State.news.selectedOptionKey ? (
           <Step2SampleRevealStage
             card={STEP2_NEWS_SAMPLE_CARD}
             selectedOptionKey={step2State.news.selectedOptionKey}
@@ -240,15 +281,18 @@ export default function Step2SampleObservation() {
         bgClassName="bg-gradient-to-b from-amber-50/70 via-muted/20 to-background dark:from-amber-950/25"
         className="!justify-start scroll-mt-[calc(var(--module4-sticky-stack-height,7rem)+var(--module4-lesson1-chrome-h,8rem))]"
       >
-        {step2State.news.answered ? (
+        {isTeacherMode || step2State.news.answered ? (
           <Step2SampleObserveStage
             card={STEP2_IMAGE_SAMPLE_CARD}
-            selectedOptionKey={selectedOptions.image ?? step2State.image.selectedOptionKey}
-            answered={step2State.image.answered}
+            selectedOptionKey={isTeacherMode ? (teacherReveal.image ? STEP2_IMAGE_SAMPLE_CARD.correctOptionKey : undefined) : selectedOptions.image ?? step2State.image.selectedOptionKey}
+            answered={isTeacherMode ? teacherReveal.image : step2State.image.answered}
             onSelectOption={(key) => handleSelectOption("image", key)}
             onConfirmAnswer={() => void handleConfirmAnswer("image", STEP2_IMAGE_SAMPLE_CARD)}
             onContinue={() => scrollToStep2Section("step2-image-reveal")}
             onPreviewOpen={() => void handlePreviewOpen("image")}
+            canConfirmWithoutSelection={isTeacherMode}
+            confirmLabel="显示参考答案与解析"
+            continueLabel="查看已显示的解析"
           />
         ) : (
           <StageNotice message="先完成新闻类样例判断，才能解锁图片类样例" targetId="step2-news" />
@@ -260,7 +304,24 @@ export default function Step2SampleObservation() {
         bgClassName="bg-gradient-to-b from-background via-amber-50/50 to-background dark:via-amber-950/20"
         className="!justify-start scroll-mt-[calc(var(--module4-sticky-stack-height,7rem)+var(--module4-lesson1-chrome-h,8rem))]"
       >
-        {step2State.image.answered && step2State.image.selectedOptionKey ? (
+        {isTeacherMode ? (
+          <>
+            <TeacherAnswerToggle
+              shown={teacherReveal.image}
+              onToggle={() => setTeacherReveal(prev => ({ ...prev, image: !prev.image }))}
+            />
+            {teacherReveal.image ? (
+              <Step2SampleRevealStage
+                card={STEP2_IMAGE_SAMPLE_CARD}
+                selectedOptionKey={STEP2_IMAGE_SAMPLE_CARD.correctOptionKey}
+                continueLabel="进入第3关：四部分结构拆解"
+                onContinue={() => void handleComplete()}
+              />
+            ) : (
+              <StageNotice message="参考答案已隐藏" targetId="step2-image" />
+            )}
+          </>
+        ) : step2State.image.answered && step2State.image.selectedOptionKey ? (
           <Step2SampleRevealStage
             card={STEP2_IMAGE_SAMPLE_CARD}
             selectedOptionKey={step2State.image.selectedOptionKey}
@@ -273,5 +334,16 @@ export default function Step2SampleObservation() {
       </Lesson1ScreenSection>
 
     </Lesson1ScreenPage>
+  )
+}
+
+function TeacherAnswerToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+  return (
+    <div className="mx-auto mb-4 flex w-full max-w-7xl justify-end">
+      <Button type="button" variant="outline" size="sm" className="gap-1.5 rounded-full" onClick={onToggle}>
+        {shown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        {shown ? "隐藏参考答案" : "显示参考答案"}
+      </Button>
+    </div>
   )
 }

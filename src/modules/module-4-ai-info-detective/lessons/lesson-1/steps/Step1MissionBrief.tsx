@@ -1,12 +1,12 @@
 /**
  * 文件说明：模块 4 课时 1 第 1 关任务发布页面。
- * 职责：首屏关卡任务蓝字（与第 2 关同款大号 theme 标题样式）；"欢迎"主标题与灰色说明行独立层级；第二屏左文右图（pic1 +5°）；第三屏「最终产出」左图右文（pic2 -5°）；配图均为原尺寸 95% 缩放；末屏三题横向三卡，仅点击底部按钮校验：首次失败即高亮错题快照+一句总提示，第二次及以后显示「想一想」提示；高亮与提示依赖上次按钮校验的快照 id，改选项不会实时取消高亮，直至再次点按钮更新快照或全部答对通关；底部红色总提示同样仅由按钮设置或清空（校验失败写入，全部答对清空）。依赖课时级屏幕布局组件和 `--module4-*` 变量，通关逻辑不变。
- * 更新触发：首屏关卡标题层级、分屏文案、配图路径、旋转/缩放、三题文案或提示字段、按钮校验与错题反馈规则变化时，需要同步更新本文件。
+ * 职责：首屏关卡任务蓝字（与第 2 关同款大号 theme 标题样式）；"欢迎"主标题与灰色说明行独立层级；第二屏左文右图（pic1 +5°）；第三屏「最终产出」左图右文（pic2 -5°）；配图均为原尺寸 95% 缩放；末屏三题横向三卡，仅点击底部按钮校验：首次失败即高亮错题快照+一句总提示，第二次及以后显示「想一想」提示；教师讲解模式下客观答案默认隐藏，可由教师按钮显示参考答案。
+ * 更新触发：首屏关卡标题层级、分屏文案、配图路径、旋转/缩放、三题文案、教师讲解答案显示规则或按钮校验与错题反馈规则变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import type { Module4Lesson1MissionQuizAttempt } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -70,9 +70,10 @@ function ModuleIllustration({
 }
 
 export default function Step1MissionBrief() {
-  const { portfolio, savePortfolio } = useModule4Portfolio()
+  const { portfolio, savePortfolio, isTeacherMode } = useModule4Portfolio()
   const navigate = useNavigate()
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [showTeacherAnswers, setShowTeacherAnswers] = useState(false)
   /** 点击「进入样例观察」后校验失败的累计次数（仅按钮触发，不因改选项重置） */
   const [verifyFailCount, setVerifyFailCount] = useState(0)
   /** 最近一次按钮校验失败时记录的错题 id；仅在校验失败回调里更新，改选项不会刷新 */
@@ -94,6 +95,11 @@ export default function Step1MissionBrief() {
   })
 
   const handleComplete = async () => {
+    if (isTeacherMode) {
+      navigate("/module/4/lesson/1/step/2")
+      return
+    }
+
     if (missionAlreadyPassed) {
       navigate("/module/4/lesson/1/step/2")
       return
@@ -200,10 +206,24 @@ export default function Step1MissionBrief() {
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">讲解完后的三题确认</h2>
             <p className="text-muted-foreground md:text-lg">
-              {missionAlreadyPassed ? "你已完成本关确认，可以直接继续到下一关。" : "全部答对后即可进入下一关「样例观察」。"}
+              {isTeacherMode
+                ? "教师讲解模式下，答案默认隐藏；需要讲评时可手动显示参考答案。"
+                : missionAlreadyPassed ? "你已完成本关确认，可以直接继续到下一关。" : "全部答对后即可进入下一关「样例观察」。"}
             </p>
+            {isTeacherMode && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 rounded-full"
+                onClick={() => setShowTeacherAnswers(prev => !prev)}
+              >
+                {showTeacherAnswers ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showTeacherAnswers ? "隐藏参考答案" : "显示参考答案"}
+              </Button>
+            )}
           </div>
-          {missionAlreadyPassed ? (
+          {missionAlreadyPassed && !isTeacherMode ? (
             <div className="mx-auto max-w-3xl rounded-2xl border border-green-200 bg-green-50/80 p-6 text-center shadow-sm">
               <p className="text-lg font-semibold text-green-800">第 1 关三题确认已通过</p>
               <p className="mt-2 text-sm text-green-700">
@@ -244,10 +264,14 @@ export default function Step1MissionBrief() {
                     <div className="mt-3 grid grid-cols-1 gap-2">
                       {question.options.map(option => {
                         const key = option.slice(0, 1)
+                        const isReferenceAnswer = showTeacherAnswers && key === question.answer
                         return (
                           <label
                             key={option}
-                            className="flex cursor-pointer items-center gap-2 rounded-xl border border-input px-3 py-2.5 text-xs transition-colors hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5 md:text-sm"
+                            className={cn(
+                              "flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-xs transition-colors hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5 md:text-sm",
+                              isReferenceAnswer ? "border-green-400 bg-green-50 text-green-900" : "border-input",
+                            )}
                           >
                             <input
                               type="radio"
@@ -259,7 +283,10 @@ export default function Step1MissionBrief() {
                               }}
                               className="h-4 w-4 shrink-0 accent-primary"
                             />
-                            <span className="leading-snug">{option}</span>
+                            <span className="leading-snug">
+                              {option}
+                              {isReferenceAnswer && <span className="ml-2 text-xs font-semibold text-green-700">参考答案</span>}
+                            </span>
                           </label>
                         )
                       })}
@@ -272,7 +299,7 @@ export default function Step1MissionBrief() {
           )}
           <div className="flex justify-center pb-8 lg:justify-end">
             <Button type="button" onClick={handleComplete} size="lg" className="gap-2 rounded-full px-10">
-              {missionAlreadyPassed ? "继续第 2 关" : "进入样例观察"}
+              {missionAlreadyPassed || isTeacherMode ? "继续第 2 关" : "进入样例观察"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
