@@ -16,19 +16,31 @@ lesson-1/
 ├── guards.ts
 ├── routes.tsx
 ├── assets/
+│   ├── image-ai-library-robot.svg
+│   ├── news-screenshot-ai-reading.svg
 │   ├── step1-pic1.jpg
-│   └── step1-pic2.jpg
+│   ├── step1-pic2.jpg
+│   ├── step2-news.png
+│   └── step2-pic.jpg
 ├── data/
-│   ├── final-samples.ts
 │   ├── anatomy-cards.ts
+│   ├── checklist.ts
+│   ├── final-samples.ts
 │   ├── source-types.ts
-│   └── checklist.ts
+│   └── step2-sample-cards.ts
 ├── components/
+│   ├── BeforeAfterQuizDemo.tsx
 │   ├── FinalSampleCard.tsx
 │   ├── FourPartCardDiagram.tsx
-│   ├── BeforeAfterQuizDemo.tsx
+│   ├── Lesson1ScreenLayout.tsx
+│   ├── Lesson1StepLayout.tsx
 │   ├── MissionChecklist.tsx
-│   └── Lesson1StepLayout.tsx
+│   ├── QuestionCardShell.tsx
+│   ├── SampleAnswerReveal.tsx
+│   ├── SampleMaterialImage.tsx
+│   ├── Step2IntroPanel.tsx
+│   ├── Step2SampleStages.tsx
+│   └── StructureLabelingTask.tsx
 └── steps/
     ├── Step1MissionBrief.tsx
     ├── Step2SampleObservation.tsx
@@ -62,11 +74,17 @@ shared   → lesson-1
 - `config.ts`：课时标题、Step 元数据和总步数。
 - `guards.ts`：Step 进入条件、完成条件和当前可学习关卡。
 - `routes.tsx`：课时 1 子路由、默认档案创建和非法访问提示。
-- `data/final-samples.ts`：新闻类与图片类题卡样例。
+- `data/final-samples.ts`：早期新闻类与图片类题卡样例数据，保留供旧组件参考。
 - `data/anatomy-cards.ts`：四部分题目卡定义与 Step 3 结构拆解题。
 - `data/source-types.ts`：四类来源要求。
-- `data/checklist.ts`：Step 5 个人任务清单。
-- `components/*.tsx`：课时 1 私有业务组件。
+- `data/checklist.ts`：Step 5 个人任务清单旧数据，当前出口任务以 `Step5TaskChecklist.tsx` 内结构化说明为准。
+- `data/step2-sample-cards.ts`：Step 2 新闻类/图片类标准样例数据，包含判断选项、解析、来源核验入口和四部分结构标签。
+- `components/QuestionCardShell.tsx` / `FinalSampleCard.tsx` / `FourPartCardDiagram.tsx` / `BeforeAfterQuizDemo.tsx`：早期题卡展示和答题前后演示组件，保留为结构参考；当前 Step 4 不再使用“答题前/答题后流程演示”作为主任务。
+- `components/Step2SampleStages.tsx`：Step 2 分阶段样例观察组件，并由 Step 3 复用结构配对舞台。
+- `components/Lesson1ScreenLayout.tsx`：第 1～2 关全屏滚动布局。
+- `components/Lesson1StepLayout.tsx`：第 3～5 关标准 Step 布局。
+- `steps/Step4QuizFlowDemo.tsx`：第 4 关完整题卡模板说明书，左侧四模块顺序导航，右侧展示作用、字段、要求和示例，底部单次总确认写入 `fullCardTemplateConfirmed`。
+- `steps/Step5TaskChecklist.tsx`：第 5 关素材准备出口任务，填写候选素材计划、选择来源类型，并以「避免使用素材 | 出口确认」左右分栏 + 底部单次总勾选完成课时。
 - `steps/*.tsx`：五个关卡页面。
 
 ## 更新规则

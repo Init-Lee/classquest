@@ -6,15 +6,15 @@
 
 # Module 4 Lesson 1 — 框架发布与样例拆解
 
-课时 1 的目标是让学生先看懂模块四的终局产出：新闻类题目卡 1 张、图片类题目卡 1 张，并理解“四部分题目卡”和网页题库答题前 / 答题后的展示逻辑。
+课时 1 的目标是让学生先看懂模块四的终局产出：新闻类题目卡 1 张、图片类题目卡 1 张；通过样例观察、四部分结构拆解和完整题卡模板说明，理解题卡由「素材展示、判断任务、解析、来源与核验入口」组成，并在课末确认下一课需要准备的新闻类与图片类候选素材包。
 
 ## 五个 Step
 
 1. `Step1MissionBrief`：任务发布，完成三题确认。
-2. `Step2SampleObservation`：观察新闻类与图片类样例，确认四部分结构。
-3. `Step3CardAnatomy`：将打乱内容归类到四部分题目卡。
-4. `Step4QuizFlowDemo`：体验答题前只看素材和任务、答题后展开解析和来源。
-5. `Step5TaskChecklist`：确认下一课个人素材准备任务，完成课时 1。
+2. `Step2SampleObservation`：观察新闻类与图片类样例，完成判断、解析核验和样例查看记录。
+3. `Step3CardAnatomy`：复用样例结构舞台，完成田字型四部分结构配对。
+4. `Step4QuizFlowDemo`：以“完整题卡说明书”方式查看素材展示、判断任务、解析、来源与核验入口四个模块，并在底部单次总确认完整题卡模板。
+5. `Step5TaskChecklist`：填写下一课新闻/图片候选素材包计划，选择可能来源类型，阅读「避免使用素材」与「出口确认」左右分栏，并通过底部单次总勾选完成课时 1。
 
 ## 本地状态
 
@@ -23,11 +23,19 @@
 ```ts
 missionAcknowledged
 outcomeCheckPassed
+missionQuizAttempts
+missionQuizPassedAt
+step2
 newsSampleViewed
 imageSampleViewed
 samplePartsConfirmed
 cardAnatomyCompleted
 cardAnatomyScore
+fullCardTemplateConfirmed
+fullCardTemplateConfirmedAt
+materialPrepChecklistKeys
+materialPrepChecklistCompletedAt
+step5
 quizFlowSimulated
 beforeAfterReason
 personalTaskChecklistCompleted
