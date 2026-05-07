@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">�< AI ��:�</title>
+  <desc id="desc">�6!��f�:h�f��< AI �G+
+�6K��o�W</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fef3c7"/>
+      <stop offset="1" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="600" fill="url(#bg)"/>
+  <rect x="68" y="54" width="824" height="492" rx="32" fill="#fff7ed" stroke="#fdba74" stroke-width="3"/>
+  <rect x="104" y="106" width="752" height="88" rx="18" fill="#fed7aa"/>
+  <text x="132" y="162" fill="#9a3412" font-family="Arial, sans-serif" font-size="38" font-weight="800">!��f�z�
+�</text>
+  <rect x="128" y="238" width="180" height="222" rx="16" fill="#c084fc"/>
+  <rect x="148" y="258" width="140" height="16" rx="8" fill="#f5d0fe"/>
+  <rect x="148" y="292" width="112" height="16" rx="8" fill="#f5d0fe"/>
+  <rect x="148" y="326" width="132" height="16" rx="8" fill="#f5d0fe"/>
+  <text x="142" y="426" fill="#581c87" font-family="Arial, sans-serif" font-size="18">LI8R4RY</text>
+  <rect x="354" y="226" width="190" height="250" rx="38" fill="#bfdbfe" stroke="#60a5fa" stroke-width="5"/>
+  <circle cx="416" cy="314" r="18" fill="#1d4ed8"/>
+  <circle cx="482" cy="314" r="18" fill="#1d4ed8"/>
+  <path d="M415 378c36 28 70 28 106 0" fill="none" stroke="#1d4ed8" stroke-width="12" stroke-linecap="round"/>
+  <rect x="388" y="176" width="122" height="58" rx="26" fill="#93c5fd"/>
+  <line x1="450" y1="176" x2="450" y2="136" stroke="#1d4ed8" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="450" cy="124" r="16" fill="#1d4ed8"/>
+  <rect x="554" y="322" width="168" height="48" rx="8" fill="#ffffff" stroke="#f97316" stroke-width="4" transform="rotate(-8 638 346)"/>
+  <rect x="566" y="336" width="132" height="10" rx="5" fill="#fb923c" transform="rotate(-8 632 341)"/>
+  <path d="M536 348c38 0 54 22 80 32 12 5 16 28-2 32-29 6-61-16-90-25" fill="#93c5fd" stroke="#1d4ed8" stroke-width="6"/>
+  <path d="M594 401c18 8 24 20 13 31m-22-35c12 16 13 27 0 38m-22-48c10 22 7 32-9 40" fill="none" stroke="#1d4ed8" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="704" cy="280" r="42" fill="#fde68a" opacity=".9"/>
+  <rect x="730" y="238" width="58" height="16" rx="8" fill="#f59e0b" transform="rotate(18 759 246)"/>
+  <rect x="742" y="272" width="72" height="14" rx="7" fill="#f59e0b" transform="rotate(-11 778 279)"/>
+  <text x="646" y="502" fill="#92400e" font-family="Arial, sans-serif" font-size="18">�:K��W��IqX(8</text>
+</svg>

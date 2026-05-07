@@ -19,10 +19,10 @@ export const MODULE_REGISTRY: PlatformModuleEntry[] = [
   {
     id: "module-4",
     slug: "ai-info-detective",
-    title: "AI 信息侦探",
-    subtitle: "V1.5 新模块占位；课程内容将在后续独立分支中逐课开发。",
+    title: "AI 信息辨识员",
+    subtitle: "课时 1 已开放；保留本地优先学习进度、继续学习包、阶段快照和教师演示模式。",
     route: "/module/4",
-    status: "draft",
+    status: "active",
     grade: "七年级 · 模块四",
   },
 ]

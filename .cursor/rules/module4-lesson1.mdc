@@ -1,0 +1,74 @@
+---
+description: Rules for developing ClassQuest Module 4 Lesson 1
+globs:
+  - "src/modules/module-4-ai-info-detective/lessons/lesson-1/**"
+  - "src/modules/module-4-ai-info-detective/domains/**"
+alwaysApply: false
+---
+
+# ClassQuest Module 4 Lesson 1 Rules
+
+## Scope
+
+You are developing:
+
+```text
+src/modules/module-4-ai-info-detective/lessons/lesson-1
+```
+
+This lesson is local-first frontend only.
+
+## Must Do
+
+- Keep all lesson-1 business components inside module-4.
+- Use Module4Lesson1State.
+- Implement 5 steps:
+  - Step1MissionBrief
+  - Step2SampleObservation
+  - Step3CardAnatomy
+  - Step4QuizFlowDemo
+  - Step5TaskChecklist
+- Implement Guard.
+- Keep routes under `/module/4/lesson/1`.
+- Update lesson README and FILE-STRUCTURE after changes.
+
+## Must Not Do
+
+- Do not call backend APIs.
+- Do not introduce SQLite.
+- Do not implement teacher review.
+- Do not create submission_pack_id or edit_token.
+- Do not import module-3 business types.
+- Do not move module-4 business components into shared.
+- Do not use WebSocket.
+- Do not expose technical terms like JSON/schema/repository to students.
+
+## UI Rule
+
+Student-facing text should use classroom language:
+
+- 题目卡
+- 来源记录
+- 核验入口
+- 任务清单
+- 继续学习包
+- 阶段快照
+
+Avoid:
+
+- JSON
+- schema
+- repository
+- API
+- token
+- SQLite
+
+## Completion Rule
+
+Step 5 completion must set:
+
+```ts
+lesson1.completed = true
+```
+
+If Lesson 2 is not implemented, return to Module 4 home with a completion message.

@@ -1,11 +1,29 @@
 /**
- * 文件说明：模块 4 前端路由占位。
- * 职责：在 V1.5 架构重构阶段提供 `/module/4` 首页路由，不挂载真实课时内容。
- * 更新触发：开始开发模块 4 具体课时、提交页、答题页或画廊页时，需要同步扩展本文件。
+ * 文件说明：模块 4 前端路由表。
+ * 职责：在模块 4 独立 Shell 下分发首页与课时 1 子路由，后续课时、提交页和画廊页也从这里扩展。
+ * 更新触发：模块 4 新增课时、页面路径、答题页或画廊页时，需要同步扩展本文件。
  */
 
-import Module4HomePage from "./pages/Module4HomePage"
+import { lazy, Suspense } from "react"
+import { Route, Routes } from "react-router-dom"
+
+const Module4HomePage = lazy(() => import("./pages/Module4HomePage"))
+const Lesson1Routes = lazy(() => import("./lessons/lesson-1/routes"))
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+    加载中...
+  </div>
+)
 
 export default function Module4Routes() {
-  return <Module4HomePage />
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        <Route index element={<Module4HomePage />} />
+        <Route path="lesson/1/*" element={<Lesson1Routes />} />
+        <Route path="*" element={<Module4HomePage />} />
+      </Routes>
+    </Suspense>
+  )
 }
