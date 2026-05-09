@@ -6,6 +6,7 @@
 
 import type { Module4Portfolio, Module4ProgressPointer } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { getCurrentLesson1Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-1/guards"
+import { getCurrentLesson2Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/guards"
 
 export interface Module4LessonEntry {
   id: number
@@ -27,11 +28,11 @@ export const MODULE4_LESSON_REGISTRY: Module4LessonEntry[] = [
   },
   {
     id: 2,
-    title: "素材收集与合规筛查",
+    title: "素材搜集与合规初筛",
     subtitle: "准备新闻素材、图片素材和来源记录",
-    path: "/module/4",
-    available: false,
-    isComplete: () => false,
+    path: "/module/4/lesson/2/step/1",
+    available: true,
+    isComplete: portfolio => Boolean(portfolio?.lesson2.completed),
   },
   {
     id: 3,
@@ -67,9 +68,27 @@ export const MODULE4_LESSON_REGISTRY: Module4LessonEntry[] = [
   },
 ]
 
+export function canAccessModule4Lesson(
+  portfolio: Module4Portfolio | null,
+  lessonId: number,
+  isTeacherMode = false,
+): boolean {
+  const entry = MODULE4_LESSON_REGISTRY.find(lesson => lesson.id === lessonId)
+  if (!entry?.available) return false
+  if (isTeacherMode) return true
+  if (lessonId === 1) return true
+  if (!portfolio) return false
+  if (lessonId === 2) return portfolio.lesson1.completed
+  if (lessonId === 3) return portfolio.lesson2.completed
+  return false
+}
+
 export function resolveModule4PortfolioPointer(portfolio: Module4Portfolio): Module4ProgressPointer {
-  if (portfolio.lesson1.completed) {
-    return { lessonId: 2, stepId: 1 }
+  if (!portfolio.lesson1.completed) {
+    return { lessonId: 1, stepId: getCurrentLesson1Step(portfolio.lesson1) }
   }
-  return { lessonId: 1, stepId: getCurrentLesson1Step(portfolio.lesson1) }
+  if (!portfolio.lesson2.completed) {
+    return { lessonId: 2, stepId: getCurrentLesson2Step(portfolio.lesson2) }
+  }
+  return { lessonId: 3, stepId: 1 }
 }

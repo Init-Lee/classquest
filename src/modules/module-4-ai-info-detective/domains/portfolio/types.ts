@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 4 学习档案领域类型。
- * 职责：定义 Module4Portfolio、课时 1 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
- * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1 Step5 出口确认字段变化时，需要同步更新本文件。
+ * 职责：定义 Module4Portfolio、课时 1/2 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
+ * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2 过程记录字段变化时，需要同步更新本文件。
  */
 
 export const MODULE4_ID = "module-4-ai-info-detective"
-export const MODULE4_APP_VERSION = "0.7.1"
+export const MODULE4_APP_VERSION = "0.7.2"
 
 /** 学生档案：姓名、班级（下拉文案）、四位班学号（前两位对齐班级序号，后两位班内学号 01～50） */
 export interface Module4StudentProfile {
@@ -59,6 +59,133 @@ export interface Module4Lesson1Step2State {
 export type Module4Lesson1NewsSourceType = "news_site" | "wechat_article" | "social_screenshot" | "other"
 export type Module4Lesson1ImageSourceType = "web" | "ai_generated" | "field_capture" | "mixed"
 
+export type Module4MaterialKind = "news" | "image"
+export type Module4MaterialPrepStatus = "ready" | "incomplete" | "none"
+export type Module4PostCriteriaStatus = "usable" | "need_fix" | "need_replace"
+export type Module4MaterialSourceType = "web" | "ai_generated" | "field_capture" | "mixed"
+export type Module4CompressedAssetMimeType = "image/webp" | "image/jpeg"
+
+export interface Module4CompressedMaterialAsset {
+  dataUrl: string
+  mimeType: Module4CompressedAssetMimeType
+  originalName: string
+  originalSizeBytes: number
+  compressedSizeBytes: number
+  width: number
+  height: number
+  compressedAt: string
+  uploadCount: number
+}
+
+export interface Module4MaterialSelfChecks {
+  typeFits: boolean
+  contentCompliant: boolean
+  hasJudgmentValue: boolean
+}
+
+export interface Module4MaterialScreeningRecord {
+  kind: Module4MaterialKind
+  initialStatus: Module4MaterialPrepStatus
+  postCriteriaStatus?: Module4PostCriteriaStatus
+  asset?: Module4CompressedMaterialAsset
+  titleOrName: string
+  sourceType?: Module4MaterialSourceType
+  sourceRecord: string
+  sourceAutoPassed: boolean
+  sourceCheckCount: number
+  sourceCheckLastReason: string
+  selfChecks: Module4MaterialSelfChecks
+  clueNote: string
+  clueEditCount: number
+  peerFeedbackNote: string
+  peerFeedbackEditCount: number
+  completed: boolean
+  completedAt: string
+}
+
+export interface Module4Lesson2CriteriaExampleAnswer {
+  exampleId: string
+  selectedCriterion: "typeFits" | "sourceTraceable" | "contentCompliant" | "hasJudgmentValue"
+  isCorrect: boolean
+}
+
+export interface Module4Lesson2CriteriaAttempt {
+  attemptNo: number
+  submittedAt: string
+  answers: Module4Lesson2CriteriaExampleAnswer[]
+  score: number
+}
+
+export interface Module4Lesson2ChallengeEvent {
+  exampleId: string
+  selectedCriterion: "typeFits" | "sourceTraceable" | "contentCompliant" | "hasJudgmentValue"
+  isCorrect: boolean
+  selectedAt: string
+  attemptIndex: number
+}
+
+export interface Module4Lesson2QuickCheckTarget<TEvidence extends Record<string, boolean>> {
+  achieved: boolean
+  evidence: TEvidence
+}
+
+export interface Module4Lesson2QuickCheckState {
+  T1: Module4Lesson2QuickCheckTarget<{
+    newsAssetReady: boolean
+    imageAssetReady: boolean
+    newsShortNameReady: boolean
+    imageShortNameReady: boolean
+  }>
+  T2: Module4Lesson2QuickCheckTarget<{
+    criteriaCalibrationCompleted: boolean
+    newsSourceCheckPassed: boolean
+    imageSourceCheckPassed: boolean
+    newsSelfChecksCompleted: boolean
+    imageSelfChecksCompleted: boolean
+  }>
+  T3: Module4Lesson2QuickCheckTarget<{
+    newsClueNoteValid: boolean
+    imageClueNoteValid: boolean
+  }>
+  evaluatedAt: string
+  metrics: {
+    criteriaAttemptCount: number
+    newsUploadCount: number
+    imageUploadCount: number
+    newsSourceCheckCount: number
+    imageSourceCheckCount: number
+    newsClueEditCount: number
+    imageClueEditCount: number
+    newsPeerOrSelfNoteEditCount: number
+    imagePeerOrSelfNoteEditCount: number
+  }
+}
+
+export interface Module4Lesson2State {
+  step1Completed: boolean
+  step2Completed: boolean
+  step3Completed: boolean
+  step4Completed: boolean
+  step5Completed: boolean
+  taskBoundaryAcknowledged: boolean
+  step1ContextDwellMs: number
+  step1ContextViewedAt: string
+  step1CaseAnswers: Record<string, string>
+  step1MaterialStatusLocked: Record<Module4MaterialKind, boolean>
+  step2CriteriaUnlockedKeys: string[]
+  step2CriteriaDwellMs: Record<string, number>
+  step2ChallengeOrderIds: string[]
+  step2ChallengeEvents: Module4Lesson2ChallengeEvent[]
+  criteriaAttempts: Module4Lesson2CriteriaAttempt[]
+  criteriaExampleScore: number
+  criteriaExampleAttemptCount: number
+  news: Module4MaterialScreeningRecord
+  image: Module4MaterialScreeningRecord
+  quickCheck: Module4Lesson2QuickCheckState
+  completed: boolean
+  completedAt: string
+}
+
 export interface Module4Lesson1Step5State {
   newsPlanText: string
   imagePlanText: string
@@ -106,6 +233,7 @@ export interface Module4Portfolio {
   student: Module4StudentProfile
   progress: Module4ProgressPointer
   lesson1: Module4Lesson1State
+  lesson2: Module4Lesson2State
   createdAt: string
   updatedAt: string
 }
@@ -181,6 +309,104 @@ export function createEmptyModule4Lesson1State(): Module4Lesson1State {
     newsSourcePlan: "",
     imageSourcePlan: "",
     completed: false,
+  }
+}
+
+export function createEmptyModule4MaterialScreeningRecord(
+  kind: Module4MaterialKind,
+): Module4MaterialScreeningRecord {
+  return {
+    kind,
+    initialStatus: "none",
+    postCriteriaStatus: undefined,
+    asset: undefined,
+    titleOrName: "",
+    sourceType: undefined,
+    sourceRecord: "",
+    sourceAutoPassed: false,
+    sourceCheckCount: 0,
+    sourceCheckLastReason: "",
+    selfChecks: {
+      typeFits: false,
+      contentCompliant: false,
+      hasJudgmentValue: false,
+    },
+    clueNote: "",
+    clueEditCount: 0,
+    peerFeedbackNote: "",
+    peerFeedbackEditCount: 0,
+    completed: false,
+    completedAt: "",
+  }
+}
+
+export function createEmptyModule4Lesson2QuickCheckState(): Module4Lesson2QuickCheckState {
+  return {
+    T1: {
+      achieved: false,
+      evidence: {
+        newsAssetReady: false,
+        imageAssetReady: false,
+        newsShortNameReady: false,
+        imageShortNameReady: false,
+      },
+    },
+    T2: {
+      achieved: false,
+      evidence: {
+        criteriaCalibrationCompleted: false,
+        newsSourceCheckPassed: false,
+        imageSourceCheckPassed: false,
+        newsSelfChecksCompleted: false,
+        imageSelfChecksCompleted: false,
+      },
+    },
+    T3: {
+      achieved: false,
+      evidence: {
+        newsClueNoteValid: false,
+        imageClueNoteValid: false,
+      },
+    },
+    evaluatedAt: "",
+    metrics: {
+      criteriaAttemptCount: 0,
+      newsUploadCount: 0,
+      imageUploadCount: 0,
+      newsSourceCheckCount: 0,
+      imageSourceCheckCount: 0,
+      newsClueEditCount: 0,
+      imageClueEditCount: 0,
+      newsPeerOrSelfNoteEditCount: 0,
+      imagePeerOrSelfNoteEditCount: 0,
+    },
+  }
+}
+
+export function createEmptyModule4Lesson2State(): Module4Lesson2State {
+  return {
+    step1Completed: false,
+    step2Completed: false,
+    step3Completed: false,
+    step4Completed: false,
+    step5Completed: false,
+    taskBoundaryAcknowledged: false,
+    step1ContextDwellMs: 0,
+    step1ContextViewedAt: "",
+    step1CaseAnswers: {},
+    step1MaterialStatusLocked: { news: false, image: false },
+    step2CriteriaUnlockedKeys: [],
+    step2CriteriaDwellMs: {},
+    step2ChallengeOrderIds: [],
+    step2ChallengeEvents: [],
+    criteriaAttempts: [],
+    criteriaExampleScore: 0,
+    criteriaExampleAttemptCount: 0,
+    news: createEmptyModule4MaterialScreeningRecord("news"),
+    image: createEmptyModule4MaterialScreeningRecord("image"),
+    quickCheck: createEmptyModule4Lesson2QuickCheckState(),
+    completed: false,
+    completedAt: "",
   }
 }
 
@@ -270,6 +496,251 @@ function normalizeImageSourceType(value: unknown): Module4Lesson1ImageSourceType
     : undefined
 }
 
+function normalizeMaterialKind(value: unknown, fallback: Module4MaterialKind): Module4MaterialKind {
+  return value === "news" || value === "image" ? value : fallback
+}
+
+function normalizeMaterialPrepStatus(value: unknown): Module4MaterialPrepStatus {
+  return value === "ready" || value === "incomplete" || value === "none" ? value : "none"
+}
+
+function normalizePostCriteriaStatus(value: unknown): Module4PostCriteriaStatus | undefined {
+  return value === "usable" || value === "need_fix" || value === "need_replace" ? value : undefined
+}
+
+function normalizeMaterialSourceType(value: unknown): Module4MaterialSourceType | undefined {
+  return value === "web" || value === "ai_generated" || value === "field_capture" || value === "mixed"
+    ? value
+    : undefined
+}
+
+function normalizeCompressedAsset(value: unknown): Module4CompressedMaterialAsset | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const raw = value as Record<string, unknown>
+  if (typeof raw.dataUrl !== "string" || !raw.dataUrl.startsWith("data:image/")) return undefined
+
+  const mimeType = raw.mimeType === "image/webp" || raw.mimeType === "image/jpeg"
+    ? raw.mimeType
+    : raw.dataUrl.startsWith("data:image/jpeg") ? "image/jpeg" : "image/webp"
+
+  return {
+    dataUrl: raw.dataUrl,
+    mimeType,
+    originalName: typeof raw.originalName === "string" ? raw.originalName : "素材图片",
+    originalSizeBytes: Number.isFinite(raw.originalSizeBytes) ? Number(raw.originalSizeBytes) : 0,
+    compressedSizeBytes: Number.isFinite(raw.compressedSizeBytes) ? Number(raw.compressedSizeBytes) : 0,
+    width: Number.isFinite(raw.width) ? Number(raw.width) : 0,
+    height: Number.isFinite(raw.height) ? Number(raw.height) : 0,
+    compressedAt: typeof raw.compressedAt === "string" ? raw.compressedAt : "",
+    uploadCount: Number.isFinite(raw.uploadCount) && Number(raw.uploadCount) > 0 ? Number(raw.uploadCount) : 1,
+  }
+}
+
+function normalizeMaterialSelfChecks(value: unknown): Module4MaterialSelfChecks {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
+  return {
+    typeFits: raw.typeFits === true,
+    contentCompliant: raw.contentCompliant === true,
+    hasJudgmentValue: raw.hasJudgmentValue === true,
+  }
+}
+
+function normalizeMaterialScreeningRecord(
+  value: unknown,
+  kind: Module4MaterialKind,
+): Module4MaterialScreeningRecord {
+  const fallback = createEmptyModule4MaterialScreeningRecord(kind)
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+
+  return {
+    kind: normalizeMaterialKind(raw.kind, kind),
+    initialStatus: normalizeMaterialPrepStatus(raw.initialStatus),
+    postCriteriaStatus: normalizePostCriteriaStatus(raw.postCriteriaStatus),
+    asset: normalizeCompressedAsset(raw.asset),
+    titleOrName: typeof raw.titleOrName === "string" ? raw.titleOrName : "",
+    sourceType: normalizeMaterialSourceType(raw.sourceType),
+    sourceRecord: typeof raw.sourceRecord === "string" ? raw.sourceRecord : "",
+    sourceAutoPassed: raw.sourceAutoPassed === true,
+    sourceCheckCount: Number.isFinite(raw.sourceCheckCount) ? Number(raw.sourceCheckCount) : 0,
+    sourceCheckLastReason: typeof raw.sourceCheckLastReason === "string" ? raw.sourceCheckLastReason : "",
+    selfChecks: normalizeMaterialSelfChecks(raw.selfChecks),
+    clueNote: typeof raw.clueNote === "string" ? raw.clueNote : "",
+    clueEditCount: Number.isFinite(raw.clueEditCount) ? Number(raw.clueEditCount) : 0,
+    peerFeedbackNote: typeof raw.peerFeedbackNote === "string" ? raw.peerFeedbackNote : "",
+    peerFeedbackEditCount: Number.isFinite(raw.peerFeedbackEditCount) ? Number(raw.peerFeedbackEditCount) : 0,
+    completed: raw.completed === true,
+    completedAt: typeof raw.completedAt === "string" ? raw.completedAt : "",
+  }
+}
+
+function normalizeCriteriaAnswer(value: unknown): Module4Lesson2CriteriaExampleAnswer | null {
+  if (!value || typeof value !== "object") return null
+  const raw = value as Record<string, unknown>
+  const selectedCriterion = (
+    raw.selectedCriterion === "typeFits"
+    || raw.selectedCriterion === "sourceTraceable"
+    || raw.selectedCriterion === "contentCompliant"
+    || raw.selectedCriterion === "hasJudgmentValue"
+  )
+    ? raw.selectedCriterion
+    : undefined
+  if (typeof raw.exampleId !== "string" || !selectedCriterion) return null
+  return {
+    exampleId: raw.exampleId,
+    selectedCriterion,
+    isCorrect: raw.isCorrect === true,
+  }
+}
+
+function normalizeCriteriaAttempts(value: unknown): Module4Lesson2CriteriaAttempt[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((rawAttempt, index): Module4Lesson2CriteriaAttempt | null => {
+      if (!rawAttempt || typeof rawAttempt !== "object") return null
+      const raw = rawAttempt as Record<string, unknown>
+      const answers = Array.isArray(raw.answers)
+        ? raw.answers.map(normalizeCriteriaAnswer).filter((answer): answer is Module4Lesson2CriteriaExampleAnswer => answer !== null)
+        : []
+      return {
+        attemptNo: Number.isFinite(raw.attemptNo) ? Number(raw.attemptNo) : index + 1,
+        submittedAt: typeof raw.submittedAt === "string" ? raw.submittedAt : "",
+        answers,
+        score: Number.isFinite(raw.score) ? Number(raw.score) : answers.filter(answer => answer.isCorrect).length,
+      }
+    })
+    .filter((attempt): attempt is Module4Lesson2CriteriaAttempt => attempt !== null)
+}
+
+function normalizeChallengeEvents(value: unknown): Module4Lesson2ChallengeEvent[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((rawEvent): Module4Lesson2ChallengeEvent | null => {
+      if (!rawEvent || typeof rawEvent !== "object") return null
+      const raw = rawEvent as Record<string, unknown>
+      const selectedCriterion = (
+        raw.selectedCriterion === "typeFits"
+        || raw.selectedCriterion === "sourceTraceable"
+        || raw.selectedCriterion === "contentCompliant"
+        || raw.selectedCriterion === "hasJudgmentValue"
+      )
+        ? raw.selectedCriterion
+        : undefined
+      if (typeof raw.exampleId !== "string" || !selectedCriterion) return null
+      return {
+        exampleId: raw.exampleId,
+        selectedCriterion,
+        isCorrect: raw.isCorrect === true,
+        selectedAt: typeof raw.selectedAt === "string" ? raw.selectedAt : "",
+        attemptIndex: Number.isFinite(raw.attemptIndex) && Number(raw.attemptIndex) > 0 ? Number(raw.attemptIndex) : 1,
+      }
+    })
+    .filter((event): event is Module4Lesson2ChallengeEvent => event !== null)
+}
+
+function normalizeStringRecord(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object") return {}
+  const record: Record<string, string> = {}
+  Object.entries(value as Record<string, unknown>).forEach(([key, answer]) => {
+    if (typeof answer === "string") record[key] = answer
+  })
+  return record
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return Array.from(new Set(value.filter((item): item is string => typeof item === "string")))
+}
+
+function normalizeNumberRecord(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object") return {}
+  const record: Record<string, number> = {}
+  Object.entries(value as Record<string, unknown>).forEach(([key, rawValue]) => {
+    if (Number.isFinite(rawValue)) record[key] = Number(rawValue)
+  })
+  return record
+}
+
+function normalizeLesson2QuickCheckState(value: unknown): Module4Lesson2QuickCheckState {
+  const fallback = createEmptyModule4Lesson2QuickCheckState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const metrics = raw.metrics && typeof raw.metrics === "object" ? raw.metrics as Record<string, unknown> : {}
+  const normalizeTarget = <TEvidence extends Record<string, boolean>>(
+    targetValue: unknown,
+    fallbackTarget: Module4Lesson2QuickCheckTarget<TEvidence>,
+  ): Module4Lesson2QuickCheckTarget<TEvidence> => {
+    if (!targetValue || typeof targetValue !== "object") return fallbackTarget
+    const target = targetValue as Record<string, unknown>
+    const evidence = target.evidence && typeof target.evidence === "object" ? target.evidence as Record<string, unknown> : {}
+    return {
+      achieved: target.achieved === true,
+      evidence: Object.fromEntries(
+        Object.keys(fallbackTarget.evidence).map(key => [key, evidence[key] === true]),
+      ) as TEvidence,
+    }
+  }
+
+  return {
+    T1: normalizeTarget(raw.T1, fallback.T1),
+    T2: normalizeTarget(raw.T2, fallback.T2),
+    T3: normalizeTarget(raw.T3, fallback.T3),
+    evaluatedAt: typeof raw.evaluatedAt === "string" ? raw.evaluatedAt : "",
+    metrics: {
+      criteriaAttemptCount: Number.isFinite(metrics.criteriaAttemptCount)
+        ? Number(metrics.criteriaAttemptCount)
+        : Number.isFinite(metrics.criteriaExampleAttemptCount) ? Number(metrics.criteriaExampleAttemptCount) : 0,
+      newsUploadCount: Number.isFinite(metrics.newsUploadCount) ? Number(metrics.newsUploadCount) : 0,
+      imageUploadCount: Number.isFinite(metrics.imageUploadCount) ? Number(metrics.imageUploadCount) : 0,
+      newsSourceCheckCount: Number.isFinite(metrics.newsSourceCheckCount) ? Number(metrics.newsSourceCheckCount) : 0,
+      imageSourceCheckCount: Number.isFinite(metrics.imageSourceCheckCount) ? Number(metrics.imageSourceCheckCount) : 0,
+      newsClueEditCount: Number.isFinite(metrics.newsClueEditCount) ? Number(metrics.newsClueEditCount) : 0,
+      imageClueEditCount: Number.isFinite(metrics.imageClueEditCount) ? Number(metrics.imageClueEditCount) : 0,
+      newsPeerOrSelfNoteEditCount: Number.isFinite(metrics.newsPeerOrSelfNoteEditCount) ? Number(metrics.newsPeerOrSelfNoteEditCount) : 0,
+      imagePeerOrSelfNoteEditCount: Number.isFinite(metrics.imagePeerOrSelfNoteEditCount) ? Number(metrics.imagePeerOrSelfNoteEditCount) : 0,
+    },
+  }
+}
+
+function normalizeLesson2State(value: unknown): Module4Lesson2State {
+  const fallback = createEmptyModule4Lesson2State()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const criteriaAttempts = normalizeCriteriaAttempts(raw.criteriaAttempts)
+
+  return {
+    step1Completed: raw.step1Completed === true,
+    step2Completed: raw.step2Completed === true,
+    step3Completed: raw.step3Completed === true,
+    step4Completed: raw.step4Completed === true,
+    step5Completed: raw.step5Completed === true,
+    taskBoundaryAcknowledged: raw.taskBoundaryAcknowledged === true,
+    step1ContextDwellMs: Number.isFinite(raw.step1ContextDwellMs) ? Number(raw.step1ContextDwellMs) : 0,
+    step1ContextViewedAt: typeof raw.step1ContextViewedAt === "string" ? raw.step1ContextViewedAt : "",
+    step1CaseAnswers: normalizeStringRecord(raw.step1CaseAnswers),
+    step1MaterialStatusLocked: {
+      news: (raw.step1MaterialStatusLocked as Record<string, unknown> | undefined)?.news === true,
+      image: (raw.step1MaterialStatusLocked as Record<string, unknown> | undefined)?.image === true,
+    },
+    step2CriteriaUnlockedKeys: normalizeStringArray(raw.step2CriteriaUnlockedKeys),
+    step2CriteriaDwellMs: normalizeNumberRecord(raw.step2CriteriaDwellMs),
+    step2ChallengeOrderIds: normalizeStringArray(raw.step2ChallengeOrderIds),
+    step2ChallengeEvents: normalizeChallengeEvents(raw.step2ChallengeEvents),
+    criteriaAttempts,
+    criteriaExampleScore: Number.isFinite(raw.criteriaExampleScore)
+      ? Number(raw.criteriaExampleScore)
+      : criteriaAttempts.at(-1)?.score ?? 0,
+    criteriaExampleAttemptCount: Number.isFinite(raw.criteriaExampleAttemptCount)
+      ? Number(raw.criteriaExampleAttemptCount)
+      : criteriaAttempts.length,
+    news: normalizeMaterialScreeningRecord(raw.news, "news"),
+    image: normalizeMaterialScreeningRecord(raw.image, "image"),
+    quickCheck: normalizeLesson2QuickCheckState(raw.quickCheck),
+    completed: raw.completed === true,
+    completedAt: typeof raw.completedAt === "string" ? raw.completedAt : "",
+  }
+}
+
 function normalizeLesson1Step5State(value: unknown, lesson1: Partial<Module4Lesson1State>): Module4Lesson1Step5State {
   const fallback = createEmptyModule4Lesson1Step5State()
   const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
@@ -334,6 +805,7 @@ export function createNewModule4Portfolio(
     },
     progress: { lessonId: 1, stepId: 1 },
     lesson1: createEmptyModule4Lesson1State(),
+    lesson2: createEmptyModule4Lesson2State(),
     createdAt: now,
     updatedAt: now,
   }
@@ -367,6 +839,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
   const updatedAt = typeof input.updatedAt === "string" ? input.updatedAt : fallback.updatedAt
   const progress = input.progress ?? fallback.progress
   const lesson1 = input.lesson1 ?? createEmptyModule4Lesson1State()
+  const lesson2 = normalizeLesson2State((input as Partial<Module4Portfolio>).lesson2)
 
   const studentMerged = normalizeStudentShape(input.student)
 
@@ -397,6 +870,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
       missionQuizPassedAt: typeof lesson1.missionQuizPassedAt === "string" ? lesson1.missionQuizPassedAt : "",
       step2: normalizeLesson1Step2State(lesson1.step2),
     },
+    lesson2,
     createdAt,
     updatedAt,
   }

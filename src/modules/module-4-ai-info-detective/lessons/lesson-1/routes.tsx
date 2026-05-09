@@ -28,6 +28,10 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
 
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [stepId])
+
   // 课时条高度写入变量，供所有全屏式 Step 统一计算「顶栏之外的可视内容区」。
   useLayoutEffect(() => {
     const el = lessonChromeRef.current

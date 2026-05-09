@@ -14,7 +14,14 @@ import {
   deserializeModule4ContinuePackage,
   downloadModule4ContinuePackage,
 } from "@/modules/module-4-ai-info-detective/infra/persistence/serializers/continue-package"
-import { downloadModule4Snapshot } from "@/modules/module-4-ai-info-detective/infra/persistence/serializers/snapshot-html"
+import { downloadModule4Snapshot, type Module4SnapshotType } from "@/modules/module-4-ai-info-detective/infra/persistence/serializers/snapshot-html"
+import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/evaluate-lesson2-quickcheck"
+
+function getSnapshotType(pathname: string): Module4SnapshotType | null {
+  if (/\/module\/4\/lesson\/1\/step\/\d+/.test(pathname)) return "lesson1-full"
+  if (/\/module\/4\/lesson\/2\/step\/\d+/.test(pathname)) return "lesson2-full"
+  return null
+}
 
 export function Module4GlobalActions() {
   const { portfolio, savePortfolio, importPortfolio, clearPortfolio, isTeacherMode } = useModule4Portfolio()
@@ -29,14 +36,22 @@ export function Module4GlobalActions() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [resetting, setResetting] = useState(false)
 
-  const canSnapshot = /\/module\/4\/lesson\/1\/step\/\d+/.test(location.pathname)
+  const snapshotType = getSnapshotType(location.pathname)
+  const canSnapshot = Boolean(snapshotType)
 
   const handleSave = async () => {
     if (!portfolio) return
     setSaving(true)
     try {
-      await savePortfolio(portfolio)
-      downloadModule4ContinuePackage(portfolio)
+      const portfolioToSave = {
+        ...portfolio,
+        lesson2: {
+          ...portfolio.lesson2,
+          quickCheck: evaluateLesson2QuickCheck(portfolio.lesson2),
+        },
+      }
+      await savePortfolio(portfolioToSave)
+      downloadModule4ContinuePackage(portfolioToSave)
       setSaveSuccess(true)
       window.setTimeout(() => setSaveSuccess(false), 2000)
     } finally {
@@ -70,8 +85,16 @@ export function Module4GlobalActions() {
   }
 
   const handleSnapshot = () => {
-    if (!portfolio) return
-    downloadModule4Snapshot("lesson1-full", portfolio)
+    if (!portfolio || !snapshotType) return
+    const portfolioToSnapshot = {
+      ...portfolio,
+      lesson2: {
+        ...portfolio.lesson2,
+        quickCheck: evaluateLesson2QuickCheck(portfolio.lesson2),
+      },
+    }
+    void savePortfolio(portfolioToSnapshot)
+    downloadModule4Snapshot(snapshotType, portfolioToSnapshot)
   }
 
   const handleReset = async () => {

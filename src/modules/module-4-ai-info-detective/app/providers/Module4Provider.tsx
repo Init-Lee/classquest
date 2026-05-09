@@ -5,7 +5,7 @@
  */
 /* eslint-disable react-refresh/only-export-components */
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import type { Module4Portfolio } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import {
   createNewModule4Portfolio,
@@ -36,6 +36,7 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isTeacherMode, setIsTeacherMode] = useState(false)
   const [demoPortfolio, setDemoPortfolio] = useState<Module4Portfolio | null>(null)
+  const clearedPortfolioIdRef = useRef<string | null>(null)
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -69,6 +70,9 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const savePortfolio = useCallback(async (updated: Module4Portfolio) => {
+    // 重置后旧页面的卸载清理可能仍会触发保存，必须阻止旧档案被重新写回。
+    if (!isTeacherMode && clearedPortfolioIdRef.current === updated.id) return
+
     const normalized = normalizeModule4Portfolio(updated)
     const withTimestamp = { ...normalized, updatedAt: new Date().toISOString() }
 
@@ -78,6 +82,7 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
     }
 
     await module4PortfolioRepository.save(withTimestamp)
+    clearedPortfolioIdRef.current = null
     setPortfolio(withTimestamp)
   }, [isTeacherMode])
 
@@ -86,6 +91,7 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
     const normalized = normalizeModule4Portfolio(imported)
     const repaired = { ...normalized, progress: resolveModule4PortfolioPointer(normalized) }
     await module4PortfolioRepository.replaceWithImported(repaired)
+    clearedPortfolioIdRef.current = null
     setPortfolio(repaired)
   }, [isTeacherMode])
 
@@ -97,9 +103,10 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
 
   const clearPortfolio = useCallback(async () => {
     if (isTeacherMode) return
+    clearedPortfolioIdRef.current = portfolio?.id ?? null
     await module4PortfolioRepository.clear()
     setPortfolio(null)
-  }, [isTeacherMode])
+  }, [isTeacherMode, portfolio?.id])
 
   const enterTeacherMode = useCallback(() => {
     setDemoPortfolio(normalizeModule4Portfolio(createModule4TeacherLecturePortfolio()))

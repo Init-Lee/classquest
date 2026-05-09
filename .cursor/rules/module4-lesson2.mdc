@@ -1,0 +1,90 @@
+---
+description: Rules for implementing ClassQuest Module 4 Lesson 2
+globs:
+  - "src/modules/module-4-ai-info-detective/lessons/lesson-2/**"
+  - "src/modules/module-4-ai-info-detective/domains/**"
+alwaysApply: false
+---
+
+# Module 4 Lesson 2 Cursor Rules
+
+## Scope
+
+Implement `src/modules/module-4-ai-info-detective/lessons/lesson-2/` for:
+
+```text
+课时二：素材搜集与合规初筛
+```
+
+Target release: `v0.7.2`.
+
+## Must Preserve
+
+- Module 4 local-first portfolio flow.
+- IndexedDB persistence.
+- Continue package export/import.
+- Stage snapshot export.
+- Teacher lecture mode.
+- Module 3 behavior and imports.
+
+## Do Not
+
+- Do not import Module 3 business code.
+- Do not add backend calls.
+- Do not create full question-card editor in Lesson 2.
+- Do not ask students to set options or correct answers.
+- Do not ask students to write final explanations.
+- Do not use OCR.
+- Do not claim source truth or AI detection certainty.
+
+## Required Lesson Shape
+
+```text
+Step 1: 素材不等于题目
+Step 2: 四关体检标准
+Step 3: 新闻素材工作台
+Step 4: 图片素材工作台
+Step 5: 我的素材体检报告
+```
+
+## Critical Content Rules
+
+1. News material is an uploaded screenshot.
+2. Image material is an uploaded image.
+3. Step 1 must include story + case examples before personal input.
+4. Step 2 must establish the four screening standards and include calibration practice.
+5. Step 3/4 must support prior asset, replacement asset, or new upload.
+6. Source traceability is system basic format check only.
+7. Step 5 green checks are completeness checks, not quality guarantee.
+
+## Image Compression
+
+- Compress uploaded assets to target <= 500KB.
+- Prefer WebP; fallback to JPEG.
+- Store compressed DataURL + metadata in portfolio.
+- Do not store original file.
+- Show preview and compressed size.
+
+## QuickCheck
+
+Generate automatically without visible student scoring:
+
+- T1: final news + image assets and short names.
+- T2: criteria calibration + source format checks + self-checks.
+- T3: valid news + image clue notes.
+
+Also record counts:
+
+- upload counts.
+- criteria attempt count.
+- per-material source check counts.
+- per-material clue edit counts.
+- per-material peer/self note edit counts.
+
+## Required Docs Update
+
+After implementing, update:
+
+- `src/modules/module-4-ai-info-detective/README.md`
+- `src/modules/module-4-ai-info-detective/FILE-STRUCTURE.md`
+- root README if release status changes

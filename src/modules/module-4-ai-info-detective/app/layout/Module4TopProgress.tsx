@@ -6,7 +6,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
 import { CheckCircle2, Circle, Lock } from "lucide-react"
-import { MODULE4_LESSON_REGISTRY } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
+import { canAccessModule4Lesson, MODULE4_LESSON_REGISTRY } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { cn } from "@/shared/utils/cn"
 
@@ -29,7 +29,7 @@ export function Module4TopProgress() {
       return lessonId === 1 ? "available" : "locked"
     }
 
-    if (!entry.available && !isTeacherMode) {
+    if (!canAccessModule4Lesson(portfolio, lessonId, isTeacherMode)) {
       return "locked"
     }
 

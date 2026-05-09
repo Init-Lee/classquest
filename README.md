@@ -32,7 +32,7 @@ backend/                              # V1.5 FastAPI 轻量后端骨架
 ## 模块状态
 
 - **模块 3 · AI 科学传播站**：已完成 6 个课时、24 个关卡；保留本地优先学习进度、继续学习包、跨角色文件链路、阶段快照和教师演示模式。详见 `src/modules/module-3-ai-science-station/README.md`。
-- **模块 4 · AI 信息辨识员**：课时 1「框架发布与样例拆解」已开放，提供独立本地档案、继续学习包、阶段快照和教师演示模式；课时 2-6 后续每个课时使用独立分支开发。详见 `src/modules/module-4-ai-info-detective/README.md`。
+- **模块 4 · AI 信息辨识员**：课时 1「框架发布与样例拆解」已开放，提供独立本地档案、继续学习包、阶段快照和教师演示模式；课时 2「素材搜集与合规初筛」已在 `module-4-lesson-2-dev` 开发分支实现本地前端候选流程，待验收后发布 `v0.7.2`。详见 `src/modules/module-4-ai-info-detective/README.md`。
 - **V1.5 后端**：当前仅骨架和健康检查；真实提交、审核、试答、统计和画廊导出在模块 4 mock 流程稳定后实现。详见 `backend/README.md`。
 
 ## 运行方式

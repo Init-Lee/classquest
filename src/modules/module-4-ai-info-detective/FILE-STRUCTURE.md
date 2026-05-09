@@ -38,23 +38,33 @@ src/modules/module-4-ai-info-detective/
 │   └── progress-ui/
 │       └── InnerStepProgress.tsx
 ├── lessons/
-│   └── lesson-1/
-│       ├── assets/
+│   ├── lesson-1/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── Lesson1ScreenLayout.tsx
+│   │   │   ├── Lesson1StepLayout.tsx
+│   │   │   ├── QuestionCardShell.tsx
+│   │   │   ├── SampleAnswerReveal.tsx
+│   │   │   ├── SampleMaterialImage.tsx
+│   │   │   ├── Step2SampleStages.tsx
+│   │   │   ├── Step2IntroPanel.tsx
+│   │   │   └── StructureLabelingTask.tsx
+│   │   ├── data/
+│   │   ├── steps/
+│   │   ├── config.ts
+│   │   ├── guards.ts
+│   │   ├── routes.tsx
+│   │   └── types.ts
+│   └── lesson-2/
+│       ├── README.md
+│       ├── FILE-STRUCTURE.md
 │       ├── components/
-│       │   ├── Lesson1ScreenLayout.tsx
-│       │   ├── Lesson1StepLayout.tsx
-│       │   ├── QuestionCardShell.tsx
-│       │   ├── SampleAnswerReveal.tsx
-│       │   ├── SampleMaterialImage.tsx
-│       │   ├── Step2SampleStages.tsx
-│       │   ├── Step2IntroPanel.tsx
-│       │   └── StructureLabelingTask.tsx
 │       ├── data/
 │       ├── steps/
+│       ├── utils/
 │       ├── config.ts
 │       ├── guards.ts
-│       ├── routes.tsx
-│       └── types.ts
+│       └── routes.tsx
 └── pages/
     └── Module4HomePage.tsx
 ```
@@ -89,11 +99,11 @@ src/modules/module-4-ai-info-detective/
 - `app/`：模块 4 应用壳、Provider、教师讲解状态和课时注册表。
 - `pages/`：路由级页面。
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
-- `lessons/`：六个课时的本地学习挑战。
+- `lessons/`：六个课时的本地学习挑战；当前课时 1 已合入，课时 2 在开发分支实现并待验收。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
 - `api/`：mock adapter 与 HTTP adapter。
 - `components/`：模块 4 私有 UI 组件。
-- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`），`serializers/snapshot-html.ts` 负责阶段快照 HTML（按第 1～5 关顺序组织并内置提交用样式）。
+- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full` 与 `lesson2-full` 阶段快照 HTML。
 - `constants/`：教师讲解档案、班级选项等模块级常量。
 - `lessons/lesson-1/components/Lesson1ScreenLayout.tsx`：课时 1 已验证的全屏滚动布局约定，负责 `scroll-snap`、固定关卡栏下方内容高度和每屏基础排版；当前用于第 1、2 关，后续若提升到模块级再迁入 `components/` 或 `features/`。
 - `lessons/lesson-1/components/Lesson1StepLayout.tsx`：第 3～5 关等标准 Step 布局；支持 `titleClassName` 以便关卡标题使用与全屏首屏一致的 primary 强调与字距（如第 3 关）。
@@ -106,6 +116,12 @@ src/modules/module-4-ai-info-detective/
 - `lessons/lesson-1/steps/Step5TaskChecklist.tsx`：第 5 关“领取素材准备任务”；作为课时 1 出口任务单，要求学生填写新闻/图片候选素材包寻找方向、分别选择可能来源类型、阅读来源类型说明；底部以「避免使用素材 | 出口确认」左右分栏展示说明，**单次总勾选** `exitAndAvoidAcknowledged` 覆盖两栏；存档时仍将 `confirmed` 四项写为 true 以兼容旧逻辑；兼容旧 `newsSourcePlan` / `imageSourcePlan` 字段。
 - `lessons/lesson-1/types.ts`：课时 1 尚在验证阶段的局部交互类型；稳定并跨课时复用后再上移到 `domains/`。Step 2/3 过程性记录字段（选择时间、提交时间、解析查看、素材放大次数、结构操作次数）和 Step 5 出口任务单结构化状态定义在 `domains/portfolio/types.ts`。
 - `lessons/lesson-1/routes.tsx`：统一渲染课时标题 + 关卡进度条 sticky chrome，并写入 `--module4-lesson1-chrome-h` / `--module4-lesson1-content-h`，子页面不得重复测量这层高度。
+- `lessons/lesson-2/`：课时 2「素材搜集与合规初筛」本地前端流程；内部结构详见 `lessons/lesson-2/FILE-STRUCTURE.md`。
+- `lessons/lesson-2/components/CompressedMaterialUploader.tsx`：新闻截图和图片素材共用上传组件；上传后压缩为 DataURL 与元数据，不保留原始图片。
+- `lessons/lesson-2/components/MaterialCriteriaRecheckCard.tsx`：第 3/4 关开头的四关标准个人素材复判卡片。
+- `lessons/lesson-2/components/MaterialWorkbenchForm.tsx`：第 3/4 关共用素材工作台；包含来源记录格式检查、三项自检、初步疑点和交流记录。
+- `lessons/lesson-2/utils/source-record-check.ts`：来源记录格式检查工具，只输出「来源记录格式通过」，不判断真实可信。
+- `lessons/lesson-2/utils/evaluate-lesson2-quickcheck.ts`：根据素材完成情况和过程计数生成 T1/T2/T3。
 
 ## 依赖方向
 

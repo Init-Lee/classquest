@@ -22,7 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Badge } from "@/shared/ui/badge"
 import { Input } from "@/shared/ui/input"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
-import { MODULE4_LESSON_REGISTRY } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
+import { canAccessModule4Lesson, MODULE4_LESSON_REGISTRY } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
 import {
   createNewModule4Portfolio,
   type Module4StudentProfile,
@@ -270,6 +270,10 @@ export default function Module4HomePage() {
       navigate(`/module/4/lesson/1/step/${portfolio.progress.stepId}`)
       return
     }
+    if (portfolio.progress.lessonId === 2 && portfolio.lesson1.completed) {
+      navigate(`/module/4/lesson/2/step/${portfolio.progress.stepId}`)
+      return
+    }
     navigate("/module/4")
   }
 
@@ -311,21 +315,23 @@ export default function Module4HomePage() {
         <div>
           <h2 className="text-lg font-semibold mb-4">本模块包含 6 个课时</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MODULE4_LESSON_REGISTRY.map(lesson => (
-              <Card key={lesson.id} className={lesson.available ? "" : "opacity-60"}>
+            {MODULE4_LESSON_REGISTRY.map(lesson => {
+              const canAccess = canAccessModule4Lesson(null, lesson.id)
+              return (
+              <Card key={lesson.id} className={canAccess ? "" : "opacity-60"}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <Badge variant={lesson.available ? "default" : "secondary"}>
+                    <Badge variant={canAccess ? "default" : "secondary"}>
                       课时
                       {lesson.id}
                     </Badge>
-                    {!lesson.available && <Lock className="h-4 w-4 text-muted-foreground" />}
+                    {!canAccess && <Lock className="h-4 w-4 text-muted-foreground" />}
                   </div>
                   <CardTitle className="text-base mt-2">{lesson.title}</CardTitle>
                   <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
                 </CardHeader>
               </Card>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -470,12 +476,13 @@ export default function Module4HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {MODULE4_LESSON_REGISTRY.map((lesson) => {
             const isCompleted = lesson.isComplete(portfolio)
-            const isCurrent = lesson.id === portfolio.progress.lessonId
+            const canAccess = canAccessModule4Lesson(portfolio, lesson.id, isTeacherMode)
+            const isCurrent = canAccess && lesson.id === portfolio.progress.lessonId
 
             return (
               <Card
                 key={lesson.id}
-                className={`transition-all ${lesson.available ? "cursor-pointer hover:shadow-md" : "opacity-60"} ${isCurrent ? "border-primary" : ""}`}
+                className={`transition-all ${canAccess ? "cursor-pointer hover:shadow-md" : "opacity-60"} ${isCurrent ? "border-primary" : ""}`}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -484,14 +491,14 @@ export default function Module4HomePage() {
                         ? "success"
                         : isCurrent
                           ? "default"
-                          : lesson.available
+                          : canAccess
                             ? "outline"
                             : "secondary"
                     }
                     >
-                      {isCompleted ? "✓ 已完成" : isCurrent ? "进行中" : lesson.available ? "待解锁" : "未开放"}
+                      {isCompleted ? "✓ 已完成" : isCurrent ? "进行中" : canAccess ? "可进入" : "待解锁"}
                     </Badge>
-                    {!lesson.available && <Lock className="h-4 w-4 text-muted-foreground" />}
+                    {!canAccess && <Lock className="h-4 w-4 text-muted-foreground" />}
                   </div>
                   <CardTitle className="text-base mt-2">
                     课时
@@ -501,7 +508,7 @@ export default function Module4HomePage() {
                   </CardTitle>
                   <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
                 </CardHeader>
-                {lesson.available && (
+                {canAccess && (
                   <CardContent className="pt-0">
                     <Button
                       variant={isCurrent ? "default" : "outline"}

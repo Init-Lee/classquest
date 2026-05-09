@@ -135,6 +135,6 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 
 - 稳定发布：`v0.6.0`，模块 3 六课时完成。
 - 当前主线版本：`0.7.1`，模块 4 课时 1 本地前端流程已合入后的发布口径。
-- 下一开发分支：`module-4-lesson-2-dev`，模块 4 课时 2 后续开发计划发布 `v0.7.2`。
-- 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1 已落地；课时 2-6 后续逐课时开发。
+- 当前开发分支：`module-4-lesson-2-dev`，模块 4 课时 2「素材搜集与合规初筛」已实现本地前端候选流程，待验收后发布 `v0.7.2`。
+- 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1 已落地；课时 2 在开发分支待验收；课时 3-6 后续逐课时开发。
 
