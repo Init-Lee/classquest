@@ -9,23 +9,13 @@ import {
   createEmptyModule4Lesson2State,
   createNewModule4Portfolio,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
-import lesson1ImageSampleSvg from "@/modules/module-4-ai-info-detective/lessons/lesson-1/assets/image-ai-library-robot.svg?raw"
-import lesson1NewsSampleSvg from "@/modules/module-4-ai-info-detective/lessons/lesson-1/assets/news-screenshot-ai-reading.svg?raw"
+import lesson2ImageSampleUrl from "@/modules/module-4-ai-info-detective/lessons/lesson-2/assets/step1-case-ai-image.jpg"
+import lesson2NewsSampleUrl from "@/modules/module-4-ai-info-detective/lessons/lesson-2/assets/step1-case-news.png"
 
 const DEMO_MISSION_QUIZ_PASSED_AT = "2026-04-28T02:00:00.000Z"
 const DEMO_STEP2_INTERACTION_AT = "2026-04-28T02:08:00.000Z"
 const DEMO_TEMPLATE_CONFIRMED_AT = "2026-04-28T02:16:00.000Z"
 const DEMO_LESSON2_COMPLETED_AT = "2026-05-07T03:00:00.000Z"
-
-function createSvgDataUrl(svg: string, title: string, description: string): string {
-  const cleaned = svg
-    .replace(/<title[\s\S]*?<\/title>/, `<title>${title}</title>`)
-    .replace(/<desc[\s\S]*?<\/desc>/, `<desc>${description}</desc>`)
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cleaned)}`
-}
-
-const DEMO_NEWS_DATA_URL = createSvgDataUrl(lesson1NewsSampleSvg, "课时1新闻样例截图", "教师模式沿用课时1新闻素材示例。")
-const DEMO_IMAGE_DATA_URL = createSvgDataUrl(lesson1ImageSampleSvg, "课时1图片样例素材", "教师模式沿用课时1图片素材示例。")
 
 const DEMO_STEP2_COMPLETED = {
   introViewed: true,
@@ -59,10 +49,10 @@ const DEMO_STEP2_COMPLETED = {
   completed: true,
 }
 
-function createDemoLesson2Asset(originalName: string, uploadCount: number, dataUrl: string): Module4CompressedMaterialAsset {
+function createDemoLesson2Asset(originalName: string, uploadCount: number, dataUrl: string, mimeType: Module4CompressedMaterialAsset["mimeType"]): Module4CompressedMaterialAsset {
   return {
     dataUrl,
-    mimeType: "image/webp",
+    mimeType,
     originalName,
     originalSizeBytes: 420000,
     compressedSizeBytes: 120000,
@@ -109,7 +99,7 @@ function createCompletedLesson2DemoState(): Module4Lesson2State {
       ...base.news,
       initialStatus: "ready",
       postCriteriaStatus: "usable",
-      asset: createDemoLesson2Asset("课时1新闻样例截图.svg", 1, DEMO_NEWS_DATA_URL),
+      asset: createDemoLesson2Asset("step1-case-news.png", 1, lesson2NewsSampleUrl, "image/jpeg"),
       titleOrName: "AI 新闻素材演示",
       sourceType: "web",
       sourceRecord: "学校科技栏目网页截图，保留标题、平台和发布时间线索。",
@@ -128,7 +118,7 @@ function createCompletedLesson2DemoState(): Module4Lesson2State {
       ...base.image,
       initialStatus: "incomplete",
       postCriteriaStatus: "need_fix",
-      asset: createDemoLesson2Asset("课时1图片样例素材.svg", 2, DEMO_IMAGE_DATA_URL),
+      asset: createDemoLesson2Asset("step1-case-ai-image.jpg", 2, lesson2ImageSampleUrl, "image/jpeg"),
       titleOrName: "AI 图片素材演示",
       sourceType: "ai_generated",
       sourceRecord: "课堂演示用 AI 生成图片，记录工具名称和 Prompt 摘要。",

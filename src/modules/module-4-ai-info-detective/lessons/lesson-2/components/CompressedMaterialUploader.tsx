@@ -25,6 +25,12 @@ function formatBytes(value: number): string {
   return `${Math.round(value / 1024)}KB`
 }
 
+function formatMimeType(value: Module4CompressedMaterialAsset["mimeType"]): string {
+  if (value === "image/webp") return "WebP"
+  if (value === "image/png") return "PNG"
+  return "JPEG"
+}
+
 export function CompressedMaterialUploader({
   kind,
   asset,
@@ -88,7 +94,7 @@ export function CompressedMaterialUploader({
             <p><span className="text-muted-foreground">文件：</span>{asset.originalName}</p>
             <p><span className="text-muted-foreground">尺寸：</span>{asset.width} × {asset.height}</p>
             <p><span className="text-muted-foreground">压缩：</span>{formatBytes(asset.originalSizeBytes)} → {formatBytes(asset.compressedSizeBytes)}</p>
-            <p><span className="text-muted-foreground">格式：</span>{asset.mimeType === "image/webp" ? "WebP" : "JPEG"} · 第 {asset.uploadCount} 次上传</p>
+            <p><span className="text-muted-foreground">格式：</span>{formatMimeType(asset.mimeType)} · 第 {asset.uploadCount} 次上传</p>
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">请确认压缩后的截图仍然能看清关键信息。</p>
           </div>
         </div>

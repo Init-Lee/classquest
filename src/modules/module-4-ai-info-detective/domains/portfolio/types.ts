@@ -63,7 +63,7 @@ export type Module4MaterialKind = "news" | "image"
 export type Module4MaterialPrepStatus = "ready" | "incomplete" | "none"
 export type Module4PostCriteriaStatus = "usable" | "need_fix" | "need_replace"
 export type Module4MaterialSourceType = "web" | "ai_generated" | "field_capture" | "mixed"
-export type Module4CompressedAssetMimeType = "image/webp" | "image/jpeg"
+export type Module4CompressedAssetMimeType = "image/webp" | "image/jpeg" | "image/png"
 
 export interface Module4CompressedMaterialAsset {
   dataUrl: string
@@ -517,11 +517,16 @@ function normalizeMaterialSourceType(value: unknown): Module4MaterialSourceType 
 function normalizeCompressedAsset(value: unknown): Module4CompressedMaterialAsset | undefined {
   if (!value || typeof value !== "object") return undefined
   const raw = value as Record<string, unknown>
-  if (typeof raw.dataUrl !== "string" || !raw.dataUrl.startsWith("data:image/")) return undefined
+  if (typeof raw.dataUrl !== "string") return undefined
+  const isImageDataUrl = raw.dataUrl.startsWith("data:image/")
+  const isLocalImageAsset = raw.dataUrl.startsWith("/") && /\.(png|jpe?g|webp)(?:\?|$)/i.test(raw.dataUrl)
+  if (!isImageDataUrl && !isLocalImageAsset) return undefined
 
-  const mimeType = raw.mimeType === "image/webp" || raw.mimeType === "image/jpeg"
+  const mimeType = raw.mimeType === "image/webp" || raw.mimeType === "image/jpeg" || raw.mimeType === "image/png"
     ? raw.mimeType
-    : raw.dataUrl.startsWith("data:image/jpeg") ? "image/jpeg" : "image/webp"
+    : raw.dataUrl.startsWith("data:image/png") || /\.png(?:\?|$)/i.test(raw.dataUrl) ? "image/png"
+      : raw.dataUrl.startsWith("data:image/jpeg") || /\.jpe?g(?:\?|$)/i.test(raw.dataUrl) ? "image/jpeg"
+        : "image/webp"
 
   return {
     dataUrl: raw.dataUrl,
