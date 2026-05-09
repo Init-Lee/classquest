@@ -16,8 +16,16 @@ const DEMO_MISSION_QUIZ_PASSED_AT = "2026-04-28T02:00:00.000Z"
 const DEMO_STEP2_INTERACTION_AT = "2026-04-28T02:08:00.000Z"
 const DEMO_TEMPLATE_CONFIRMED_AT = "2026-04-28T02:16:00.000Z"
 const DEMO_LESSON2_COMPLETED_AT = "2026-05-07T03:00:00.000Z"
-const DEMO_NEWS_DATA_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(lesson1NewsSampleSvg)}`
-const DEMO_IMAGE_DATA_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(lesson1ImageSampleSvg)}`
+
+function createSvgDataUrl(svg: string, title: string, description: string): string {
+  const cleaned = svg
+    .replace(/<title[\s\S]*?<\/title>/, `<title>${title}</title>`)
+    .replace(/<desc[\s\S]*?<\/desc>/, `<desc>${description}</desc>`)
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(cleaned)}`
+}
+
+const DEMO_NEWS_DATA_URL = createSvgDataUrl(lesson1NewsSampleSvg, "课时1新闻样例截图", "教师模式沿用课时1新闻素材示例。")
+const DEMO_IMAGE_DATA_URL = createSvgDataUrl(lesson1ImageSampleSvg, "课时1图片样例素材", "教师模式沿用课时1图片素材示例。")
 
 const DEMO_STEP2_COMPLETED = {
   introViewed: true,
