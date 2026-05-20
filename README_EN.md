@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![Chinese](https://img.shields.io/badge/README-中文-red)](README.md)
-[![Release](https://img.shields.io/badge/release-v0.7.1-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.7.2-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ## Current Architecture Goal
 
@@ -24,7 +24,7 @@ src/
 ├── platform/                         # Platform portal, global routes, module registry
 ├── modules/
 │   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
-│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lesson 1 open
+│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lessons 1-2 open
 └── shared/                            # Business-neutral UI and pure utilities
 
 backend/                              # V1.5 lightweight FastAPI backend skeleton
@@ -33,7 +33,7 @@ backend/                              # V1.5 lightweight FastAPI backend skeleto
 ## Module Status
 
 - **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
-- **Module 4 · AI Information Detective**: Lesson 1 is now open with an independent local portfolio, continue packages, stage snapshots, and teacher demo mode. Lessons 2-6 will continue on one branch per lesson. See `src/modules/module-4-ai-info-detective/README.md`.
+- **Module 4 · AI Information Detective**: Lessons 1-2 are now open with an independent local portfolio, continue packages, stage snapshots, and teacher demo mode. Lesson 2 adds news/image material workbenches, four-gate screening, compliance pre-checks, and non-obtrusive QuickCheck records. See `src/modules/module-4-ai-info-detective/README.md`.
 - **V1.5 Backend**: currently a skeleton with a health check only. Real submission, review, quiz, stats, and gallery export features will be implemented after Module 4 mock workflows stabilize. See `backend/README.md`.
 
 ## Getting Started
@@ -72,9 +72,9 @@ Before Module 4 connects to the real backend, the frontend should first validate
 
 ## Branching and Version Strategy
 
-- Current mainline release: `v0.7.1`, after merging the local-first Module 4 Lesson 1 flow (full lesson walkthrough, continuation package import/export, stage snapshot, and teacher lecture mode).
+- Current mainline release: `v0.7.2`, after merging the local-first Module 4 Lesson 2 flow (Lessons 1-2 walkthroughs, continuation package import/export, stage snapshots, and teacher lecture mode).
 - Previous milestone: `v0.6.0`, when Module 3 shipped as a single-app layout.
-- Later Module 4 work: one branch per lesson, for example `module-4-lesson-2-dev`; each completed lesson moves the patch release forward, with Lesson 2 targeting `v0.7.2`.
+- Later Module 4 work: one branch per lesson, for example `module-4-lesson-3-dev`; each completed lesson moves the patch release forward.
 - After Module 4 mock workflows stabilize: move toward `v0.8.0`.
 - After Module 4 connects to the real backend: move toward `v0.9.0`.
 

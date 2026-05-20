@@ -99,7 +99,7 @@ src/modules/module-4-ai-info-detective/
 - `app/`：模块 4 应用壳、Provider、教师讲解状态和课时注册表。
 - `pages/`：路由级页面。
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
-- `lessons/`：六个课时的本地学习挑战；当前课时 1 已合入，课时 2 在开发分支实现并待验收。
+- `lessons/`：六个课时的本地学习挑战；当前课时 1-2 已合入，课时 3-6 后续按独立分支推进。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
 - `api/`：mock adapter 与 HTTP adapter。
 - `components/`：模块 4 私有 UI 组件。

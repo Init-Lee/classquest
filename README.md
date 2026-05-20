@@ -10,7 +10,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
-[![Release](https://img.shields.io/badge/release-v0.7.1-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-v0.7.2-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ## 当前架构目标
 
@@ -23,7 +23,7 @@ src/
 ├── platform/                         # 平台门户、全局路由、模块注册表
 ├── modules/
 │   ├── module-3-ai-science-station/   # 已完成的模块 3：AI 科学传播站
-│   └── module-4-ai-info-detective/    # 模块 4：AI 信息辨识员，课时 1 已开放
+│   └── module-4-ai-info-detective/    # 模块 4：AI 信息辨识员，课时 1-2 已开放
 └── shared/                            # 业务无关 UI 与纯工具
 
 backend/                              # V1.5 FastAPI 轻量后端骨架
@@ -32,7 +32,7 @@ backend/                              # V1.5 FastAPI 轻量后端骨架
 ## 模块状态
 
 - **模块 3 · AI 科学传播站**：已完成 6 个课时、24 个关卡；保留本地优先学习进度、继续学习包、跨角色文件链路、阶段快照和教师演示模式。详见 `src/modules/module-3-ai-science-station/README.md`。
-- **模块 4 · AI 信息辨识员**：课时 1「框架发布与样例拆解」已开放，提供独立本地档案、继续学习包、阶段快照和教师演示模式；课时 2「素材搜集与合规初筛」已在 `module-4-lesson-2-dev` 开发分支实现本地前端候选流程，待验收后发布 `v0.7.2`。详见 `src/modules/module-4-ai-info-detective/README.md`。
+- **模块 4 · AI 信息辨识员**：课时 1「框架发布与样例拆解」和课时 2「素材搜集与合规初筛」已开放，提供独立本地档案、继续学习包、阶段快照和教师演示模式；课时 2 已完成新闻/图片素材工作台、四关体检、合规初筛和 QuickCheck 无感记录。详见 `src/modules/module-4-ai-info-detective/README.md`。
 - **V1.5 后端**：当前仅骨架和健康检查；真实提交、审核、试答、统计和画廊导出在模块 4 mock 流程稳定后实现。详见 `backend/README.md`。
 
 ## 运行方式
@@ -71,9 +71,9 @@ npm run build
 
 ## 分支与版本策略
 
-- 当前主线发布：`v0.7.1`，对应模块 4 课时 1 本地前端流程合并（课时 1 可完整闯关、保存进度、导入进度、生成阶段快照，并支持教师讲解模式）。
+- 当前主线发布：`v0.7.2`，对应模块 4 课时 2 本地前端流程合并（课时 1-2 可完整闯关、保存进度、导入进度、生成阶段快照，并支持教师讲解模式）。
 - 上一稳定里程碑：`v0.6.0`，模块 3 六课时全部完成时的单应用形态。
-- 模块 4 后续开发：每个课时独立分支，例如 `module-4-lesson-2-dev`；每完成一课后进入 patch 版本，课时 2 对应 `v0.7.2`。
+- 模块 4 后续开发：每个课时独立分支，例如课时 3 可进入 `module-4-lesson-3-dev`；每完成一课后进入 patch 版本。
 - 模块 4 mock 流程稳定后：进入 `v0.8.0`。
 - 模块 4 接入真实后端后：进入 `v0.9.0`。
 
