@@ -4,12 +4,14 @@
  * 更新触发：图片素材工作台区块、来源动态提示、自检要求、自动状态推导或进入报告页策略变化时，需要同步更新本文件。
  */
 
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type {
   Module4CompressedMaterialAsset,
   Module4MaterialScreeningRecord,
   Module4MaterialSourceType,
   Module4PostCriteriaStatus,
+  Module4Portfolio,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { Lesson2StepLayout } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/components/Lesson2StepLayout"
@@ -74,9 +76,26 @@ function StatusMark({ ok }: { ok: boolean }) {
 
 export default function Step4ImageWorkbench() {
   const { portfolio, savePortfolio } = useModule4Portfolio()
-  const navigate = useNavigate()
   if (!portfolio) return null
+  return <Step4ImageWorkbenchContent portfolio={portfolio} savePortfolio={savePortfolio} />
+}
+
+function Step4ImageWorkbenchContent({
+  portfolio,
+  savePortfolio,
+}: {
+  portfolio: Module4Portfolio
+  savePortfolio: (updated: Module4Portfolio) => Promise<void>
+}) {
+  const navigate = useNavigate()
   const lesson2 = portfolio.lesson2
+  const record = lesson2.image
+  const [textDraft, setTextDraft] = useState({
+    titleOrName: record.titleOrName,
+    sourceRecord: record.sourceRecord,
+    clueNote: record.clueNote,
+    peerFeedbackNote: record.peerFeedbackNote,
+  })
 
   const updateImage = (image: Module4MaterialScreeningRecord) => {
     const nextImage = withCompletionState(image)
@@ -98,6 +117,30 @@ export default function Step4ImageWorkbench() {
     updateImage({ ...lesson2.image, ...patch })
   }
 
+  const updateTextDraft = (field: keyof typeof textDraft, value: string) => {
+    setTextDraft(current => ({ ...current, [field]: value }))
+  }
+
+  const commitTextDraft = (field: keyof typeof textDraft) => {
+    const value = textDraft[field]
+    if (value === record[field]) return
+
+    if (field === "sourceRecord") {
+      updateImagePatch({ sourceRecord: value, sourceAutoPassed: false })
+      return
+    }
+    if (field === "clueNote") {
+      updateImagePatch({ clueNote: value, clueEditCount: record.clueEditCount + 1 })
+      return
+    }
+    if (field === "peerFeedbackNote") {
+      updateImagePatch({ peerFeedbackNote: value, peerFeedbackEditCount: record.peerFeedbackEditCount + 1 })
+      return
+    }
+
+    updateImagePatch({ titleOrName: value })
+  }
+
   const handleAssetChange = (asset: Module4CompressedMaterialAsset) => updateImagePatch({ asset })
 
   const handleSourceCheck = () => {
@@ -112,6 +155,7 @@ export default function Step4ImageWorkbench() {
   const appendClueChip = (chip: string) => {
     const text = lesson2.image.clueNote.trim()
     const next = text ? `${text}；${chip}` : chip
+    updateTextDraft("clueNote", next)
     updateImagePatch({ clueNote: next, clueEditCount: lesson2.image.clueEditCount + 1 })
   }
 
@@ -125,7 +169,6 @@ export default function Step4ImageWorkbench() {
     navigate("/module/4/lesson/2/step/5")
   }
 
-  const record = lesson2.image
   const sourceHint = record.sourceType ? SOURCE_HINTS[record.sourceType] : "请先选择来源类型，系统会给出对应填写提示。"
   const selfChecksComplete = record.selfChecks.typeFits && record.selfChecks.contentCompliant && record.selfChecks.hasJudgmentValue
   const completionItems = [
@@ -216,7 +259,15 @@ export default function Step4ImageWorkbench() {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                   <label className="space-y-2 text-sm">
                     <span className="font-medium">图片短名</span>
-                    <Input value={record.titleOrName} onChange={event => updateImagePatch({ titleOrName: event.target.value })} placeholder="例如：校园 AI 风格图片" />
+                    <Input
+                      value={textDraft.titleOrName}
+                      onChange={event => updateTextDraft("titleOrName", event.target.value)}
+                      onBlur={() => commitTextDraft("titleOrName")}
+                      onKeyDown={event => {
+                        if (event.key === "Enter") event.currentTarget.blur()
+                      }}
+                      placeholder="例如：校园 AI 风格图片"
+                    />
                   </label>
                   <label className="space-y-2 text-sm">
                     <span className="font-medium">来源类型</span>
@@ -236,7 +287,12 @@ export default function Step4ImageWorkbench() {
                 <p className="rounded-2xl bg-blue-50 px-4 py-3 text-sm text-blue-900">{sourceHint}</p>
                 <label className="space-y-2 text-sm">
                   <span className="font-medium">来源记录</span>
-                  <Textarea value={record.sourceRecord} onChange={event => updateImagePatch({ sourceRecord: event.target.value, sourceAutoPassed: false })} placeholder="填写链接、平台、生成记录、拍摄说明或加工过程。" />
+                  <Textarea
+                    value={textDraft.sourceRecord}
+                    onChange={event => updateTextDraft("sourceRecord", event.target.value)}
+                    onBlur={() => commitTextDraft("sourceRecord")}
+                    placeholder="填写链接、平台、生成记录、拍摄说明或加工过程。"
+                  />
                 </label>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button type="button" variant="outline" onClick={handleSourceCheck}>检查来源记录</Button>
@@ -301,8 +357,9 @@ export default function Step4ImageWorkbench() {
                   <span className="font-medium">初步疑点提示</span>
                   <p className="text-xs leading-6 text-muted-foreground">写 1 条图片中可能存在的 AI 痕迹、信息缺口或需要进一步核验之处。这里不是最终解析，只是给下一课留下观察线索。</p>
                   <Textarea
-                    value={record.clueNote}
-                    onChange={event => updateImagePatch({ clueNote: event.target.value, clueEditCount: record.clueEditCount + 1 })}
+                    value={textDraft.clueNote}
+                    onChange={event => updateTextDraft("clueNote", event.target.value)}
+                    onBlur={() => commitTextDraft("clueNote")}
                     placeholder="例如：图片中背景文字存在错乱，可能需要结合来源记录进一步核验。"
                   />
                 </label>
@@ -310,8 +367,9 @@ export default function Step4ImageWorkbench() {
                   <span className="font-medium">同伴 / 自我交流记录</span>
                   <p className="text-xs leading-6 text-muted-foreground">记录一条和同学交流后的提醒，或你自己发现的修改意见。</p>
                   <Textarea
-                    value={record.peerFeedbackNote}
-                    onChange={event => updateImagePatch({ peerFeedbackNote: event.target.value, peerFeedbackEditCount: record.peerFeedbackEditCount + 1 })}
+                    value={textDraft.peerFeedbackNote}
+                    onChange={event => updateTextDraft("peerFeedbackNote", event.target.value)}
+                    onBlur={() => commitTextDraft("peerFeedbackNote")}
                     placeholder="例如：同学提醒我注意图片是否包含清晰人脸，可能需要更换素材。"
                   />
                 </label>
