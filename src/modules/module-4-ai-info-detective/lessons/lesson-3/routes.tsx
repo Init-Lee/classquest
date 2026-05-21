@@ -37,6 +37,10 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
     if (!el) return
     const update = () => {
       document.documentElement.style.setProperty("--module4-lesson3-chrome-h", `${el.offsetHeight}px`)
+      document.documentElement.style.setProperty(
+        "--module4-lesson3-content-h",
+        "calc(100dvh - var(--module4-sticky-stack-height, 7rem) - var(--module4-lesson3-chrome-h, 8rem))",
+      )
     }
     update()
     const ro = new ResizeObserver(update)
@@ -44,6 +48,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
     return () => {
       ro.disconnect()
       document.documentElement.style.removeProperty("--module4-lesson3-chrome-h")
+      document.documentElement.style.removeProperty("--module4-lesson3-content-h")
     }
   })
 
@@ -77,6 +82,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
     : LESSON3_STEPS
       .filter(step => canEnterLesson3Step(portfolio.lesson2, portfolio.lesson3, step.id))
       .map(step => step.id)
+  const usesScreenLayout = stepId === 1
 
   return (
     <>
@@ -102,7 +108,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
           </div>
         </div>
       </div>
-      <div className="w-full min-w-0">{children}</div>
+      <div className={usesScreenLayout ? "w-full min-w-0" : "mx-auto w-full max-w-7xl px-4 py-6"}>{children}</div>
     </>
   )
 }

@@ -57,7 +57,7 @@ export function getCurrentLesson3Step(state: Module4Lesson3State): number {
 
 export function getLesson3GuardReason(stepId: number): string {
   const reasons: Record<number, string> = {
-    2: "请先确认课时 3 的 V1 制作边界。",
+    2: "请先完成课时 3 的 V1 启动页。",
     3: "请先完成新闻题卡 V1。",
     4: "请先完成新闻题卡 V1 和图片题卡 V1。",
   }

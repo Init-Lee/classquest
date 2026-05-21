@@ -15,8 +15,8 @@ export const LESSON3_STEPS = [
   {
     id: 1,
     path: "step/1",
-    title: "V1 规则确认",
-    subtitle: "明确今天只完成两张题卡初稿",
+    title: "启动 V1 制作",
+    subtitle: "明确今天要完成的两张题卡初稿",
   },
   {
     id: 2,

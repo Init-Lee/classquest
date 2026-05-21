@@ -16,6 +16,7 @@ lessons/lesson-3/
 ├── guards.ts
 ├── routes.tsx
 ├── components/
+│   └── Lesson3ScreenLayout.tsx
 ├── data/
 ├── steps/
 └── utils/
@@ -28,6 +29,7 @@ lessons/lesson-3/
 - `routes.tsx`：课时 3 子路由、Guard 和步骤进度条。
 - `data/default-options.ts`：固定三选项与四类来源类型文案。
 - `utils/`：素材指纹、课时 2 快照草稿、自审和 QuickCheck。
+- `components/Lesson3ScreenLayout.tsx`：第 1 步全屏滚动分屏布局。
 - `components/`：共用题卡编辑器、实时预览、来源选择、嵌入式自审和题卡自检助手。
 - `steps/`：四个路由步骤页面。
 
