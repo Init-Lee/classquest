@@ -318,14 +318,14 @@ export default function Step1V1Briefing() {
                   )}
                 >
                   <CardContent className="space-y-4 p-6">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
-                      {index + 1}
-                    </span>
                     <div className="flex items-center gap-3">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+                        {index + 1}
+                      </span>
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-primary shadow-sm">
                         <Icon className="h-5 w-5" strokeWidth={2} />
                       </span>
-                      <h3 className="text-xl font-semibold md:text-2xl">{card.title}</h3>
+                      <h3 className="text-lg font-semibold">{card.title}</h3>
                     </div>
                     <p className="text-base leading-7 text-muted-foreground">{card.text}</p>
                   </CardContent>
