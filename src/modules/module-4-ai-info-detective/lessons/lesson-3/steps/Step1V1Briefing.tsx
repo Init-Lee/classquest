@@ -88,13 +88,13 @@ const HERO_FLOW_NODES = [
 function V1HeroFocusPanel() {
   return (
     <div className="space-y-4">
-      <p className="text-sm font-semibold tracking-wide text-primary">今天聚焦</p>
+      <p className="text-xl font-bold tracking-wide text-primary md:text-2xl">今天聚焦</p>
       {HERO_FOCUS_BLOCKS.map(block => {
         const Icon = block.icon
         return (
           <div
             key={block.text}
-            className={cn("flex gap-4 rounded-2xl border p-4 shadow-sm md:p-5", block.accent)}
+            className={cn("flex items-center gap-4 rounded-2xl border p-4 shadow-sm md:p-5", block.accent)}
           >
             <div
               className={cn(
@@ -142,11 +142,11 @@ function V1HeroFlowDiagram() {
         const Icon = node.icon
         return (
           <div key={node.label} className="flex w-full flex-col items-center">
-            <div className="flex w-full flex-col items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-center">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className="flex w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" strokeWidth={2} />
               </span>
-              <span className="text-sm font-semibold text-primary">{node.label}</span>
+              <span className="text-base font-semibold text-primary">{node.label}</span>
             </div>
             {index < HERO_FLOW_NODES.length - 1 && (
               <svg viewBox="0 0 24 28" className="my-1 h-7 w-6 shrink-0" aria-hidden>
