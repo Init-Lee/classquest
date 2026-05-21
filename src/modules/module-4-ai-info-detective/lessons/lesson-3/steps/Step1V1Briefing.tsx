@@ -16,6 +16,7 @@ import {
   Link2,
   ListChecks,
   Newspaper,
+  Save,
   type LucideIcon,
 } from "lucide-react"
 import type { Module4MaterialKind, Module4MaterialScreeningRecord } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -42,7 +43,7 @@ const MISSION_CARDS = [
     accent: "from-violet-500/15 to-purple-500/5",
   },
   {
-    icon: ArrowRight,
+    icon: Save,
     title: "保存初稿",
     text: "预览两张题卡并保存为 V1，为后续迭代打好结构基础。",
     accent: "from-amber-500/15 to-orange-500/5",
@@ -317,16 +318,16 @@ export default function Step1V1Briefing() {
                   )}
                 >
                   <CardContent className="space-y-4 p-6">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+                      {index + 1}
+                    </span>
                     <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
-                        {index + 1}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-primary shadow-sm">
+                        <Icon className="h-5 w-5" strokeWidth={2} />
                       </span>
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-primary shadow-sm">
-                        <Icon className="h-5 w-5" />
-                      </span>
+                      <h3 className="text-xl font-semibold md:text-2xl">{card.title}</h3>
                     </div>
-                    <h3 className="text-xl font-semibold">{card.title}</h3>
-                    <p className="text-sm leading-7 text-muted-foreground">{card.text}</p>
+                    <p className="text-base leading-7 text-muted-foreground">{card.text}</p>
                   </CardContent>
                 </Card>
               )
