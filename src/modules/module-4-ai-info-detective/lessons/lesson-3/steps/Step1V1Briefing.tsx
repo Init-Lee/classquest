@@ -143,7 +143,7 @@ function V1HeroFlowDiagram() {
         const Icon = node.icon
         return (
           <div key={node.label} className="flex w-full flex-col items-center">
-            <div className="flex w-full items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4">
+            <div className="flex w-full items-center justify-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" strokeWidth={2} />
               </span>
@@ -291,7 +291,7 @@ export default function Step1V1Briefing() {
             </p>
             <V1HeroFocusPanel />
           </div>
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-center">
             <V1HeroFlowDiagram />
           </div>
         </div>
