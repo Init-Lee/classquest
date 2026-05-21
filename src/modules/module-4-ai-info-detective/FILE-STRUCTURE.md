@@ -24,6 +24,9 @@ src/modules/module-4-ai-info-detective/
 │   └── lesson-registry.ts
 ├── constants/
 │   └── demo-portfolio.ts
+├── api/
+│   ├── lesson3-ai-review.adapter.ts
+│   └── types.ts
 ├── domains/
 │   ├── portfolio/
 │   │   └── types.ts
@@ -55,7 +58,17 @@ src/modules/module-4-ai-info-detective/
 │   │   ├── guards.ts
 │   │   ├── routes.tsx
 │   │   └── types.ts
-│   └── lesson-2/
+│   ├── lesson-2/
+│   │   ├── README.md
+│   │   ├── FILE-STRUCTURE.md
+│   │   ├── components/
+│   │   ├── data/
+│   │   ├── steps/
+│   │   ├── utils/
+│   │   ├── config.ts
+│   │   ├── guards.ts
+│   │   └── routes.tsx
+│   └── lesson-3/
 │       ├── README.md
 │       ├── FILE-STRUCTURE.md
 │       ├── components/
@@ -99,11 +112,11 @@ src/modules/module-4-ai-info-detective/
 - `app/`：模块 4 应用壳、Provider、教师讲解状态和课时注册表。
 - `pages/`：路由级页面。
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
-- `lessons/`：六个课时的本地学习挑战；当前课时 1-2 已合入，课时 3-6 后续按独立分支推进。
+- `lessons/`：六个课时的本地学习挑战；当前课时 1-2 已合入，课时 3 在 dev 分支实现 V1 初稿流程，课时 4-6 后续按独立分支推进。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
-- `api/`：mock adapter 与 HTTP adapter。
+- `api/`：mock adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到 `/api/v1/module4/lesson3/ai-review`。
 - `components/`：模块 4 私有 UI 组件。
-- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full` 与 `lesson2-full` 阶段快照 HTML。
+- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`，课时 3 中会显示 `课时3第N步` 或 `课时3已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full`、`lesson2-full` 与 `lesson3-full` 阶段快照 HTML。
 - `constants/`：教师讲解档案、班级选项等模块级常量。
 - `lessons/lesson-1/components/Lesson1ScreenLayout.tsx`：课时 1 已验证的全屏滚动布局约定，负责 `scroll-snap`、固定关卡栏下方内容高度和每屏基础排版；当前用于第 1、2 关，后续若提升到模块级再迁入 `components/` 或 `features/`。
 - `lessons/lesson-1/components/Lesson1StepLayout.tsx`：第 3～5 关等标准 Step 布局；支持 `titleClassName` 以便关卡标题使用与全屏首屏一致的 primary 强调与字距（如第 3 关）。
@@ -122,6 +135,12 @@ src/modules/module-4-ai-info-detective/
 - `lessons/lesson-2/components/MaterialWorkbenchForm.tsx`：第 3/4 关共用素材工作台；包含来源记录格式检查、三项自检、初步疑点和交流记录。
 - `lessons/lesson-2/utils/source-record-check.ts`：来源记录格式检查工具，只输出「来源记录格式通过」，不判断真实可信。
 - `lessons/lesson-2/utils/evaluate-lesson2-quickcheck.ts`：根据素材完成情况和过程计数生成 T1/T2/T3。
+- `lessons/lesson-3/`：课时 3「题目卡 V1 制作与解析填写」本地前端流程；从课时 2 新闻/图片素材复制快照，制作两张 V1 题卡，不反向修改课时 2。
+- `lessons/lesson-3/components/QuestionCardEditorLayout.tsx`：新闻/图片共用编辑器，桌面左右分栏，右侧 sticky 实时预览；组件只调用模块 4 API adapter，不直接访问模型服务。
+- `lessons/lesson-3/components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览。
+- `lessons/lesson-3/components/AiReviewPanel.tsx`：题卡自检助手面板；自检失败不阻断保存 V1。
+- `lessons/lesson-3/utils/build-lesson3-draft.ts`：从课时 2 素材生成课时 3 快照草稿，增加 `assetFingerprint`，不比较整段 base64。
+- `lessons/lesson-3/utils/evaluate-lesson3-quickcheck.ts`：根据两张 V1 题卡生成课时 3 QuickCheck。
 
 ## 依赖方向
 

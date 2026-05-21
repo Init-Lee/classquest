@@ -1,8 +1,10 @@
 /**
  * 文件说明：模块 4 学习档案领域类型。
- * 职责：定义 Module4Portfolio、课时 1/2 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
- * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2 过程记录字段变化时，需要同步更新本文件。
+ * 职责：定义 Module4Portfolio、课时 1/2/3 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
+ * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3 过程记录字段变化时，需要同步更新本文件。
  */
+
+import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
 
 export const MODULE4_ID = "module-4-ai-info-detective"
 export const MODULE4_APP_VERSION = "0.7.2"
@@ -186,6 +188,153 @@ export interface Module4Lesson2State {
   completedAt: string
 }
 
+export type Module4Lesson3CardVersion = "v1"
+export type Module4Lesson3CardStatus = "draft" | "ready_for_lesson4"
+export type Module4Lesson3AiReviewRuntimeStatus = "idle" | "pending" | "completed" | "failed"
+export type Module4Lesson3AiReviewOverallStatus = "pass" | "needs_revision" | "blocked"
+export type Module4Lesson3AiReviewArea = "material" | "task" | "explanation" | "source"
+export type Module4Lesson3AiReviewLevel = "ok" | "warning" | "error"
+
+export interface Module4Lesson3MaterialSnapshot {
+  kind: Module4MaterialKind
+  lesson2Completed: boolean
+  lesson2PostCriteriaStatus?: Module4PostCriteriaStatus
+  lesson2TitleOrName: string
+  lesson2SourceType?: Module4MaterialSourceType
+  lesson2SourceRecord: string
+  lesson2ClueNote: string
+  asset?: Module4CompressedMaterialAsset
+  assetFingerprint: string
+  snappedAt: string
+}
+
+export interface Module4Lesson3CardSelfCheck {
+  materialReady: boolean
+  taskReady: boolean
+  answerSelected: boolean
+  explanationReady: boolean
+  sourceReady: boolean
+  verificationReady: boolean
+  allRequiredPassed: boolean
+  lastCheckedAt: string
+}
+
+export interface Module4Lesson3AiReviewCheck {
+  area: Module4Lesson3AiReviewArea
+  level: Module4Lesson3AiReviewLevel
+  message: string
+  suggestion?: string
+}
+
+export interface Module4Lesson3AiReviewResult {
+  status: Module4Lesson3AiReviewOverallStatus
+  summary: string
+  checks: Module4Lesson3AiReviewCheck[]
+  missingRequiredFields: string[]
+  suggestedEdits: string[]
+  safetyFlags: string[]
+}
+
+export interface Module4Lesson3AiReviewState {
+  enabled: boolean
+  status: Module4Lesson3AiReviewRuntimeStatus
+  lastRequestId: string
+  lastReviewedAt: string
+  result?: Module4Lesson3AiReviewResult
+  errorMessage: string
+}
+
+export interface Module4Lesson3QuestionCardDraft {
+  id: string
+  kind: Module4MaterialKind
+  version: Module4Lesson3CardVersion
+  status: Module4Lesson3CardStatus
+  sourceMaterialSnapshot: Module4Lesson3MaterialSnapshot
+  material: {
+    titleOrName: string
+    displayNote: string
+    asset?: Module4CompressedMaterialAsset
+    assetFingerprint: string
+  }
+  task: {
+    prompt: string
+    options: JudgmentOption[]
+    correctOptionKey?: "A" | "B" | "C"
+  }
+  explanation: {
+    text: string
+    editCount: number
+    updatedAt: string
+  }
+  source: {
+    sourceType?: Module4MaterialSourceType
+    sourceRecord: string
+    verificationNote: string
+  }
+  selfCheck: Module4Lesson3CardSelfCheck
+  aiReview: Module4Lesson3AiReviewState
+  metrics: {
+    materialEditCount: number
+    taskEditCount: number
+    explanationEditCount: number
+    sourceEditCount: number
+    previewModeSwitchCount: number
+    aiReviewRequestCount: number
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Module4Lesson3QuickCheckState {
+  T1: Module4Lesson2QuickCheckTarget<{
+    newsSnapshotReady: boolean
+    imageSnapshotReady: boolean
+    newsAssetReady: boolean
+    imageAssetReady: boolean
+  }>
+  T2: Module4Lesson2QuickCheckTarget<{
+    newsMaterialReady: boolean
+    newsTaskReady: boolean
+    newsExplanationReady: boolean
+    newsSourceReady: boolean
+    imageMaterialReady: boolean
+    imageTaskReady: boolean
+    imageExplanationReady: boolean
+    imageSourceReady: boolean
+  }>
+  T3: Module4Lesson2QuickCheckTarget<{
+    finalPreviewConfirmed: boolean
+    newsReadyForLesson4: boolean
+    imageReadyForLesson4: boolean
+  }>
+  evaluatedAt: string
+  metrics: {
+    newsExplanationEditCount: number
+    imageExplanationEditCount: number
+    newsSourceEditCount: number
+    imageSourceEditCount: number
+    newsPreviewModeSwitchCount: number
+    imagePreviewModeSwitchCount: number
+    newsAiReviewRequestCount: number
+    imageAiReviewRequestCount: number
+  }
+}
+
+export interface Module4Lesson3State {
+  step1Acknowledged: boolean
+  step1AcknowledgedAt: string
+  step2Completed: boolean
+  step3Completed: boolean
+  step4Completed: boolean
+  newsCard: Module4Lesson3QuestionCardDraft
+  imageCard: Module4Lesson3QuestionCardDraft
+  finalPreviewConfirmed: boolean
+  finalPreviewConfirmedAt: string
+  quickCheck: Module4Lesson3QuickCheckState
+  completed: boolean
+  completedAt: string
+}
+
 export interface Module4Lesson1Step5State {
   newsPlanText: string
   imagePlanText: string
@@ -234,6 +383,7 @@ export interface Module4Portfolio {
   progress: Module4ProgressPointer
   lesson1: Module4Lesson1State
   lesson2: Module4Lesson2State
+  lesson3: Module4Lesson3State
   createdAt: string
   updatedAt: string
 }
@@ -405,6 +555,158 @@ export function createEmptyModule4Lesson2State(): Module4Lesson2State {
     news: createEmptyModule4MaterialScreeningRecord("news"),
     image: createEmptyModule4MaterialScreeningRecord("image"),
     quickCheck: createEmptyModule4Lesson2QuickCheckState(),
+    completed: false,
+    completedAt: "",
+  }
+}
+
+function createEmptyModule4Lesson3MaterialSnapshot(kind: Module4MaterialKind): Module4Lesson3MaterialSnapshot {
+  return {
+    kind,
+    lesson2Completed: false,
+    lesson2PostCriteriaStatus: undefined,
+    lesson2TitleOrName: "",
+    lesson2SourceType: undefined,
+    lesson2SourceRecord: "",
+    lesson2ClueNote: "",
+    asset: undefined,
+    assetFingerprint: "",
+    snappedAt: "",
+  }
+}
+
+export function createEmptyModule4Lesson3CardSelfCheck(): Module4Lesson3CardSelfCheck {
+  return {
+    materialReady: false,
+    taskReady: false,
+    answerSelected: false,
+    explanationReady: false,
+    sourceReady: false,
+    verificationReady: false,
+    allRequiredPassed: false,
+    lastCheckedAt: "",
+  }
+}
+
+export function createEmptyModule4Lesson3AiReviewState(): Module4Lesson3AiReviewState {
+  return {
+    enabled: true,
+    status: "idle",
+    lastRequestId: "",
+    lastReviewedAt: "",
+    result: undefined,
+    errorMessage: "",
+  }
+}
+
+export function createEmptyModule4Lesson3QuestionCardDraft(kind: Module4MaterialKind): Module4Lesson3QuestionCardDraft {
+  const now = new Date().toISOString()
+  return {
+    id: `lesson3-${kind}-v1`,
+    kind,
+    version: "v1",
+    status: "draft",
+    sourceMaterialSnapshot: createEmptyModule4Lesson3MaterialSnapshot(kind),
+    material: {
+      titleOrName: "",
+      displayNote: "",
+      asset: undefined,
+      assetFingerprint: "",
+    },
+    task: {
+      prompt: kind === "news"
+        ? "请判断这则新闻是否存在明显的 AI 生成痕迹。"
+        : "请判断这张图片是否存在明显的 AI 生成痕迹。",
+      options: [
+        { key: "A", label: "明显存在 AI 痕迹" },
+        { key: "B", label: "暂无明显 AI 痕迹" },
+        { key: "C", label: "证据不足，仍需核验" },
+      ],
+      correctOptionKey: undefined,
+    },
+    explanation: {
+      text: "",
+      editCount: 0,
+      updatedAt: "",
+    },
+    source: {
+      sourceType: undefined,
+      sourceRecord: "",
+      verificationNote: "",
+    },
+    selfCheck: createEmptyModule4Lesson3CardSelfCheck(),
+    aiReview: createEmptyModule4Lesson3AiReviewState(),
+    metrics: {
+      materialEditCount: 0,
+      taskEditCount: 0,
+      explanationEditCount: 0,
+      sourceEditCount: 0,
+      previewModeSwitchCount: 0,
+      aiReviewRequestCount: 0,
+    },
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createEmptyModule4Lesson3QuickCheckState(): Module4Lesson3QuickCheckState {
+  return {
+    T1: {
+      achieved: false,
+      evidence: {
+        newsSnapshotReady: false,
+        imageSnapshotReady: false,
+        newsAssetReady: false,
+        imageAssetReady: false,
+      },
+    },
+    T2: {
+      achieved: false,
+      evidence: {
+        newsMaterialReady: false,
+        newsTaskReady: false,
+        newsExplanationReady: false,
+        newsSourceReady: false,
+        imageMaterialReady: false,
+        imageTaskReady: false,
+        imageExplanationReady: false,
+        imageSourceReady: false,
+      },
+    },
+    T3: {
+      achieved: false,
+      evidence: {
+        finalPreviewConfirmed: false,
+        newsReadyForLesson4: false,
+        imageReadyForLesson4: false,
+      },
+    },
+    evaluatedAt: "",
+    metrics: {
+      newsExplanationEditCount: 0,
+      imageExplanationEditCount: 0,
+      newsSourceEditCount: 0,
+      imageSourceEditCount: 0,
+      newsPreviewModeSwitchCount: 0,
+      imagePreviewModeSwitchCount: 0,
+      newsAiReviewRequestCount: 0,
+      imageAiReviewRequestCount: 0,
+    },
+  }
+}
+
+export function createEmptyModule4Lesson3State(): Module4Lesson3State {
+  return {
+    step1Acknowledged: false,
+    step1AcknowledgedAt: "",
+    step2Completed: false,
+    step3Completed: false,
+    step4Completed: false,
+    newsCard: createEmptyModule4Lesson3QuestionCardDraft("news"),
+    imageCard: createEmptyModule4Lesson3QuestionCardDraft("image"),
+    finalPreviewConfirmed: false,
+    finalPreviewConfirmedAt: "",
+    quickCheck: createEmptyModule4Lesson3QuickCheckState(),
     completed: false,
     completedAt: "",
   }
@@ -746,6 +1048,215 @@ function normalizeLesson2State(value: unknown): Module4Lesson2State {
   }
 }
 
+function normalizeLesson3CardStatus(value: unknown): Module4Lesson3CardStatus {
+  return value === "ready_for_lesson4" ? "ready_for_lesson4" : "draft"
+}
+
+function normalizeLesson3AiReviewRuntimeStatus(value: unknown): Module4Lesson3AiReviewRuntimeStatus {
+  return value === "pending" || value === "completed" || value === "failed" ? value : "idle"
+}
+
+function normalizeLesson3AiReviewOverallStatus(value: unknown): Module4Lesson3AiReviewOverallStatus {
+  return value === "pass" || value === "blocked" ? value : "needs_revision"
+}
+
+function normalizeLesson3AiReviewArea(value: unknown): Module4Lesson3AiReviewArea {
+  return value === "task" || value === "explanation" || value === "source" ? value : "material"
+}
+
+function normalizeLesson3AiReviewLevel(value: unknown): Module4Lesson3AiReviewLevel {
+  return value === "ok" || value === "error" ? value : "warning"
+}
+
+function normalizeLesson3SelfCheck(value: unknown): Module4Lesson3CardSelfCheck {
+  const fallback = createEmptyModule4Lesson3CardSelfCheck()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    materialReady: raw.materialReady === true,
+    taskReady: raw.taskReady === true,
+    answerSelected: raw.answerSelected === true,
+    explanationReady: raw.explanationReady === true,
+    sourceReady: raw.sourceReady === true,
+    verificationReady: raw.verificationReady === true,
+    allRequiredPassed: raw.allRequiredPassed === true,
+    lastCheckedAt: typeof raw.lastCheckedAt === "string" ? raw.lastCheckedAt : "",
+  }
+}
+
+function normalizeLesson3AiReviewResult(value: unknown): Module4Lesson3AiReviewResult | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const raw = value as Record<string, unknown>
+  const checks = Array.isArray(raw.checks)
+    ? raw.checks
+      .map((check): Module4Lesson3AiReviewCheck | null => {
+        if (!check || typeof check !== "object") return null
+        const item = check as Record<string, unknown>
+        return {
+          area: normalizeLesson3AiReviewArea(item.area),
+          level: normalizeLesson3AiReviewLevel(item.level),
+          message: typeof item.message === "string" ? item.message : "",
+          suggestion: typeof item.suggestion === "string" ? item.suggestion : undefined,
+        }
+      })
+      .filter((check): check is Module4Lesson3AiReviewCheck => check !== null && check.message.trim().length > 0)
+    : []
+  return {
+    status: normalizeLesson3AiReviewOverallStatus(raw.status),
+    summary: typeof raw.summary === "string" ? raw.summary : "",
+    checks,
+    missingRequiredFields: normalizeStringArray(raw.missingRequiredFields),
+    suggestedEdits: normalizeStringArray(raw.suggestedEdits),
+    safetyFlags: normalizeStringArray(raw.safetyFlags),
+  }
+}
+
+function normalizeLesson3AiReview(value: unknown): Module4Lesson3AiReviewState {
+  const fallback = createEmptyModule4Lesson3AiReviewState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    enabled: raw.enabled !== false,
+    status: normalizeLesson3AiReviewRuntimeStatus(raw.status),
+    lastRequestId: typeof raw.lastRequestId === "string" ? raw.lastRequestId : "",
+    lastReviewedAt: typeof raw.lastReviewedAt === "string" ? raw.lastReviewedAt : "",
+    result: normalizeLesson3AiReviewResult(raw.result),
+    errorMessage: typeof raw.errorMessage === "string" ? raw.errorMessage : "",
+  }
+}
+
+function normalizeLesson3MaterialSnapshot(value: unknown, kind: Module4MaterialKind): Module4Lesson3MaterialSnapshot {
+  const fallback = createEmptyModule4Lesson3MaterialSnapshot(kind)
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    kind: normalizeMaterialKind(raw.kind, kind),
+    lesson2Completed: raw.lesson2Completed === true,
+    lesson2PostCriteriaStatus: normalizePostCriteriaStatus(raw.lesson2PostCriteriaStatus),
+    lesson2TitleOrName: typeof raw.lesson2TitleOrName === "string" ? raw.lesson2TitleOrName : "",
+    lesson2SourceType: normalizeMaterialSourceType(raw.lesson2SourceType),
+    lesson2SourceRecord: typeof raw.lesson2SourceRecord === "string" ? raw.lesson2SourceRecord : "",
+    lesson2ClueNote: typeof raw.lesson2ClueNote === "string" ? raw.lesson2ClueNote : "",
+    asset: normalizeCompressedAsset(raw.asset),
+    assetFingerprint: typeof raw.assetFingerprint === "string" ? raw.assetFingerprint : "",
+    snappedAt: typeof raw.snappedAt === "string" ? raw.snappedAt : "",
+  }
+}
+
+function normalizeLesson3QuestionCardDraft(value: unknown, kind: Module4MaterialKind): Module4Lesson3QuestionCardDraft {
+  const fallback = createEmptyModule4Lesson3QuestionCardDraft(kind)
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const material = raw.material && typeof raw.material === "object" ? raw.material as Record<string, unknown> : {}
+  const task = raw.task && typeof raw.task === "object" ? raw.task as Record<string, unknown> : {}
+  const explanation = raw.explanation && typeof raw.explanation === "object" ? raw.explanation as Record<string, unknown> : {}
+  const source = raw.source && typeof raw.source === "object" ? raw.source as Record<string, unknown> : {}
+  const metrics = raw.metrics && typeof raw.metrics === "object" ? raw.metrics as Record<string, unknown> : {}
+  const correctOptionKey = task.correctOptionKey === "A" || task.correctOptionKey === "B" || task.correctOptionKey === "C"
+    ? task.correctOptionKey
+    : undefined
+
+  return {
+    ...fallback,
+    id: typeof raw.id === "string" && raw.id ? raw.id : fallback.id,
+    kind: normalizeMaterialKind(raw.kind, kind),
+    version: "v1",
+    status: normalizeLesson3CardStatus(raw.status),
+    sourceMaterialSnapshot: normalizeLesson3MaterialSnapshot(raw.sourceMaterialSnapshot, kind),
+    material: {
+      titleOrName: typeof material.titleOrName === "string" ? material.titleOrName : "",
+      displayNote: typeof material.displayNote === "string" ? material.displayNote : "",
+      asset: normalizeCompressedAsset(material.asset),
+      assetFingerprint: typeof material.assetFingerprint === "string" ? material.assetFingerprint : "",
+    },
+    task: {
+      prompt: typeof task.prompt === "string" ? task.prompt : fallback.task.prompt,
+      options: fallback.task.options,
+      correctOptionKey,
+    },
+    explanation: {
+      text: typeof explanation.text === "string" ? explanation.text : "",
+      editCount: Number.isFinite(explanation.editCount) ? Number(explanation.editCount) : 0,
+      updatedAt: typeof explanation.updatedAt === "string" ? explanation.updatedAt : "",
+    },
+    source: {
+      sourceType: normalizeMaterialSourceType(source.sourceType),
+      sourceRecord: typeof source.sourceRecord === "string" ? source.sourceRecord : "",
+      verificationNote: typeof source.verificationNote === "string" ? source.verificationNote : "",
+    },
+    selfCheck: normalizeLesson3SelfCheck(raw.selfCheck),
+    aiReview: normalizeLesson3AiReview(raw.aiReview),
+    metrics: {
+      materialEditCount: Number.isFinite(metrics.materialEditCount) ? Number(metrics.materialEditCount) : 0,
+      taskEditCount: Number.isFinite(metrics.taskEditCount) ? Number(metrics.taskEditCount) : 0,
+      explanationEditCount: Number.isFinite(metrics.explanationEditCount) ? Number(metrics.explanationEditCount) : 0,
+      sourceEditCount: Number.isFinite(metrics.sourceEditCount) ? Number(metrics.sourceEditCount) : 0,
+      previewModeSwitchCount: Number.isFinite(metrics.previewModeSwitchCount) ? Number(metrics.previewModeSwitchCount) : 0,
+      aiReviewRequestCount: Number.isFinite(metrics.aiReviewRequestCount) ? Number(metrics.aiReviewRequestCount) : 0,
+    },
+    createdAt: typeof raw.createdAt === "string" ? raw.createdAt : fallback.createdAt,
+    updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : fallback.updatedAt,
+  }
+}
+
+function normalizeLesson3QuickCheck(value: unknown): Module4Lesson3QuickCheckState {
+  const fallback = createEmptyModule4Lesson3QuickCheckState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const metrics = raw.metrics && typeof raw.metrics === "object" ? raw.metrics as Record<string, unknown> : {}
+  const normalizeTarget = <TEvidence extends Record<string, boolean>>(
+    targetValue: unknown,
+    fallbackTarget: Module4Lesson2QuickCheckTarget<TEvidence>,
+  ): Module4Lesson2QuickCheckTarget<TEvidence> => {
+    if (!targetValue || typeof targetValue !== "object") return fallbackTarget
+    const target = targetValue as Record<string, unknown>
+    const evidence = target.evidence && typeof target.evidence === "object" ? target.evidence as Record<string, unknown> : {}
+    return {
+      achieved: target.achieved === true,
+      evidence: Object.fromEntries(
+        Object.keys(fallbackTarget.evidence).map(key => [key, evidence[key] === true]),
+      ) as TEvidence,
+    }
+  }
+
+  return {
+    T1: normalizeTarget(raw.T1, fallback.T1),
+    T2: normalizeTarget(raw.T2, fallback.T2),
+    T3: normalizeTarget(raw.T3, fallback.T3),
+    evaluatedAt: typeof raw.evaluatedAt === "string" ? raw.evaluatedAt : "",
+    metrics: {
+      newsExplanationEditCount: Number.isFinite(metrics.newsExplanationEditCount) ? Number(metrics.newsExplanationEditCount) : 0,
+      imageExplanationEditCount: Number.isFinite(metrics.imageExplanationEditCount) ? Number(metrics.imageExplanationEditCount) : 0,
+      newsSourceEditCount: Number.isFinite(metrics.newsSourceEditCount) ? Number(metrics.newsSourceEditCount) : 0,
+      imageSourceEditCount: Number.isFinite(metrics.imageSourceEditCount) ? Number(metrics.imageSourceEditCount) : 0,
+      newsPreviewModeSwitchCount: Number.isFinite(metrics.newsPreviewModeSwitchCount) ? Number(metrics.newsPreviewModeSwitchCount) : 0,
+      imagePreviewModeSwitchCount: Number.isFinite(metrics.imagePreviewModeSwitchCount) ? Number(metrics.imagePreviewModeSwitchCount) : 0,
+      newsAiReviewRequestCount: Number.isFinite(metrics.newsAiReviewRequestCount) ? Number(metrics.newsAiReviewRequestCount) : 0,
+      imageAiReviewRequestCount: Number.isFinite(metrics.imageAiReviewRequestCount) ? Number(metrics.imageAiReviewRequestCount) : 0,
+    },
+  }
+}
+
+function normalizeLesson3State(value: unknown): Module4Lesson3State {
+  const fallback = createEmptyModule4Lesson3State()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    step1Acknowledged: raw.step1Acknowledged === true,
+    step1AcknowledgedAt: typeof raw.step1AcknowledgedAt === "string" ? raw.step1AcknowledgedAt : "",
+    step2Completed: raw.step2Completed === true,
+    step3Completed: raw.step3Completed === true,
+    step4Completed: raw.step4Completed === true,
+    newsCard: normalizeLesson3QuestionCardDraft(raw.newsCard, "news"),
+    imageCard: normalizeLesson3QuestionCardDraft(raw.imageCard, "image"),
+    finalPreviewConfirmed: raw.finalPreviewConfirmed === true,
+    finalPreviewConfirmedAt: typeof raw.finalPreviewConfirmedAt === "string" ? raw.finalPreviewConfirmedAt : "",
+    quickCheck: normalizeLesson3QuickCheck(raw.quickCheck),
+    completed: raw.completed === true,
+    completedAt: typeof raw.completedAt === "string" ? raw.completedAt : "",
+  }
+}
+
 function normalizeLesson1Step5State(value: unknown, lesson1: Partial<Module4Lesson1State>): Module4Lesson1Step5State {
   const fallback = createEmptyModule4Lesson1Step5State()
   const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
@@ -811,6 +1322,7 @@ export function createNewModule4Portfolio(
     progress: { lessonId: 1, stepId: 1 },
     lesson1: createEmptyModule4Lesson1State(),
     lesson2: createEmptyModule4Lesson2State(),
+    lesson3: createEmptyModule4Lesson3State(),
     createdAt: now,
     updatedAt: now,
   }
@@ -845,6 +1357,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
   const progress = input.progress ?? fallback.progress
   const lesson1 = input.lesson1 ?? createEmptyModule4Lesson1State()
   const lesson2 = normalizeLesson2State((input as Partial<Module4Portfolio>).lesson2)
+  const lesson3 = normalizeLesson3State((input as Partial<Module4Portfolio>).lesson3)
 
   const studentMerged = normalizeStudentShape(input.student)
 
@@ -876,6 +1389,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
       step2: normalizeLesson1Step2State(lesson1.step2),
     },
     lesson2,
+    lesson3,
     createdAt,
     updatedAt,
   }

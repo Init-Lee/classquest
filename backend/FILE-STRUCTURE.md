@@ -19,6 +19,7 @@ backend/
 │   ├── core/
 │   ├── modules/
 │   │   └── module4/
+│   │       └── lesson3/
 │   └── shared/
 └── scripts/
 ```
@@ -27,7 +28,7 @@ backend/
 
 - `app/main.py`：FastAPI 应用入口和健康检查。
 - `app/core/`：配置、安全、数据库连接等项目级基础能力。
-- `app/modules/`：后端模块域，目前只有模块 4。
+- `app/modules/`：后端模块域，目前只有模块 4；模块 4 下的 `lesson3/` 提供题卡自检助手后端壳。
 - `app/shared/`：后端业务无关工具。
 - `scripts/`：初始化、备份、统计重算等运维脚本。
 

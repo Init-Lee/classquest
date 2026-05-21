@@ -17,6 +17,13 @@ backend/app/modules/module4/
 ├── router_admin.py
 ├── schemas.py
 ├── models.py
+├── lesson3/
+│   ├── README.md
+│   ├── __init__.py
+│   ├── routes.py
+│   ├── schemas.py
+│   ├── prompt.py
+│   └── qwen_client.py
 ├── services/
 └── sql/
     └── schema.sql
@@ -28,9 +35,10 @@ backend/app/modules/module4/
 routers → services → database/file layer
 schemas → routers/services
 services 不依赖 routers
+lesson3/routes → lesson3/qwen_client → lesson3/schemas
 ```
 
 ## 状态
 
-当前为 V1.5 架构占位。数据库 schema 待模块 4 前端 mock 流程稳定后冻结。
+当前为 V1.5 架构占位。课时 3 在 dev 分支新增题卡自检助手后端壳，默认 mock provider；数据库 schema 待模块 4 前端 mock 流程稳定后冻结。
 

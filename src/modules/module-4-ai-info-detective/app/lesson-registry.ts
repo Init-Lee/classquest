@@ -7,6 +7,7 @@
 import type { Module4Portfolio, Module4ProgressPointer } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { getCurrentLesson1Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-1/guards"
 import { getCurrentLesson2Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/guards"
+import { getCurrentLesson3Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/guards"
 
 export interface Module4LessonEntry {
   id: number
@@ -36,11 +37,11 @@ export const MODULE4_LESSON_REGISTRY: Module4LessonEntry[] = [
   },
   {
     id: 3,
-    title: "题卡创作与解释撰写",
-    subtitle: "完成新闻题卡与图片题卡草稿",
-    path: "/module/4",
-    available: false,
-    isComplete: () => false,
+    title: "题目卡 V1 制作与解析填写",
+    subtitle: "完成新闻题卡与图片题卡 V1 初稿",
+    path: "/module/4/lesson/3/step/1",
+    available: true,
+    isComplete: portfolio => Boolean(portfolio?.lesson3.completed),
   },
   {
     id: 4,
@@ -90,5 +91,5 @@ export function resolveModule4PortfolioPointer(portfolio: Module4Portfolio): Mod
   if (!portfolio.lesson2.completed) {
     return { lessonId: 2, stepId: getCurrentLesson2Step(portfolio.lesson2) }
   }
-  return { lessonId: 3, stepId: 1 }
+  return { lessonId: 3, stepId: getCurrentLesson3Step(portfolio.lesson3) }
 }

@@ -16,10 +16,12 @@ import {
 } from "@/modules/module-4-ai-info-detective/infra/persistence/serializers/continue-package"
 import { downloadModule4Snapshot, type Module4SnapshotType } from "@/modules/module-4-ai-info-detective/infra/persistence/serializers/snapshot-html"
 import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/evaluate-lesson2-quickcheck"
+import { evaluateLesson3QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/evaluate-lesson3-quickcheck"
 
 function getSnapshotType(pathname: string): Module4SnapshotType | null {
   if (/\/module\/4\/lesson\/1\/step\/\d+/.test(pathname)) return "lesson1-full"
   if (/\/module\/4\/lesson\/2\/step\/\d+/.test(pathname)) return "lesson2-full"
+  if (/\/module\/4\/lesson\/3\/step\/\d+/.test(pathname)) return "lesson3-full"
   return null
 }
 
@@ -48,6 +50,10 @@ export function Module4GlobalActions() {
         lesson2: {
           ...portfolio.lesson2,
           quickCheck: evaluateLesson2QuickCheck(portfolio.lesson2),
+        },
+        lesson3: {
+          ...portfolio.lesson3,
+          quickCheck: evaluateLesson3QuickCheck(portfolio.lesson3),
         },
       }
       await savePortfolio(portfolioToSave)
@@ -91,6 +97,10 @@ export function Module4GlobalActions() {
       lesson2: {
         ...portfolio.lesson2,
         quickCheck: evaluateLesson2QuickCheck(portfolio.lesson2),
+      },
+      lesson3: {
+        ...portfolio.lesson3,
+        quickCheck: evaluateLesson3QuickCheck(portfolio.lesson3),
       },
     }
     void savePortfolio(portfolioToSnapshot)

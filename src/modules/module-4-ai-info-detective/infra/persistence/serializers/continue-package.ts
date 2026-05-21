@@ -20,6 +20,8 @@ function safeFilenamePart(value: string): string {
 
 function progressFilenamePart(portfolio: Module4Portfolio): string {
   const { lessonId, stepId } = portfolio.progress
+  if (portfolio.lesson3.completed) return "课时3已完成"
+  if (portfolio.lesson2.completed && lessonId === 3) return `课时3第${stepId}步`
   if (portfolio.lesson2.completed) return "课时2已完成"
   if (portfolio.lesson1.completed && lessonId === 2) return `课时2第${stepId}关`
   if (portfolio.lesson1.completed) return "课时1已完成"
