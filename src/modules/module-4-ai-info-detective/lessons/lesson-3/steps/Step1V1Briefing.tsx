@@ -5,7 +5,19 @@
  */
 
 import { useNavigate } from "react-router-dom"
-import { ArrowRight, FileImage, ImageIcon, Newspaper } from "lucide-react"
+import {
+  ArrowRight,
+  BookOpenCheck,
+  ClipboardCheck,
+  FileImage,
+  FolderOpen,
+  ImageIcon,
+  LayoutTemplate,
+  Link2,
+  ListChecks,
+  Newspaper,
+  type LucideIcon,
+} from "lucide-react"
 import type { Module4MaterialKind, Module4MaterialScreeningRecord } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { Button } from "@/shared/ui/button"
@@ -44,77 +56,120 @@ const CARD_PARTS = [
   { label: "来源与核验入口", hint: "记录来源并支持继续核验" },
 ] as const
 
-function V1HeroFlowDiagram() {
-  const nodes = [
-    { label: "课时2素材包", sub: "新闻 + 图片" },
-    { label: "题卡编辑器", sub: "填写任务与解析" },
-    { label: "实时预览", sub: "边写边看效果" },
-    { label: "V1 草稿", sub: "两张初稿" },
-  ]
+const HERO_CARD_PARTS = [
+  { label: "素材展示", icon: ImageIcon },
+  { label: "判断任务", icon: ListChecks },
+  { label: "核心解析", icon: BookOpenCheck },
+  { label: "来源与核验入口", icon: Link2 },
+] as const satisfies ReadonlyArray<{ label: string; icon: LucideIcon }>
 
+const HERO_FOCUS_BLOCKS = [
+  {
+    text: "你已经在课时 2 完成了新闻素材和图片素材的体检。",
+    icon: ClipboardCheck,
+    accent: "border-sky-200/90 bg-sky-50/90 text-sky-950 dark:border-sky-800/60 dark:bg-sky-950/35 dark:text-sky-50",
+    iconWrap: "bg-sky-500/15 text-sky-700 dark:bg-sky-400/20 dark:text-sky-300",
+  },
+  {
+    text: "今天，你要把它们加工成两张可以让同学作答的 AI 信息辨识题卡。",
+    icon: LayoutTemplate,
+    accent: "border-violet-200/90 bg-violet-50/90 text-violet-950 dark:border-violet-800/60 dark:bg-violet-950/35 dark:text-violet-50",
+    iconWrap: "bg-violet-500/15 text-violet-700 dark:bg-violet-400/20 dark:text-violet-300",
+  },
+] as const
+
+const HERO_FLOW_NODES = [
+  { label: "新闻截图卡", icon: Newspaper },
+  { label: "图片素材卡", icon: ImageIcon },
+  { label: "题卡预览框", icon: LayoutTemplate },
+  { label: "V1 文件夹", icon: FolderOpen },
+] as const satisfies ReadonlyArray<{ label: string; icon: LucideIcon }>
+
+function V1HeroFocusPanel() {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm font-semibold tracking-wide text-primary">今天聚焦</p>
+      {HERO_FOCUS_BLOCKS.map(block => {
+        const Icon = block.icon
+        return (
+          <div
+            key={block.text}
+            className={cn("flex gap-4 rounded-2xl border p-4 shadow-sm md:p-5", block.accent)}
+          >
+            <div
+              className={cn(
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                block.iconWrap,
+              )}
+              aria-hidden
+            >
+              <Icon className="h-5 w-5" strokeWidth={2} />
+            </div>
+            <p className="text-pretty text-sm leading-7 md:text-base">{block.text}</p>
+          </div>
+        )
+      })}
+      <div className="rounded-2xl border border-amber-200/90 bg-amber-50/90 p-4 shadow-sm dark:border-amber-800/60 dark:bg-amber-950/35 md:p-5">
+        <p className="text-sm leading-7 text-amber-950 dark:text-amber-50 md:text-base">
+          每张题卡都会包含：
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {HERO_CARD_PARTS.map(part => {
+            const PartIcon = part.icon
+            return (
+              <span
+                key={part.label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-amber-950 shadow-sm dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-50 md:text-sm"
+              >
+                <PartIcon className="h-3.5 w-3.5 shrink-0 text-amber-700 dark:text-amber-300" strokeWidth={2} />
+                {part.label}
+              </span>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function V1HeroFlowDiagram() {
   return (
     <div
-      className="w-full max-w-xl rounded-3xl border border-white/80 bg-white/90 p-5 shadow-xl backdrop-blur md:p-6"
+      className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-white/80 bg-white/90 p-5 shadow-xl backdrop-blur md:max-w-md md:p-6"
       aria-hidden
     >
-      <svg viewBox="0 0 420 220" className="h-auto w-full" role="img">
-        <defs>
-          <linearGradient id="lesson3-flow-line" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(var(--primary) / 0.35)" />
-            <stop offset="100%" stopColor="hsl(var(--primary))" />
-          </linearGradient>
-        </defs>
-        {nodes.map((node, index) => {
-          const x = 24 + index * 98
-          return (
-            <g key={node.label}>
-              <rect
-                x={x}
-                y="48"
-                width="88"
-                height="72"
-                rx="14"
-                fill="hsl(var(--primary) / 0.08)"
-                stroke="hsl(var(--primary) / 0.35)"
-                strokeWidth="1.5"
-              />
-              <text x={x + 44} y="78" textAnchor="middle" fontSize="11" fontWeight="600" fill="hsl(var(--primary))">
-                {node.label}
-              </text>
-              <text x={x + 44} y="98" textAnchor="middle" fontSize="9" fill="hsl(var(--muted-foreground))">
-                {node.sub}
-              </text>
-              {index < nodes.length - 1 && (
-                <>
-                  <line
-                    x1={x + 88}
-                    y1="84"
-                    x2={x + 98}
-                    y2="84"
-                    stroke="url(#lesson3-flow-line)"
-                    strokeWidth="2"
-                    markerEnd="url(#lesson3-arrow)"
-                  />
-                  <polygon
-                    points={`${x + 98},80 ${x + 106},84 ${x + 98},88`}
-                    fill="hsl(var(--primary))"
-                  />
-                </>
-              )}
-            </g>
-          )
-        })}
-        <path
-          d="M 60 168 Q 210 196 360 168"
-          fill="none"
-          stroke="hsl(var(--primary) / 0.25)"
-          strokeWidth="2"
-          strokeDasharray="6 4"
-        />
-        <text x="210" y="205" textAnchor="middle" fontSize="10" fill="hsl(var(--muted-foreground))">
-          今天完成两张可作答的 V1 题卡
-        </text>
-      </svg>
+      {HERO_FLOW_NODES.map((node, index) => {
+        const Icon = node.icon
+        return (
+          <div key={node.label} className="flex w-full flex-col items-center">
+            <div className="flex w-full flex-col items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-center">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" strokeWidth={2} />
+              </span>
+              <span className="text-sm font-semibold text-primary">{node.label}</span>
+            </div>
+            {index < HERO_FLOW_NODES.length - 1 && (
+              <svg viewBox="0 0 24 28" className="my-1 h-7 w-6 shrink-0" aria-hidden>
+                <defs>
+                  <linearGradient id={`lesson3-flow-line-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="hsl(var(--primary) / 0.35)" />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" />
+                  </linearGradient>
+                </defs>
+                <line
+                  x1="12"
+                  y1="2"
+                  x2="12"
+                  y2="20"
+                  stroke={`url(#lesson3-flow-line-${index})`}
+                  strokeWidth="2"
+                />
+                <polygon points="8,20 12,26 16,20" fill="hsl(var(--primary))" />
+              </svg>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -229,16 +284,11 @@ export default function Step1V1Briefing() {
         bgClassName="relative overflow-hidden bg-gradient-to-b from-indigo-50 via-background to-background"
       >
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
-          <div className="space-y-4">
+          <div className="space-y-5">
             <p className="text-balance text-3xl font-bold tracking-[0.06em] text-primary md:text-4xl">
               第1步 · 启动 V1 制作
             </p>
-            <p className="text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-              把课时 2 通过体检的新闻和图片素材，做成两张可作答的 AI 信息辨识题。
-            </p>
-            <p className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm leading-6 text-muted-foreground">
-              今天聚焦「做出来」：先新闻题卡，再图片题卡，最后保存 V1 初稿。
-            </p>
+            <V1HeroFocusPanel />
           </div>
           <div className="flex justify-center lg:justify-end">
             <V1HeroFlowDiagram />
