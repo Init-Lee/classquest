@@ -24,6 +24,14 @@ import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/pr
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent } from "@/shared/ui/card"
 import { Badge } from "@/shared/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/dialog"
 import { cn } from "@/shared/utils/cn"
 import { Lesson3ScreenPage, Lesson3ScreenSection } from "../components/Lesson3ScreenLayout"
 import { LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
@@ -259,12 +267,13 @@ function MaterialSummaryCard({
   const title = kind === "news" ? "新闻素材" : "图片素材"
   const readiness = getLesson2MaterialReadinessLabel(record)
   const ready = readiness === "已就绪"
+  const imageDataUrl = record.asset?.dataUrl
 
   return (
     <Card className="border-white/70 bg-white/90 shadow-xl backdrop-blur">
       <CardContent className="p-5 md:p-6">
-        <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-5">
-          <div className="min-w-0 space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-start sm:gap-5">
+          <div className="min-w-0 space-y-4 sm:col-span-2">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-medium text-primary">{title}</p>
@@ -287,15 +296,39 @@ function MaterialSummaryCard({
               </div>
             </dl>
           </div>
-          <div className="w-full shrink-0 overflow-hidden rounded-2xl border bg-muted/30 sm:w-36 md:w-44">
-            {record.asset?.dataUrl ? (
-              <img
-                src={record.asset.dataUrl}
-                alt={`${title}缩略图`}
-                className="aspect-[4/3] h-full w-full object-contain sm:aspect-square"
-              />
+          <div className="w-full overflow-hidden rounded-2xl border bg-muted/30 sm:col-span-1">
+            {imageDataUrl ? (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="group block w-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    aria-label="放大查看素材"
+                  >
+                    <img
+                      src={imageDataUrl}
+                      alt={`${title}缩略图`}
+                      className="aspect-[4/3] w-full object-contain transition-opacity group-hover:opacity-90 sm:aspect-square"
+                    />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[90vh] max-w-[min(92vw,56rem)] overflow-y-auto border-none bg-transparent p-2 shadow-none">
+                  <DialogHeader className="sr-only">
+                    <DialogTitle>{title}放大预览</DialogTitle>
+                    <DialogDescription>查看课时 2 素材原图</DialogDescription>
+                  </DialogHeader>
+                  <img
+                    src={imageDataUrl}
+                    alt={`${title}原图`}
+                    className="max-h-[85vh] w-full rounded-2xl bg-white object-contain shadow-2xl"
+                  />
+                </DialogContent>
+              </Dialog>
             ) : (
-              <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 text-muted-foreground sm:aspect-square sm:min-h-[9rem]">
+              <div
+                className="flex aspect-[4/3] flex-col items-center justify-center gap-2 text-muted-foreground sm:aspect-square sm:min-h-[9rem]"
+                aria-disabled
+              >
                 <ImageIcon className="h-10 w-10 opacity-40" />
                 <p className="text-sm">暂无素材缩略图</p>
               </div>
