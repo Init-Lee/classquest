@@ -50,12 +50,15 @@ const MISSION_CARDS = [
   },
 ] as const
 
-const CARD_PARTS = [
-  { label: "素材展示", hint: "展示新闻或图片原文" },
-  { label: "判断任务", hint: "给出可作答的三选项" },
-  { label: "核心解析", hint: "说明判断依据与讨论点" },
-  { label: "来源与核验入口", hint: "记录来源并支持继续核验" },
-] as const
+const V1_STRUCTURE_BEFORE = [
+  { order: 1, label: "素材展示", icon: ImageIcon, accent: "border-blue-200/90 bg-blue-50/90 dark:border-blue-800/60 dark:bg-blue-950/35" },
+  { order: 2, label: "判断任务", icon: ListChecks, accent: "border-violet-200/90 bg-violet-50/90 dark:border-violet-800/60 dark:bg-violet-950/35" },
+] as const satisfies ReadonlyArray<{ order: number; label: string; icon: LucideIcon; accent: string }>
+
+const V1_STRUCTURE_AFTER = [
+  { order: 3, label: "核心解析", icon: BookOpenCheck, accent: "border-amber-200/90 bg-amber-50/90 dark:border-amber-800/60 dark:bg-amber-950/35" },
+  { order: 4, label: "来源与核验入口", icon: Link2, accent: "border-emerald-200/90 bg-emerald-50/90 dark:border-emerald-800/60 dark:bg-emerald-950/35" },
+] as const satisfies ReadonlyArray<{ order: number; label: string; icon: LucideIcon; accent: string }>
 
 const HERO_CARD_PARTS = [
   { label: "素材展示", icon: ImageIcon },
@@ -175,29 +178,73 @@ function V1HeroFlowDiagram() {
   )
 }
 
-function MiniQuestionCardDiagram() {
+function StructurePhaseDivider({ label }: { label: string }) {
   return (
-    <div className="mx-auto w-full max-w-md rounded-3xl border-2 border-primary/20 bg-white p-4 shadow-xl">
-      <div className="space-y-2">
-        {CARD_PARTS.map((part, index) => (
-          <div
-            key={part.label}
-            className={cn(
-              "relative rounded-2xl border px-4 py-3",
-              index === 0 && "border-blue-200 bg-blue-50/80",
-              index === 1 && "border-violet-200 bg-violet-50/80",
-              index === 2 && "border-amber-200 bg-amber-50/80",
-              index === 3 && "border-emerald-200 bg-emerald-50/80",
-            )}
-          >
-            <p className="text-sm font-semibold text-foreground">{part.label}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{part.hint}</p>
-          </div>
-        ))}
-      </div>
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        每张题卡都由以上四部分构成，新闻题卡与图片题卡结构相同。
+    <div className="flex items-center gap-3 py-1" aria-hidden>
+      <span className="h-px flex-1 bg-border/80" />
+      <span className="shrink-0 text-xs font-medium tracking-wide text-muted-foreground">{label}</span>
+      <span className="h-px flex-1 bg-border/80" />
+    </div>
+  )
+}
+
+function V1CardStructurePart({
+  order,
+  label,
+  icon: Icon,
+  accent,
+}: {
+  order: number
+  label: string
+  icon: LucideIcon
+  accent: string
+}) {
+  return (
+    <div className={cn("flex items-center gap-3 rounded-2xl border px-4 py-3.5 shadow-sm", accent)}>
+      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+        {order}
+      </span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/70 text-primary shadow-sm dark:bg-white/10">
+        <Icon className="h-4 w-4" strokeWidth={2} />
+      </span>
+      <p className="text-sm font-semibold text-foreground md:text-base">{label}</p>
+    </div>
+  )
+}
+
+function V1CardStructureBriefPanel() {
+  return (
+    <div className="flex flex-col justify-center space-y-6">
+      <h2 className="text-3xl font-bold tracking-tight text-primary md:text-4xl">好题卡长什么样？</h2>
+      <p className="text-pretty text-lg leading-8 text-foreground md:text-xl md:leading-9">
+        一张好题卡 = 看清素材、做出判断、读懂依据、继续核验。
       </p>
+      <p className="rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 text-base leading-7 text-foreground shadow-sm md:text-lg">
+        今天你要把两份素材做成两张 V1。
+      </p>
+    </div>
+  )
+}
+
+function V1CardStructureDiagram() {
+  return (
+    <div
+      className="mx-auto w-full max-w-lg rounded-3xl border border-white/80 bg-white/90 p-5 shadow-xl backdrop-blur md:p-6"
+      aria-label="题卡 V1 四部分结构示意图"
+    >
+      <p className="mb-4 text-center text-sm font-semibold tracking-wide text-primary md:text-base">题卡 V1 结构</p>
+      <div className="space-y-2 rounded-2xl border border-sky-200/70 bg-gradient-to-b from-sky-50/80 to-violet-50/40 p-3 dark:border-sky-800/50 dark:from-sky-950/30 dark:to-violet-950/20">
+        {V1_STRUCTURE_BEFORE.map(part => (
+          <V1CardStructurePart key={part.label} {...part} />
+        ))}
+        <StructurePhaseDivider label="—— 同学答题前看到 ——" />
+      </div>
+      <div className="mt-3 space-y-2 rounded-2xl border border-amber-200/70 bg-gradient-to-b from-amber-50/80 to-emerald-50/40 p-3 dark:border-amber-800/50 dark:from-amber-950/30 dark:to-emerald-950/20">
+        {V1_STRUCTURE_AFTER.map(part => (
+          <V1CardStructurePart key={part.label} {...part} />
+        ))}
+        <StructurePhaseDivider label="—— 同学答题后展开 ——" />
+      </div>
     </div>
   )
 }
@@ -340,14 +387,9 @@ export default function Step1V1Briefing() {
         id="lesson3-step1-card-structure"
         bgClassName="bg-gradient-to-b from-blue-50 via-amber-50/50 to-background"
       >
-        <div className="mx-auto w-full max-w-7xl space-y-8">
-          <div className="space-y-2 text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">好题卡长什么样</h2>
-            <p className="text-muted-foreground md:text-lg">
-              每张 V1 题卡都包含四个部分，让同学能看素材、做判断、读解析、继续核验。
-            </p>
-          </div>
-          <MiniQuestionCardDiagram />
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
+          <V1CardStructureBriefPanel />
+          <V1CardStructureDiagram />
         </div>
       </Lesson3ScreenSection>
 
