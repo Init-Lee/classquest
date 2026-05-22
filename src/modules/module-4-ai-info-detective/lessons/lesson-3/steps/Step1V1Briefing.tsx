@@ -262,42 +262,46 @@ function MaterialSummaryCard({
 
   return (
     <Card className="border-white/70 bg-white/90 shadow-xl backdrop-blur">
-      <CardContent className="space-y-4 p-5 md:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium text-primary">{title}</p>
-            <h3 className="mt-1 text-lg font-semibold">{record.titleOrName || "尚未填写短名"}</h3>
-          </div>
-          <Badge variant={ready ? "success" : "warning"}>{readiness}</Badge>
-        </div>
-        <div className="overflow-hidden rounded-2xl border bg-muted/30">
-          {record.asset?.dataUrl ? (
-            <img
-              src={record.asset.dataUrl}
-              alt={`${title}缩略图`}
-              className="max-h-48 w-full object-contain"
-            />
-          ) : (
-            <div className="flex min-h-[10rem] flex-col items-center justify-center gap-2 text-muted-foreground">
-              <ImageIcon className="h-10 w-10 opacity-40" />
-              <p className="text-sm">暂无素材缩略图</p>
+      <CardContent className="p-5 md:p-6">
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-5">
+          <div className="min-w-0 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-primary">{title}</p>
+                <h3 className="mt-1 text-lg font-semibold">{record.titleOrName || "尚未填写短名"}</h3>
+              </div>
+              <Badge variant={ready ? "success" : "warning"}>{readiness}</Badge>
             </div>
-          )}
+            <dl className="grid gap-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">来源类型</dt>
+                <dd className="font-medium">
+                  {record.sourceType ? LESSON3_SOURCE_TYPE_LABELS[record.sourceType] : "未选择"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">初步疑点</dt>
+                <dd className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm leading-6">
+                  {record.clueNote.trim() || "尚未填写线索笔记"}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div className="w-full shrink-0 overflow-hidden rounded-2xl border bg-muted/30 sm:w-36 md:w-44">
+            {record.asset?.dataUrl ? (
+              <img
+                src={record.asset.dataUrl}
+                alt={`${title}缩略图`}
+                className="aspect-[4/3] h-full w-full object-contain sm:aspect-square"
+              />
+            ) : (
+              <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 text-muted-foreground sm:aspect-square sm:min-h-[9rem]">
+                <ImageIcon className="h-10 w-10 opacity-40" />
+                <p className="text-sm">暂无素材缩略图</p>
+              </div>
+            )}
+          </div>
         </div>
-        <dl className="grid gap-2 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">来源类型</dt>
-            <dd className="font-medium">
-              {record.sourceType ? LESSON3_SOURCE_TYPE_LABELS[record.sourceType] : "未选择"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">初步疑点</dt>
-            <dd className="mt-1 rounded-xl bg-slate-50 px-3 py-2 text-sm leading-6">
-              {record.clueNote.trim() || "尚未填写线索笔记"}
-            </dd>
-          </div>
-        </dl>
       </CardContent>
     </Card>
   )
