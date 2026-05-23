@@ -281,7 +281,7 @@ export function QuestionCardEditorWorkbench({
                     </div>
                   )}
                 </div>
-                <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-2 overflow-hidden lg:max-h-[50%]">
+                <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-2 overflow-visible lg:max-h-[50%]">
                   <dl className="grid shrink-0 gap-2 rounded-xl border bg-slate-50/80 p-3 text-sm">
                     <div className="min-w-0">
                       <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
@@ -294,14 +294,16 @@ export function QuestionCardEditorWorkbench({
                       </dd>
                     </div>
                   </dl>
-                  <label className="block shrink-0 space-y-1.5 px-0.5 pb-0.5 text-sm">
+                  <label className="block shrink-0 space-y-1.5 text-sm">
                     <span className="font-medium">展示说明</span>
-                    <Textarea
-                      {...displayNoteField}
-                      placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
-                      rows={2}
-                      className="min-h-[72px] max-h-[96px] resize-none py-2"
-                    />
+                    <div className="p-1 -m-1">
+                      <Textarea
+                        {...displayNoteField}
+                        placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
+                        rows={2}
+                        className="min-h-[72px] max-h-[96px] resize-none py-2"
+                      />
+                    </div>
                   </label>
                 </div>
               </div>
