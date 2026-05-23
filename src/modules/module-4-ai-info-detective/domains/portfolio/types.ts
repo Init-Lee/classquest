@@ -6,6 +6,36 @@
 
 import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
 
+/** 课时 3 判断题选项 key，最多支持 A–F 六项 */
+export type Module4Lesson3OptionKey = "A" | "B" | "C" | "D" | "E" | "F"
+
+const LESSON3_OPTION_KEYS: Module4Lesson3OptionKey[] = ["A", "B", "C", "D", "E", "F"]
+
+function isModule4Lesson3OptionKey(value: unknown): value is Module4Lesson3OptionKey {
+  return typeof value === "string" && LESSON3_OPTION_KEYS.includes(value as Module4Lesson3OptionKey)
+}
+
+function normalizeLesson3TaskOptions(value: unknown, fallback: JudgmentOption[]): JudgmentOption[] {
+  if (!Array.isArray(value)) return fallback.slice(0, 3)
+
+  const labels: string[] = []
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue
+    const record = item as Record<string, unknown>
+    if (!isModule4Lesson3OptionKey(record.key)) continue
+    labels.push(typeof record.label === "string" ? record.label : "")
+  }
+
+  const count = Math.min(Math.max(labels.length, 0), LESSON3_OPTION_KEYS.length)
+  if (count < 3) return fallback.slice(0, 3)
+
+  const defaultByKey = new Map(fallback.map(option => [option.key, option.label]))
+  return LESSON3_OPTION_KEYS.slice(0, count).map((key, index) => ({
+    key,
+    label: labels[index] ?? defaultByKey.get(key) ?? "",
+  }))
+}
+
 export const MODULE4_ID = "module-4-ai-info-detective"
 export const MODULE4_APP_VERSION = "0.7.2"
 
@@ -259,7 +289,7 @@ export interface Module4Lesson3QuestionCardDraft {
   task: {
     prompt: string
     options: JudgmentOption[]
-    correctOptionKey?: "A" | "B" | "C"
+    correctOptionKey?: Module4Lesson3OptionKey
   }
   explanation: {
     text: string
@@ -1152,7 +1182,9 @@ function normalizeLesson3QuestionCardDraft(value: unknown, kind: Module4Material
   const explanation = raw.explanation && typeof raw.explanation === "object" ? raw.explanation as Record<string, unknown> : {}
   const source = raw.source && typeof raw.source === "object" ? raw.source as Record<string, unknown> : {}
   const metrics = raw.metrics && typeof raw.metrics === "object" ? raw.metrics as Record<string, unknown> : {}
-  const correctOptionKey = task.correctOptionKey === "A" || task.correctOptionKey === "B" || task.correctOptionKey === "C"
+  const options = normalizeLesson3TaskOptions(task.options, fallback.task.options)
+  const optionKeys = new Set(options.map(option => option.key))
+  const correctOptionKey = isModule4Lesson3OptionKey(task.correctOptionKey) && optionKeys.has(task.correctOptionKey)
     ? task.correctOptionKey
     : undefined
 
@@ -1171,7 +1203,7 @@ function normalizeLesson3QuestionCardDraft(value: unknown, kind: Module4Material
     },
     task: {
       prompt: typeof task.prompt === "string" ? task.prompt : fallback.task.prompt,
-      options: fallback.task.options,
+      options,
       correctOptionKey,
     },
     explanation: {

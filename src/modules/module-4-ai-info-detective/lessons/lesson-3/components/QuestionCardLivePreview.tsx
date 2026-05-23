@@ -19,6 +19,7 @@ export function QuestionCardLivePreview({
   onModeChange: (mode: Lesson3PreviewMode) => void
 }) {
   const title = card.kind === "news" ? "新闻题卡 V1" : "图片题卡 V1"
+  const correctOption = card.task.options.find(option => option.key === card.task.correctOptionKey)
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-3">
@@ -58,7 +59,9 @@ export function QuestionCardLivePreview({
         {mode === "after" && (
           <div className="space-y-4 rounded-2xl border bg-green-50 p-4">
             <p className="text-sm font-medium text-green-900">答题后解析</p>
-            <p className="text-sm">参考答案：{card.task.correctOptionKey ?? "未选择"}</p>
+            <p className="text-sm">
+              参考答案：{correctOption ? `${correctOption.key}. ${correctOption.label}` : "未选择"}
+            </p>
             <p className="text-sm leading-6">{card.explanation.text || "未填写核心解析"}</p>
             <div className="rounded-xl bg-white p-3 text-sm leading-6">
               <p><strong>来源类型：</strong>{card.source.sourceType ? LESSON3_SOURCE_TYPE_LABELS[card.source.sourceType] : "未选择"}</p>

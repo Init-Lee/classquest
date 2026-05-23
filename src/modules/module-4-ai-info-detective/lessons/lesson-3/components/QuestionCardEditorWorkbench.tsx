@@ -10,7 +10,8 @@ import type {
   Module4Lesson3AiReviewState,
   Module4Lesson3QuestionCardDraft,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
-import { LESSON3_DEFAULT_OPTIONS, LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
+import { LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
+import { TaskOptionsEditor } from "./TaskOptionsEditor"
 import { evaluateLesson3SelfCheck } from "../utils/evaluate-lesson3-self-check"
 import { Button } from "@/shared/ui/button"
 import { Textarea } from "@/shared/ui/textarea"
@@ -263,7 +264,7 @@ export function QuestionCardEditorWorkbench({
             {activeEditorTab === 2 && (
               <div className="space-y-4">
                 <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs leading-5 text-muted-foreground">
-                  题干需清楚说明判断对象；选项固定为 A/B/C 三项，请选择参考答案。
+                  题干需清楚说明判断对象；默认提供 A/B/C 三项，可按需修改文案或增减至最多六项，并单选一项作为参考答案。
                 </p>
                 <label className="block space-y-2 text-sm">
                   <span className="font-medium">题干</span>
@@ -271,42 +272,24 @@ export function QuestionCardEditorWorkbench({
                     value={card.task.prompt}
                     onChange={event => updateCard({
                       ...card,
-                      task: { ...card.task, prompt: event.target.value, options: LESSON3_DEFAULT_OPTIONS },
+                      task: { ...card.task, prompt: event.target.value },
                       metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
                     })}
                     rows={3}
                   />
                 </label>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">固定选项（不可自定义）</p>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {LESSON3_DEFAULT_OPTIONS.map(option => (
-                      <label
-                        key={option.key}
-                        className={cn(
-                          "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 text-sm transition",
-                          card.task.correctOptionKey === option.key && "border-primary bg-primary/5",
-                        )}
-                      >
-                        <input
-                          type="radio"
-                          name={`${card.id}-answer`}
-                          className="mt-1 h-4 w-4"
-                          checked={card.task.correctOptionKey === option.key}
-                          onChange={() => updateCard({
-                            ...card,
-                            task: {
-                              ...card.task,
-                              options: LESSON3_DEFAULT_OPTIONS,
-                              correctOptionKey: option.key as "A" | "B" | "C",
-                            },
-                            metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
-                          })}
-                        />
-                        <span>{option.key}. {option.label}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <p className="text-sm font-medium">判断选项</p>
+                  <TaskOptionsEditor
+                    cardId={card.id}
+                    options={card.task.options}
+                    correctOptionKey={card.task.correctOptionKey}
+                    onChange={({ options, correctOptionKey }) => updateCard({
+                      ...card,
+                      task: { ...card.task, options, correctOptionKey },
+                      metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
+                    })}
+                  />
                 </div>
               </div>
             )}

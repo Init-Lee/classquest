@@ -5,11 +5,20 @@
  */
 
 import type { Module4Lesson3CardSelfCheck, Module4Lesson3QuestionCardDraft } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import { isLesson3OptionKey, LESSON3_MIN_OPTIONS } from "../data/default-options"
 
 export function evaluateLesson3SelfCheck(card: Module4Lesson3QuestionCardDraft): Module4Lesson3CardSelfCheck {
   const materialReady = card.material.titleOrName.trim().length > 0 && Boolean(card.material.asset || card.material.displayNote.trim())
-  const taskReady = card.task.prompt.trim().length > 0 && card.task.options.length === 3
-  const answerSelected = card.task.correctOptionKey === "A" || card.task.correctOptionKey === "B" || card.task.correctOptionKey === "C"
+  const optionKeys = new Set(card.task.options.map(option => option.key))
+  const hasValidAnswer = Boolean(
+    card.task.correctOptionKey
+    && isLesson3OptionKey(card.task.correctOptionKey)
+    && optionKeys.has(card.task.correctOptionKey),
+  )
+  const taskReady = card.task.prompt.trim().length > 0
+    && card.task.options.length >= LESSON3_MIN_OPTIONS
+    && hasValidAnswer
+  const answerSelected = hasValidAnswer
   const explanationLength = card.explanation.text.trim().length
   const explanationReady = explanationLength >= 20 && !/我觉得像\s*AI|我感觉像\s*AI/.test(card.explanation.text)
   const sourceReady = Boolean(card.source.sourceType) && card.source.sourceRecord.trim().length >= 6
