@@ -137,8 +137,8 @@ export function QuestionCardEditorWorkbench({
   )
 
   return (
-    <div className="flex h-[var(--module4-lesson3-content-h)] w-full min-w-0 flex-col overflow-hidden px-4 sm:px-8 lg:px-10">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] lg:gap-6">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-4 sm:px-8 lg:px-10">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] lg:gap-6">
         {/* 移动端预览折叠区 */}
         <div className="lg:hidden">
           <button
@@ -158,99 +158,105 @@ export function QuestionCardEditorWorkbench({
 
         {/* 左侧编辑区 */}
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border bg-white">
-          <div className="border-b px-4 py-3">
-            <h3 className="text-lg font-semibold">{title} · 编辑工作台</h3>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              素材与来源来自课时 2 快照，本页编辑不会改动课时 2 原记录。
+          <div className="shrink-0 border-b px-4 py-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h3 className="shrink-0 text-base font-semibold sm:text-lg">{title} · 编辑工作台</h3>
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+                {TAB_ITEMS.map(item => {
+                  const complete = tabComplete(card, item.id)
+                  const active = activeEditorTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition sm:px-3 sm:text-sm",
+                        active
+                          ? "border-primary/30 bg-primary/5 text-primary shadow-sm"
+                          : "border-transparent bg-slate-50 hover:bg-slate-100",
+                      )}
+                      onClick={() => switchTab(item.id)}
+                    >
+                      <span className="font-medium">{item.shortLabel}</span>
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 py-0.5 text-[10px] font-medium sm:text-xs",
+                          complete ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700",
+                        )}
+                      >
+                        {complete ? "已完成" : "待补充"}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+              素材与来源来自课时 2 快照；本页只编辑题卡内容，不会改动课时 2 原记录。
             </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-1 border-b bg-slate-50 p-2 sm:grid-cols-4">
-            {TAB_ITEMS.map(item => {
-              const complete = tabComplete(card, item.id)
-              const active = activeEditorTab === item.id
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={cn(
-                    "rounded-xl px-2 py-2 text-left text-xs transition sm:px-3 sm:text-sm",
-                    active ? "bg-white shadow-sm ring-1 ring-primary/20" : "hover:bg-white/70",
-                  )}
-                  onClick={() => switchTab(item.id)}
-                >
-                  <span className="font-medium">{item.shortLabel}</span>
-                  <span className="mt-0.5 block text-[10px] sm:text-xs">
-                    <span className={complete ? "text-green-600" : "text-amber-600"}>
-                      {complete ? "已完成" : "待补充"}
-                    </span>
-                    <span className="hidden sm:inline"> · {item.label}</span>
-                  </span>
-                </button>
-              )
-            })}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
             {activeEditorTab === 1 && (
-              <div className="space-y-4">
-                <div className="rounded-xl bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900">
-                  以下内容来自课时 2 快照，仅供题卡展示参考；你只需补充「展示说明」，不会回写课时 2。
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                <div className="shrink-0 lg:w-2/5">
+                  {card.material.asset ? (
+                    <div className="relative">
+                      <img
+                        src={card.material.asset.dataUrl}
+                        alt={snapshot.lesson2TitleOrName || title}
+                        className="max-h-48 w-full rounded-2xl border object-contain sm:max-h-56 lg:max-h-full lg:min-h-[12rem]"
+                      />
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button type="button" variant="secondary" size="sm" className="absolute bottom-3 right-3 gap-1">
+                            <Expand className="h-3.5 w-3.5" />
+                            放大查看
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto">
+                          <DialogHeader>
+                            <DialogTitle>{snapshot.lesson2TitleOrName || "素材预览"}</DialogTitle>
+                          </DialogHeader>
+                          <img
+                            src={card.material.asset.dataUrl}
+                            alt={snapshot.lesson2TitleOrName || title}
+                            className="max-h-[70vh] w-full rounded-xl object-contain"
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                      暂无素材图片（请先在课时 2 完成素材准备）
+                    </div>
+                  )}
                 </div>
-                {card.material.asset ? (
-                  <div className="relative">
-                    <img
-                      src={card.material.asset.dataUrl}
-                      alt={snapshot.lesson2TitleOrName || title}
-                      className="max-h-56 w-full rounded-2xl border object-contain sm:max-h-72"
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  <dl className="grid gap-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
+                      <dd className="mt-1 font-medium">{snapshot.lesson2TitleOrName || "未填写"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">课时 2 疑点提示（快照）</dt>
+                      <dd className="mt-1 leading-6">{snapshot.lesson2ClueNote || "无"}</dd>
+                    </div>
+                  </dl>
+                  <label className="block space-y-2 text-sm">
+                    <span className="font-medium">展示说明</span>
+                    <Textarea
+                      value={card.material.displayNote}
+                      onChange={event => updateCard({
+                        ...card,
+                        material: { ...card.material, displayNote: event.target.value },
+                        metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
+                      })}
+                      placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
+                      rows={4}
                     />
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button type="button" variant="secondary" size="sm" className="absolute bottom-3 right-3 gap-1">
-                          <Expand className="h-3.5 w-3.5" />
-                          放大查看
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto">
-                        <DialogHeader>
-                          <DialogTitle>{snapshot.lesson2TitleOrName || "素材预览"}</DialogTitle>
-                        </DialogHeader>
-                        <img
-                          src={card.material.asset.dataUrl}
-                          alt={snapshot.lesson2TitleOrName || title}
-                          className="max-h-[70vh] w-full rounded-xl object-contain"
-                        />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                    暂无素材图片（请先在课时 2 完成素材准备）
-                  </div>
-                )}
-                <dl className="grid gap-3 rounded-2xl border bg-slate-50/80 p-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
-                    <dd className="mt-1 font-medium">{snapshot.lesson2TitleOrName || "未填写"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">课时 2 疑点提示（快照）</dt>
-                    <dd className="mt-1 leading-6">{snapshot.lesson2ClueNote || "无"}</dd>
-                  </div>
-                </dl>
-                <label className="block space-y-2 text-sm">
-                  <span className="font-medium">展示说明</span>
-                  <Textarea
-                    value={card.material.displayNote}
-                    onChange={event => updateCard({
-                      ...card,
-                      material: { ...card.material, displayNote: event.target.value },
-                      metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
-                    })}
-                    placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
-                    rows={4}
-                  />
-                </label>
+                  </label>
+                </div>
               </div>
             )}
 
@@ -370,7 +376,7 @@ export function QuestionCardEditorWorkbench({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-slate-50/80 px-4 py-3">
+          <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-t bg-slate-50/80 px-4 py-3">
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" disabled={activeEditorTab === 1} onClick={goPrevTab}>
                 上一步

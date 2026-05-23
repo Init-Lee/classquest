@@ -28,9 +28,14 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
 
+  const usesWorkbenchLayout = stepId === 2 || stepId === 3
+
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
-  }, [stepId])
+    // 工作台步骤锁定视口高度，无需整页 scrollTo，避免触发外层滚动
+    if (!usesWorkbenchLayout) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }
+  }, [stepId, usesWorkbenchLayout])
 
   useLayoutEffect(() => {
     const el = lessonChromeRef.current
@@ -82,7 +87,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
     : LESSON3_STEPS
       .filter(step => canEnterLesson3Step(portfolio.lesson2, portfolio.lesson3, step.id))
       .map(step => step.id)
-  const usesScreenLayout = stepId === 1 || stepId === 2 || stepId === 3
+  const usesScreenScrollLayout = stepId === 1
 
   return (
     <>
@@ -108,7 +113,15 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
           </div>
         </div>
       </div>
-      <div className={usesScreenLayout ? "w-full min-w-0" : "mx-auto w-full max-w-7xl px-4 py-6"}>{children}</div>
+      <div
+        className={cn(
+          usesWorkbenchLayout && "h-[var(--module4-lesson3-content-h)] w-full min-w-0 overflow-hidden",
+          usesScreenScrollLayout && "w-full min-w-0",
+          !usesWorkbenchLayout && !usesScreenScrollLayout && "mx-auto w-full max-w-7xl px-4 py-6",
+        )}
+      >
+        {children}
+      </div>
     </>
   )
 }
