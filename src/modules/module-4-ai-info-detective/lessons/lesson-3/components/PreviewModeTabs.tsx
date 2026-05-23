@@ -17,25 +17,31 @@ export function PreviewModeTabs({
   onModeChange: (mode: Lesson3PreviewMode) => void
 }) {
   return (
-    <div className="inline-flex w-auto shrink-0 rounded-lg border bg-slate-50 p-0.5">
+    <div className="inline-flex w-auto shrink-0 rounded-lg bg-muted p-0.5">
       {[
         { key: "before" as const, label: "答题前" },
         { key: "after" as const, label: "答题后" },
-      ].map(item => (
-        <Button
-          key={item.key}
-          type="button"
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-7 rounded-md px-2.5 text-xs",
-            mode === item.key && "bg-white shadow-sm",
-          )}
-          onClick={() => onModeChange(item.key)}
-        >
-          {item.label}
-        </Button>
-      ))}
+      ].map(item => {
+        const isActive = mode === item.key
+
+        return (
+          <Button
+            key={item.key}
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-7 rounded-md px-2.5 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1",
+              isActive
+                ? "bg-primary font-medium text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
+                : "bg-transparent text-muted-foreground hover:bg-background/70 hover:text-foreground",
+            )}
+            onClick={() => onModeChange(item.key)}
+          >
+            {item.label}
+          </Button>
+        )
+      })}
     </div>
   )
 }

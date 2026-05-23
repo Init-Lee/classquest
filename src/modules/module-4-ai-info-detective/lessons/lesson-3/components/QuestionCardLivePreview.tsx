@@ -93,7 +93,7 @@ export function QuestionCardLivePreview({
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 px-4 py-2">
         <p className="text-lg font-semibold leading-none tracking-tight">实时预览</p>
         <PreviewModeTabs mode={mode} onModeChange={onModeChange} />
       </CardHeader>
