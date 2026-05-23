@@ -286,6 +286,7 @@ export function QuestionCardEditorWorkbench({
                 </label>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">判断选项</p>
+                  <p className="text-xs text-muted-foreground">编辑各选项文案，并在下方单选一项作为参考答案。</p>
                   <TaskOptionsEditor
                     cardId={card.id}
                     options={card.task.options}
@@ -387,12 +388,8 @@ export function QuestionCardEditorWorkbench({
           </div>
         </section>
 
-        {/* 右侧反馈面板（桌面） */}
+        {/* 右侧实时反馈预览（桌面） */}
         <aside className="hidden min-h-0 min-w-[360px] flex-col overflow-hidden lg:flex">
-          <div className="mb-2 flex items-center justify-between gap-2 px-1">
-            <h3 className="text-base font-semibold">{title}</h3>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">反馈面板</span>
-          </div>
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {previewPanel}
           </div>

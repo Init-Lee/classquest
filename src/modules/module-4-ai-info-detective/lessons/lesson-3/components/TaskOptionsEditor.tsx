@@ -55,13 +55,9 @@ export function TaskOptionsEditor({
 
   return (
     <div className="space-y-3">
-      <div className="hidden grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-3 px-1 text-xs text-muted-foreground sm:grid">
-        <span>选项</span>
-        <span>文案（可编辑）</span>
-        <span className="sr-only">正确答案</span>
-      </div>
+      <p className="text-sm font-medium">请选择正确答案（单选）</p>
 
-      <div className="space-y-2" role="radiogroup" aria-label="选择参考答案">
+      <div className="space-y-2" role="radiogroup" aria-label="请选择正确答案">
         {options.map((option, index) => (
           <div
             key={option.key}
@@ -70,15 +66,15 @@ export function TaskOptionsEditor({
               correctOptionKey === option.key && "border-primary bg-primary/5",
             )}
           >
-            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-3">
-              <span className="text-sm font-semibold">{option.key}</span>
+            <div className="flex items-center gap-3">
+              <span className="w-8 shrink-0 text-center text-sm font-semibold">{option.key}</span>
               <Input
                 value={option.label}
                 onChange={event => updateOption(index, { label: event.target.value })}
                 placeholder={`填写选项 ${option.key} 文案`}
-                className="h-9 text-sm"
+                className="h-9 min-w-0 flex-1 text-sm"
               />
-              <label className="flex cursor-pointer items-center justify-center">
+              <label className="flex shrink-0 cursor-pointer items-center justify-center p-1">
                 <input
                   type="radio"
                   name={`${cardId}-correct-answer`}
@@ -89,18 +85,16 @@ export function TaskOptionsEditor({
                 />
               </label>
             </div>
-            <div className="pl-0 sm:pl-[calc(2.5rem+0.75rem)]">
-              <label className="block space-y-1.5">
-                <span className="text-xs text-muted-foreground">选项解析（选填）</span>
-                <Textarea
-                  value={option.rationale ?? ""}
-                  onChange={event => updateOption(index, { rationale: event.target.value })}
-                  placeholder="说明为什么选 / 为什么不选该选项，帮助学生理解错在哪里。"
-                  rows={2}
-                  className="min-h-[3.5rem] resize-y text-sm"
-                />
-              </label>
-            </div>
+            <label className="block w-full space-y-1.5">
+              <span className="text-xs text-muted-foreground">选项解析（选填）</span>
+              <Textarea
+                value={option.rationale ?? ""}
+                onChange={event => updateOption(index, { rationale: event.target.value })}
+                placeholder="说明为什么选 / 为什么不选该选项，帮助学生理解错在哪里。"
+                rows={2}
+                className="min-h-[3.5rem] resize-y text-sm"
+              />
+            </label>
           </div>
         ))}
       </div>
