@@ -323,6 +323,26 @@ export interface Module4Lesson3QuestionCardDraft {
   updatedAt: string
 }
 
+/** 课时 3 第 4 步单张题卡作者自测记录 */
+export interface Lesson3CardSelfTrialRecord {
+  submitted: boolean
+  selectedOptionKey?: Module4Lesson3OptionKey
+  isCorrect?: boolean
+  submittedAt?: string
+  feedbackViewed: boolean
+  confirmed: boolean
+  confirmedAt?: string
+  /** 确认时写入，用于检测 Step2/Step3 编辑后是否需要重新自测 */
+  contentFingerprint?: string
+  /** 返回编辑器或内容变更后重置时标记，chip 展示「需要重新作答」 */
+  needsRetrial?: boolean
+}
+
+export interface Module4Lesson3SelfTrialState {
+  news: Lesson3CardSelfTrialRecord
+  image: Lesson3CardSelfTrialRecord
+}
+
 export interface Module4Lesson3QuickCheckState {
   T1: Module4Lesson2QuickCheckTarget<{
     newsSnapshotReady: boolean
@@ -344,6 +364,8 @@ export interface Module4Lesson3QuickCheckState {
     finalPreviewConfirmed: boolean
     newsReadyForLesson4: boolean
     imageReadyForLesson4: boolean
+    newsSelfTrialConfirmed: boolean
+    imageSelfTrialConfirmed: boolean
   }>
   evaluatedAt: string
   metrics: {
@@ -366,6 +388,7 @@ export interface Module4Lesson3State {
   step4Completed: boolean
   newsCard: Module4Lesson3QuestionCardDraft
   imageCard: Module4Lesson3QuestionCardDraft
+  selfTrial: Module4Lesson3SelfTrialState
   finalPreviewConfirmed: boolean
   finalPreviewConfirmedAt: string
   quickCheck: Module4Lesson3QuickCheckState
@@ -613,6 +636,26 @@ function createEmptyModule4Lesson3MaterialSnapshot(kind: Module4MaterialKind): M
   }
 }
 
+export function createEmptyLesson3CardSelfTrialRecord(): Lesson3CardSelfTrialRecord {
+  return {
+    submitted: false,
+    selectedOptionKey: undefined,
+    isCorrect: undefined,
+    submittedAt: undefined,
+    feedbackViewed: false,
+    confirmed: false,
+    confirmedAt: undefined,
+    contentFingerprint: undefined,
+  }
+}
+
+export function createEmptyModule4Lesson3SelfTrialState(): Module4Lesson3SelfTrialState {
+  return {
+    news: createEmptyLesson3CardSelfTrialRecord(),
+    image: createEmptyLesson3CardSelfTrialRecord(),
+  }
+}
+
 export function createEmptyModule4Lesson3CardSelfCheck(): Module4Lesson3CardSelfCheck {
   return {
     materialReady: false,
@@ -717,6 +760,8 @@ export function createEmptyModule4Lesson3QuickCheckState(): Module4Lesson3QuickC
         finalPreviewConfirmed: false,
         newsReadyForLesson4: false,
         imageReadyForLesson4: false,
+        newsSelfTrialConfirmed: false,
+        imageSelfTrialConfirmed: false,
       },
     },
     evaluatedAt: "",
@@ -742,6 +787,7 @@ export function createEmptyModule4Lesson3State(): Module4Lesson3State {
     step4Completed: false,
     newsCard: createEmptyModule4Lesson3QuestionCardDraft("news"),
     imageCard: createEmptyModule4Lesson3QuestionCardDraft("image"),
+    selfTrial: createEmptyModule4Lesson3SelfTrialState(),
     finalPreviewConfirmed: false,
     finalPreviewConfirmedAt: "",
     quickCheck: createEmptyModule4Lesson3QuickCheckState(),
@@ -1106,6 +1152,34 @@ function normalizeLesson3AiReviewLevel(value: unknown): Module4Lesson3AiReviewLe
   return value === "ok" || value === "error" ? value : "warning"
 }
 
+function normalizeLesson3CardSelfTrialRecord(value: unknown): Lesson3CardSelfTrialRecord {
+  const fallback = createEmptyLesson3CardSelfTrialRecord()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const selectedOptionKey = isModule4Lesson3OptionKey(raw.selectedOptionKey) ? raw.selectedOptionKey : undefined
+  return {
+    submitted: raw.submitted === true,
+    selectedOptionKey,
+    isCorrect: typeof raw.isCorrect === "boolean" ? raw.isCorrect : undefined,
+    submittedAt: typeof raw.submittedAt === "string" ? raw.submittedAt : undefined,
+    feedbackViewed: raw.feedbackViewed === true,
+    confirmed: raw.confirmed === true,
+    confirmedAt: typeof raw.confirmedAt === "string" ? raw.confirmedAt : undefined,
+    contentFingerprint: typeof raw.contentFingerprint === "string" ? raw.contentFingerprint : undefined,
+    needsRetrial: raw.needsRetrial === true,
+  }
+}
+
+function normalizeLesson3SelfTrial(value: unknown): Module4Lesson3SelfTrialState {
+  const fallback = createEmptyModule4Lesson3SelfTrialState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    news: normalizeLesson3CardSelfTrialRecord(raw.news),
+    image: normalizeLesson3CardSelfTrialRecord(raw.image),
+  }
+}
+
 function normalizeLesson3SelfCheck(value: unknown): Module4Lesson3CardSelfCheck {
   const fallback = createEmptyModule4Lesson3CardSelfCheck()
   if (!value || typeof value !== "object") return fallback
@@ -1289,6 +1363,7 @@ function normalizeLesson3State(value: unknown): Module4Lesson3State {
     step4Completed: raw.step4Completed === true,
     newsCard: normalizeLesson3QuestionCardDraft(raw.newsCard, "news"),
     imageCard: normalizeLesson3QuestionCardDraft(raw.imageCard, "image"),
+    selfTrial: normalizeLesson3SelfTrial(raw.selfTrial),
     finalPreviewConfirmed: raw.finalPreviewConfirmed === true,
     finalPreviewConfirmedAt: typeof raw.finalPreviewConfirmedAt === "string" ? raw.finalPreviewConfirmedAt : "",
     quickCheck: normalizeLesson3QuickCheck(raw.quickCheck),

@@ -52,8 +52,8 @@ const MISSION_CARDS = [
   },
   {
     icon: Save,
-    title: "保存初稿",
-    text: "预览两张题卡并保存为 V1，为后续迭代打好结构基础。",
+    title: "自测并保存",
+    text: "分别试答两张题卡，确认体验后保存为 V1，为后续迭代打好结构基础。",
     accent: "from-amber-500/15 to-orange-500/5",
   },
 ] as const

@@ -5,7 +5,7 @@
  */
 
 import { useState, type ReactNode } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import type { FormEvent } from "react"
 import {
   ArrowRight,
@@ -253,11 +253,9 @@ function NewProfileForm({ onCreated }: { onCreated: () => void }) {
 export default function Module4HomePage() {
   const { portfolio, loading, isTeacherMode } = useModule4Portfolio()
   const navigate = useNavigate()
-  const location = useLocation()
   const [showNewForm, setShowNewForm] = useState(false)
 
   const lesson1Completed = Boolean(portfolio?.lesson1.completed)
-  const showCompletionHint = lesson1Completed || new URLSearchParams(location.search).get("lesson1") === "completed"
   const showTeacherEntry = !isTeacherMode
 
   const handleCreated = () => {
@@ -272,6 +270,10 @@ export default function Module4HomePage() {
     }
     if (portfolio.progress.lessonId === 2 && portfolio.lesson1.completed) {
       navigate(`/module/4/lesson/2/step/${portfolio.progress.stepId}`)
+      return
+    }
+    if (portfolio.progress.lessonId === 3 && portfolio.lesson2.completed) {
+      navigate(`/module/4/lesson/3/step/${portfolio.progress.stepId}`)
       return
     }
     navigate("/module/4")
@@ -420,14 +422,6 @@ export default function Module4HomePage() {
         <p className="text-muted-foreground text-sm">继续你的闯关之旅吧</p>
       </div>
 
-      {showCompletionHint && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-4 text-sm text-green-800">
-            课时1已完成。下一课将进入「素材搜集与合规初筛」。
-          </CardContent>
-        </Card>
-      )}
-
       <Card className="max-w-lg mx-auto border-primary/20 bg-primary/5">
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-primary">当前进度</CardTitle>
@@ -456,7 +450,7 @@ export default function Module4HomePage() {
                 {" "}
                 · 第
                 {portfolio.progress.stepId}
-                关
+                {portfolio.progress.lessonId === 3 ? "步" : "关"}
               </span>
             </p>
             <p className="text-muted-foreground text-xs mt-1">

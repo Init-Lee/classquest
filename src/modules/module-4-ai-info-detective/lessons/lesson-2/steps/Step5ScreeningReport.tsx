@@ -40,7 +40,7 @@ export default function Step5ScreeningReport() {
       progress: { lessonId: 3, stepId: 1 },
       lesson2: nextLesson2,
     })
-    navigate("/module/4?lesson2=completed")
+    navigate("/module/4")
   }
 
   return (

@@ -45,11 +45,17 @@ export function evaluateLesson3QuickCheck(lesson3: Module4Lesson3State): Module4
       },
     },
     T3: {
-      achieved: lesson3.finalPreviewConfirmed && news.status === "ready_for_lesson4" && image.status === "ready_for_lesson4",
+      achieved: lesson3.finalPreviewConfirmed
+        && news.status === "ready_for_lesson4"
+        && image.status === "ready_for_lesson4"
+        && lesson3.selfTrial.news.confirmed
+        && lesson3.selfTrial.image.confirmed,
       evidence: {
         finalPreviewConfirmed: lesson3.finalPreviewConfirmed,
         newsReadyForLesson4: news.status === "ready_for_lesson4",
         imageReadyForLesson4: image.status === "ready_for_lesson4",
+        newsSelfTrialConfirmed: lesson3.selfTrial.news.confirmed,
+        imageSelfTrialConfirmed: lesson3.selfTrial.image.confirmed,
       },
     },
     evaluatedAt: new Date().toISOString(),

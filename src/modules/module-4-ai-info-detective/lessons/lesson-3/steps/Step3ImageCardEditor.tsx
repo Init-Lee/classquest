@@ -10,6 +10,7 @@ import type { Module4Lesson3QuestionCardDraft, Module4Portfolio } from "@/module
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { evaluateLesson3QuickCheck } from "../utils/evaluate-lesson3-quickcheck"
 import { ensureLesson3DraftFromLesson2 } from "../utils/build-lesson3-draft"
+import { invalidateLesson3SelfTrialOnCardSave } from "../utils/self-trial-invalidation"
 import { QuestionCardEditorWorkbench } from "../components/QuestionCardEditorWorkbench"
 import type { Lesson3PreviewMode } from "../components/PreviewModeTabs"
 
@@ -35,8 +36,14 @@ export default function Step3ImageCardEditor() {
   if (!portfolio) return null
 
   const updateImageCard = (imageCard: Module4Lesson3QuestionCardDraft) => {
+    const withInvalidation = invalidateLesson3SelfTrialOnCardSave(
+      portfolio.lesson3,
+      "image",
+      portfolio.lesson3.imageCard,
+      imageCard,
+    )
     const nextLesson3 = {
-      ...portfolio.lesson3,
+      ...withInvalidation,
       imageCard,
       step3Completed: imageCard.selfCheck.allRequiredPassed,
     }
@@ -71,7 +78,7 @@ export default function Step3ImageCardEditor() {
       onPreviewModeChange={setPreviewMode}
       onCardChange={updateImageCard}
       onComplete={complete}
-      completeLabel="完成图片题卡 V1，进入双卡总览"
+      completeLabel="完成图片题卡 V1，进入双卡自测"
     />
   )
 }

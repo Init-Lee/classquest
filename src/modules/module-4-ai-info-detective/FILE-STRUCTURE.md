@@ -116,7 +116,7 @@ src/modules/module-4-ai-info-detective/
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
 - `api/`：mock adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到 `/api/v1/module4/lesson3/ai-review`。
 - `components/`：模块 4 私有 UI 组件。
-- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`，课时 3 中会显示 `课时3第N步` 或 `课时3已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full`、`lesson2-full` 与 `lesson3-full` 阶段快照 HTML。
+- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`，课时 3 中会显示 `课时3第N步` 或 `课时3已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full`、`lesson2-full` 与 `lesson3-full` 阶段快照 HTML；课时 3 快照下载文件名为 `模块4_姓名_课时3题卡V1快照_日期.html`。
 - `constants/`：教师讲解档案、班级选项等模块级常量。
 - `lessons/lesson-1/components/Lesson1ScreenLayout.tsx`：课时 1 已验证的全屏滚动布局约定，负责 `scroll-snap`、固定关卡栏下方内容高度和每屏基础排版；当前用于第 1、2 关，后续若提升到模块级再迁入 `components/` 或 `features/`。
 - `lessons/lesson-1/components/Lesson1StepLayout.tsx`：第 3～5 关等标准 Step 布局；支持 `titleClassName` 以便关卡标题使用与全屏首屏一致的 primary 强调与字距（如第 3 关）。

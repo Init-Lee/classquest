@@ -28,7 +28,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
 
-  const usesWorkbenchLayout = stepId === 2 || stepId === 3
+  const usesWorkbenchLayout = stepId === 2 || stepId === 3 || stepId === 4
 
   useLayoutEffect(() => {
     // 工作台步骤锁定视口高度，无需整页 scrollTo，避免触发外层滚动

@@ -387,7 +387,15 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
   const clazz = escapeHtml(portfolio.student.clazz || "未填写")
   const seat = escapeHtml(portfolio.student.classSeatCode || "未填写")
   const quickCheck = evaluateLesson3QuickCheck(lesson3)
-  const renderCard = (title: string, card: typeof lesson3.newsCard) => `
+  const renderCard = (title: string, card: typeof lesson3.newsCard, trial: typeof lesson3.selfTrial.news) => {
+    const optionRows = card.task.options.map(option => `
+      <tr>
+        <td>${escapeHtml(option.key)}</td>
+        <td>${escapeHtml(option.label || "未填写")}</td>
+        <td>${escapeHtml(option.rationale || "未填写")}</td>
+        <td>${option.key === card.task.correctOptionKey ? "是" : "否"}</td>
+      </tr>`).join("")
+    return `
     <section>
       <h2>${title}</h2>
       ${card.material.asset ? `<img class="material-preview" src="${card.material.asset.dataUrl}" alt="${escapeHtml(title)}" />` : `<p class="muted">暂无素材预览</p>`}
@@ -396,13 +404,23 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
         <div class="info-card"><span class="label">素材短名</span><span class="value">${escapeHtml(card.material.titleOrName || "未填写")}</span></div>
         <div class="info-card"><span class="label">参考答案</span><span class="value">${escapeHtml(card.task.correctOptionKey || "未选择")}</span></div>
         <div class="info-card"><span class="label">来源类型</span><span class="value">${escapeHtml(card.source.sourceType ? LESSON3_SOURCE_TYPE_LABELS[card.source.sourceType] : "未选择")}</span></div>
+        <div class="info-card"><span class="label">自测试答</span><span class="value">${trial.confirmed ? "已确认" : trial.submitted ? "已提交待确认" : trial.needsRetrial ? "需要重新作答" : "未自测"}</span></div>
+        <div class="info-card"><span class="label">自测结果</span><span class="value">${trial.submitted ? `${escapeHtml(trial.selectedOptionKey || "未记录")} · ${trial.isCorrect ? "答对" : "未答对"}` : "未提交"}</span></div>
       </div>
       <p class="item"><strong>题干：</strong>${escapeHtml(card.task.prompt || "未填写")}</p>
+      <table>
+        <thead>
+          <tr><th>选项</th><th>文案</th><th>选项解析 rationale</th><th>是否参考答案</th></tr>
+        </thead>
+        <tbody>${optionRows || `<tr><td colspan="4" class="muted">暂无选项</td></tr>`}</tbody>
+      </table>
       <p class="note"><strong>核心解析：</strong>${escapeHtml(card.explanation.text || "未填写")}</p>
       <p class="item"><strong>来源记录：</strong>${escapeHtml(card.source.sourceRecord || "未填写")}</p>
       <p class="item"><strong>核验观察指引：</strong>${escapeHtml(card.source.verificationNote || "未填写")}</p>
       <p class="item"><strong>自审状态：</strong>${card.selfCheck.allRequiredPassed ? "四部分齐全" : "仍需补充"}</p>
+      <p class="item"><strong>自测确认时间：</strong>${escapeHtml(trial.confirmedAt || "未记录")}；内容指纹：${escapeHtml(trial.contentFingerprint || "未记录")}</p>
     </section>`
+  }
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -430,6 +448,10 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
     .status.done { background: var(--green); color: #067647; }
     .note { border-left: 4px solid #f97316; padding: 10px 12px; border-radius: 12px; background: var(--warm); }
     .material-preview { max-width: 100%; max-height: 260px; object-fit: contain; border-radius: 16px; border: 1px solid var(--line); background: white; }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; background: white; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    th { background: #eef4ff; color: #1e3a8a; }
   </style>
 </head>
 <body>
@@ -457,13 +479,16 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
         <div class="stat-card"><span class="label">确认时间</span><span class="value">${escapeHtml(lesson3.finalPreviewConfirmedAt || "未记录")}</span></div>
       </div>
     </section>
-    ${renderCard("新闻题卡 V1", lesson3.newsCard)}
-    ${renderCard("图片题卡 V1", lesson3.imageCard)}
+    ${renderCard("新闻题卡 V1", lesson3.newsCard, lesson3.selfTrial.news)}
+    ${renderCard("图片题卡 V1", lesson3.imageCard, lesson3.selfTrial.image)}
     <section>
       <h2>QuickCheck 自动记录</h2>
       <p class="item">T1 素材快照：${quickCheck.T1.achieved ? "完成" : "未完成"}</p>
+      <p class="item">证据：新闻快照 ${quickCheck.T1.evidence.newsSnapshotReady ? "已生成" : "未生成"}；图片快照 ${quickCheck.T1.evidence.imageSnapshotReady ? "已生成" : "未生成"}；新闻素材 ${quickCheck.T1.evidence.newsAssetReady ? "已带入" : "未带入"}；图片素材 ${quickCheck.T1.evidence.imageAssetReady ? "已带入" : "未带入"}。</p>
       <p class="item">T2 题卡四部分：${quickCheck.T2.achieved ? "完成" : "未完成"}</p>
+      <p class="item">证据：新闻素材/任务/解析/来源 ${quickCheck.T2.evidence.newsMaterialReady ? "✓" : "×"} ${quickCheck.T2.evidence.newsTaskReady ? "✓" : "×"} ${quickCheck.T2.evidence.newsExplanationReady ? "✓" : "×"} ${quickCheck.T2.evidence.newsSourceReady ? "✓" : "×"}；图片素材/任务/解析/来源 ${quickCheck.T2.evidence.imageMaterialReady ? "✓" : "×"} ${quickCheck.T2.evidence.imageTaskReady ? "✓" : "×"} ${quickCheck.T2.evidence.imageExplanationReady ? "✓" : "×"} ${quickCheck.T2.evidence.imageSourceReady ? "✓" : "×"}。</p>
       <p class="item">T3 V1 保存：${quickCheck.T3.achieved ? "完成" : "未完成"}</p>
+      <p class="item">证据：最终确认 ${quickCheck.T3.evidence.finalPreviewConfirmed ? "是" : "否"}；新闻待课时4 ${quickCheck.T3.evidence.newsReadyForLesson4 ? "是" : "否"}；图片待课时4 ${quickCheck.T3.evidence.imageReadyForLesson4 ? "是" : "否"}；新闻自测确认 ${quickCheck.T3.evidence.newsSelfTrialConfirmed ? "是" : "否"}；图片自测确认 ${quickCheck.T3.evidence.imageSelfTrialConfirmed ? "是" : "否"}。</p>
       <p class="item">评估时间：${escapeHtml(quickCheck.evaluatedAt || "未生成")}</p>
     </section>
   </main>
@@ -483,7 +508,9 @@ export function downloadModule4Snapshot(type: Module4SnapshotType, portfolio: Mo
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
-  link.download = `模块4_${namePart}_${type}_阶段快照_${date}.html`
+  link.download = type === "lesson3-full"
+    ? `模块4_${namePart}_课时3题卡V1快照_${date}.html`
+    : `模块4_${namePart}_${type}_阶段快照_${date}.html`
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

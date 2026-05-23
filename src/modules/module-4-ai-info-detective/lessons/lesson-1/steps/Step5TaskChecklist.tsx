@@ -104,7 +104,7 @@ export default function Step5TaskChecklist() {
         completed: true,
       },
     })
-    navigate("/module/4?lesson1=completed")
+    navigate("/module/4")
   }
 
   return (

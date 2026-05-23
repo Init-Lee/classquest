@@ -20,10 +20,15 @@ lessons/lesson-3/
 │   ├── QuestionCardEditorWorkbench.tsx
 │   ├── QuestionCardLivePreview.tsx
 │   ├── PreviewModeTabs.tsx
+│   ├── QuestionCardSelfTrialPanel.tsx
+│   ├── SelfTrialStatusStrip.tsx
+│   ├── SelfTrialFeedbackPanel.tsx
+│   ├── TaskOptionsEditor.tsx
 │   ├── InlineSelfCheckPanel.tsx
 │   ├── AiReviewPanel.tsx
 │   ├── CardEditorSection.tsx
-│   └── SourceTypeSelect.tsx
+│   ├── SourceTypeSelect.tsx
+│   └── useImeSafeDraftValue.ts
 ├── data/
 ├── steps/
 └── utils/
@@ -33,12 +38,16 @@ lessons/lesson-3/
 
 - `config.ts`：课时标题、四步流程和路由片段。
 - `guards.ts`：进入条件、完成判定和当前步骤解析。
-- `routes.tsx`：课时 3 子路由、Guard 和步骤进度条；第 2～3 步使用全宽工作台布局（非 scroll-snap）。
+- `routes.tsx`：课时 3 子路由、Guard 和步骤进度条；第 2～4 步使用全宽工作台布局（非 scroll-snap）。
 - `data/default-options.ts`：固定三选项与四类来源类型文案。
-- `utils/`：素材指纹、课时 2 快照草稿、自审和 QuickCheck。
+- `utils/`：素材指纹、课时 2 快照草稿、自审、QuickCheck 和自测失效规则。
 - `components/Lesson3ScreenLayout.tsx`：第 1 步全屏滚动分屏布局。
 - `components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左右各 50%（四 Tab 编辑 | 两行预览）；第 2、3 步共用，仅 `cardType` 与数据源不同。
 - `components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览；桌面两行（图+题 / 解析+完成度与 AI 自检，后者仅编辑工作台传入时显示）。
+- `components/QuestionCardSelfTrialPanel.tsx`：第 4 步三栏自测试答面板（素材 / 判断任务 / 答题反馈）。
+- `components/SelfTrialStatusStrip.tsx`：第 4 步顶部极简状态条，展示新闻/图片自测进度并承载返回编辑器与确认 CTA。
+- `components/SelfTrialFeedbackPanel.tsx`：第 4 步答题反馈右栏；答错时只展示所选选项解析、核心解析和来源核验，不单独展示参考答案解析。
+- `components/TaskOptionsEditor.tsx`：判断选项与选项解析编辑器。
 - `components/InlineSelfCheckPanel.tsx`：四 Tab 结构完成度聚合（右侧反馈面板）。
 - `components/AiReviewPanel.tsx`：题卡自检助手；失败不阻断保存 V1。
 - `components/CardEditorSection.tsx`：编辑区块容器（保留供其他步骤复用）。

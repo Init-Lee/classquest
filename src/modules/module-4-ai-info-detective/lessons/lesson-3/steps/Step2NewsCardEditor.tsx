@@ -10,6 +10,7 @@ import type { Module4Lesson3QuestionCardDraft, Module4Portfolio } from "@/module
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { evaluateLesson3QuickCheck } from "../utils/evaluate-lesson3-quickcheck"
 import { ensureLesson3DraftFromLesson2 } from "../utils/build-lesson3-draft"
+import { invalidateLesson3SelfTrialOnCardSave } from "../utils/self-trial-invalidation"
 import { QuestionCardEditorWorkbench } from "../components/QuestionCardEditorWorkbench"
 import type { Lesson3PreviewMode } from "../components/PreviewModeTabs"
 
@@ -35,8 +36,14 @@ export default function Step2NewsCardEditor() {
   if (!portfolio) return null
 
   const updateNewsCard = (newsCard: Module4Lesson3QuestionCardDraft) => {
+    const withInvalidation = invalidateLesson3SelfTrialOnCardSave(
+      portfolio.lesson3,
+      "news",
+      portfolio.lesson3.newsCard,
+      newsCard,
+    )
     const nextLesson3 = {
-      ...portfolio.lesson3,
+      ...withInvalidation,
       newsCard,
       step2Completed: newsCard.selfCheck.allRequiredPassed,
     }

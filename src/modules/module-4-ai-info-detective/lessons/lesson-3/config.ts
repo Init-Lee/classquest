@@ -33,8 +33,8 @@ export const LESSON3_STEPS = [
   {
     id: 4,
     path: "step/4",
-    title: "双卡总览保存",
-    subtitle: "确认两张 V1 初稿并保存",
+    title: "双卡自测与保存",
+    subtitle: "试答两张题卡并保存 V1",
   },
 ] as const
 
