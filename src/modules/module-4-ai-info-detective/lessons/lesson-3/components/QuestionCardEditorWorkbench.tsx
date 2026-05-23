@@ -393,13 +393,20 @@ export function QuestionCardEditorWorkbench({
                 下一项
               </Button>
             </div>
-            {card.selfCheck.allRequiredPassed ? (
-              <Button type="button" size="sm" onClick={onComplete}>
+            <div className="flex flex-col items-end gap-1">
+              <Button
+                type="button"
+                size="sm"
+                disabled={!card.selfCheck.allRequiredPassed}
+                title={card.selfCheck.allRequiredPassed ? undefined : "请先完成素材、任务、核心解析与来源核验四项必填内容"}
+                onClick={onComplete}
+              >
                 {completeLabel}
               </Button>
-            ) : (
-              <p className="text-xs text-muted-foreground">四项必填完成后可进入下一步</p>
-            )}
+              {!card.selfCheck.allRequiredPassed && (
+                <p className="text-[11px] text-muted-foreground">四项必填完成后可点击</p>
+              )}
+            </div>
           </div>
         </section>
 

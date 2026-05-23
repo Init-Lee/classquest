@@ -62,16 +62,26 @@ export function QuestionCardLivePreview({
         {mode === "after" && (
           <div className="space-y-4 rounded-2xl border bg-green-50 p-4">
             <p className="text-sm font-medium text-green-900">答题后解析</p>
-            <div className="text-sm">
-              <p>
-                参考答案：{correctOption ? `${correctOption.key}. ${correctOption.label}` : "未选择"}
+
+            <div className="rounded-xl bg-white p-3 text-sm">
+              <p className="font-medium text-slate-800">参考答案</p>
+              <p className="mt-1 leading-6 text-slate-700">
+                {correctOption ? `${correctOption.key}. ${correctOption.label}` : "未选择"}
               </p>
-              {correctOption?.rationale?.trim() && (
-                <p className="mt-1 leading-6 text-green-900/90">
-                  选项解析：{correctOption.rationale.trim()}
-                </p>
-              )}
             </div>
+
+            {correctOption?.rationale?.trim() && (
+              <div className="rounded-xl bg-white p-3 text-sm">
+                <p className="font-medium text-slate-800">正确答案解析</p>
+                <p className="mt-1 leading-6 text-slate-700">{correctOption.rationale.trim()}</p>
+              </div>
+            )}
+
+            <div className="rounded-xl bg-white p-3 text-sm">
+              <p className="font-medium text-slate-800">核心解析</p>
+              <p className="mt-1 leading-6 text-slate-700">{card.explanation.text || "未填写核心解析"}</p>
+            </div>
+
             {otherRationales.length > 0 && (
               <div className="space-y-2 rounded-xl bg-white p-3 text-sm">
                 <p className="font-medium text-slate-800">其他选项解析</p>
@@ -82,7 +92,7 @@ export function QuestionCardLivePreview({
                 ))}
               </div>
             )}
-            <p className="text-sm leading-6">{card.explanation.text || "未填写核心解析"}</p>
+
             <div className="rounded-xl bg-white p-3 text-sm leading-6">
               <p><strong>来源类型：</strong>{card.source.sourceType ? LESSON3_SOURCE_TYPE_LABELS[card.source.sourceType] : "未选择"}</p>
               <p><strong>来源记录：</strong>{card.source.sourceRecord || "未填写"}</p>
