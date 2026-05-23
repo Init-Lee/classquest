@@ -18,22 +18,30 @@ function isModule4Lesson3OptionKey(value: unknown): value is Module4Lesson3Optio
 function normalizeLesson3TaskOptions(value: unknown, fallback: JudgmentOption[]): JudgmentOption[] {
   if (!Array.isArray(value)) return fallback.slice(0, 3)
 
-  const labels: string[] = []
+  const parsed: Array<{ label: string; rationale: string }> = []
   for (const item of value) {
     if (!item || typeof item !== "object") continue
     const record = item as Record<string, unknown>
     if (!isModule4Lesson3OptionKey(record.key)) continue
-    labels.push(typeof record.label === "string" ? record.label : "")
+    parsed.push({
+      label: typeof record.label === "string" ? record.label : "",
+      rationale: typeof record.rationale === "string" ? record.rationale : "",
+    })
   }
 
-  const count = Math.min(Math.max(labels.length, 0), LESSON3_OPTION_KEYS.length)
+  const count = Math.min(Math.max(parsed.length, 0), LESSON3_OPTION_KEYS.length)
   if (count < 3) return fallback.slice(0, 3)
 
-  const defaultByKey = new Map(fallback.map(option => [option.key, option.label]))
-  return LESSON3_OPTION_KEYS.slice(0, count).map((key, index) => ({
-    key,
-    label: labels[index] ?? defaultByKey.get(key) ?? "",
-  }))
+  const defaultByKey = new Map(fallback.map(option => [option.key, option]))
+  return LESSON3_OPTION_KEYS.slice(0, count).map((key, index) => {
+    const fallbackOption = defaultByKey.get(key)
+    const current = parsed[index]
+    return {
+      key,
+      label: current?.label ?? fallbackOption?.label ?? "",
+      rationale: current?.rationale ?? fallbackOption?.rationale ?? "",
+    }
+  })
 }
 
 export const MODULE4_ID = "module-4-ai-info-detective"
@@ -648,9 +656,9 @@ export function createEmptyModule4Lesson3QuestionCardDraft(kind: Module4Material
         ? "请判断这则新闻是否存在明显的 AI 生成痕迹。"
         : "请判断这张图片是否存在明显的 AI 生成痕迹。",
       options: [
-        { key: "A", label: "明显存在 AI 痕迹" },
-        { key: "B", label: "暂无明显 AI 痕迹" },
-        { key: "C", label: "证据不足，仍需核验" },
+        { key: "A", label: "明显存在 AI 痕迹", rationale: "" },
+        { key: "B", label: "暂无明显 AI 痕迹", rationale: "" },
+        { key: "C", label: "证据不足，仍需核验", rationale: "" },
       ],
       correctOptionKey: undefined,
     },

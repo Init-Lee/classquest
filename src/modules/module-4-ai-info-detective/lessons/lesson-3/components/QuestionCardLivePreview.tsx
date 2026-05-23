@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时 3 题卡实时预览组件。
- * 职责：展示单张 V1 题卡的答题前/答题后视图，帮助学生边编辑边确认呈现效果。
- * 更新触发：题卡四部分结构、预览模式或展示字段变化时，需要同步更新本文件。
+ * 职责：展示单张 V1 题卡的答题前/答题后视图，答题后展示选项解析与来源核验观察指引。
+ * 更新触发：题卡四部分结构、选项 rationale、预览模式或展示字段变化时，需要同步更新本文件。
  */
 
 import type { Module4Lesson3QuestionCardDraft } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -20,6 +20,9 @@ export function QuestionCardLivePreview({
 }) {
   const title = card.kind === "news" ? "新闻题卡 V1" : "图片题卡 V1"
   const correctOption = card.task.options.find(option => option.key === card.task.correctOptionKey)
+  const optionsWithRationale = card.task.options.filter(option => option.rationale?.trim())
+  const otherRationales = optionsWithRationale.filter(option => option.key !== card.task.correctOptionKey)
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-3">
@@ -59,14 +62,31 @@ export function QuestionCardLivePreview({
         {mode === "after" && (
           <div className="space-y-4 rounded-2xl border bg-green-50 p-4">
             <p className="text-sm font-medium text-green-900">答题后解析</p>
-            <p className="text-sm">
-              参考答案：{correctOption ? `${correctOption.key}. ${correctOption.label}` : "未选择"}
-            </p>
+            <div className="text-sm">
+              <p>
+                参考答案：{correctOption ? `${correctOption.key}. ${correctOption.label}` : "未选择"}
+              </p>
+              {correctOption?.rationale?.trim() && (
+                <p className="mt-1 leading-6 text-green-900/90">
+                  选项解析：{correctOption.rationale.trim()}
+                </p>
+              )}
+            </div>
+            {otherRationales.length > 0 && (
+              <div className="space-y-2 rounded-xl bg-white p-3 text-sm">
+                <p className="font-medium text-slate-800">其他选项解析</p>
+                {otherRationales.map(option => (
+                  <p key={option.key} className="leading-6 text-slate-700">
+                    <span className="font-medium">{option.key}.</span> {option.rationale?.trim()}
+                  </p>
+                ))}
+              </div>
+            )}
             <p className="text-sm leading-6">{card.explanation.text || "未填写核心解析"}</p>
             <div className="rounded-xl bg-white p-3 text-sm leading-6">
               <p><strong>来源类型：</strong>{card.source.sourceType ? LESSON3_SOURCE_TYPE_LABELS[card.source.sourceType] : "未选择"}</p>
               <p><strong>来源记录：</strong>{card.source.sourceRecord || "未填写"}</p>
-              <p><strong>核验入口：</strong>{card.source.verificationNote || "未填写"}</p>
+              <p><strong>核验观察指引：</strong>{card.source.verificationNote || "未填写"}</p>
             </div>
           </div>
         )}

@@ -13,6 +13,8 @@ export type SourceType = "web" | "ai_generated" | "field_capture" | "mixed"
 export interface JudgmentOption {
   key: string
   label: string
+  /** 选项级简单解析：说明为何选/不选，与题卡核心解析 explanation 区分 */
+  rationale?: string
 }
 
 export interface NewsMaterial {

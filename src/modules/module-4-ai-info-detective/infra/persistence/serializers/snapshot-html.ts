@@ -400,7 +400,7 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
       <p class="item"><strong>题干：</strong>${escapeHtml(card.task.prompt || "未填写")}</p>
       <p class="note"><strong>核心解析：</strong>${escapeHtml(card.explanation.text || "未填写")}</p>
       <p class="item"><strong>来源记录：</strong>${escapeHtml(card.source.sourceRecord || "未填写")}</p>
-      <p class="item"><strong>核验入口：</strong>${escapeHtml(card.source.verificationNote || "未填写")}</p>
+      <p class="item"><strong>核验观察指引：</strong>${escapeHtml(card.source.verificationNote || "未填写")}</p>
       <p class="item"><strong>自审状态：</strong>${card.selfCheck.allRequiredPassed ? "四部分齐全" : "仍需补充"}</p>
     </section>`
 

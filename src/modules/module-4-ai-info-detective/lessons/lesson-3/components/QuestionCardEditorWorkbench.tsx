@@ -59,6 +59,12 @@ function explanationHint(cardType: "news" | "image"): string {
     : "可写人体结构、文字细节、光影透视、来源不可追溯等依据；证据不足时选择 C 是合理答案。"
 }
 
+function verificationGuidePlaceholder(cardType: "news" | "image"): string {
+  return cardType === "news"
+    ? "打开来源链接后，请核对发布时间、发布机构、正文是否与截图一致，并查找是否有其他权威报道交叉印证。"
+    : "打开生成工具记录或原图来源后，请核对 Prompt 摘要、生成参数，或尝试反向搜图比对画面细节。"
+}
+
 export function QuestionCardEditorWorkbench({
   cardType,
   card,
@@ -324,7 +330,7 @@ export function QuestionCardEditorWorkbench({
             {activeEditorTab === 4 && (
               <div className="space-y-4">
                 <p className="rounded-xl bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900">
-                  来源类型与来源记录由课时 2 快照带入，此处只读；请补充「核验入口提示」。
+                  来源类型与来源记录由课时 2 快照带入，此处只读；请补充点开来源后应观察什么、如何核验与复现。
                 </p>
                 <dl className="space-y-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
                   <div>
@@ -343,7 +349,7 @@ export function QuestionCardEditorWorkbench({
                   </div>
                 </dl>
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium">核验入口提示</span>
+                  <span className="font-medium">核验观察指引</span>
                   <Textarea
                     value={card.source.verificationNote}
                     onChange={event => updateCard({
@@ -351,7 +357,7 @@ export function QuestionCardEditorWorkbench({
                       source: { ...card.source, verificationNote: event.target.value },
                       metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
                     })}
-                    placeholder="例如：可以从原网页发布时间、图片生成记录或反向搜图继续核验。"
+                    placeholder={verificationGuidePlaceholder(cardType)}
                     rows={4}
                   />
                 </label>

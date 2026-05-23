@@ -23,9 +23,9 @@ export const LESSON3_MAX_OPTIONS = 6
 export const MAX_OPTIONS = LESSON3_MAX_OPTIONS
 
 export const LESSON3_DEFAULT_OPTIONS: JudgmentOption[] = [
-  { key: "A", label: "明显存在 AI 痕迹" },
-  { key: "B", label: "暂无明显 AI 痕迹" },
-  { key: "C", label: "证据不足，仍需核验" },
+  { key: "A", label: "明显存在 AI 痕迹", rationale: "" },
+  { key: "B", label: "暂无明显 AI 痕迹", rationale: "" },
+  { key: "C", label: "证据不足，仍需核验", rationale: "" },
 ]
 
 /** 与 LESSON3_DEFAULT_OPTIONS 同义，兼容旧命名 */
@@ -38,7 +38,7 @@ export function isLesson3OptionKey(value: string): value is Module4Lesson3Option
 export function appendLesson3Option(options: JudgmentOption[]): JudgmentOption[] {
   if (options.length >= LESSON3_MAX_OPTIONS) return options
   const nextKey = LESSON3_OPTION_KEYS[options.length]
-  return [...options, { key: nextKey, label: "" }]
+  return [...options, { key: nextKey, label: "", rationale: "" }]
 }
 
 export function removeLastLesson3Option(

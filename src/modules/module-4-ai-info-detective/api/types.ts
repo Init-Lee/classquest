@@ -22,7 +22,7 @@ export interface Lesson3AiReviewRequest {
   }
   task: {
     prompt: string
-    options: Array<{ key: string; label: string }>
+    options: Array<{ key: string; label: string; rationale?: string }>
     correctOptionKey?: string
   }
   explanation: {
