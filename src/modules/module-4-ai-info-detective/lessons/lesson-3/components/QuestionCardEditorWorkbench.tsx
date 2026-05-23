@@ -393,7 +393,10 @@ export function QuestionCardEditorWorkbench({
                 下一项
               </Button>
             </div>
-            <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-3">
+              {!card.selfCheck.allRequiredPassed && (
+                <p className="text-[11px] text-muted-foreground">四项必填完成后可点击</p>
+              )}
               <Button
                 type="button"
                 size="sm"
@@ -403,9 +406,6 @@ export function QuestionCardEditorWorkbench({
               >
                 {completeLabel}
               </Button>
-              {!card.selfCheck.allRequiredPassed && (
-                <p className="text-[11px] text-muted-foreground">四项必填完成后可点击</p>
-              )}
             </div>
           </div>
         </section>
