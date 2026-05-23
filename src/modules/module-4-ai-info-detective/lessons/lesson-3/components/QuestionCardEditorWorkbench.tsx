@@ -1,0 +1,408 @@
+/**
+ * 文件说明：模块 4 课时 3 题卡编辑工作台（单屏驾驶舱）。
+ * 职责：为新闻/图片 V1 题卡提供左 2/3 四 Tab 分段编辑与右 1/3 固定反馈面板（预览、完成度、AI 自检）。
+ * 更新触发：题卡编辑分区、Tab 导航、预览布局、移动端折叠策略或保存/完成流程变化时，需要同步更新本文件。
+ */
+
+import { useState } from "react"
+import { ChevronDown, ChevronUp, Expand } from "lucide-react"
+import type {
+  Module4Lesson3AiReviewState,
+  Module4Lesson3QuestionCardDraft,
+} from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import { LESSON3_DEFAULT_OPTIONS, LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
+import { evaluateLesson3SelfCheck } from "../utils/evaluate-lesson3-self-check"
+import { Button } from "@/shared/ui/button"
+import { Textarea } from "@/shared/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/dialog"
+import { cn } from "@/shared/utils/cn"
+import { AiReviewPanel } from "./AiReviewPanel"
+import { InlineSelfCheckPanel } from "./InlineSelfCheckPanel"
+import { QuestionCardLivePreview } from "./QuestionCardLivePreview"
+import type { Lesson3PreviewMode } from "./PreviewModeTabs"
+
+type EditorTab = 1 | 2 | 3 | 4
+
+const TAB_ITEMS: Array<{ id: EditorTab; label: string; shortLabel: string }> = [
+  { id: 1, label: "素材展示", shortLabel: "素材" },
+  { id: 2, label: "判断任务", shortLabel: "任务" },
+  { id: 3, label: "核心解析", shortLabel: "解析" },
+  { id: 4, label: "来源核验", shortLabel: "来源" },
+]
+
+function withSelfCheck(card: Module4Lesson3QuestionCardDraft): Module4Lesson3QuestionCardDraft {
+  return { ...card, selfCheck: evaluateLesson3SelfCheck(card), updatedAt: new Date().toISOString() }
+}
+
+function tabComplete(card: Module4Lesson3QuestionCardDraft, tab: EditorTab): boolean {
+  const check = card.selfCheck
+  if (tab === 1) return check.materialReady
+  if (tab === 2) return check.taskReady && check.answerSelected
+  if (tab === 3) return check.explanationReady
+  return check.sourceReady && check.verificationReady
+}
+
+function cardTitle(cardType: "news" | "image"): string {
+  return cardType === "news" ? "新闻题卡 V1" : "图片题卡 V1"
+}
+
+function explanationHint(cardType: "news" | "image"): string {
+  return cardType === "news"
+    ? "写 40–120 字左右，说明标题、数据出处、截图来源等具体依据；避免只写「我觉得像 AI」。"
+    : "可写人体结构、文字细节、光影透视、来源不可追溯等依据；证据不足时选择 C 是合理答案。"
+}
+
+export function QuestionCardEditorWorkbench({
+  cardType,
+  card,
+  previewMode,
+  onPreviewModeChange,
+  onCardChange,
+  onComplete,
+  completeLabel,
+}: {
+  cardType: "news" | "image"
+  card: Module4Lesson3QuestionCardDraft
+  previewMode: Lesson3PreviewMode
+  onPreviewModeChange: (mode: Lesson3PreviewMode) => void
+  onCardChange: (card: Module4Lesson3QuestionCardDraft) => void
+  onComplete: () => void
+  completeLabel: string
+}) {
+  const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>(1)
+  const [savedHint, setSavedHint] = useState(false)
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false)
+
+  const snapshot = card.sourceMaterialSnapshot
+  const title = cardTitle(cardType)
+
+  const updateCard = (next: Module4Lesson3QuestionCardDraft) => onCardChange(withSelfCheck(next))
+
+  const refreshSelfCheck = () => updateCard(card)
+
+  const switchTab = (tab: EditorTab) => {
+    setActiveEditorTab(tab)
+    refreshSelfCheck()
+  }
+
+  const updateAiReview = (aiReview: Module4Lesson3AiReviewState) => {
+    updateCard({
+      ...card,
+      aiReview,
+      metrics: {
+        ...card.metrics,
+        aiReviewRequestCount: aiReview.status === "pending"
+          ? card.metrics.aiReviewRequestCount + 1
+          : card.metrics.aiReviewRequestCount,
+      },
+    })
+  }
+
+  const updatePreviewMode = (mode: Lesson3PreviewMode) => {
+    if (mode !== previewMode) {
+      updateCard({
+        ...card,
+        metrics: { ...card.metrics, previewModeSwitchCount: card.metrics.previewModeSwitchCount + 1 },
+      })
+    }
+    onPreviewModeChange(mode)
+  }
+
+  const handleSaveSection = () => {
+    updateCard(card)
+    setSavedHint(true)
+    window.setTimeout(() => setSavedHint(false), 2000)
+  }
+
+  const goPrevTab = () => {
+    if (activeEditorTab > 1) switchTab((activeEditorTab - 1) as EditorTab)
+  }
+
+  const goNextTab = () => {
+    if (activeEditorTab < 4) switchTab((activeEditorTab + 1) as EditorTab)
+  }
+
+  const previewPanel = (
+    <div className="flex min-h-0 flex-col gap-4">
+      <QuestionCardLivePreview card={card} mode={previewMode} onModeChange={updatePreviewMode} />
+      <InlineSelfCheckPanel selfCheck={card.selfCheck} />
+      <AiReviewPanel card={card} onReviewStateChange={updateAiReview} />
+    </div>
+  )
+
+  return (
+    <div className="flex h-[var(--module4-lesson3-content-h)] w-full min-w-0 flex-col overflow-hidden px-4 sm:px-8 lg:px-10">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] lg:gap-6">
+        {/* 移动端预览折叠区 */}
+        <div className="lg:hidden">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between rounded-2xl border bg-white px-4 py-3 text-left"
+            onClick={() => setMobilePreviewOpen(open => !open)}
+          >
+            <span className="text-sm font-medium">{title} · 实时预览与完成度</span>
+            {mobilePreviewOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {mobilePreviewOpen && (
+            <div className="mt-3 max-h-[42vh] overflow-y-auto rounded-2xl border bg-slate-50/50 p-3">
+              {previewPanel}
+            </div>
+          )}
+        </div>
+
+        {/* 左侧编辑区 */}
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border bg-white">
+          <div className="border-b px-4 py-3">
+            <h3 className="text-lg font-semibold">{title} · 编辑工作台</h3>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              素材与来源来自课时 2 快照，本页编辑不会改动课时 2 原记录。
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1 border-b bg-slate-50 p-2 sm:grid-cols-4">
+            {TAB_ITEMS.map(item => {
+              const complete = tabComplete(card, item.id)
+              const active = activeEditorTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={cn(
+                    "rounded-xl px-2 py-2 text-left text-xs transition sm:px-3 sm:text-sm",
+                    active ? "bg-white shadow-sm ring-1 ring-primary/20" : "hover:bg-white/70",
+                  )}
+                  onClick={() => switchTab(item.id)}
+                >
+                  <span className="font-medium">{item.shortLabel}</span>
+                  <span className="mt-0.5 block text-[10px] sm:text-xs">
+                    <span className={complete ? "text-green-600" : "text-amber-600"}>
+                      {complete ? "已完成" : "待补充"}
+                    </span>
+                    <span className="hidden sm:inline"> · {item.label}</span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+            {activeEditorTab === 1 && (
+              <div className="space-y-4">
+                <div className="rounded-xl bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900">
+                  以下内容来自课时 2 快照，仅供题卡展示参考；你只需补充「展示说明」，不会回写课时 2。
+                </div>
+                {card.material.asset ? (
+                  <div className="relative">
+                    <img
+                      src={card.material.asset.dataUrl}
+                      alt={snapshot.lesson2TitleOrName || title}
+                      className="max-h-56 w-full rounded-2xl border object-contain sm:max-h-72"
+                    />
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="secondary" size="sm" className="absolute bottom-3 right-3 gap-1">
+                          <Expand className="h-3.5 w-3.5" />
+                          放大查看
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-h-[90vh] max-w-4xl overflow-auto">
+                        <DialogHeader>
+                          <DialogTitle>{snapshot.lesson2TitleOrName || "素材预览"}</DialogTitle>
+                        </DialogHeader>
+                        <img
+                          src={card.material.asset.dataUrl}
+                          alt={snapshot.lesson2TitleOrName || title}
+                          className="max-h-[70vh] w-full rounded-xl object-contain"
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    暂无素材图片（请先在课时 2 完成素材准备）
+                  </div>
+                )}
+                <dl className="grid gap-3 rounded-2xl border bg-slate-50/80 p-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
+                    <dd className="mt-1 font-medium">{snapshot.lesson2TitleOrName || "未填写"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">课时 2 疑点提示（快照）</dt>
+                    <dd className="mt-1 leading-6">{snapshot.lesson2ClueNote || "无"}</dd>
+                  </div>
+                </dl>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium">展示说明</span>
+                  <Textarea
+                    value={card.material.displayNote}
+                    onChange={event => updateCard({
+                      ...card,
+                      material: { ...card.material, displayNote: event.target.value },
+                      metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
+                    })}
+                    placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
+                    rows={4}
+                  />
+                </label>
+              </div>
+            )}
+
+            {activeEditorTab === 2 && (
+              <div className="space-y-4">
+                <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs leading-5 text-muted-foreground">
+                  题干需清楚说明判断对象；选项固定为 A/B/C 三项，请选择参考答案。
+                </p>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium">题干</span>
+                  <Textarea
+                    value={card.task.prompt}
+                    onChange={event => updateCard({
+                      ...card,
+                      task: { ...card.task, prompt: event.target.value, options: LESSON3_DEFAULT_OPTIONS },
+                      metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
+                    })}
+                    rows={3}
+                  />
+                </label>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">固定选项（不可自定义）</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {LESSON3_DEFAULT_OPTIONS.map(option => (
+                      <label
+                        key={option.key}
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 text-sm transition",
+                          card.task.correctOptionKey === option.key && "border-primary bg-primary/5",
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name={`${card.id}-answer`}
+                          className="mt-1 h-4 w-4"
+                          checked={card.task.correctOptionKey === option.key}
+                          onChange={() => updateCard({
+                            ...card,
+                            task: {
+                              ...card.task,
+                              options: LESSON3_DEFAULT_OPTIONS,
+                              correctOptionKey: option.key as "A" | "B" | "C",
+                            },
+                            metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
+                          })}
+                        />
+                        <span>{option.key}. {option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeEditorTab === 3 && (
+              <div className="space-y-4">
+                <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+                  {explanationHint(cardType)}
+                </p>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium">核心解析</span>
+                  <Textarea
+                    value={card.explanation.text}
+                    onChange={event => updateCard({
+                      ...card,
+                      explanation: {
+                        text: event.target.value,
+                        editCount: card.explanation.editCount + 1,
+                        updatedAt: new Date().toISOString(),
+                      },
+                      metrics: { ...card.metrics, explanationEditCount: card.metrics.explanationEditCount + 1 },
+                    })}
+                    placeholder={cardType === "news"
+                      ? "例如：这则新闻目前只有截图，缺少原网页链接；标题中的数据出处不清，需要根据来源记录继续核验。"
+                      : "例如：画面中背景文字和边缘融合存在异常，但来源记录仍需核验，因此不能只凭画面下最终结论。"}
+                    rows={6}
+                  />
+                </label>
+              </div>
+            )}
+
+            {activeEditorTab === 4 && (
+              <div className="space-y-4">
+                <p className="rounded-xl bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900">
+                  来源类型与来源记录由课时 2 快照带入，此处只读；请补充「核验入口提示」。
+                </p>
+                <dl className="space-y-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">来源类型（快照）</dt>
+                    <dd className="mt-1 font-medium">
+                      {card.source.sourceType
+                        ? LESSON3_SOURCE_TYPE_LABELS[card.source.sourceType]
+                        : "未选择"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">来源记录（快照）</dt>
+                    <dd className="mt-1 whitespace-pre-wrap leading-6">
+                      {card.source.sourceRecord || "未填写"}
+                    </dd>
+                  </div>
+                </dl>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium">核验入口提示</span>
+                  <Textarea
+                    value={card.source.verificationNote}
+                    onChange={event => updateCard({
+                      ...card,
+                      source: { ...card.source, verificationNote: event.target.value },
+                      metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
+                    })}
+                    placeholder="例如：可以从原网页发布时间、图片生成记录或反向搜图继续核验。"
+                    rows={4}
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-slate-50/80 px-4 py-3">
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={activeEditorTab === 1} onClick={goPrevTab}>
+                上一步
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={handleSaveSection}>
+                {savedHint ? "已保存" : "保存当前项"}
+              </Button>
+              <Button type="button" variant="outline" size="sm" disabled={activeEditorTab === 4} onClick={goNextTab}>
+                下一项
+              </Button>
+            </div>
+            {card.selfCheck.allRequiredPassed ? (
+              <Button type="button" size="sm" onClick={onComplete}>
+                {completeLabel}
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">四项必填完成后可进入下一步</p>
+            )}
+          </div>
+        </section>
+
+        {/* 右侧反馈面板（桌面） */}
+        <aside className="hidden min-h-0 min-w-[360px] flex-col overflow-hidden lg:flex">
+          <div className="mb-2 flex items-center justify-between gap-2 px-1">
+            <h3 className="text-base font-semibold">{title}</h3>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">反馈面板</span>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {previewPanel}
+          </div>
+        </aside>
+      </div>
+    </div>
+  )
+}

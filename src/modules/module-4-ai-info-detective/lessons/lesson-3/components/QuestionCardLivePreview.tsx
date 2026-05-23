@@ -8,7 +8,6 @@ import type { Module4Lesson3QuestionCardDraft } from "@/modules/module-4-ai-info
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
 import { type Lesson3PreviewMode, PreviewModeTabs } from "./PreviewModeTabs"
-import { InlineSelfCheckPanel } from "./InlineSelfCheckPanel"
 
 export function QuestionCardLivePreview({
   card,
@@ -68,8 +67,6 @@ export function QuestionCardLivePreview({
             </div>
           </div>
         )}
-
-        <InlineSelfCheckPanel selfCheck={card.selfCheck} />
       </CardContent>
     </Card>
   )

@@ -82,7 +82,7 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
     : LESSON3_STEPS
       .filter(step => canEnterLesson3Step(portfolio.lesson2, portfolio.lesson3, step.id))
       .map(step => step.id)
-  const usesScreenLayout = stepId === 1
+  const usesScreenLayout = stepId === 1 || stepId === 2 || stepId === 3
 
   return (
     <>

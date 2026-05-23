@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时 3 第 2 步新闻题卡编辑页。
- * 职责：从课时 2 新闻素材生成快照草稿，并提供新闻题卡 V1 的编辑、预览、自审与保存入口。
- * 更新触发：新闻题卡字段、草稿迁移规则、编辑器布局或进入第 3 步策略变化时，需要同步更新本文件。
+ * 职责：从课时 2 新闻素材生成快照草稿，并挂载新闻题卡 V1 编辑工作台。
+ * 更新触发：新闻题卡字段、草稿迁移规则、工作台参数或进入第 3 步策略变化时，需要同步更新本文件。
  */
 
 import { useEffect, useState } from "react"
@@ -10,7 +10,7 @@ import type { Module4Lesson3QuestionCardDraft, Module4Portfolio } from "@/module
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { evaluateLesson3QuickCheck } from "../utils/evaluate-lesson3-quickcheck"
 import { ensureLesson3DraftFromLesson2 } from "../utils/build-lesson3-draft"
-import { QuestionCardEditorLayout } from "../components/QuestionCardEditorLayout"
+import { QuestionCardEditorWorkbench } from "../components/QuestionCardEditorWorkbench"
 import type { Lesson3PreviewMode } from "../components/PreviewModeTabs"
 
 export default function Step2NewsCardEditor() {
@@ -64,14 +64,14 @@ export default function Step2NewsCardEditor() {
   }
 
   return (
-    <QuestionCardEditorLayout
+    <QuestionCardEditorWorkbench
+      cardType="news"
       card={portfolio.lesson3.newsCard}
       previewMode={previewMode}
       onPreviewModeChange={setPreviewMode}
       onCardChange={updateNewsCard}
       onComplete={complete}
-      completeButtonLabel="完成新闻题卡 V1，进入图片题卡"
-      helperText="新闻题卡会从课时2新闻素材复制快照；你在这里填写题干、答案、解析和核验入口，不会改动课时2素材。"
+      completeLabel="完成新闻题卡 V1，进入图片题卡"
     />
   )
 }

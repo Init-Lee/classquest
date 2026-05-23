@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时 3 第 3 步图片题卡编辑页。
- * 职责：从课时 2 图片素材生成快照草稿，并提供图片题卡 V1 的编辑、预览、自审与保存入口。
- * 更新触发：图片题卡字段、草稿迁移规则、编辑器布局或进入第 4 步策略变化时，需要同步更新本文件。
+ * 职责：从课时 2 图片素材生成快照草稿，并挂载图片题卡 V1 编辑工作台。
+ * 更新触发：图片题卡字段、草稿迁移规则、工作台参数或进入第 4 步策略变化时，需要同步更新本文件。
  */
 
 import { useEffect, useState } from "react"
@@ -10,7 +10,7 @@ import type { Module4Lesson3QuestionCardDraft, Module4Portfolio } from "@/module
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { evaluateLesson3QuickCheck } from "../utils/evaluate-lesson3-quickcheck"
 import { ensureLesson3DraftFromLesson2 } from "../utils/build-lesson3-draft"
-import { QuestionCardEditorLayout } from "../components/QuestionCardEditorLayout"
+import { QuestionCardEditorWorkbench } from "../components/QuestionCardEditorWorkbench"
 import type { Lesson3PreviewMode } from "../components/PreviewModeTabs"
 
 export default function Step3ImageCardEditor() {
@@ -64,14 +64,14 @@ export default function Step3ImageCardEditor() {
   }
 
   return (
-    <QuestionCardEditorLayout
+    <QuestionCardEditorWorkbench
+      cardType="image"
       card={portfolio.lesson3.imageCard}
       previewMode={previewMode}
       onPreviewModeChange={setPreviewMode}
       onCardChange={updateImageCard}
       onComplete={complete}
-      completeButtonLabel="完成图片题卡 V1，进入双卡总览"
-      helperText="图片题卡可以写人体结构、文字细节、光影透视、来源不可追溯等依据；证据不足时选择 C 是合理答案。"
+      completeLabel="完成图片题卡 V1，进入双卡总览"
     />
   )
 }
