@@ -247,7 +247,7 @@ export function QuestionCardEditorWorkbench({
             )}
           >
             {activeEditorTab === 1 && (
-              <div className="flex h-full min-h-0 flex-col gap-4 lg:overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-3 lg:overflow-hidden">
                 <div className="flex min-h-[12rem] flex-[1] flex-col lg:min-h-0 lg:max-h-[50%]">
                   {card.material.asset ? (
                     <div className="relative flex h-full min-h-[12rem] items-center justify-center overflow-hidden rounded-2xl border bg-slate-50">
@@ -281,23 +281,26 @@ export function QuestionCardEditorWorkbench({
                     </div>
                   )}
                 </div>
-                <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-3 overflow-y-auto lg:max-h-[50%] lg:pr-1">
-                  <dl className="grid gap-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
-                    <div>
+                <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-2 overflow-hidden lg:max-h-[50%]">
+                  <dl className="grid shrink-0 gap-2 rounded-xl border bg-slate-50/80 p-3 text-sm">
+                    <div className="min-w-0">
                       <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
-                      <dd className="mt-1 font-medium">{snapshot.lesson2TitleOrName || "未填写"}</dd>
+                      <dd className="mt-0.5 truncate font-medium">{snapshot.lesson2TitleOrName || "未填写"}</dd>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <dt className="text-xs text-muted-foreground">课时 2 疑点提示（快照）</dt>
-                      <dd className="mt-1 leading-6">{snapshot.lesson2ClueNote || "无"}</dd>
+                      <dd className="mt-0.5 line-clamp-2 text-sm leading-5 text-muted-foreground">
+                        {snapshot.lesson2ClueNote || "无"}
+                      </dd>
                     </div>
                   </dl>
-                  <label className="block space-y-2 text-sm">
+                  <label className="block shrink-0 space-y-1.5 px-0.5 pb-0.5 text-sm">
                     <span className="font-medium">展示说明</span>
                     <Textarea
                       {...displayNoteField}
                       placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
-                      rows={4}
+                      rows={2}
+                      className="min-h-[72px] max-h-[96px] resize-none py-2"
                     />
                   </label>
                 </div>
