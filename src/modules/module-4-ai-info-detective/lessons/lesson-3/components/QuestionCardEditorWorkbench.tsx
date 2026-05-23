@@ -203,16 +203,21 @@ export function QuestionCardEditorWorkbench({
             </p>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+          <div
+            className={cn(
+              "min-h-0 flex-1 px-4 py-4 sm:px-5",
+              activeEditorTab === 1 ? "overflow-y-auto lg:overflow-hidden" : "overflow-y-auto",
+            )}
+          >
             {activeEditorTab === 1 && (
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-                <div className="shrink-0 lg:w-2/5">
+              <div className="flex h-full min-h-0 flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:overflow-hidden">
+                <div className="min-h-0 min-w-0 lg:h-full">
                   {card.material.asset ? (
-                    <div className="relative">
+                    <div className="relative flex h-64 min-h-[12rem] items-center justify-center overflow-hidden rounded-2xl border bg-slate-50 sm:h-80 lg:h-full lg:min-h-0">
                       <img
                         src={card.material.asset.dataUrl}
                         alt={snapshot.lesson2TitleOrName || title}
-                        className="max-h-48 w-full rounded-2xl border object-contain sm:max-h-56 lg:max-h-full lg:min-h-[12rem]"
+                        className="max-h-full max-w-full object-contain"
                       />
                       <Dialog>
                         <DialogTrigger asChild>
@@ -234,12 +239,12 @@ export function QuestionCardEditorWorkbench({
                       </Dialog>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <div className="flex h-64 min-h-[12rem] items-center justify-center rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground sm:h-80 lg:h-full lg:min-h-0">
                       暂无素材图片（请先在课时 2 完成素材准备）
                     </div>
                   )}
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 lg:overflow-y-auto lg:pr-1">
                   <dl className="grid gap-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
                     <div>
                       <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>

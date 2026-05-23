@@ -10,7 +10,6 @@ import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domain
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Textarea } from "@/shared/ui/textarea"
-import { cn } from "@/shared/utils/cn"
 import {
   appendLesson3Option,
   LESSON3_MAX_OPTIONS,
@@ -60,26 +59,23 @@ export function TaskOptionsEditor({
         <p className="text-xs text-muted-foreground">编辑各选项文案，点选右侧 radio 标记参考答案。</p>
       </div>
 
-      <div className="space-y-2.5" role="radiogroup" aria-label="请选择正确答案">
+      <div className="overflow-hidden rounded-xl border bg-white" role="radiogroup" aria-label="请选择正确答案">
         {options.map((option, index) => (
           <div
             key={option.key}
-            className={cn(
-              "space-y-2 rounded-xl px-2.5 py-2 transition",
-              correctOptionKey === option.key
-                ? "bg-primary/5 ring-1 ring-primary/40"
-                : "bg-slate-50/60",
-            )}
+            className="border-b px-3 py-3 last:border-b-0"
           >
-            <div className="flex flex-nowrap items-center gap-2">
-              <span className="w-8 shrink-0 text-center text-sm font-semibold">{option.key}</span>
+            <div className="flex min-w-0 flex-nowrap items-center gap-2">
+              <span className="flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-700">
+                {option.key}
+              </span>
               <Input
                 value={option.label}
                 onChange={event => updateOption(index, { label: event.target.value })}
                 placeholder={`填写选项 ${option.key} 文案`}
                 className="h-9 min-w-0 flex-1 text-sm"
               />
-              <label className="flex shrink-0 cursor-pointer items-center justify-center p-1">
+              <label className="flex h-9 shrink-0 cursor-pointer items-center justify-center px-1">
                 <input
                   type="radio"
                   name={`${cardId}-correct-answer`}
@@ -90,8 +86,8 @@ export function TaskOptionsEditor({
                 />
               </label>
             </div>
-            <label className="block w-full space-y-1.5">
-              <span className="text-xs text-muted-foreground">选项解析（选填）</span>
+            <label className="mt-2 block w-full space-y-1.5 pl-10">
+              <span className="text-xs text-muted-foreground">选项解析</span>
               <Textarea
                 value={option.rationale ?? ""}
                 onChange={event => updateOption(index, { rationale: event.target.value })}
