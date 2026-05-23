@@ -27,6 +27,7 @@ import { AiReviewPanel } from "./AiReviewPanel"
 import { InlineSelfCheckPanel } from "./InlineSelfCheckPanel"
 import { QuestionCardLivePreview } from "./QuestionCardLivePreview"
 import type { Lesson3PreviewMode } from "./PreviewModeTabs"
+import { useImeSafeDraftValue } from "./useImeSafeDraftValue"
 
 type EditorTab = 1 | 2 | 3 | 4
 
@@ -120,6 +121,43 @@ export function QuestionCardEditorWorkbench({
     }
     onPreviewModeChange(mode)
   }
+
+  const displayNoteField = useImeSafeDraftValue({
+    value: card.material.displayNote,
+    onCommit: displayNote => updateCard({
+      ...card,
+      material: { ...card.material, displayNote },
+      metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
+    }),
+  })
+  const taskPromptField = useImeSafeDraftValue({
+    value: card.task.prompt,
+    onCommit: prompt => updateCard({
+      ...card,
+      task: { ...card.task, prompt },
+      metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
+    }),
+  })
+  const explanationField = useImeSafeDraftValue({
+    value: card.explanation.text,
+    onCommit: text => updateCard({
+      ...card,
+      explanation: {
+        text,
+        editCount: card.explanation.editCount + 1,
+        updatedAt: new Date().toISOString(),
+      },
+      metrics: { ...card.metrics, explanationEditCount: card.metrics.explanationEditCount + 1 },
+    }),
+  })
+  const verificationNoteField = useImeSafeDraftValue({
+    value: card.source.verificationNote,
+    onCommit: verificationNote => updateCard({
+      ...card,
+      source: { ...card.source, verificationNote },
+      metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
+    }),
+  })
 
   const handleSaveSection = () => {
     updateCard(card)
@@ -258,12 +296,7 @@ export function QuestionCardEditorWorkbench({
                   <label className="block space-y-2 text-sm">
                     <span className="font-medium">展示说明</span>
                     <Textarea
-                      value={card.material.displayNote}
-                      onChange={event => updateCard({
-                        ...card,
-                        material: { ...card.material, displayNote: event.target.value },
-                        metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
-                      })}
+                      {...displayNoteField}
                       placeholder="只描述素材可见信息或课时 2 留下的疑点，不写最终判断。"
                       rows={4}
                     />
@@ -280,12 +313,7 @@ export function QuestionCardEditorWorkbench({
                 <label className="block space-y-2 text-sm">
                   <span className="font-medium">题干</span>
                   <Textarea
-                    value={card.task.prompt}
-                    onChange={event => updateCard({
-                      ...card,
-                      task: { ...card.task, prompt: event.target.value },
-                      metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
-                    })}
+                    {...taskPromptField}
                     rows={3}
                   />
                 </label>
@@ -310,16 +338,7 @@ export function QuestionCardEditorWorkbench({
                 <label className="block space-y-2 text-sm">
                   <span className="font-medium">核心解析</span>
                   <Textarea
-                    value={card.explanation.text}
-                    onChange={event => updateCard({
-                      ...card,
-                      explanation: {
-                        text: event.target.value,
-                        editCount: card.explanation.editCount + 1,
-                        updatedAt: new Date().toISOString(),
-                      },
-                      metrics: { ...card.metrics, explanationEditCount: card.metrics.explanationEditCount + 1 },
-                    })}
+                    {...explanationField}
                     placeholder={cardType === "news"
                       ? "例如：这则新闻目前只有截图，缺少原网页链接；标题中的数据出处不清，需要根据来源记录继续核验。"
                       : "例如：画面中背景文字和边缘融合存在异常，但来源记录仍需核验，因此不能只凭画面下最终结论。"}
@@ -353,12 +372,7 @@ export function QuestionCardEditorWorkbench({
                 <label className="block space-y-2 text-sm">
                   <span className="font-medium">核验观察指引</span>
                   <Textarea
-                    value={card.source.verificationNote}
-                    onChange={event => updateCard({
-                      ...card,
-                      source: { ...card.source, verificationNote: event.target.value },
-                      metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
-                    })}
+                    {...verificationNoteField}
                     placeholder={verificationGuidePlaceholder(cardType)}
                     rows={4}
                   />

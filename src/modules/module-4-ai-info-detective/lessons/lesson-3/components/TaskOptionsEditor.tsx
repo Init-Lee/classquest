@@ -9,13 +9,66 @@ import type { Module4Lesson3OptionKey } from "@/modules/module-4-ai-info-detecti
 import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
-import { Textarea } from "@/shared/ui/textarea"
 import {
   appendLesson3Option,
   LESSON3_MAX_OPTIONS,
   LESSON3_MIN_OPTIONS,
   removeLastLesson3Option,
 } from "../data/default-options"
+import { useImeSafeDraftValue } from "./useImeSafeDraftValue"
+
+function TaskOptionRow({
+  cardId,
+  option,
+  index,
+  correctOptionKey,
+  onOptionChange,
+  onSelectCorrectOption,
+}: {
+  cardId: string
+  option: JudgmentOption
+  index: number
+  correctOptionKey?: Module4Lesson3OptionKey
+  onOptionChange: (index: number, patch: Partial<JudgmentOption>) => void
+  onSelectCorrectOption: (key: Module4Lesson3OptionKey) => void
+}) {
+  const labelField = useImeSafeDraftValue({
+    value: option.label,
+    onCommit: label => onOptionChange(index, { label }),
+  })
+  const rationaleField = useImeSafeDraftValue({
+    value: option.rationale ?? "",
+    onCommit: rationale => onOptionChange(index, { rationale }),
+  })
+
+  return (
+    <div className="grid min-w-[720px] grid-cols-[2.5rem_minmax(12rem,1.2fr)_5rem_minmax(12rem,1fr)] items-center gap-2 border-b px-3 py-2 last:border-b-0">
+      <span className="flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-700">
+        {option.key}
+      </span>
+      <Input
+        {...labelField}
+        placeholder={`填写选项 ${option.key} 文案`}
+        className="h-9 min-w-0 text-sm"
+      />
+      <label className="flex h-9 cursor-pointer items-center justify-center">
+        <input
+          type="radio"
+          name={`${cardId}-correct-answer`}
+          className="h-4 w-4 accent-primary"
+          checked={correctOptionKey === option.key}
+          onChange={() => onSelectCorrectOption(option.key as Module4Lesson3OptionKey)}
+          aria-label={`将选项 ${option.key} 设为参考答案`}
+        />
+      </label>
+      <Input
+        {...rationaleField}
+        placeholder="选项解析"
+        className="h-9 min-w-0 text-sm"
+      />
+    </div>
+  )
+}
 
 export function TaskOptionsEditor({
   cardId,
@@ -59,44 +112,23 @@ export function TaskOptionsEditor({
         <p className="text-xs text-muted-foreground">编辑各选项文案，点选右侧 radio 标记参考答案。</p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-white" role="radiogroup" aria-label="请选择正确答案">
+      <div className="overflow-x-auto rounded-xl border bg-white" role="radiogroup" aria-label="请选择正确答案">
+        <div className="grid min-w-[720px] grid-cols-[2.5rem_minmax(12rem,1.2fr)_5rem_minmax(12rem,1fr)] items-center gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-medium text-muted-foreground">
+          <span>选项</span>
+          <span>答案</span>
+          <span className="text-center">正确答案</span>
+          <span>选项解析</span>
+        </div>
         {options.map((option, index) => (
-          <div
+          <TaskOptionRow
             key={option.key}
-            className="border-b px-3 py-3 last:border-b-0"
-          >
-            <div className="flex min-w-0 flex-nowrap items-center gap-2">
-              <span className="flex h-9 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-700">
-                {option.key}
-              </span>
-              <Input
-                value={option.label}
-                onChange={event => updateOption(index, { label: event.target.value })}
-                placeholder={`填写选项 ${option.key} 文案`}
-                className="h-9 min-w-0 flex-1 text-sm"
-              />
-              <label className="flex h-9 shrink-0 cursor-pointer items-center justify-center px-1">
-                <input
-                  type="radio"
-                  name={`${cardId}-correct-answer`}
-                  className="h-4 w-4 accent-primary"
-                  checked={correctOptionKey === option.key}
-                  onChange={() => selectCorrectOption(option.key as Module4Lesson3OptionKey)}
-                  aria-label={`将选项 ${option.key} 设为参考答案`}
-                />
-              </label>
-            </div>
-            <label className="mt-2 block w-full space-y-1.5 pl-10">
-              <span className="text-xs text-muted-foreground">选项解析</span>
-              <Textarea
-                value={option.rationale ?? ""}
-                onChange={event => updateOption(index, { rationale: event.target.value })}
-                placeholder="说明为什么选 / 为什么不选该选项，帮助学生理解错在哪里。"
-                rows={2}
-                className="min-h-[3.5rem] resize-y text-sm"
-              />
-            </label>
-          </div>
+            cardId={cardId}
+            option={option}
+            index={index}
+            correctOptionKey={correctOptionKey}
+            onOptionChange={updateOption}
+            onSelectCorrectOption={selectCorrectOption}
+          />
         ))}
       </div>
 
