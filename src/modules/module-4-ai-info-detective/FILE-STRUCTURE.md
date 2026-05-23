@@ -136,7 +136,7 @@ src/modules/module-4-ai-info-detective/
 - `lessons/lesson-2/utils/source-record-check.ts`：来源记录格式检查工具，只输出「来源记录格式通过」，不判断真实可信。
 - `lessons/lesson-2/utils/evaluate-lesson2-quickcheck.ts`：根据素材完成情况和过程计数生成 T1/T2/T3。
 - `lessons/lesson-3/`：课时 3「题目卡 V1 制作与解析填写」本地前端流程；从课时 2 新闻/图片素材复制快照，制作两张 V1 题卡，不反向修改课时 2。
-- `lessons/lesson-3/components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左 2/3 四 Tab 分段编辑，右 1/3 固定反馈面板（预览、结构完成度、AI 自检）；第 2、3 步共用；禁止迁入 `shared/` 或跨模块 export。
+- `lessons/lesson-3/components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左右各 50%（四 Tab 编辑 | 两行预览含结构完成度与 AI 自检）；第 2、3 步共用；禁止迁入 `shared/` 或跨模块 export。
 - `lessons/lesson-3/components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览。
 - `lessons/lesson-3/components/AiReviewPanel.tsx`：题卡自检助手面板；自检失败不阻断保存 V1。
 - `lessons/lesson-3/utils/build-lesson3-draft.ts`：从课时 2 素材生成课时 3 快照草稿，增加 `assetFingerprint`，不比较整段 base64。

@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 课时 3 题卡编辑工作台（单屏驾驶舱）。
- * 职责：为新闻/图片 V1 题卡提供左 2/3 四 Tab 分段编辑与右 1/3 固定反馈面板（预览、完成度、AI 自检）。
+ * 职责：为新闻/图片 V1 题卡提供左右各 50% 的单屏驾驶舱：左侧四 Tab 分段编辑，右侧两行预览（图+题 / 解析+完成度与 AI 自检）。
  * 更新触发：题卡编辑分区、Tab 导航、预览布局、移动端折叠策略或保存/完成流程变化时，需要同步更新本文件。
  */
 
@@ -23,8 +23,6 @@ import {
   DialogTrigger,
 } from "@/shared/ui/dialog"
 import { cn } from "@/shared/utils/cn"
-import { AiReviewPanel } from "./AiReviewPanel"
-import { InlineSelfCheckPanel } from "./InlineSelfCheckPanel"
 import { QuestionCardLivePreview } from "./QuestionCardLivePreview"
 import type { Lesson3PreviewMode } from "./PreviewModeTabs"
 import { useImeSafeDraftValue } from "./useImeSafeDraftValue"
@@ -174,16 +172,17 @@ export function QuestionCardEditorWorkbench({
   }
 
   const previewPanel = (
-    <div className="flex min-h-0 flex-col gap-4">
-      <QuestionCardLivePreview card={card} mode={previewMode} onModeChange={updatePreviewMode} />
-      <InlineSelfCheckPanel selfCheck={card.selfCheck} />
-      <AiReviewPanel card={card} onReviewStateChange={updateAiReview} />
-    </div>
+    <QuestionCardLivePreview
+      card={card}
+      mode={previewMode}
+      onModeChange={updatePreviewMode}
+      onReviewStateChange={updateAiReview}
+    />
   )
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-4 sm:px-8 lg:px-10">
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] lg:grid-rows-1 lg:gap-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:gap-6">
         {/* 移动端预览折叠区 */}
         <div className="shrink-0 lg:hidden">
           <button
@@ -248,10 +247,10 @@ export function QuestionCardEditorWorkbench({
             )}
           >
             {activeEditorTab === 1 && (
-              <div className="flex h-full min-h-0 flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:overflow-hidden">
-                <div className="min-h-0 min-w-0 lg:h-full">
+              <div className="flex h-full min-h-0 flex-col gap-4 lg:overflow-hidden">
+                <div className="flex min-h-[12rem] flex-[1] flex-col lg:min-h-0 lg:max-h-[50%]">
                   {card.material.asset ? (
-                    <div className="relative flex h-64 min-h-[12rem] items-center justify-center overflow-hidden rounded-2xl border bg-slate-50 sm:h-80 lg:h-full lg:min-h-0">
+                    <div className="relative flex h-full min-h-[12rem] items-center justify-center overflow-hidden rounded-2xl border bg-slate-50">
                       <img
                         src={card.material.asset.dataUrl}
                         alt={snapshot.lesson2TitleOrName || title}
@@ -277,12 +276,12 @@ export function QuestionCardEditorWorkbench({
                       </Dialog>
                     </div>
                   ) : (
-                    <div className="flex h-64 min-h-[12rem] items-center justify-center rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground sm:h-80 lg:h-full lg:min-h-0">
+                    <div className="flex h-full min-h-[12rem] items-center justify-center rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
                       暂无素材图片（请先在课时 2 完成素材准备）
                     </div>
                   )}
                 </div>
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 lg:overflow-y-auto lg:pr-1">
+                <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-3 overflow-y-auto lg:max-h-[50%] lg:pr-1">
                   <dl className="grid gap-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
                     <div>
                       <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
@@ -411,7 +410,7 @@ export function QuestionCardEditorWorkbench({
         </section>
 
         {/* 右侧实时反馈预览（桌面） */}
-        <aside className="hidden min-h-0 min-w-[360px] flex-col overflow-hidden lg:flex">
+        <aside className="hidden min-h-0 min-w-0 flex-col overflow-hidden lg:flex">
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {previewPanel}
           </div>

@@ -37,8 +37,8 @@ lessons/lesson-3/
 - `data/default-options.ts`：固定三选项与四类来源类型文案。
 - `utils/`：素材指纹、课时 2 快照草稿、自审和 QuickCheck。
 - `components/Lesson3ScreenLayout.tsx`：第 1 步全屏滚动分屏布局。
-- `components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左 2/3 四 Tab 分段编辑，右 1/3 固定反馈面板；第 2、3 步共用，仅 `cardType` 与数据源不同。
-- `components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览。
+- `components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左右各 50%（四 Tab 编辑 | 两行预览）；第 2、3 步共用，仅 `cardType` 与数据源不同。
+- `components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览；桌面两行（图+题 / 解析+完成度与 AI 自检，后者仅编辑工作台传入时显示）。
 - `components/InlineSelfCheckPanel.tsx`：四 Tab 结构完成度聚合（右侧反馈面板）。
 - `components/AiReviewPanel.tsx`：题卡自检助手；失败不阻断保存 V1。
 - `components/CardEditorSection.tsx`：编辑区块容器（保留供其他步骤复用）。
