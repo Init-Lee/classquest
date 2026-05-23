@@ -38,13 +38,23 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
   }, [stepId, usesWorkbenchLayout])
 
   useLayoutEffect(() => {
+    if (!usesWorkbenchLayout) return
+    const root = document.documentElement
+    const prevOverflow = root.style.overflow
+    root.style.overflow = "hidden"
+    return () => {
+      root.style.overflow = prevOverflow
+    }
+  }, [usesWorkbenchLayout])
+
+  useLayoutEffect(() => {
     const el = lessonChromeRef.current
     if (!el) return
     const update = () => {
       document.documentElement.style.setProperty("--module4-lesson3-chrome-h", `${el.offsetHeight}px`)
       document.documentElement.style.setProperty(
         "--module4-lesson3-content-h",
-        "calc(100dvh - var(--module4-sticky-stack-height, 7rem) - var(--module4-lesson3-chrome-h, 8rem))",
+        "calc(100dvh - var(--module4-sticky-stack-height, 7rem) - var(--module4-lesson3-chrome-h, 8rem) - var(--module4-shell-footer-height, 0px))",
       )
     }
     update()
@@ -89,35 +99,50 @@ function StepContainer({ stepId, children }: { stepId: number; children: ReactNo
       .map(step => step.id)
   const usesScreenScrollLayout = stepId === 1
 
-  return (
-    <>
-      <div
-        ref={lessonChromeRef}
-        className={cn("sticky z-30 bg-background/95 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-background/90")}
-        style={{ top: "var(--module4-sticky-stack-height, 6.75rem)" }}
-      >
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">课时3</span>
-              <h2 className="text-lg font-semibold">{LESSON3_CONFIG.title}</h2>
-            </div>
-            <InnerStepProgress
-              lessonId={3}
-              currentStepId={stepId}
-              steps={LESSON3_STEPS.map(step => ({ id: step.id, label: step.title }))}
-              completedStepIds={completedSteps}
-              accessibleStepIds={accessibleSteps}
-              markPreviousStepsCompleted={!isTeacherMode}
-            />
+  const lessonChrome = (
+    <div
+      ref={lessonChromeRef}
+      className={cn(
+        "z-30 bg-background/95 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-background/90",
+        usesWorkbenchLayout ? "shrink-0" : "sticky",
+      )}
+      style={usesWorkbenchLayout ? undefined : { top: "var(--module4-sticky-stack-height, 6.75rem)" }}
+    >
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">课时3</span>
+            <h2 className="text-lg font-semibold">{LESSON3_CONFIG.title}</h2>
           </div>
+          <InnerStepProgress
+            lessonId={3}
+            currentStepId={stepId}
+            steps={LESSON3_STEPS.map(step => ({ id: step.id, label: step.title }))}
+            completedStepIds={completedSteps}
+            accessibleStepIds={accessibleSteps}
+            markPreviousStepsCompleted={!isTeacherMode}
+          />
         </div>
       </div>
+    </div>
+  )
+
+  if (usesWorkbenchLayout) {
+    return (
+      <div className="flex h-[calc(100dvh-var(--module4-sticky-stack-height,7rem)-var(--module4-shell-footer-height,0px))] min-h-0 w-full flex-col overflow-hidden">
+        {lessonChrome}
+        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {lessonChrome}
       <div
         className={cn(
-          usesWorkbenchLayout && "h-[var(--module4-lesson3-content-h)] w-full min-w-0 overflow-hidden",
           usesScreenScrollLayout && "w-full min-w-0",
-          !usesWorkbenchLayout && !usesScreenScrollLayout && "mx-auto w-full max-w-7xl px-4 py-6",
+          !usesScreenScrollLayout && "mx-auto w-full max-w-7xl px-4 py-6",
         )}
       >
         {children}

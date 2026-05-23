@@ -138,9 +138,9 @@ export function QuestionCardEditorWorkbench({
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-4 sm:px-8 lg:px-10">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] lg:gap-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] lg:grid-rows-1 lg:gap-6">
         {/* 移动端预览折叠区 */}
-        <div className="lg:hidden">
+        <div className="shrink-0 lg:hidden">
           <button
             type="button"
             className="flex w-full items-center justify-between rounded-2xl border bg-white px-4 py-3 text-left"
@@ -157,7 +157,7 @@ export function QuestionCardEditorWorkbench({
         </div>
 
         {/* 左侧编辑区 */}
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border bg-white">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-white lg:flex-none">
           <div className="shrink-0 border-b px-4 py-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <h3 className="shrink-0 text-base font-semibold sm:text-lg">{title} · 编辑工作台</h3>

@@ -16,26 +16,31 @@ function Module4ShellInner() {
   const navigate = useNavigate()
   const teacherBannerRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
+  const footerRef = useRef<HTMLElement>(null)
 
-  // 把「教师横幅 + 顶栏」的总高度写成 CSS 变量，供课时内 sticky 条对齐，避免出现缝隙或压住正文。
+  // 把「教师横幅 + 顶栏 + 页脚」高度写成 CSS 变量，供课时内 sticky 条与工作台视口高度计算对齐。
   useLayoutEffect(() => {
     const update = () => {
       const teacherBannerHeight = isTeacherMode ? teacherBannerRef.current?.offsetHeight ?? 0 : 0
       let h = headerRef.current?.offsetHeight ?? 0
       h += teacherBannerHeight
+      const footerHeight = footerRef.current?.offsetHeight ?? 0
       document.documentElement.style.setProperty("--module4-teacher-banner-height", `${teacherBannerHeight}px`)
       document.documentElement.style.setProperty("--module4-sticky-stack-height", `${h}px`)
+      document.documentElement.style.setProperty("--module4-shell-footer-height", `${footerHeight}px`)
     }
     update()
     const ro = new ResizeObserver(update)
     if (teacherBannerRef.current) ro.observe(teacherBannerRef.current)
     if (headerRef.current) ro.observe(headerRef.current)
+    if (footerRef.current) ro.observe(footerRef.current)
     window.addEventListener("resize", update)
     return () => {
       ro.disconnect()
       window.removeEventListener("resize", update)
       document.documentElement.style.removeProperty("--module4-teacher-banner-height")
       document.documentElement.style.removeProperty("--module4-sticky-stack-height")
+      document.documentElement.style.removeProperty("--module4-shell-footer-height")
     }
   }, [isTeacherMode])
 
@@ -122,7 +127,11 @@ function Module4ShellInner() {
         <Outlet />
       </main>
 
-      <footer className="border-t py-3 text-center text-xs text-muted-foreground">
+      <footer
+        ref={footerRef}
+        data-module4-shell-footer=""
+        className="shrink-0 border-t py-3 text-center text-xs text-muted-foreground"
+      >
         ClassQuest · AI 信息辨识员 · MIT License
       </footer>
     </div>
