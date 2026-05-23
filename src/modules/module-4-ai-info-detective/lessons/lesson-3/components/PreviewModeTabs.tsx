@@ -17,7 +17,7 @@ export function PreviewModeTabs({
   onModeChange: (mode: Lesson3PreviewMode) => void
 }) {
   return (
-    <div className="grid grid-cols-2 rounded-xl border bg-slate-50 p-1">
+    <div className="inline-flex w-auto shrink-0 rounded-lg border bg-slate-50 p-0.5">
       {[
         { key: "before" as const, label: "答题前" },
         { key: "after" as const, label: "答题后" },
@@ -27,7 +27,10 @@ export function PreviewModeTabs({
           type="button"
           variant="ghost"
           size="sm"
-          className={cn("rounded-lg", mode === item.key && "bg-white shadow-sm")}
+          className={cn(
+            "h-7 rounded-md px-2.5 text-xs",
+            mode === item.key && "bg-white shadow-sm",
+          )}
           onClick={() => onModeChange(item.key)}
         >
           {item.label}

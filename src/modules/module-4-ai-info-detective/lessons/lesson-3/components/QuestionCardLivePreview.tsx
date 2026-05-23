@@ -8,7 +8,7 @@ import type {
   Module4Lesson3AiReviewState,
   Module4Lesson3QuestionCardDraft,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Card, CardContent, CardHeader } from "@/shared/ui/card"
 import { LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
 import { AiReviewPanel } from "./AiReviewPanel"
 import { InlineSelfCheckPanel } from "./InlineSelfCheckPanel"
@@ -88,16 +88,13 @@ export function QuestionCardLivePreview({
   /** 编辑工作台传入时，第二行右侧展示结构完成度与题卡自检助手 */
   onReviewStateChange?: (next: Module4Lesson3AiReviewState) => void
 }) {
-  const title = card.kind === "news" ? "新闻题卡 V1" : "图片题卡 V1"
+  const cardAltLabel = card.kind === "news" ? "新闻题卡 V1" : "图片题卡 V1"
   const showEditorFeedback = Boolean(onReviewStateChange)
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">实时预览</span>
-        </div>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+        <p className="text-lg font-semibold leading-none tracking-tight">实时预览</p>
         <PreviewModeTabs mode={mode} onModeChange={onModeChange} />
       </CardHeader>
       <CardContent className="space-y-4">
@@ -108,7 +105,7 @@ export function QuestionCardLivePreview({
               <div className="flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden rounded-xl border bg-slate-50">
                 <img
                   src={card.material.asset.dataUrl}
-                  alt={card.material.titleOrName || title}
+                  alt={card.material.titleOrName || cardAltLabel}
                   className="max-h-48 max-w-full object-contain lg:max-h-56"
                 />
               </div>
