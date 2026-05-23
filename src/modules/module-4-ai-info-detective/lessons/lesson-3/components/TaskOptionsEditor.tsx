@@ -55,18 +55,23 @@ export function TaskOptionsEditor({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">请选择正确答案（单选）</p>
+      <div className="space-y-1">
+        <p className="text-sm font-medium">请选择正确答案（单选）</p>
+        <p className="text-xs text-muted-foreground">编辑各选项文案，点选右侧 radio 标记参考答案。</p>
+      </div>
 
-      <div className="space-y-2" role="radiogroup" aria-label="请选择正确答案">
+      <div className="space-y-2.5" role="radiogroup" aria-label="请选择正确答案">
         {options.map((option, index) => (
           <div
             key={option.key}
             className={cn(
-              "space-y-2 rounded-2xl border p-3 transition",
-              correctOptionKey === option.key && "border-primary bg-primary/5",
+              "space-y-2 rounded-xl px-2.5 py-2 transition",
+              correctOptionKey === option.key
+                ? "bg-primary/5 ring-1 ring-primary/40"
+                : "bg-slate-50/60",
             )}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex flex-nowrap items-center gap-2">
               <span className="w-8 shrink-0 text-center text-sm font-semibold">{option.key}</span>
               <Input
                 value={option.label}

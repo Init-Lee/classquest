@@ -284,20 +284,16 @@ export function QuestionCardEditorWorkbench({
                     rows={3}
                   />
                 </label>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">判断选项</p>
-                  <p className="text-xs text-muted-foreground">编辑各选项文案，并在下方单选一项作为参考答案。</p>
-                  <TaskOptionsEditor
-                    cardId={card.id}
-                    options={card.task.options}
-                    correctOptionKey={card.task.correctOptionKey}
-                    onChange={({ options, correctOptionKey }) => updateCard({
-                      ...card,
-                      task: { ...card.task, options, correctOptionKey },
-                      metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
-                    })}
-                  />
-                </div>
+                <TaskOptionsEditor
+                  cardId={card.id}
+                  options={card.task.options}
+                  correctOptionKey={card.task.correctOptionKey}
+                  onChange={({ options, correctOptionKey }) => updateCard({
+                    ...card,
+                    task: { ...card.task, options, correctOptionKey },
+                    metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
+                  })}
+                />
               </div>
             )}
 
