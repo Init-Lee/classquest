@@ -1,5 +1,7 @@
 # 依赖目录
 node_modules
+.venv
+venv
 .pnp
 .pnp.js
 
@@ -30,6 +32,7 @@ pnpm-debug.log*
 # 环境变量（含敏感信息，禁止提交）
 .env
 .env.local
+.env.production
 .env.*.local
 
 # TypeScript 缓存

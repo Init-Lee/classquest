@@ -1,37 +1,19 @@
 /**
  * 文件说明：模块 4 课时 3 题卡实时预览组件。
- * 职责：展示单张 V1 题卡的答题前/答题后视图；桌面端两行布局（图+题 / 解析+反馈），编辑工作台可嵌入完成度与 AI 自检。
- * 更新触发：题卡四部分结构、选项 rationale、预览模式、两行布局或展示字段变化时，需要同步更新本文件。
+ * 职责：展示单张 V1 题卡的完整实时预览，包含素材、判断任务、参考答案、解析与来源核验。
+ * 更新触发：题卡四部分结构、选项 rationale、预览布局或展示字段变化时，需要同步更新本文件。
  */
 
 import type {
-  Module4Lesson3AiReviewState,
   Module4Lesson3QuestionCardDraft,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { Card, CardContent, CardHeader } from "@/shared/ui/card"
 import { LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
-import { AiReviewPanel } from "./AiReviewPanel"
-import { InlineSelfCheckPanel } from "./InlineSelfCheckPanel"
-import { type Lesson3PreviewMode, PreviewModeTabs } from "./PreviewModeTabs"
 
-function PreviewAnalysisSection({
-  card,
-  mode,
-}: {
-  card: Module4Lesson3QuestionCardDraft
-  mode: Lesson3PreviewMode
-}) {
+function PreviewAnalysisSection({ card }: { card: Module4Lesson3QuestionCardDraft }) {
   const correctOption = card.task.options.find(option => option.key === card.task.correctOptionKey)
   const optionsWithRationale = card.task.options.filter(option => option.rationale?.trim())
   const otherRationales = optionsWithRationale.filter(option => option.key !== card.task.correctOptionKey)
-
-  if (mode === "before") {
-    return (
-      <div className="flex h-full min-h-[8rem] items-center justify-center rounded-2xl border border-dashed bg-slate-50/60 p-4 text-center text-sm text-muted-foreground">
-        切换到「答题后」可预览解析与来源核验内容
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-2 rounded-2xl border bg-green-50/80 p-3">
@@ -78,28 +60,18 @@ function PreviewAnalysisSection({
 
 export function QuestionCardLivePreview({
   card,
-  mode,
-  onModeChange,
-  onReviewStateChange,
 }: {
   card: Module4Lesson3QuestionCardDraft
-  mode: Lesson3PreviewMode
-  onModeChange: (mode: Lesson3PreviewMode) => void
-  /** 编辑工作台传入时，第二行右侧展示结构完成度与题卡自检助手 */
-  onReviewStateChange?: (next: Module4Lesson3AiReviewState) => void
 }) {
   const cardAltLabel = card.kind === "news" ? "新闻题卡 V1" : "图片题卡 V1"
-  const showEditorFeedback = Boolean(onReviewStateChange)
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 px-4 py-2">
+      <CardHeader className="px-4 py-2">
         <p className="text-lg font-semibold leading-none tracking-tight">实时预览</p>
-        <PreviewModeTabs mode={mode} onModeChange={onModeChange} />
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* 第一行：素材图片 | 判断任务 */}
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
           <div className="flex min-h-0 flex-col rounded-2xl border bg-white p-3">
             {card.material.asset ? (
               <div className="flex min-h-[10rem] flex-1 items-center justify-center overflow-hidden rounded-xl border bg-slate-50">
@@ -133,19 +105,7 @@ export function QuestionCardLivePreview({
           </div>
         </div>
 
-        {/* 第二行：解析 | 完成度 + 自检助手（编辑工作台） */}
-        <div className={showEditorFeedback ? "grid gap-4 lg:grid-cols-2" : ""}>
-          <div className={showEditorFeedback ? "min-h-0 min-w-0" : ""}>
-            <PreviewAnalysisSection card={card} mode={mode} />
-          </div>
-
-          {showEditorFeedback && onReviewStateChange && (
-            <div className="flex min-h-0 min-w-0 flex-col gap-3">
-              <InlineSelfCheckPanel selfCheck={card.selfCheck} />
-              <AiReviewPanel card={card} onReviewStateChange={onReviewStateChange} />
-            </div>
-          )}
-        </div>
+        <PreviewAnalysisSection card={card} />
       </CardContent>
     </Card>
   )

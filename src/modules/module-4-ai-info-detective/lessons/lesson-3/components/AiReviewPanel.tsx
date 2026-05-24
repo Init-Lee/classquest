@@ -9,11 +9,38 @@ import type { Module4Lesson3AiReviewState, Module4Lesson3QuestionCardDraft } fro
 import { reviewLesson3QuestionCard } from "@/modules/module-4-ai-info-detective/api/lesson3-ai-review.adapter"
 import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/utils/cn"
+import { deriveLesson3AiReviewTier, getLesson3AiReviewTierLabel } from "../utils/derive-lesson3-ai-review-tier"
 
 function reviewLabel(status?: string): string {
   if (status === "pass") return "可以保存为 V1"
   if (status === "blocked") return "缺少必要信息"
   return "建议补充后保存"
+}
+
+const AREA_LABELS = {
+  material: "素材展示",
+  task: "判断任务",
+  explanation: "核心解析",
+  source: "来源核验",
+} as const
+
+const AREA_ORDER = ["material", "task", "explanation", "source"] as const
+
+const TIER_STANDARD_COPY = {
+  excellent: "四项均通过，可以进入自测与保存。",
+  good: "具备 V1 基本结构，可以保存；建议课时4继续优化。",
+  blocked: "存在必须修改的板块，请先按原因和建议修改。",
+  not_checked: "请先运行自检，系统会按四个板块逐项给出通过或修改建议。",
+} as const
+
+function getAreaCheck(result: NonNullable<Module4Lesson3QuestionCardDraft["aiReview"]["result"]>, area: typeof AREA_ORDER[number]) {
+  return result.checks.find(check => check.area === area)
+}
+
+function areaPassed(result: NonNullable<Module4Lesson3QuestionCardDraft["aiReview"]["result"]>, area: typeof AREA_ORDER[number]): boolean {
+  const check = getAreaCheck(result, area)
+  if (result.missingRequiredFields.includes(area)) return false
+  return !check || check.level === "ok"
 }
 
 export function AiReviewPanel({
@@ -26,7 +53,7 @@ export function AiReviewPanel({
   const running = card.aiReview.status === "pending"
   const runReview = async () => {
     const requestNo = card.metrics.aiReviewRequestCount + 1
-    onReviewStateChange({ ...card.aiReview, status: "pending", errorMessage: "" })
+    onReviewStateChange({ ...card.aiReview, status: "pending", isStale: false, errorMessage: "" })
     try {
       const response = await reviewLesson3QuestionCard({
         cardId: card.id,
@@ -57,6 +84,7 @@ export function AiReviewPanel({
         lastRequestId: response.requestId,
         lastReviewedAt: response.reviewedAt,
         result: response.result,
+        isStale: false,
         errorMessage: "",
       })
     } catch (error) {
@@ -69,33 +97,64 @@ export function AiReviewPanel({
   }
 
   const result = card.aiReview.result
+  const tier = deriveLesson3AiReviewTier(result)
+  const tierLabel = getLesson3AiReviewTierLabel(tier)
+  const stale = card.aiReview.isStale
   return (
     <div className="rounded-2xl border bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-medium">题卡自检助手</p>
-          <p className="text-xs text-muted-foreground">只检查题卡结构与表达质量，不替你判定真伪。</p>
         </div>
         <Button type="button" variant="outline" onClick={runReview} disabled={running}>
           {running && <Loader2 className="h-4 w-4 animate-spin" />}
           检查这张题卡是否完整
         </Button>
       </div>
+      <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
+        <p className="font-medium text-slate-800">评价标准</p>
+        <p>按“素材展示、判断任务、核心解析、来源核验”四项检查；✅ 表示该项已通过，❌ 表示需要修改后重新自检。</p>
+      </div>
       {result && (
         <div className="mt-4 space-y-3">
-          <p className={cn(
-            "rounded-xl px-3 py-2 text-sm font-medium",
-            result.status === "pass" ? "bg-green-50 text-green-800" : result.status === "blocked" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-900",
+          {stale && (
+            <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-700">
+              题卡内容已修改，下方是上次自检结果，仅供参考；请重新运行题卡自检助手。
+            </p>
           )}
+          <div
+            className={cn(
+              "rounded-xl px-3 py-2 text-sm",
+              stale ? "bg-slate-50 text-slate-700" : tier === "excellent" ? "bg-green-50 text-green-800" : tier === "blocked" ? "bg-red-50 text-red-800" : "bg-amber-50 text-amber-900",
+            )}
           >
-            {reviewLabel(result.status)}：{result.summary}
-          </p>
-          <div className="space-y-2">
-            {result.checks.slice(0, 3).map((check, index) => (
-              <p key={`${check.area}-${index}`} className="text-sm leading-6 text-slate-700">
-                {check.message}{check.suggestion ? ` 建议：${check.suggestion}` : ""}
-              </p>
-            ))}
+            <p className="font-medium">整体结果：{tierLabel}。</p>
+            <p className="mt-1 leading-6">
+              {TIER_STANDARD_COPY[tier]} {reviewLabel(result.status)}：{result.summary}
+            </p>
+          </div>
+          <div className="space-y-2.5">
+            {AREA_ORDER.map(area => {
+              const check = getAreaCheck(result, area)
+              const passed = areaPassed(result, area)
+              return (
+                <div key={area} className={cn(
+                  "rounded-xl border px-3 py-2.5 text-sm leading-6",
+                  passed ? "border-green-100 bg-green-50/70" : "border-red-100 bg-red-50/70",
+                )}
+                >
+                  <p className={cn("font-medium", passed ? "text-green-800" : "text-red-800")}>
+                    {AREA_LABELS[area]} {passed ? "✅" : "❌"}
+                  </p>
+                  {!passed && (
+                    <div className="mt-1 space-y-1 text-slate-700">
+                      <p><span className="font-medium">理由：</span>{check?.message || "这一项还没有满足题卡 V1 要求。"}</p>
+                      <p><span className="font-medium">建议：</span>{check?.suggestion || "请补充更具体的信息后重新自检。"}</p>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

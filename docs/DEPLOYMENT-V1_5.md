@@ -23,9 +23,25 @@ Backend:
 
 ## 前端环境变量
 
+本地开发（`.env.local`）：
+
 ```env
-VITE_API_BASE_URL=https://api.classquest.example.cn
+VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http
+VITE_API_PROXY_TARGET=http://127.0.0.1:8000
 ```
+
+OSS 静态前端 + 轻量服务器后端（方案 B，`.env.production`）：
+
+```env
+VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http
+VITE_API_BASE_URL=https://api.xnwyedu.com
+```
+
+前端访问域名示例：`https://tool.xnwyedu.com`。后端 API 域名需同样使用 HTTPS（如 `https://api.xnwyedu.com`），避免浏览器 Mixed Content 拦截。
+
+构建：`npm run build`，上传 `dist/` 到 OSS。浏览器会直连 `VITE_API_BASE_URL/api/...`，后端需配置 `CORS_ALLOWED_ORIGINS=https://tool.xnwyedu.com`。
+
+同域名 CDN 回源（方案 A）可省略 `VITE_API_BASE_URL`，继续使用相对路径 `/api/...`。
 
 ## 后端运行时路径
 

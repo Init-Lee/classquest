@@ -40,9 +40,6 @@ export default function Step1InheritAnchor() {
     if (saving) return
     setSaving(true)
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'Step1InheritAnchor.tsx:handleConfirm',message:'handleConfirm called (new user path)',data:{pointerBefore:portfolio.pointer},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       await savePortfolio({
         ...portfolio,
         pointer: advancePointer(portfolio.pointer, 3, 1),
@@ -137,9 +134,6 @@ export default function Step1InheritAnchor() {
           <div className="flex justify-end pt-1">
             {alreadyDone ? (
               <Button onClick={() => {
-                // #region agent log (post-fix verify)
-                fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'Step1InheritAnchor.tsx:continue-btn',message:'[post-fix] navigate only, no pointer update',data:{pointer:portfolio.pointer},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
-                // #endregion
                 navigate("/module/3/lesson/3/step/2")
               }}>
                 继续第2关 <ArrowRight className="ml-1 h-4 w-4" />

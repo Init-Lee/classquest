@@ -279,6 +279,8 @@ export interface Module4Lesson3AiReviewState {
   lastRequestId: string
   lastReviewedAt: string
   result?: Module4Lesson3AiReviewResult
+  /** 题卡内容在上次自检后发生修改，旧结果仅供参考，不能作为放行依据 */
+  isStale: boolean
   errorMessage: string
 }
 
@@ -676,6 +678,7 @@ export function createEmptyModule4Lesson3AiReviewState(): Module4Lesson3AiReview
     lastRequestId: "",
     lastReviewedAt: "",
     result: undefined,
+    isStale: false,
     errorMessage: "",
   }
 }
@@ -1233,6 +1236,7 @@ function normalizeLesson3AiReview(value: unknown): Module4Lesson3AiReviewState {
     lastRequestId: typeof raw.lastRequestId === "string" ? raw.lastRequestId : "",
     lastReviewedAt: typeof raw.lastReviewedAt === "string" ? raw.lastReviewedAt : "",
     result: normalizeLesson3AiReviewResult(raw.result),
+    isStale: raw.isStale === true,
     errorMessage: typeof raw.errorMessage === "string" ? raw.errorMessage : "",
   }
 }

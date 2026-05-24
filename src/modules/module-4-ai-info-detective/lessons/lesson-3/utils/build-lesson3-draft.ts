@@ -70,5 +70,6 @@ export function ensureLesson3DraftFromLesson2(
   card: Module4Lesson3QuestionCardDraft,
   record: Module4MaterialScreeningRecord,
 ): Module4Lesson3QuestionCardDraft {
-  return hasDraftContent(card) ? card : buildLesson3DraftFromLesson2(card.kind, record)
+  const currentHasDraftContent = hasDraftContent(card)
+  return currentHasDraftContent ? card : buildLesson3DraftFromLesson2(card.kind, record)
 }

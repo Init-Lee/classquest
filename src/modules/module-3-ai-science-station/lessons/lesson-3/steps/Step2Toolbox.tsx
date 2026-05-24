@@ -366,9 +366,6 @@ export default function Step2Toolbox() {
           )}
           {alreadyDone ? (
             <Button onClick={() => {
-              // #region agent log (post-fix verify)
-              fetch('http://127.0.0.1:7867/ingest/f477b48f-d907-4d17-af01-17b6b09ded5c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2a660e'},body:JSON.stringify({sessionId:'2a660e',location:'Step2Toolbox.tsx:continue-btn',message:'[post-fix] navigate only, no pointer update',data:{pointer:portfolio.pointer},timestamp:Date.now(),runId:'post-fix'})}).catch(()=>{});
-              // #endregion
               navigate("/module/3/lesson/3/step/3")
             }}>
               继续第3关 <ArrowRight className="ml-1 h-4 w-4" />

@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 课时 3 题卡编辑工作台（单屏驾驶舱）。
- * 职责：为新闻/图片 V1 题卡提供左右各 50% 的单屏驾驶舱：左侧四 Tab 分段编辑，右侧两行预览（图+题 / 解析+完成度与 AI 自检）。
+ * 职责：为新闻/图片 V1 题卡提供单屏驾驶舱：左侧四 Tab 分段编辑，右侧拆分为实时预览与 AI 自检助手。
  * 更新触发：题卡编辑分区、Tab 导航、预览布局、移动端折叠策略或保存/完成流程变化时，需要同步更新本文件。
  */
 
@@ -10,11 +10,13 @@ import type {
   Module4Lesson3AiReviewState,
   Module4Lesson3QuestionCardDraft,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
-import { LESSON3_SOURCE_TYPE_LABELS } from "../data/default-options"
+import { createEmptyModule4Lesson3AiReviewState } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { TaskOptionsEditor } from "./TaskOptionsEditor"
 import { evaluateLesson3SelfCheck } from "../utils/evaluate-lesson3-self-check"
+import { deriveLesson3AiReviewTier } from "../utils/derive-lesson3-ai-review-tier"
 import { Button } from "@/shared/ui/button"
 import { Textarea } from "@/shared/ui/textarea"
+import { Input } from "@/shared/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -24,8 +26,9 @@ import {
 } from "@/shared/ui/dialog"
 import { cn } from "@/shared/utils/cn"
 import { QuestionCardLivePreview } from "./QuestionCardLivePreview"
-import type { Lesson3PreviewMode } from "./PreviewModeTabs"
 import { useImeSafeDraftValue } from "./useImeSafeDraftValue"
+import { SourceTypeSelect } from "./SourceTypeSelect"
+import { AiReviewPanel } from "./AiReviewPanel"
 
 type EditorTab = 1 | 2 | 3 | 4
 
@@ -38,6 +41,19 @@ const TAB_ITEMS: Array<{ id: EditorTab; label: string; shortLabel: string }> = [
 
 function withSelfCheck(card: Module4Lesson3QuestionCardDraft): Module4Lesson3QuestionCardDraft {
   return { ...card, selfCheck: evaluateLesson3SelfCheck(card), updatedAt: new Date().toISOString() }
+}
+
+function withAiReviewStale(card: Module4Lesson3QuestionCardDraft): Module4Lesson3QuestionCardDraft {
+  if (!card.aiReview.result) return { ...card, aiReview: createEmptyModule4Lesson3AiReviewState() }
+  return {
+    ...card,
+    aiReview: {
+      ...card.aiReview,
+      status: "completed",
+      isStale: true,
+      errorMessage: "题卡内容已修改，请重新运行题卡自检助手。",
+    },
+  }
 }
 
 function tabComplete(card: Module4Lesson3QuestionCardDraft, tab: EditorTab): boolean {
@@ -67,16 +83,12 @@ function verificationGuidePlaceholder(cardType: "news" | "image"): string {
 export function QuestionCardEditorWorkbench({
   cardType,
   card,
-  previewMode,
-  onPreviewModeChange,
   onCardChange,
   onComplete,
   completeLabel,
 }: {
   cardType: "news" | "image"
   card: Module4Lesson3QuestionCardDraft
-  previewMode: Lesson3PreviewMode
-  onPreviewModeChange: (mode: Lesson3PreviewMode) => void
   onCardChange: (card: Module4Lesson3QuestionCardDraft) => void
   onComplete: () => void
   completeLabel: string
@@ -87,8 +99,14 @@ export function QuestionCardEditorWorkbench({
 
   const snapshot = card.sourceMaterialSnapshot
   const title = cardTitle(cardType)
+  const aiReviewTier = card.aiReview.isStale ? "not_checked" : deriveLesson3AiReviewTier(card.aiReview.result)
+  const aiReviewPassed = aiReviewTier === "excellent" || aiReviewTier === "good"
+  const canComplete = card.selfCheck.allRequiredPassed && aiReviewPassed
 
   const updateCard = (next: Module4Lesson3QuestionCardDraft) => onCardChange(withSelfCheck(next))
+  const updateContentCard = (next: Module4Lesson3QuestionCardDraft) => {
+    updateCard(withAiReviewStale(next))
+  }
 
   const refreshSelfCheck = () => updateCard(card)
 
@@ -110,27 +128,25 @@ export function QuestionCardEditorWorkbench({
     })
   }
 
-  const updatePreviewMode = (mode: Lesson3PreviewMode) => {
-    if (mode !== previewMode) {
-      updateCard({
-        ...card,
-        metrics: { ...card.metrics, previewModeSwitchCount: card.metrics.previewModeSwitchCount + 1 },
-      })
-    }
-    onPreviewModeChange(mode)
-  }
-
   const displayNoteField = useImeSafeDraftValue({
     value: card.material.displayNote,
-    onCommit: displayNote => updateCard({
+    onCommit: displayNote => updateContentCard({
       ...card,
       material: { ...card.material, displayNote },
       metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
     }),
   })
+  const titleOrNameField = useImeSafeDraftValue({
+    value: card.material.titleOrName,
+    onCommit: titleOrName => updateContentCard({
+      ...card,
+      material: { ...card.material, titleOrName },
+      metrics: { ...card.metrics, materialEditCount: card.metrics.materialEditCount + 1 },
+    }),
+  })
   const taskPromptField = useImeSafeDraftValue({
     value: card.task.prompt,
-    onCommit: prompt => updateCard({
+    onCommit: prompt => updateContentCard({
       ...card,
       task: { ...card.task, prompt },
       metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
@@ -138,7 +154,7 @@ export function QuestionCardEditorWorkbench({
   })
   const explanationField = useImeSafeDraftValue({
     value: card.explanation.text,
-    onCommit: text => updateCard({
+    onCommit: text => updateContentCard({
       ...card,
       explanation: {
         text,
@@ -150,9 +166,17 @@ export function QuestionCardEditorWorkbench({
   })
   const verificationNoteField = useImeSafeDraftValue({
     value: card.source.verificationNote,
-    onCommit: verificationNote => updateCard({
+    onCommit: verificationNote => updateContentCard({
       ...card,
       source: { ...card.source, verificationNote },
+      metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
+    }),
+  })
+  const sourceRecordField = useImeSafeDraftValue({
+    value: card.source.sourceRecord,
+    onCommit: sourceRecord => updateContentCard({
+      ...card,
+      source: { ...card.source, sourceRecord },
       metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
     }),
   })
@@ -172,17 +196,12 @@ export function QuestionCardEditorWorkbench({
   }
 
   const previewPanel = (
-    <QuestionCardLivePreview
-      card={card}
-      mode={previewMode}
-      onModeChange={updatePreviewMode}
-      onReviewStateChange={updateAiReview}
-    />
+    <QuestionCardLivePreview card={card} />
   )
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-4 sm:px-8 lg:px-10">
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-1 lg:gap-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-1 lg:gap-6">
         {/* 移动端预览折叠区 */}
         <div className="shrink-0 lg:hidden">
           <button
@@ -190,7 +209,7 @@ export function QuestionCardEditorWorkbench({
             className="flex w-full items-center justify-between rounded-2xl border bg-white px-4 py-3 text-left"
             onClick={() => setMobilePreviewOpen(open => !open)}
           >
-            <span className="text-sm font-medium">{title} · 实时预览与完成度</span>
+            <span className="text-sm font-medium">{title} · 实时预览与自检助手</span>
             {mobilePreviewOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           {mobilePreviewOpen && (
@@ -236,7 +255,7 @@ export function QuestionCardEditorWorkbench({
               </div>
             </div>
             <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-              素材与来源来自课时 2 快照；本页只编辑题卡内容，不会改动课时 2 原记录。
+              素材与来源来自课时 2 快照；如自检指出来源或说明不清，可在本页直接修改题卡副本，不会改动课时 2 原记录。
             </p>
           </div>
 
@@ -284,16 +303,19 @@ export function QuestionCardEditorWorkbench({
                 <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-2 overflow-visible lg:max-h-[50%]">
                   <dl className="grid shrink-0 gap-2 rounded-xl border bg-slate-50/80 p-3 text-sm">
                     <div className="min-w-0">
-                      <dt className="text-xs text-muted-foreground">素材短名（快照）</dt>
-                      <dd className="mt-0.5 truncate font-medium">{snapshot.lesson2TitleOrName || "未填写"}</dd>
-                    </div>
-                    <div className="min-w-0">
                       <dt className="text-xs text-muted-foreground">课时 2 疑点提示（快照）</dt>
                       <dd className="mt-0.5 line-clamp-2 text-sm leading-5 text-muted-foreground">
                         {snapshot.lesson2ClueNote || "无"}
                       </dd>
                     </div>
                   </dl>
+                  <label className="block shrink-0 space-y-1.5 text-sm">
+                    <span className="font-medium">素材短名</span>
+                    <Input
+                      {...titleOrNameField}
+                      placeholder="给素材起一个便于识别的短名"
+                    />
+                  </label>
                   <label className="block shrink-0 space-y-1.5 text-sm">
                     <span className="font-medium">展示说明</span>
                     <div className="p-1 -m-1">
@@ -325,7 +347,7 @@ export function QuestionCardEditorWorkbench({
                   cardId={card.id}
                   options={card.task.options}
                   correctOptionKey={card.task.correctOptionKey}
-                  onChange={({ options, correctOptionKey }) => updateCard({
+                  onChange={({ options, correctOptionKey }) => updateContentCard({
                     ...card,
                     task: { ...card.task, options, correctOptionKey },
                     metrics: { ...card.metrics, taskEditCount: card.metrics.taskEditCount + 1 },
@@ -355,24 +377,27 @@ export function QuestionCardEditorWorkbench({
             {activeEditorTab === 4 && (
               <div className="space-y-4">
                 <p className="rounded-xl bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900">
-                  来源类型与来源记录由课时 2 快照带入，此处只读；请补充点开来源后应观察什么、如何核验与复现。
+                  来源信息由课时 2 快照带入；如自检指出来源不清，可在本页修改题卡中的来源副本，并补充核验观察指引。
                 </p>
-                <dl className="space-y-3 rounded-2xl border bg-slate-50/80 p-4 text-sm">
-                  <div>
-                    <dt className="text-xs text-muted-foreground">来源类型（快照）</dt>
-                    <dd className="mt-1 font-medium">
-                      {card.source.sourceType
-                        ? LESSON3_SOURCE_TYPE_LABELS[card.source.sourceType]
-                        : "未选择"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">来源记录（快照）</dt>
-                    <dd className="mt-1 whitespace-pre-wrap leading-6">
-                      {card.source.sourceRecord || "未填写"}
-                    </dd>
-                  </div>
-                </dl>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium">来源类型</span>
+                  <SourceTypeSelect
+                    value={card.source.sourceType}
+                    onChange={sourceType => updateContentCard({
+                      ...card,
+                      source: { ...card.source, sourceType },
+                      metrics: { ...card.metrics, sourceEditCount: card.metrics.sourceEditCount + 1 },
+                    })}
+                  />
+                </label>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium">来源记录</span>
+                  <Textarea
+                    {...sourceRecordField}
+                    placeholder="填写链接、平台、生成记录、拍摄说明或其它可追溯信息"
+                    rows={4}
+                  />
+                </label>
                 <label className="block space-y-2 text-sm">
                   <span className="font-medium">核验观察指引</span>
                   <Textarea
@@ -398,14 +423,22 @@ export function QuestionCardEditorWorkbench({
               </Button>
             </div>
             <div className="flex items-center gap-3">
-              {!card.selfCheck.allRequiredPassed && (
-                <p className="text-[11px] text-muted-foreground">四项必填完成后可点击</p>
+              {!canComplete && (
+                <p className="max-w-[18rem] text-[11px] text-muted-foreground">
+                  {!card.selfCheck.allRequiredPassed
+                    ? "四项必填完成后可点击"
+                    : aiReviewTier === "not_checked"
+                      ? "请先运行题卡自检助手"
+                      : aiReviewTier === "good"
+                        ? "自检为“基本合格”，可以保存 V1，建议课时4继续优化"
+                        : "自检未通过，请修改后重新自检"}
+                </p>
               )}
               <Button
                 type="button"
                 size="sm"
-                disabled={!card.selfCheck.allRequiredPassed}
-                title={card.selfCheck.allRequiredPassed ? undefined : "请先完成素材、任务、核心解析与来源核验四项必填内容"}
+                disabled={!canComplete}
+                title={canComplete ? undefined : "请先完成结构必填项，并确认题卡自检不是“不通过”"}
                 onClick={onComplete}
               >
                 {completeLabel}
@@ -414,10 +447,11 @@ export function QuestionCardEditorWorkbench({
           </div>
         </section>
 
-        {/* 右侧实时反馈预览（桌面） */}
-        <aside className="hidden min-h-0 min-w-0 flex-col overflow-hidden lg:flex">
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            {previewPanel}
+        {/* 右侧：实时预览与自检助手拆分 */}
+        <aside className="hidden min-h-0 min-w-0 overflow-hidden lg:grid lg:grid-cols-2 lg:gap-4">
+          <div className="min-h-0 min-w-0 overflow-y-auto pr-1">{previewPanel}</div>
+          <div className="min-h-0 min-w-0 overflow-y-auto pr-1">
+            <AiReviewPanel card={card} onReviewStateChange={updateAiReview} />
           </div>
         </aside>
       </div>

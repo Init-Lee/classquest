@@ -114,7 +114,7 @@ src/modules/module-4-ai-info-detective/
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
 - `lessons/`：六个课时的本地学习挑战；当前课时 1-2 已合入，课时 3 在 dev 分支实现 V1 初稿流程，课时 4-6 后续按独立分支推进。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
-- `api/`：mock adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到 `/api/v1/module4/lesson3/ai-review`。
+- `api/`：mock adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到后端；OSS 方案 B 另需 `VITE_API_BASE_URL`。
 - `components/`：模块 4 私有 UI 组件。
 - `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`，课时 3 中会显示 `课时3第N步` 或 `课时3已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full`、`lesson2-full` 与 `lesson3-full` 阶段快照 HTML；课时 3 快照下载文件名为 `模块4_姓名_课时3题卡V1快照_日期.html`。
 - `constants/`：教师讲解档案、班级选项等模块级常量。

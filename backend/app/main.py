@@ -5,6 +5,11 @@
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import get_cors_allowed_origins, load_backend_env
+
+load_backend_env()
 
 from app.modules.module4.router_admin import router as module4_admin_router
 from app.modules.module4.lesson3.routes import router as module4_lesson3_router
@@ -12,6 +17,16 @@ from app.modules.module4.router_student import router as module4_student_router
 from app.modules.module4.router_teacher import router as module4_teacher_router
 
 app = FastAPI(title="ClassQuest V1.5 API")
+
+_cors_origins = get_cors_allowed_origins()
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/api/v1/health")

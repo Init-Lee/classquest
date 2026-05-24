@@ -21,4 +21,12 @@
 
 ## AI 自检
 
-组件只调用模块 4 API adapter：`api/lesson3-ai-review.adapter.ts`。默认 mock；设置 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 后调用 `/api/v1/module4/lesson3/ai-review`。自检失败不阻止保存 V1。
+组件只调用模块 4 API adapter：`api/lesson3-ai-review.adapter.ts`。默认 mock；设置 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 后调用后端自检接口。本地 dev 使用相对路径 `/api/...` + Vite proxy；OSS 生产构建需额外设置 `VITE_API_BASE_URL` 指向轻量服务器，并由后端 `CORS_ALLOWED_ORIGINS` 放行 OSS 域名。
+
+自检结果在前端归一为三层：`优秀`、`基本合格`、`不通过`。`优秀` 与 `基本合格` 都可进入后续自测试答；`基本合格` 表示可保存 V1，但建议课时 4 继续优化。只有 `不通过` 会阻断继续提交。反馈 UI 先展示整体结果，再按 `素材展示 / 判断任务 / 核心解析 / 来源核验` 四项显示 ✅ 或 ❌；❌ 项单独展示理由与建议。编辑题卡内容后会把旧自检结果标记为“已过期”，避免旧结论继续放行。
+
+后端提交给 Qwen 的内容使用中文标签整理，避免模型把 `sourceType`、`ai_generated` 等内部字段名或枚举值写进学生反馈。
+
+课时 3 从课时 2 带入素材快照后，不反向修改课时 2 原记录。若 AI 自检指出素材短名、展示说明或来源记录不清，学生可直接在课时 3 编辑题卡副本；编辑后旧自检结果会标记为“已过期”，仍可查看但不能作为放行依据。
+
+来源类型也可在课时 3 的题卡副本中调整。编辑工作台右侧拆分为“实时预览”和“题卡自检助手”两个区域；实时预览直接展示完整题卡内容，不再通过答题前/答题后按钮切换。

@@ -4,7 +4,7 @@
  * 更新触发：新闻题卡字段、草稿迁移规则、工作台参数或进入第 3 步策略变化时，需要同步更新本文件。
  */
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Module4Lesson3QuestionCardDraft, Module4Portfolio } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
@@ -12,12 +12,10 @@ import { evaluateLesson3QuickCheck } from "../utils/evaluate-lesson3-quickcheck"
 import { ensureLesson3DraftFromLesson2 } from "../utils/build-lesson3-draft"
 import { invalidateLesson3SelfTrialOnCardSave } from "../utils/self-trial-invalidation"
 import { QuestionCardEditorWorkbench } from "../components/QuestionCardEditorWorkbench"
-import type { Lesson3PreviewMode } from "../components/PreviewModeTabs"
 
 export default function Step2NewsCardEditor() {
   const { portfolio, savePortfolio } = useModule4Portfolio()
   const navigate = useNavigate()
-  const [previewMode, setPreviewMode] = useState<Lesson3PreviewMode>("before")
 
   useEffect(() => {
     if (!portfolio) return
@@ -74,8 +72,6 @@ export default function Step2NewsCardEditor() {
     <QuestionCardEditorWorkbench
       cardType="news"
       card={portfolio.lesson3.newsCard}
-      previewMode={previewMode}
-      onPreviewModeChange={setPreviewMode}
       onCardChange={updateNewsCard}
       onComplete={complete}
       completeLabel="完成新闻题卡 V1，进入图片题卡"

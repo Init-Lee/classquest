@@ -6,13 +6,13 @@
 
 import os
 
+import httpx
 from fastapi import APIRouter, HTTPException, status
 
-from .qwen_client import get_lesson3_ai_review_provider
+from .qwen_client import QwenProviderError, get_lesson3_ai_review_provider
 from .schemas import Lesson3AiReviewRequest, Lesson3AiReviewResponse
 
 router = APIRouter(prefix="/lesson3", tags=["module4-lesson3"])
-
 
 @router.post("/ai-review", response_model=Lesson3AiReviewResponse)
 async def review_lesson3_question_card(payload: Lesson3AiReviewRequest) -> Lesson3AiReviewResponse:
@@ -21,4 +21,12 @@ async def review_lesson3_question_card(payload: Lesson3AiReviewRequest) -> Lesso
     if payload.material.assetDataUrl and len(payload.material.assetDataUrl.encode("utf-8")) > max_image_bytes:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="图片 DataURL 超出自检大小限制")
     provider = get_lesson3_ai_review_provider()
-    return await provider.review(payload)
+    try:
+        result = await provider.review(payload)
+        return result
+    except QwenProviderError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Qwen 调用失败，状态码：{exc.response.status_code}") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Qwen 网络调用失败，请检查后端网络、base URL 或超时设置") from exc

@@ -12,6 +12,7 @@
 backend/
 ├── README.md
 ├── FILE-STRUCTURE.md
+├── .env.example
 ├── requirements.txt
 ├── .gitignore
 ├── app/
@@ -26,8 +27,9 @@ backend/
 
 ## 职责
 
-- `app/main.py`：FastAPI 应用入口和健康检查。
-- `app/core/`：配置、安全、数据库连接等项目级基础能力。
+- `.env.example`：后端环境变量示例，不包含真实密钥；本地真实 `backend/.env` 被仓库忽略。
+- `app/main.py`：FastAPI 应用入口，启动时加载 `backend/.env` 并注册健康检查。
+- `app/core/`：配置、安全、数据库连接等项目级基础能力；`config.py` 负责 `.env` 加载、运行时路径与 `CORS_ALLOWED_ORIGINS` 解析。
 - `app/modules/`：后端模块域，目前只有模块 4；模块 4 下的 `lesson3/` 提供题卡自检助手后端壳。
 - `app/shared/`：后端业务无关工具。
 - `scripts/`：初始化、备份、统计重算等运维脚本。

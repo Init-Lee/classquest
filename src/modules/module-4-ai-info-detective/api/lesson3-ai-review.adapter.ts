@@ -6,7 +6,89 @@
 
 import type { Lesson3AiReviewRequest, Lesson3AiReviewResponse } from "./types"
 
-const HTTP_ENDPOINT = "/api/v1/module4/lesson3/ai-review"
+const LESSON3_AI_REVIEW_PATH = "/api/v1/module4/lesson3/ai-review"
+const AI_REVIEW_SESSION_CACHE_PREFIX = "module4:lesson3:ai-review:accepted"
+
+/** 生产 OSS 直连后端时使用 VITE_API_BASE_URL；本地 dev 留空则走相对路径 + Vite proxy。 */
+function resolveLesson3AiReviewEndpoint(): string {
+  const base = String(import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "")
+  return base ? `${base}${LESSON3_AI_REVIEW_PATH}` : LESSON3_AI_REVIEW_PATH
+}
+
+
+function buildAreaFingerprint(payload: Lesson3AiReviewRequest, area: Lesson3AiReviewResponse["result"]["checks"][number]["area"]): string {
+  if (area === "material") {
+    return JSON.stringify({
+      titleOrName: payload.material.titleOrName,
+      displayNote: payload.material.displayNote,
+      assetFingerprint: payload.material.assetFingerprint,
+    })
+  }
+  if (area === "task") {
+    return JSON.stringify({
+      prompt: payload.task.prompt,
+      options: payload.task.options,
+      correctOptionKey: payload.task.correctOptionKey,
+    })
+  }
+  if (area === "explanation") return JSON.stringify(payload.explanation)
+  return JSON.stringify(payload.source)
+}
+
+function getSessionCacheKey(payload: Lesson3AiReviewRequest, area: Lesson3AiReviewResponse["result"]["checks"][number]["area"]): string {
+  return `${AI_REVIEW_SESSION_CACHE_PREFIX}:${payload.cardId}:${area}`
+}
+
+function readAcceptedAreaFingerprint(payload: Lesson3AiReviewRequest, area: Lesson3AiReviewResponse["result"]["checks"][number]["area"]): string | null {
+  try {
+    return window.sessionStorage.getItem(getSessionCacheKey(payload, area))
+  } catch {
+    return null
+  }
+}
+
+function writeAcceptedAreaFingerprint(payload: Lesson3AiReviewRequest, area: Lesson3AiReviewResponse["result"]["checks"][number]["area"], fingerprint: string): void {
+  try {
+    window.sessionStorage.setItem(getSessionCacheKey(payload, area), fingerprint)
+  } catch {
+    // sessionStorage 只做体验优化，失败不影响自检流程。
+  }
+}
+
+function applyAcceptedAreaCache(payload: Lesson3AiReviewRequest, response: Lesson3AiReviewResponse): Lesson3AiReviewResponse {
+  const checks = response.result.checks.map(check => {
+    const fingerprint = buildAreaFingerprint(payload, check.area)
+    const acceptedFingerprint = readAcceptedAreaFingerprint(payload, check.area)
+    if (check.level === "ok") {
+      writeAcceptedAreaFingerprint(payload, check.area, fingerprint)
+      return check
+    }
+    if (acceptedFingerprint === fingerprint) {
+      return {
+        area: check.area,
+        level: "ok" as const,
+        message: "这一项上次已通过，本次内容未变化，保持通过。",
+      }
+    }
+    return check
+  })
+  const missingRequiredFields = response.result.missingRequiredFields.filter(area => {
+    if (!["material", "task", "explanation", "source"].includes(area)) return true
+    const typedArea = area as Lesson3AiReviewResponse["result"]["checks"][number]["area"]
+    return readAcceptedAreaFingerprint(payload, typedArea) !== buildAreaFingerprint(payload, typedArea)
+  })
+  const hasError = checks.some(check => check.level === "error") || missingRequiredFields.length > 0
+  const hasWarning = checks.some(check => check.level === "warning")
+  return {
+    ...response,
+    result: {
+      ...response.result,
+      status: hasError ? "blocked" : hasWarning ? "needs_revision" : "pass",
+      checks,
+      missingRequiredFields,
+    },
+  }
+}
 
 function buildMockChecks(payload: Lesson3AiReviewRequest): Lesson3AiReviewResponse["result"]["checks"] {
   const checks: Lesson3AiReviewResponse["result"]["checks"] = []
@@ -61,13 +143,19 @@ function mapHttpError(status: number): string {
 
 export async function reviewLesson3QuestionCard(payload: Lesson3AiReviewRequest): Promise<Lesson3AiReviewResponse> {
   const mode = import.meta.env.VITE_MODULE4_LESSON3_AI_REVIEW_MODE
-  if (mode !== "http") return buildMockResponse(payload)
+  const httpEndpoint = resolveLesson3AiReviewEndpoint()
+  if (mode !== "http") {
+    const mockResponse = buildMockResponse(payload)
+    return mockResponse
+  }
 
-  const response = await fetch(HTTP_ENDPOINT, {
+  const response = await fetch(httpEndpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })
   if (!response.ok) throw new Error(mapHttpError(response.status))
-  return response.json() as Promise<Lesson3AiReviewResponse>
+  const rawData = await response.json() as Lesson3AiReviewResponse
+  const data = applyAcceptedAreaCache(payload, rawData)
+  return data
 }

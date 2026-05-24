@@ -43,15 +43,16 @@ lessons/lesson-3/
 - `utils/`：素材指纹、课时 2 快照草稿、自审、QuickCheck 和自测失效规则。
 - `components/Lesson3ScreenLayout.tsx`：第 1 步全屏滚动分屏布局。
 - `components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左右各 50%（四 Tab 编辑 | 两行预览）；第 2、3 步共用，仅 `cardType` 与数据源不同。
-- `components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览；桌面两行（图+题 / 解析+完成度与 AI 自检，后者仅编辑工作台传入时显示）。
+- `components/QuestionCardLivePreview.tsx`：题卡完整实时预览，直接展示素材、判断任务、参考答案、解析与来源核验。
 - `components/QuestionCardSelfTrialPanel.tsx`：第 4 步三栏自测试答面板（素材 / 判断任务 / 答题反馈）。
 - `components/SelfTrialStatusStrip.tsx`：第 4 步顶部极简状态条，展示新闻/图片自测进度并承载返回编辑器与确认 CTA。
 - `components/SelfTrialFeedbackPanel.tsx`：第 4 步答题反馈右栏；答错时只展示所选选项解析、核心解析和来源核验，不单独展示参考答案解析。
 - `components/TaskOptionsEditor.tsx`：判断选项与选项解析编辑器。
 - `components/InlineSelfCheckPanel.tsx`：四 Tab 结构完成度聚合（右侧反馈面板）。
-- `components/AiReviewPanel.tsx`：题卡自检助手；失败不阻断保存 V1。
+- `components/AiReviewPanel.tsx`：题卡自检助手；展示整体结果与四板块 ✅/❌，失败不阻断本地编辑。
+- `utils/derive-lesson3-ai-review-tier.ts`：把 Qwen 自检结果归一为 `优秀 / 基本合格 / 不通过`，供编辑页门禁和面板文案复用。
 - `components/CardEditorSection.tsx`：编辑区块容器（保留供其他步骤复用）。
-- `components/SourceTypeSelect.tsx`：来源类型选择（课时 2 带入只读场景下暂不在工作台使用）。
+- `components/SourceTypeSelect.tsx`：来源类型选择；课时 3 编辑题卡副本时可调整来源类型，不回写课时 2。
 - `steps/`：四个路由步骤页面；Step2/Step3 为薄包装，仅传参给 Workbench。
 
 ## 依赖方向
@@ -63,5 +64,5 @@ utils → domains / data
 data → domains / question-card types
 ```
 
-课时 3 组件不得直接调用模型服务或持有 API key，只能通过模块 4 API adapter 访问后端自检能力。
+课时 3 组件不得直接调用模型服务或持有 API key，只能通过模块 4 API adapter 访问后端自检能力。进入后续自测试答前，题卡必须通过本地结构完成度，并让 AI 自检达到 `优秀` 或 `基本合格`；只有 `不通过` 需要补齐硬性缺失后重新自检。课时 3 只编辑题卡副本，不回写课时 2；编辑副本后旧 AI 自检结果标记为过期。编辑工作台右侧按实时预览与题卡自检助手拆分展示。
 **QuestionCardEditorWorkbench 等编辑器组件仅限 module-4 内部，禁止 export 到 shared 或跨模块。**

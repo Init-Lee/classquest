@@ -67,7 +67,7 @@ npm run build
 后端：轻量服务器 → Nginx → FastAPI → SQLite / 本地运行时文件
 ```
 
-模块 4 真实后端联调前，前端应先使用本地状态和 mock API 完成流程验证。
+OSS 直连后端（方案 B）生产构建前复制 `.env.production.example` 为 `.env.production`，设置 `VITE_API_BASE_URL`；服务器 `backend/.env` 需配置 `CORS_ALLOWED_ORIGINS` 允许 OSS 域名。详见 `docs/DEPLOYMENT-V1_5.md`。
 
 ## 分支与版本策略
 
