@@ -6,7 +6,7 @@
 
 # Module 4 Lesson 3 Backend
 
-本目录是模块四课时 3「题目卡 V1 制作与解析填写」的后端壳，当前 dev 分支只提供题卡自检助手 endpoint。
+本目录是模块四课时 3「题目卡 V1 制作与解析填写」的后端壳，提供题卡自检助手 endpoint（mock / Qwen）。
 
 ## Endpoint
 

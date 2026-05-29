@@ -5,8 +5,19 @@
  */
 
 import { Loader2 } from "lucide-react"
-import type { Module4Lesson3AiReviewState, Module4Lesson3QuestionCardDraft } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
-import { reviewLesson3QuestionCard } from "@/modules/module-4-ai-info-detective/api/lesson3-ai-review.adapter"
+import type {
+  Module4Lesson3AiReviewArea,
+  Module4Lesson3AiReviewHistoryEntry,
+  Module4Lesson3AiReviewLevel,
+  Module4Lesson3AiReviewResult,
+  Module4Lesson3AiReviewState,
+  Module4Lesson3QuestionCardDraft,
+} from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import { LESSON3_AI_REVIEW_HISTORY_LIMIT } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import {
+  reviewLesson3QuestionCard,
+  sanitizeLesson3AiReviewAssetDataUrl,
+} from "@/modules/module-4-ai-info-detective/api/lesson3-ai-review.adapter"
 import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { deriveLesson3AiReviewTier, getLesson3AiReviewTierLabel } from "../utils/derive-lesson3-ai-review-tier"
@@ -43,6 +54,33 @@ function areaPassed(result: NonNullable<Module4Lesson3QuestionCardDraft["aiRevie
   return !check || check.level === "ok"
 }
 
+function buildHistoryEntry(
+  result: Module4Lesson3AiReviewResult,
+  requestId: string,
+  reviewedAt: string,
+): Module4Lesson3AiReviewHistoryEntry {
+  const tier = deriveLesson3AiReviewTier(result)
+  const safeTier: Module4Lesson3AiReviewHistoryEntry["tier"] = tier === "not_checked" ? "good" : tier
+  const pickLevel = (area: Module4Lesson3AiReviewArea): Module4Lesson3AiReviewLevel => {
+    if (result.missingRequiredFields.includes(area)) return "error"
+    const check = result.checks.find(item => item.area === area)
+    return check?.level ?? "ok"
+  }
+  return {
+    requestId,
+    reviewedAt,
+    status: result.status,
+    tier: safeTier,
+    areaLevels: {
+      material: pickLevel("material"),
+      task: pickLevel("task"),
+      explanation: pickLevel("explanation"),
+      source: pickLevel("source"),
+    },
+    suggestedEditCount: result.suggestedEdits.length,
+  }
+}
+
 export function AiReviewPanel({
   card,
   onReviewStateChange,
@@ -61,7 +99,7 @@ export function AiReviewPanel({
         material: {
           titleOrName: card.material.titleOrName,
           displayNote: card.material.displayNote,
-          assetDataUrl: card.material.asset?.dataUrl,
+          assetDataUrl: sanitizeLesson3AiReviewAssetDataUrl(card.material.asset?.dataUrl),
           assetMimeType: card.material.asset?.mimeType,
           assetFingerprint: card.material.assetFingerprint,
         },
@@ -78,6 +116,8 @@ export function AiReviewPanel({
         },
         clientContext: { lessonId: 3, version: "v1", requestNo },
       })
+      const historyEntry = buildHistoryEntry(response.result, response.requestId, response.reviewedAt)
+      const nextHistory = [historyEntry, ...card.aiReview.history].slice(0, LESSON3_AI_REVIEW_HISTORY_LIMIT)
       onReviewStateChange({
         enabled: true,
         status: "completed",
@@ -86,6 +126,7 @@ export function AiReviewPanel({
         result: response.result,
         isStale: false,
         errorMessage: "",
+        history: nextHistory,
       })
     } catch (error) {
       onReviewStateChange({

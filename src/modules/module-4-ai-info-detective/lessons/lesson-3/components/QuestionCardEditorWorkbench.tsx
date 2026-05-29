@@ -5,7 +5,7 @@
  */
 
 import { useState } from "react"
-import { ChevronDown, ChevronUp, Expand } from "lucide-react"
+import { ChevronDown, ChevronUp, Expand, X } from "lucide-react"
 import type {
   Module4Lesson3AiReviewState,
   Module4Lesson3QuestionCardDraft,
@@ -86,22 +86,28 @@ export function QuestionCardEditorWorkbench({
   onCardChange,
   onComplete,
   completeLabel,
+  lesson2SnapshotOutdated = false,
+  onSyncLesson2Snapshot,
 }: {
   cardType: "news" | "image"
   card: Module4Lesson3QuestionCardDraft
   onCardChange: (card: Module4Lesson3QuestionCardDraft) => void
   onComplete: () => void
   completeLabel: string
+  lesson2SnapshotOutdated?: boolean
+  onSyncLesson2Snapshot?: () => void
 }) {
   const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>(1)
   const [savedHint, setSavedHint] = useState(false)
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false)
+  const [lesson2SyncDismissed, setLesson2SyncDismissed] = useState(false)
 
   const snapshot = card.sourceMaterialSnapshot
   const title = cardTitle(cardType)
   const aiReviewTier = card.aiReview.isStale ? "not_checked" : deriveLesson3AiReviewTier(card.aiReview.result)
   const aiReviewPassed = aiReviewTier === "excellent" || aiReviewTier === "good"
   const canComplete = card.selfCheck.allRequiredPassed && aiReviewPassed
+  const showLesson2SyncNotice = lesson2SnapshotOutdated && !lesson2SyncDismissed && onSyncLesson2Snapshot
 
   const updateCard = (next: Module4Lesson3QuestionCardDraft) => onCardChange(withSelfCheck(next))
   const updateContentCard = (next: Module4Lesson3QuestionCardDraft) => {
@@ -116,12 +122,15 @@ export function QuestionCardEditorWorkbench({
   }
 
   const updateAiReview = (aiReview: Module4Lesson3AiReviewState) => {
+    const isFreshSuccess = aiReview.status === "completed"
+      && !!aiReview.lastRequestId
+      && aiReview.lastRequestId !== card.aiReview.lastRequestId
     updateCard({
       ...card,
       aiReview,
       metrics: {
         ...card.metrics,
-        aiReviewRequestCount: aiReview.status === "pending"
+        aiReviewRequestCount: isFreshSuccess
           ? card.metrics.aiReviewRequestCount + 1
           : card.metrics.aiReviewRequestCount,
       },
@@ -257,6 +266,48 @@ export function QuestionCardEditorWorkbench({
             <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
               素材与来源来自课时 2 快照；如自检指出来源或说明不清，可在本页直接修改题卡副本，不会改动课时 2 原记录。
             </p>
+            {showLesson2SyncNotice && (
+              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p>
+                      检测到课时 2 素材记录已更新。课时 3 默认保留进入时的快照；如果你想使用最新素材，可以手动重新带入。
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-amber-800">
+                      替换材料会更新素材与来源记录，并让 AI 自检、自测试答和最终保存重新确认；题干、答案和核心解析不会被覆盖。
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
+                        onClick={onSyncLesson2Snapshot}
+                      >
+                        重新带入课时 2 最新素材
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-amber-900 hover:bg-amber-100"
+                        onClick={() => setLesson2SyncDismissed(true)}
+                      >
+                        不采纳
+                      </Button>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-full p-1 text-amber-900 transition hover:bg-amber-100"
+                    aria-label="不采纳课时 2 最新素材提醒"
+                    onClick={() => setLesson2SyncDismissed(true)}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div

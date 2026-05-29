@@ -19,7 +19,7 @@ lessons/lesson-3/
 │   ├── Lesson3ScreenLayout.tsx
 │   ├── QuestionCardEditorWorkbench.tsx
 │   ├── QuestionCardLivePreview.tsx
-│   ├── PreviewModeTabs.tsx
+│   ├── PreviewModeTabs.tsx          # 遗留组件，当前流程未引用
 │   ├── QuestionCardSelfTrialPanel.tsx
 │   ├── SelfTrialStatusStrip.tsx
 │   ├── SelfTrialFeedbackPanel.tsx
@@ -40,7 +40,8 @@ lessons/lesson-3/
 - `guards.ts`：进入条件、完成判定和当前步骤解析。
 - `routes.tsx`：课时 3 子路由、Guard 和步骤进度条；第 2～4 步使用全宽工作台布局（非 scroll-snap）。
 - `data/default-options.ts`：固定三选项与四类来源类型文案。
-- `utils/`：素材指纹、课时 2 快照草稿、自审、QuickCheck 和自测失效规则。
+- `utils/`：素材指纹、课时 2 快照草稿、课时 2 手动同步、自审、QuickCheck 和自测失效规则。
+- `utils/lesson2-snapshot-sync.ts`：检测课时 2 素材变更；学生确认后只同步素材/来源相关字段，并标记 AI 自检过期。
 - `components/Lesson3ScreenLayout.tsx`：第 1 步全屏滚动分屏布局。
 - `components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左右各 50%（四 Tab 编辑 | 两行预览）；第 2、3 步共用，仅 `cardType` 与数据源不同。
 - `components/QuestionCardLivePreview.tsx`：题卡完整实时预览，直接展示素材、判断任务、参考答案、解析与来源核验。

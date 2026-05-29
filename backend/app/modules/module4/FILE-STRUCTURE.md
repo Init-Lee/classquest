@@ -40,5 +40,5 @@ lesson3/routes → lesson3/qwen_client → lesson3/schemas
 
 ## 状态
 
-当前为 V1.5 架构占位。课时 3 在 dev 分支新增题卡自检助手后端壳，默认 mock provider；数据库 schema 待模块 4 前端 mock 流程稳定后冻结。
+当前为 V1.5 架构占位。课时 3 题卡自检助手后端壳已提供（默认 mock provider，可切换 Qwen）；数据库 schema 待模块 4 前端 mock 流程稳定后冻结。
 

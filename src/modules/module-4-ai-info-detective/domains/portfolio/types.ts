@@ -273,6 +273,22 @@ export interface Module4Lesson3AiReviewResult {
   safetyFlags: string[]
 }
 
+/**
+ * 单次成功 AI 自检的简化轨迹项。
+ * 仅记录可统计字段（请求 ID、时间、状态、tier、四板块等级），不冗余存储 message/summary 文本。
+ */
+export interface Module4Lesson3AiReviewHistoryEntry {
+  requestId: string
+  reviewedAt: string
+  status: Module4Lesson3AiReviewOverallStatus
+  tier: "excellent" | "good" | "blocked"
+  areaLevels: Record<Module4Lesson3AiReviewArea, Module4Lesson3AiReviewLevel>
+  suggestedEditCount: number
+}
+
+/** 课时 3 单张题卡 AI 自检轨迹最多保留的条目数，避免档案无限增长 */
+export const LESSON3_AI_REVIEW_HISTORY_LIMIT = 5
+
 export interface Module4Lesson3AiReviewState {
   enabled: boolean
   status: Module4Lesson3AiReviewRuntimeStatus
@@ -282,6 +298,8 @@ export interface Module4Lesson3AiReviewState {
   /** 题卡内容在上次自检后发生修改，旧结果仅供参考，不能作为放行依据 */
   isStale: boolean
   errorMessage: string
+  /** 历史成功调用轨迹（按时间倒序，仅保留简化项） */
+  history: Module4Lesson3AiReviewHistoryEntry[]
 }
 
 export interface Module4Lesson3QuestionCardDraft {
@@ -680,6 +698,7 @@ export function createEmptyModule4Lesson3AiReviewState(): Module4Lesson3AiReview
     result: undefined,
     isStale: false,
     errorMessage: "",
+    history: [],
   }
 }
 
@@ -1226,10 +1245,44 @@ function normalizeLesson3AiReviewResult(value: unknown): Module4Lesson3AiReviewR
   }
 }
 
+function normalizeLesson3AiReviewHistoryEntry(value: unknown): Module4Lesson3AiReviewHistoryEntry | null {
+  if (!value || typeof value !== "object") return null
+  const raw = value as Record<string, unknown>
+  const requestId = typeof raw.requestId === "string" ? raw.requestId : ""
+  const reviewedAt = typeof raw.reviewedAt === "string" ? raw.reviewedAt : ""
+  if (!requestId && !reviewedAt) return null
+  const rawAreaLevels = raw.areaLevels && typeof raw.areaLevels === "object"
+    ? raw.areaLevels as Record<string, unknown>
+    : {}
+  const rawTier = raw.tier
+  const tier: Module4Lesson3AiReviewHistoryEntry["tier"] = rawTier === "excellent" || rawTier === "good" || rawTier === "blocked"
+    ? rawTier
+    : "good"
+  return {
+    requestId,
+    reviewedAt,
+    status: normalizeLesson3AiReviewOverallStatus(raw.status),
+    tier,
+    areaLevels: {
+      material: normalizeLesson3AiReviewLevel(rawAreaLevels.material),
+      task: normalizeLesson3AiReviewLevel(rawAreaLevels.task),
+      explanation: normalizeLesson3AiReviewLevel(rawAreaLevels.explanation),
+      source: normalizeLesson3AiReviewLevel(rawAreaLevels.source),
+    },
+    suggestedEditCount: Number.isFinite(raw.suggestedEditCount) ? Math.max(0, Number(raw.suggestedEditCount)) : 0,
+  }
+}
+
 function normalizeLesson3AiReview(value: unknown): Module4Lesson3AiReviewState {
   const fallback = createEmptyModule4Lesson3AiReviewState()
   if (!value || typeof value !== "object") return fallback
   const raw = value as Record<string, unknown>
+  const history = Array.isArray(raw.history)
+    ? raw.history
+      .map(normalizeLesson3AiReviewHistoryEntry)
+      .filter((entry): entry is Module4Lesson3AiReviewHistoryEntry => entry !== null)
+      .slice(0, LESSON3_AI_REVIEW_HISTORY_LIMIT)
+    : []
   return {
     enabled: raw.enabled !== false,
     status: normalizeLesson3AiReviewRuntimeStatus(raw.status),
@@ -1238,6 +1291,7 @@ function normalizeLesson3AiReview(value: unknown): Module4Lesson3AiReviewState {
     result: normalizeLesson3AiReviewResult(raw.result),
     isStale: raw.isStale === true,
     errorMessage: typeof raw.errorMessage === "string" ? raw.errorMessage : "",
+    history,
   }
 }
 

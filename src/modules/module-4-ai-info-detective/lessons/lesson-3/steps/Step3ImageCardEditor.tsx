@@ -10,6 +10,7 @@ import type { Module4Lesson3QuestionCardDraft, Module4Portfolio } from "@/module
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { evaluateLesson3QuickCheck } from "../utils/evaluate-lesson3-quickcheck"
 import { ensureLesson3DraftFromLesson2 } from "../utils/build-lesson3-draft"
+import { hasLesson2SnapshotDrift, syncLesson3CardWithLesson2Snapshot } from "../utils/lesson2-snapshot-sync"
 import { invalidateLesson3SelfTrialOnCardSave } from "../utils/self-trial-invalidation"
 import { QuestionCardEditorWorkbench } from "../components/QuestionCardEditorWorkbench"
 
@@ -54,6 +55,29 @@ export default function Step3ImageCardEditor() {
     })
   }
 
+  const syncLatestLesson2Snapshot = () => {
+    const previousCard = portfolio.lesson3.imageCard
+    const syncedCard = syncLesson3CardWithLesson2Snapshot(previousCard, portfolio.lesson2.image)
+    const withInvalidation = invalidateLesson3SelfTrialOnCardSave(
+      portfolio.lesson3,
+      "image",
+      previousCard,
+      syncedCard,
+    )
+    const nextLesson3 = {
+      ...withInvalidation,
+      imageCard: syncedCard,
+      step3Completed: syncedCard.selfCheck.allRequiredPassed,
+    }
+    void savePortfolio({
+      ...portfolio,
+      lesson3: {
+        ...nextLesson3,
+        quickCheck: evaluateLesson3QuickCheck(nextLesson3),
+      },
+    })
+  }
+
   const complete = () => {
     if (!portfolio.lesson3.imageCard.selfCheck.allRequiredPassed) return
     const nextPortfolio: Module4Portfolio = {
@@ -75,6 +99,8 @@ export default function Step3ImageCardEditor() {
       onCardChange={updateImageCard}
       onComplete={complete}
       completeLabel="完成图片题卡 V1，进入双卡自测"
+      lesson2SnapshotOutdated={hasLesson2SnapshotDrift(portfolio.lesson3.imageCard, portfolio.lesson2.image)}
+      onSyncLesson2Snapshot={syncLatestLesson2Snapshot}
     />
   )
 }

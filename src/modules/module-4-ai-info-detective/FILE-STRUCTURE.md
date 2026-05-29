@@ -112,12 +112,13 @@ src/modules/module-4-ai-info-detective/
 - `app/`：模块 4 应用壳、Provider、教师讲解状态和课时注册表。
 - `pages/`：路由级页面。
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
-- `lessons/`：六个课时的本地学习挑战；当前课时 1-2 已合入，课时 3 在 dev 分支实现 V1 初稿流程，课时 4-6 后续按独立分支推进。
+- `lessons/`：六个课时的本地学习挑战；当前课时 1-3 已合入，课时 4-6 后续按独立分支推进。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
 - `api/`：mock adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到后端；OSS 方案 B 另需 `VITE_API_BASE_URL`。
 - `components/`：模块 4 私有 UI 组件。
-- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`，课时 3 中会显示 `课时3第N步` 或 `课时3已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full`、`lesson2-full` 与 `lesson3-full` 阶段快照 HTML；课时 3 快照下载文件名为 `模块4_姓名_课时3题卡V1快照_日期.html`。
+- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（文件名为 `模块4_姓名_当前进度_日期.json`，课时 2 中会显示 `课时2第N关` 或 `课时2已完成`，课时 3 中会显示 `课时3第N步` 或 `课时3已完成`），`serializers/snapshot-html.ts` 负责 `lesson1-full`、`lesson2-full` 与 `lesson3-full` 阶段快照 HTML；课时 3 快照下载文件名为 `模块4_姓名_课时3题卡V1快照_日期.html`，每张题卡下方追加“AI 自检助手记录”段（整体结果、成功调用次数、最近自检时间、是否过期、必填缺失、四板块 ✅/❌ 表、前 3 条建议与最近 5 次成功调用轨迹简表）。课时 3 题卡 `aiReview` 现包含 `history: Module4Lesson3AiReviewHistoryEntry[]`（上限 `LESSON3_AI_REVIEW_HISTORY_LIMIT=5`，仅存 `requestId / reviewedAt / status / tier / 四板块 level / 建议条数` 的简化项）；`metrics.aiReviewRequestCount` 仅在“成功完成且 `requestId` 与上次不同”时 +1，失败请求不写入计数与 history。后端不持久化任何 AI 调用记录。
 - `constants/`：教师讲解档案、班级选项等模块级常量。
+- `lessons/lesson-3/utils/lesson2-snapshot-sync.ts`：课时 3 手动同步课时 2 最新素材快照的边界工具；只检测并同步素材/来源相关字段（素材图、素材指纹、素材短名、来源类型、来源记录、课时 2 疑点提示快照），不得覆盖题干、选项、参考答案、核心解析和核验观察指引；编辑器提示必须告知替换材料会让 AI 自检、自测试答与最终保存重新确认，并允许学生点击“不采纳”或关闭按钮忽略本次提醒；同步后必须让 AI 自检过期，并触发自测试答/最终确认重新完成。
 - `lessons/lesson-1/components/Lesson1ScreenLayout.tsx`：课时 1 已验证的全屏滚动布局约定，负责 `scroll-snap`、固定关卡栏下方内容高度和每屏基础排版；当前用于第 1、2 关，后续若提升到模块级再迁入 `components/` 或 `features/`。
 - `lessons/lesson-1/components/Lesson1StepLayout.tsx`：第 3～5 关等标准 Step 布局；支持 `titleClassName` 以便关卡标题使用与全屏首屏一致的 primary 强调与字距（如第 3 关）。
 - `lessons/lesson-1/components/Step2SampleStages.tsx`：第 2 关新闻类/图片类样例的分阶段组件；第 2 关只负责观察判断与解析核验，第 3 关复用其中的 `Step2SampleStructureStage` 完成田字型四部分结构配对；教师讲解模式可允许未选答案时显示参考解析；`hideStageHeader` 可避免与外层层级标题重复；田字格侧栏不含「进入下一关」按钮，继续操作由各 Step 页面的 `Lesson1StepLayout` footer 承担；题目界面素材可放大，解析页缩略图不可放大；来源核验入口使用题卡数据里的公开原网页链接。
@@ -137,9 +138,10 @@ src/modules/module-4-ai-info-detective/
 - `lessons/lesson-2/utils/evaluate-lesson2-quickcheck.ts`：根据素材完成情况和过程计数生成 T1/T2/T3。
 - `lessons/lesson-3/`：课时 3「题目卡 V1 制作与解析填写」本地前端流程；从课时 2 新闻/图片素材复制快照，制作两张 V1 题卡，不反向修改课时 2。
 - `lessons/lesson-3/components/QuestionCardEditorWorkbench.tsx`：**模块 4 私有**单屏编辑驾驶舱；左右各 50%（四 Tab 编辑 | 两行预览含结构完成度与 AI 自检）；第 2、3 步共用；禁止迁入 `shared/` 或跨模块 export。
-- `lessons/lesson-3/components/QuestionCardLivePreview.tsx`：题卡答题前/答题后实时预览。
+- `lessons/lesson-3/components/QuestionCardLivePreview.tsx`：题卡完整实时预览（素材、任务、解析、来源核验）。
 - `lessons/lesson-3/components/AiReviewPanel.tsx`：题卡自检助手面板；自检失败不阻断保存 V1。
 - `lessons/lesson-3/utils/build-lesson3-draft.ts`：从课时 2 素材生成课时 3 快照草稿，增加 `assetFingerprint`，不比较整段 base64。
+- `lessons/lesson-3/utils/lesson2-snapshot-sync.ts`：检测课时 2 与课时 3 快照差异，并在学生确认后手动同步素材/来源字段（见上文 `infra/` 同级条目说明）。
 - `lessons/lesson-3/utils/evaluate-lesson3-quickcheck.ts`：根据两张 V1 题卡生成课时 3 QuickCheck。
 
 ## 依赖方向

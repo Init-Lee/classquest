@@ -15,6 +15,12 @@ function resolveLesson3AiReviewEndpoint(): string {
   return base ? `${base}${LESSON3_AI_REVIEW_PATH}` : LESSON3_AI_REVIEW_PATH
 }
 
+/** 仅提交 data:image DataURL；教师演示素材常为静态资源路径，避免触发后端 422。 */
+export function sanitizeLesson3AiReviewAssetDataUrl(dataUrl?: string): string | undefined {
+  if (!dataUrl?.startsWith("data:image/")) return undefined
+  return dataUrl
+}
+
 
 function buildAreaFingerprint(payload: Lesson3AiReviewRequest, area: Lesson3AiReviewResponse["result"]["checks"][number]["area"]): string {
   if (area === "material") {
@@ -137,6 +143,7 @@ function buildMockResponse(payload: Lesson3AiReviewRequest): Lesson3AiReviewResp
 function mapHttpError(status: number): string {
   if (status === 400) return "题卡信息不完整，暂时无法自检。"
   if (status === 413) return "图片太大，请重新压缩或跳过自检。"
+  if (status === 422) return "题卡素材格式不符合自检要求，请刷新页面后重试。"
   if (status === 429) return "自检次数较多，请稍后再试。"
   return "自检助手暂时不可用，不影响保存 V1。"
 }

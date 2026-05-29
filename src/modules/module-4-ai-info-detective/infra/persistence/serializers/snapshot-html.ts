@@ -4,10 +4,22 @@
  * 更新触发：课时快照内容、文件命名规则、脱敏边界或新增课时快照类型时，需要同步更新本文件。
  */
 
-import type { Module4Portfolio } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import type {
+  Module4Lesson3AiReviewArea,
+  Module4Lesson3AiReviewHistoryEntry,
+  Module4Lesson3AiReviewLevel,
+  Module4Lesson3AiReviewResult,
+  Module4Lesson3AiReviewState,
+  Module4Lesson3QuestionCardDraft,
+  Module4Portfolio,
+} from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/evaluate-lesson2-quickcheck"
 import { evaluateLesson3QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/evaluate-lesson3-quickcheck"
 import { LESSON3_SOURCE_TYPE_LABELS } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/data/default-options"
+import {
+  deriveLesson3AiReviewTier,
+  getLesson3AiReviewTierLabel,
+} from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/derive-lesson3-ai-review-tier"
 
 export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full"
 
@@ -380,6 +392,115 @@ export function buildModule4Lesson2SnapshotHtml(portfolio: Module4Portfolio): st
 </html>`
 }
 
+const AREA_LABELS_FOR_SNAPSHOT: Record<Module4Lesson3AiReviewArea, string> = {
+  material: "素材展示",
+  task: "判断任务",
+  explanation: "核心解析",
+  source: "来源核验",
+}
+
+const AREA_ORDER_FOR_SNAPSHOT: Module4Lesson3AiReviewArea[] = ["material", "task", "explanation", "source"]
+
+function aiAreaPassed(result: Module4Lesson3AiReviewResult, area: Module4Lesson3AiReviewArea): boolean {
+  if (result.missingRequiredFields.includes(area)) return false
+  const check = result.checks.find(item => item.area === area)
+  return !check || check.level === "ok"
+}
+
+function aiLevelLabel(level: Module4Lesson3AiReviewLevel): string {
+  if (level === "ok") return "✅"
+  if (level === "warning") return "⚠️"
+  return "❌"
+}
+
+function renderAiHistoryRow(entry: Module4Lesson3AiReviewHistoryEntry): string {
+  const tierLabel = entry.tier === "excellent" ? "优秀" : entry.tier === "good" ? "基本合格" : "不通过"
+  return `
+    <tr>
+      <td>${escapeHtml(entry.reviewedAt || "未记录")}</td>
+      <td>${escapeHtml(tierLabel)}</td>
+      <td>${aiLevelLabel(entry.areaLevels.material)}</td>
+      <td>${aiLevelLabel(entry.areaLevels.task)}</td>
+      <td>${aiLevelLabel(entry.areaLevels.explanation)}</td>
+      <td>${aiLevelLabel(entry.areaLevels.source)}</td>
+      <td>${entry.suggestedEditCount}</td>
+    </tr>`
+}
+
+function renderAiReviewSection(card: Module4Lesson3QuestionCardDraft): string {
+  const aiReview: Module4Lesson3AiReviewState = card.aiReview
+  const result = aiReview.result
+  const requestCount = card.metrics.aiReviewRequestCount
+  const lastReviewedAt = aiReview.lastReviewedAt || "未记录"
+  const stale = aiReview.isStale
+  const history = aiReview.history ?? []
+
+  if (!result) {
+    return `
+    <section>
+      <h2>AI 自检助手记录</h2>
+      <p class="item">尚未运行 AI 题卡自检助手；成功调用次数：<strong>${requestCount}</strong>。</p>
+      <p class="muted">完成首次自检后，这里会展示整体结论、四个板块结果与最近一次自检的建议要点。</p>
+    </section>`
+  }
+
+  const tier = deriveLesson3AiReviewTier(result)
+  const tierLabel = getLesson3AiReviewTierLabel(tier)
+  const summary = escapeHtml(result.summary || "未记录")
+  const missing = result.missingRequiredFields
+    .map(area => {
+      const key = area as Module4Lesson3AiReviewArea
+      return AREA_LABELS_FOR_SNAPSHOT[key] ?? area
+    })
+    .join("、")
+  const suggestionItems = result.suggestedEdits.slice(0, 3)
+    .map(text => `<li>${escapeHtml(text)}</li>`)
+    .join("")
+  const checkRows = AREA_ORDER_FOR_SNAPSHOT.map(area => {
+    const passed = aiAreaPassed(result, area)
+    const check = result.checks.find(item => item.area === area)
+    return `
+      <tr>
+        <td>${escapeHtml(AREA_LABELS_FOR_SNAPSHOT[area])}</td>
+        <td>${passed ? "✅ 通过" : "❌ 待修改"}</td>
+        <td>${escapeHtml(check?.message || (passed ? "本项已满足 V1 基本要求。" : "尚未满足 V1 基本要求。"))}</td>
+        <td>${escapeHtml(check?.suggestion || "无")}</td>
+      </tr>`
+  }).join("")
+
+  const historyBlock = history.length
+    ? `
+      <p class="item"><strong>历史成功调用轨迹（最近 ${history.length} 次）：</strong></p>
+      <table>
+        <thead>
+          <tr><th>时间</th><th>整体</th><th>素材</th><th>任务</th><th>解析</th><th>来源</th><th>建议条数</th></tr>
+        </thead>
+        <tbody>${history.map(renderAiHistoryRow).join("")}</tbody>
+      </table>`
+    : `<p class="item muted">暂无更早的成功调用记录。</p>`
+
+  return `
+    <section>
+      <h2>AI 自检助手记录</h2>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">整体结果</span><span class="value">${escapeHtml(tierLabel)}</span></div>
+        <div class="info-card"><span class="label">成功调用次数</span><span class="value">${requestCount}</span></div>
+        <div class="info-card"><span class="label">最近自检时间</span><span class="value">${escapeHtml(lastReviewedAt)}</span></div>
+        <div class="info-card"><span class="label">是否过期</span><span class="value">${stale ? "题卡有改动，建议重新自检" : "与当前题卡内容一致"}</span></div>
+      </div>
+      <p class="item"><strong>整体总结：</strong>${summary}</p>
+      ${missing ? `<p class="item"><strong>必填缺失板块：</strong>${escapeHtml(missing)}</p>` : ""}
+      <table>
+        <thead>
+          <tr><th>板块</th><th>结果</th><th>说明</th><th>建议</th></tr>
+        </thead>
+        <tbody>${checkRows}</tbody>
+      </table>
+      ${suggestionItems ? `<p class="item"><strong>关键修改建议（前 3 条）：</strong></p><ul>${suggestionItems}</ul>` : ""}
+      ${historyBlock}
+    </section>`
+}
+
 export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): string {
   const lesson3 = portfolio.lesson3
   const generatedAt = new Date().toLocaleString("zh-CN")
@@ -419,7 +540,8 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
       <p class="item"><strong>核验观察指引：</strong>${escapeHtml(card.source.verificationNote || "未填写")}</p>
       <p class="item"><strong>自审状态：</strong>${card.selfCheck.allRequiredPassed ? "四部分齐全" : "仍需补充"}</p>
       <p class="item"><strong>自测确认时间：</strong>${escapeHtml(trial.confirmedAt || "未记录")}；内容指纹：${escapeHtml(trial.contentFingerprint || "未记录")}</p>
-    </section>`
+    </section>
+    ${renderAiReviewSection(card)}`
   }
 
   return `<!doctype html>
