@@ -65,7 +65,7 @@ function TeacherModeEntry() {
           教师讲解模式
         </CardTitle>
         <CardDescription className="text-amber-700/80">
-          浏览全部页面；客观题答案默认隐藏，所有操作不影响学生数据
+          浏览全部页面；客观题答案默认隐藏；课时 4 互审走 fixture 演示，所有操作不影响学生数据
         </CardDescription>
       </CardHeader>
       <CardContent>

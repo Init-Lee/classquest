@@ -44,3 +44,11 @@ def get_cors_allowed_origins() -> list[str]:
     raw = os.getenv("CORS_ALLOWED_ORIGINS", "")
     return [item.strip() for item in raw.split(",") if item.strip()]
 
+
+def get_database_path(raw_path: str | None = None) -> Path:
+    """解析 SQLite 数据库路径；测试可传临时路径，生产默认使用运行时目录。"""
+    value = raw_path or os.getenv("CLASSQUEST_DATABASE_PATH", "").strip()
+    if value:
+        return Path(value).expanduser()
+    return DATABASE_PATH
+

@@ -14,6 +14,7 @@ import {
 import { module4PortfolioRepository } from "@/modules/module-4-ai-info-detective/infra/persistence/repositories/portfolio.repository.idb"
 import { createModule4TeacherLecturePortfolio } from "@/modules/module-4-ai-info-detective/constants/demo-portfolio"
 import { resolveModule4PortfolioPointer } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
+import { setModule4TeacherModeFlag } from "@/modules/module-4-ai-info-detective/utils/module4-teacher-mode-flag"
 
 interface Module4ContextValue {
   portfolio: Module4Portfolio | null
@@ -109,11 +110,13 @@ export function Module4Provider({ children }: { children: React.ReactNode }) {
   }, [isTeacherMode, portfolio?.id])
 
   const enterTeacherMode = useCallback(() => {
+    setModule4TeacherModeFlag(true)
     setDemoPortfolio(normalizeModule4Portfolio(createModule4TeacherLecturePortfolio()))
     setIsTeacherMode(true)
   }, [])
 
   const exitTeacherMode = useCallback(() => {
+    setModule4TeacherModeFlag(false)
     setIsTeacherMode(false)
     setDemoPortfolio(null)
   }, [])

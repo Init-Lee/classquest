@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 学习档案领域类型。
- * 职责：定义 Module4Portfolio、课时 1/2/3 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
- * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3 过程记录字段变化时，需要同步更新本文件。
+ * 职责：定义 Module4Portfolio、课时 1/2/3/4 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
+ * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3/4 过程记录字段变化时，需要同步更新本文件。
  */
 
 import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
@@ -416,6 +416,78 @@ export interface Module4Lesson3State {
   completedAt: string
 }
 
+export type Lesson4OutboundStatus = "not_sent" | "pending" | "claimed" | "submitted" | "pulled" | "cancelled" | "expired"
+export type Lesson4InboundStatus = "idle" | "available" | "claimed" | "submitted" | "expired"
+export type Lesson4ReviewRubricLevel = "pass" | "minor_fix" | "major_fix"
+/** 档位别名，兼容历史 verdict 字段（major_rework 归一化为 major_fix）。 */
+export type Lesson4ReviewVerdict = Lesson4ReviewRubricLevel
+export type Lesson4ReviewArea = "material" | "task" | "explanation" | "source" | "safety"
+/** 单卡量规维度（不含 safety，后者在 reviewJson 整体内容违规统一判定）。 */
+export type Lesson4ReviewRubricDimensionKey = Exclude<Lesson4ReviewArea, "safety">
+
+export interface Lesson4ReviewRubricEntry {
+  /** 未选中时为 undefined，提交前每个维度须三选一。 */
+  level?: Lesson4ReviewRubricLevel
+  /** 选定档位后必填，说明该维度评价理由。 */
+  reason: string
+}
+
+export interface Module4Lesson4ReviewCardFeedback {
+  trialAnswer?: Module4Lesson3OptionKey
+  rubric: Record<Lesson4ReviewRubricDimensionKey, Lesson4ReviewRubricEntry>
+  /** 该题卡总体建议（分卡独立，不再全局共用）。 */
+  overallComment: string
+  /** null 表示尚未选择是否违规；提交本卡前须明确 true/false。 */
+  contentViolation: boolean | null
+  /** 判定存在违规时必填说明。 */
+  contentViolationNote: string
+  /** 本卡已通过本地校验与 AI 审核，允许整体提交。 */
+  approved?: boolean
+}
+
+export interface Module4Lesson4ReviewJson {
+  cards: Record<Module4MaterialKind, Module4Lesson4ReviewCardFeedback>
+}
+
+/** 领取后冻结的送审题卡 JSON，与 api Lesson4ReviewRequestJson 结构一致。 */
+export interface Module4Lesson4ReviewRequestJson {
+  cards: Record<Module4MaterialKind, Module4Lesson3QuestionCardDraft>
+  snapshotMeta: {
+    version: "v1"
+    snapshotCreatedAt: string
+  }
+}
+
+export interface Module4Lesson4State {
+  outbound: {
+    status: Lesson4OutboundStatus
+    requestId: string
+    targetReviewerSeatCode: string
+    inviteCode: string
+    sentAt: string
+    pendingExpiresAt: string
+    reviewExpiresAt: string
+    receivedReviewJson?: Module4Lesson4ReviewJson
+    completed: boolean
+  }
+  inbound: {
+    status: Lesson4InboundStatus
+    requestId: string
+    authorSeatCode: string
+    /** 领取后审查 TTL 截止时间，与 claim/status API 的 reviewExpiresAt 对齐。 */
+    reviewExpiresAt: string
+    /** B5 claim 返回的完整题卡，持久化以支持刷新/重挂载后恢复工作台。 */
+    claimedRequestJson?: Module4Lesson4ReviewRequestJson
+    /** 审查进行中的临时草稿（IndexedDB）；提交成功或 inbound 重置后清除，与 submittedReviewJson 区分。 */
+    reviewDraftJson?: Module4Lesson4ReviewJson
+    submittedReviewJson?: Module4Lesson4ReviewJson
+    completed: boolean
+  }
+  gatePassed: boolean
+  step1Completed: boolean
+  completed: boolean
+}
+
 export interface Module4Lesson1Step5State {
   newsPlanText: string
   imagePlanText: string
@@ -465,6 +537,7 @@ export interface Module4Portfolio {
   lesson1: Module4Lesson1State
   lesson2: Module4Lesson2State
   lesson3: Module4Lesson3State
+  lesson4: Module4Lesson4State
   createdAt: string
   updatedAt: string
 }
@@ -815,6 +888,68 @@ export function createEmptyModule4Lesson3State(): Module4Lesson3State {
     quickCheck: createEmptyModule4Lesson3QuickCheckState(),
     completed: false,
     completedAt: "",
+  }
+}
+
+const LESSON4_REVIEW_RUBRIC_DIMENSION_KEYS: Lesson4ReviewRubricDimensionKey[] = [
+  "material",
+  "task",
+  "explanation",
+  "source",
+]
+
+function createEmptyLesson4ReviewRubric(): Record<Lesson4ReviewRubricDimensionKey, Lesson4ReviewRubricEntry> {
+  return Object.fromEntries(
+    LESSON4_REVIEW_RUBRIC_DIMENSION_KEYS.map(key => [key, { level: undefined, reason: "" }]),
+  ) as Record<Lesson4ReviewRubricDimensionKey, Lesson4ReviewRubricEntry>
+}
+
+function createEmptyLesson4ReviewCardFeedback(): Module4Lesson4ReviewCardFeedback {
+  return {
+    trialAnswer: undefined,
+    rubric: createEmptyLesson4ReviewRubric(),
+    overallComment: "",
+    contentViolation: null,
+    contentViolationNote: "",
+    approved: undefined,
+  }
+}
+
+export function createEmptyModule4Lesson4ReviewJson(): Module4Lesson4ReviewJson {
+  return {
+    cards: {
+      news: createEmptyLesson4ReviewCardFeedback(),
+      image: createEmptyLesson4ReviewCardFeedback(),
+    },
+  }
+}
+
+export function createEmptyModule4Lesson4State(): Module4Lesson4State {
+  return {
+    outbound: {
+      status: "not_sent",
+      requestId: "",
+      targetReviewerSeatCode: "",
+      inviteCode: "",
+      sentAt: "",
+      pendingExpiresAt: "",
+      reviewExpiresAt: "",
+      receivedReviewJson: undefined,
+      completed: false,
+    },
+    inbound: {
+      status: "idle",
+      requestId: "",
+      authorSeatCode: "",
+      reviewExpiresAt: "",
+      claimedRequestJson: undefined,
+      reviewDraftJson: undefined,
+      submittedReviewJson: undefined,
+      completed: false,
+    },
+    gatePassed: false,
+    step1Completed: false,
+    completed: false,
   }
 }
 
@@ -1430,6 +1565,195 @@ function normalizeLesson3State(value: unknown): Module4Lesson3State {
   }
 }
 
+function normalizeLesson4OutboundStatus(value: unknown): Lesson4OutboundStatus {
+  return value === "pending"
+    || value === "claimed"
+    || value === "submitted"
+    || value === "pulled"
+    || value === "cancelled"
+    || value === "expired"
+    ? value
+    : "not_sent"
+}
+
+function normalizeLesson4InboundStatus(value: unknown): Lesson4InboundStatus {
+  return value === "available" || value === "claimed" || value === "submitted" || value === "expired"
+    ? value
+    : "idle"
+}
+
+function normalizeLesson4ReviewVerdict(value: unknown): Lesson4ReviewVerdict | undefined {
+  if (value === "pass" || value === "minor_fix" || value === "major_fix") return value
+  if (value === "major_rework") return "major_fix"
+  return undefined
+}
+
+function normalizeLesson4ReviewRubricEntry(value: unknown): Lesson4ReviewRubricEntry {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const nested = value as Record<string, unknown>
+    return {
+      level: normalizeLesson4ReviewVerdict(nested.level ?? nested.verdict),
+      reason: typeof nested.reason === "string" ? nested.reason : "",
+    }
+  }
+  return {
+    level: normalizeLesson4ReviewVerdict(value),
+    reason: "",
+  }
+}
+
+function normalizeLesson4ReviewCardContentViolation(value: unknown): boolean | null {
+  if (value === true) return true
+  if (value === false) return false
+  return null
+}
+
+function normalizeLesson4ReviewCardFeedback(
+  value: unknown,
+  legacyGlobal?: {
+    overallComment: string
+    contentViolation: boolean | null
+    contentViolationNote: string
+  },
+): Module4Lesson4ReviewCardFeedback {
+  const fallback = createEmptyLesson4ReviewCardFeedback()
+  if (!value || typeof value !== "object") {
+    if (!legacyGlobal) return fallback
+    return {
+      ...fallback,
+      overallComment: legacyGlobal.overallComment,
+      contentViolation: legacyGlobal.contentViolation,
+      contentViolationNote: legacyGlobal.contentViolationNote,
+    }
+  }
+  const raw = value as Record<string, unknown>
+  const rubricRaw = raw.rubric && typeof raw.rubric === "object" ? raw.rubric as Record<string, unknown> : {}
+  const legacyVerdict = normalizeLesson4ReviewVerdict(raw.verdict)
+  const legacySuggestions = normalizeStringArray(raw.suggestions)
+  const legacyVerdictReason = typeof raw.verdictReason === "string"
+    ? raw.verdictReason
+    : legacySuggestions.find(item => item.trim().length > 0) ?? ""
+
+  const rubric = createEmptyLesson4ReviewRubric()
+  let hasDimensionData = false
+  for (const key of LESSON4_REVIEW_RUBRIC_DIMENSION_KEYS) {
+    if (rubricRaw[key] === undefined) continue
+    hasDimensionData = true
+    rubric[key] = normalizeLesson4ReviewRubricEntry(rubricRaw[key])
+  }
+
+  if (!hasDimensionData && legacyVerdict) {
+    for (const key of LESSON4_REVIEW_RUBRIC_DIMENSION_KEYS) {
+      rubric[key] = { level: legacyVerdict, reason: legacyVerdictReason }
+    }
+  }
+
+  const cardOverall = typeof raw.overallComment === "string" ? raw.overallComment : ""
+  const cardViolation = normalizeLesson4ReviewCardContentViolation(raw.contentViolation)
+  const cardViolationNote = typeof raw.contentViolationNote === "string" ? raw.contentViolationNote : ""
+
+  return {
+    trialAnswer: isModule4Lesson3OptionKey(raw.trialAnswer) ? raw.trialAnswer : undefined,
+    rubric,
+    overallComment: cardOverall || legacyGlobal?.overallComment || "",
+    contentViolation: cardViolation ?? legacyGlobal?.contentViolation ?? null,
+    contentViolationNote: cardViolationNote || legacyGlobal?.contentViolationNote || "",
+    approved: raw.approved === true ? true : undefined,
+  }
+}
+
+function normalizeLesson4ReviewJson(value: unknown): Module4Lesson4ReviewJson | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const raw = value as Record<string, unknown>
+  const cards = raw.cards && typeof raw.cards === "object" ? raw.cards as Record<string, unknown> : {}
+  /** 旧版全局 overall/violation 迁移到 news 卡，image 需重新填写。 */
+  const legacyGlobal = {
+    overallComment: typeof raw.overallComment === "string" ? raw.overallComment : "",
+    contentViolation: normalizeLesson4ReviewCardContentViolation(raw.contentViolation),
+    contentViolationNote: typeof raw.contentViolationNote === "string" ? raw.contentViolationNote : "",
+  }
+  const hasLegacyGlobal = legacyGlobal.overallComment.length > 0
+    || legacyGlobal.contentViolation !== null
+    || legacyGlobal.contentViolationNote.length > 0
+  return {
+    cards: {
+      news: normalizeLesson4ReviewCardFeedback(cards.news, hasLegacyGlobal ? legacyGlobal : undefined),
+      image: normalizeLesson4ReviewCardFeedback(cards.image),
+    },
+  }
+}
+
+function parseJsonObjectIfString(value: unknown): unknown {
+  if (typeof value !== "string") return value
+  try {
+    return JSON.parse(value) as unknown
+  } catch {
+    return undefined
+  }
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === "object" && !Array.isArray(value)
+}
+
+function normalizeLesson4ReviewRequestJson(value: unknown): Module4Lesson4ReviewRequestJson | undefined {
+  const parsed = parseJsonObjectIfString(value)
+  if (!isPlainObject(parsed)) return undefined
+  const cardsRaw = parsed.cards
+  if (!isPlainObject(cardsRaw)) return undefined
+  const newsRaw = cardsRaw.news
+  const imageRaw = cardsRaw.image
+  if (!isPlainObject(newsRaw) || !isPlainObject(imageRaw)) return undefined
+  const snapshotMeta = isPlainObject(parsed.snapshotMeta) ? parsed.snapshotMeta : {}
+  return {
+    cards: {
+      news: normalizeLesson3QuestionCardDraft(newsRaw, "news"),
+      image: normalizeLesson3QuestionCardDraft(imageRaw, "image"),
+    },
+    snapshotMeta: {
+      version: "v1",
+      snapshotCreatedAt: typeof snapshotMeta.snapshotCreatedAt === "string" ? snapshotMeta.snapshotCreatedAt : "",
+    },
+  }
+}
+
+function normalizeLesson4State(value: unknown): Module4Lesson4State {
+  const fallback = createEmptyModule4Lesson4State()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const outbound = raw.outbound && typeof raw.outbound === "object" ? raw.outbound as Record<string, unknown> : {}
+  const inbound = raw.inbound && typeof raw.inbound === "object" ? raw.inbound as Record<string, unknown> : {}
+  const normalizedOutbound = {
+    status: normalizeLesson4OutboundStatus(outbound.status),
+    requestId: typeof outbound.requestId === "string" ? outbound.requestId : "",
+    targetReviewerSeatCode: typeof outbound.targetReviewerSeatCode === "string" ? outbound.targetReviewerSeatCode.replace(/\D/g, "").slice(0, 4) : "",
+    inviteCode: typeof outbound.inviteCode === "string" ? outbound.inviteCode.replace(/\D/g, "").slice(0, 4) : "",
+    sentAt: typeof outbound.sentAt === "string" ? outbound.sentAt : "",
+    pendingExpiresAt: typeof outbound.pendingExpiresAt === "string" ? outbound.pendingExpiresAt : "",
+    reviewExpiresAt: typeof outbound.reviewExpiresAt === "string" ? outbound.reviewExpiresAt : "",
+    receivedReviewJson: normalizeLesson4ReviewJson(outbound.receivedReviewJson),
+    completed: outbound.completed === true,
+  }
+  const normalizedInbound = {
+    status: normalizeLesson4InboundStatus(inbound.status),
+    requestId: typeof inbound.requestId === "string" ? inbound.requestId : "",
+    authorSeatCode: typeof inbound.authorSeatCode === "string" ? inbound.authorSeatCode.replace(/\D/g, "").slice(0, 4) : "",
+    reviewExpiresAt: typeof inbound.reviewExpiresAt === "string" ? inbound.reviewExpiresAt : "",
+    claimedRequestJson: normalizeLesson4ReviewRequestJson(inbound.claimedRequestJson),
+    reviewDraftJson: normalizeLesson4ReviewJson(inbound.reviewDraftJson),
+    submittedReviewJson: normalizeLesson4ReviewJson(inbound.submittedReviewJson),
+    completed: inbound.completed === true,
+  }
+  const gatePassed = normalizedOutbound.completed && normalizedInbound.completed
+  return {
+    outbound: normalizedOutbound,
+    inbound: normalizedInbound,
+    gatePassed,
+    step1Completed: raw.step1Completed === true || gatePassed,
+    completed: raw.completed === true || gatePassed,
+  }
+}
+
 function normalizeLesson1Step5State(value: unknown, lesson1: Partial<Module4Lesson1State>): Module4Lesson1Step5State {
   const fallback = createEmptyModule4Lesson1Step5State()
   const raw = value && typeof value === "object" ? value as Record<string, unknown> : {}
@@ -1496,6 +1820,7 @@ export function createNewModule4Portfolio(
     lesson1: createEmptyModule4Lesson1State(),
     lesson2: createEmptyModule4Lesson2State(),
     lesson3: createEmptyModule4Lesson3State(),
+    lesson4: createEmptyModule4Lesson4State(),
     createdAt: now,
     updatedAt: now,
   }
@@ -1531,6 +1856,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
   const lesson1 = input.lesson1 ?? createEmptyModule4Lesson1State()
   const lesson2 = normalizeLesson2State((input as Partial<Module4Portfolio>).lesson2)
   const lesson3 = normalizeLesson3State((input as Partial<Module4Portfolio>).lesson3)
+  const lesson4 = normalizeLesson4State((input as Partial<Module4Portfolio>).lesson4)
 
   const studentMerged = normalizeStudentShape(input.student)
 
@@ -1563,6 +1889,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
     },
     lesson2,
     lesson3,
+    lesson4,
     createdAt,
     updatedAt,
   }

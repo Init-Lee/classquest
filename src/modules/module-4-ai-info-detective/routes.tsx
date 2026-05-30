@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 前端路由表。
- * 职责：在模块 4 独立 Shell 下分发首页、课时 1/2/3 子路由，后续课时、提交页和画廊页也从这里扩展。
+ * 职责：在模块 4 独立 Shell 下分发首页、课时 1/2/3/4 子路由，后续课时、提交页和画廊页也从这里扩展。
  * 更新触发：模块 4 新增课时、页面路径、答题页或画廊页时，需要同步扩展本文件。
  */
 
@@ -11,6 +11,7 @@ const Module4HomePage = lazy(() => import("./pages/Module4HomePage"))
 const Lesson1Routes = lazy(() => import("./lessons/lesson-1/routes"))
 const Lesson2Routes = lazy(() => import("./lessons/lesson-2/routes"))
 const Lesson3Routes = lazy(() => import("./lessons/lesson-3/routes"))
+const Lesson4Routes = lazy(() => import("./lessons/lesson-4/routes"))
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
@@ -26,6 +27,7 @@ export default function Module4Routes() {
         <Route path="lesson/1/*" element={<Lesson1Routes />} />
         <Route path="lesson/2/*" element={<Lesson2Routes />} />
         <Route path="lesson/3/*" element={<Lesson3Routes />} />
+        <Route path="lesson/4/*" element={<Lesson4Routes />} />
         <Route path="*" element={<Module4HomePage />} />
       </Routes>
     </Suspense>

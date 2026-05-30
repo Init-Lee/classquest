@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import httpx
 
+from ..shared.qwen_http import QwenHttpError, read_dashscope_api_key
 from .prompt import LESSON3_AI_REVIEW_SYSTEM_PROMPT
 from .schemas import (
     Lesson3AiReviewCheck,
@@ -59,15 +60,6 @@ def _now_iso() -> str:
 
 class QwenProviderError(RuntimeError):
     """Qwen provider 可定位错误，不包含密钥或完整模型响应。"""
-
-def _read_dashscope_api_key() -> str:
-    """读取并基础校验 DashScope API key，避免非法字符进入 Authorization header。"""
-    api_key = os.getenv("DASHSCOPE_API_KEY", "").strip().strip("'\"“”")
-    if not api_key:
-        return ""
-    if any(ord(char) > 127 for char in api_key):
-        raise QwenProviderError("DASHSCOPE_API_KEY 含有非 ASCII 字符，请检查是否仍是中文占位或使用了中文引号。")
-    return api_key
 
 def _student_facing_text(text: Any) -> str:
     """把模型可能复述的内部字段名替换成学生可理解的中文。"""
@@ -461,7 +453,10 @@ class QwenLesson3AiReviewProvider:
         }
 
     async def review(self, payload: Lesson3AiReviewRequest) -> Lesson3AiReviewResponse:
-        api_key = _read_dashscope_api_key()
+        try:
+            api_key = read_dashscope_api_key()
+        except QwenHttpError as exc:
+            raise QwenProviderError(str(exc)) from exc
         if not api_key:
             return await MockLesson3AiReviewProvider().review(payload)
 

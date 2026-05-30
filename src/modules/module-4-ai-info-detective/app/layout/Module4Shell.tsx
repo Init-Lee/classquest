@@ -5,7 +5,7 @@
  */
 
 import { useLayoutEffect, useRef } from "react"
-import { Outlet, useNavigate } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Module4Provider, useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
 import { Module4GlobalActions } from "@/modules/module-4-ai-info-detective/app/layout/Module4GlobalActions"
@@ -14,9 +14,11 @@ import { Module4TopProgress } from "@/modules/module-4-ai-info-detective/app/lay
 function Module4ShellInner() {
   const { portfolio, isTeacherMode, exitTeacherMode, resetTeacherMode } = useModule4Portfolio()
   const navigate = useNavigate()
+  const location = useLocation()
   const teacherBannerRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const footerRef = useRef<HTMLElement>(null)
+  const isLesson4Route = /\/module\/4\/lesson\/4/.test(location.pathname)
 
   // 把「教师横幅 + 顶栏 + 页脚」高度写成 CSS 变量，供课时内 sticky 条与工作台视口高度计算对齐。
   useLayoutEffect(() => {
@@ -53,7 +55,11 @@ function Module4ShellInner() {
         >
           <div className="max-w-7xl mx-auto px-4 py-2 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-medium">
-              <span className="min-w-0">教师讲解模式 — 可直接浏览全部关卡；客观题答案默认隐藏，可按需显示</span>
+              <span className="min-w-0">
+                {isLesson4Route
+                  ? "教师讲解模式 — 演示 · 不写入学生数据；课时 4 互审走 fixture，不请求后端"
+                  : "教师讲解模式 — 可直接浏览全部关卡；客观题答案默认隐藏，可按需显示"}
+              </span>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <Button
                   variant="outline"

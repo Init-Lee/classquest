@@ -1,0 +1,115 @@
+---
+description: ClassQuest 模块 4 课时 4 同伴互审规则
+alwaysApply: false
+---
+
+# Module 4 Lesson 4 — Peer Review Relay Rules
+
+> 本文件是 Cursor 项目规则，语义角色是约束模块 4 课时 4 的前端互审中转站、档案类型与后续后端互审接口实现；当课时 4 的状态机、API 契约、目录边界或实现阶段发生变化时，需要同步更新本文件。
+
+Apply these rules when editing `src/modules/module-4-ai-info-detective/lessons/lesson-4/`, module 4 portfolio types, or `backend/app/modules/module4/lesson4/`.
+
+## Course positioning
+
+Lesson 4 is **题目卡互审与 V2 入库准备**.
+
+It does not produce final published cards. It moves lesson 3 V1 cards toward V2 and prepares lesson 5 web trial.
+
+## Development target
+
+v0.2 implements the student peer review relay gate:
+
+- A sends frozen V1 cards to target seat code.
+- Backend stores request JSON and generates review code.
+- B refreshes tasks, enters review code, claims task.
+- B reviews both cards and submits review JSON.
+- A polls/pulls review JSON.
+- Gate passes only after A is reviewed and A reviews someone.
+
+## Non-negotiable gate logic
+
+Do not require mutual pair review. These two conditions are independent:
+
+```ts
+outbound.completed && inbound.completed
+```
+
+A three-student ring must pass:
+
+```text
+A → B, B → C, C → A
+```
+
+## State machine
+
+Use:
+
+```text
+pending → claimed → submitted → pulled
+   ↓         ↓
+expired   expired
+
+pending → cancelled
+```
+
+No additional state should be added unless it is strictly necessary.
+
+## Timers
+
+- pending expires after 6 minutes.
+- pending can be manually cancelled by author.
+- claimed uses a wider review countdown, default 20 minutes.
+- claimed cannot be manually cancelled by author.
+- submitted must not short-expire; retain until author pulls or cleanup.
+
+## Review code
+
+Use a 4-digit invite/review code. Reviewer may see task summary by seat code but must enter correct code before full cards are returned.
+
+## Backend
+
+Use SQLite and JSON text first. Do not over-normalize.
+
+Minimum table:
+
+```text
+module4_lesson4_review_requests
+```
+
+Minimum endpoints under `/api/v1/module4/lesson4`:
+
+```text
+POST /review-requests
+POST /review-requests/{requestId}/cancel
+GET  /review-requests/inbox
+POST /review-requests/{requestId}/claim
+POST /review-requests/{requestId}/submit
+GET  /review-requests/{requestId}/status
+POST /review-requests/{requestId}/pull
+```
+
+## Frontend
+
+Step 1 is a two-column relay station:
+
+- left: my cards sent for review;
+- right: tasks sent to me;
+- top: two-condition gate status.
+
+For this frontend-only phase, Step 2-4 must stay as locked placeholder pages. Do not implement Step 2-4 business logic until the backend integration phase explicitly continues.
+
+## Boundaries
+
+Do not implement:
+
+- teacher dashboard;
+- rescue mode;
+- WebSocket/WebRTC;
+- formal item-bank scoring;
+- lesson 5 random quiz;
+- Q score or frequency adjustment;
+- final publish flow.
+
+## Module boundary
+
+Keep lesson 4 components in module 4. Do not export module 4 business components to shared. Reuse shared UI primitives only.

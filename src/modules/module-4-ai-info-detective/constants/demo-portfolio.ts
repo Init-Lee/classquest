@@ -14,6 +14,7 @@ import type {
 import {
   createEmptyModule4Lesson2State,
   createEmptyModule4Lesson3State,
+  createEmptyModule4Lesson4State,
   createNewModule4Portfolio,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { buildLesson3DraftFromLesson2 } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/build-lesson3-draft"
@@ -445,14 +446,27 @@ function createLesson3TeacherDemoState(lesson2: Module4Lesson2State): Module4Les
   }
 }
 
+function createLesson3CompletedTeacherDemoState(lesson2: Module4Lesson2State): Module4Lesson3State {
+  const lesson3 = createLesson3TeacherDemoState(lesson2)
+  return {
+    ...lesson3,
+    step4Completed: true,
+    finalPreviewConfirmed: true,
+    finalPreviewConfirmedAt: DEMO_LESSON3_AT,
+    completed: true,
+    completedAt: DEMO_LESSON3_AT,
+  }
+}
+
 export function createModule4TeacherLecturePortfolio(): Module4Portfolio {
   const completed = createModule4CompletedDemoPortfolio()
   const lesson2 = createCompletedLesson2DemoState()
-  const lesson3 = createLesson3TeacherDemoState(lesson2)
+  const lesson3 = createLesson3CompletedTeacherDemoState(lesson2)
   return {
     ...completed,
-    progress: { lessonId: 3, stepId: 2 },
+    progress: { lessonId: 4, stepId: 1 },
     lesson2,
     lesson3,
+    lesson4: createEmptyModule4Lesson4State(),
   }
 }

@@ -53,16 +53,37 @@ cp backend/.env.example backend/.env
 ```
 
 OSS 静态前端直连后端（方案 B）时，还需在服务器 `.env` 填写 `CORS_ALLOWED_ORIGINS`，允许 OSS 访问域名（逗号分隔，含 `https://` 协议）。
+本地或测试如需覆盖 SQLite 路径，可设置 `CLASSQUEST_DATABASE_PATH`（示例：`runtime/db/classquest.sqlite`，相对 `backend/` 目录）；留空时默认使用 `/var/lib/classquest/db/classquest.sqlite`。
 
 ## 本地启动
 
-建议使用后端独立虚拟环境，避免系统 Python、conda 或其它项目依赖影响联调：
+建议使用后端独立虚拟环境，避免系统 Python、conda 或其它项目依赖影响联调。
+
+**必须在 `backend/` 目录下操作**，并设置本地 SQLite 路径（相对 `backend/`）：
 
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+
+export CLASSQUEST_DATABASE_PATH=runtime/db/classquest.sqlite
+export PYTHONPATH=.
+```
+
+模块 4 课时 4 互审 API 的服务端时间口径为 **Asia/Shanghai（UTC+8）**；响应中的 `serverNow` 等字段为带 `+08:00` 的 ISO8601。
+
+首次启动或 schema 变更后，初始化 SQLite：
+
+```bash
+python scripts/init_db.py
+```
+
+预期输出：`数据库已初始化：runtime/db/classquest.sqlite`（或绝对路径）。脚本会启用 `core/database.py` 中的 SQLite 连接约定，并加载课时 4 同伴互审请求表 schema。`init_db.py` 已自动将 `backend/` 加入 `sys.path`，但 **uvicorn 与其它 `app.*` 导入仍建议保留 `export PYTHONPATH=.`**，避免 `ModuleNotFoundError: No module named 'app'`。
+
+启动 API：
+
+```bash
 uvicorn app.main:app --reload
 ```
 
@@ -70,5 +91,5 @@ uvicorn app.main:app --reload
 
 ## 当前状态
 
-当前已提供 `GET /api/v1/health` 健康检查、模块 4 基础 router，以及课时 3 题卡自检助手 `POST /api/v1/module4/lesson3/ai-review`。课时 3 自检支持默认 mock provider，并可通过后端环境变量切换到 Qwen OpenAI-compatible Chat Completions；真实提交、审核、试答和统计逻辑在模块 4 mock 流程稳定后再实现。
+当前已提供 `GET /api/v1/health` 健康检查、模块 4 基础 router、课时 3 题卡自检助手 `POST /api/v1/module4/lesson3/ai-review`，以及课时 4 同伴互审 SQLite 基座与业务端点 B1~B7（送审、状态、撤回、收件箱、领取、提交、拉取）与 `POST /api/v1/module4/lesson4/review-requests/moderate-text` 文字审核。课时 3 自检与课时 4 互审审核共用 `DASHSCOPE_API_KEY` / `QWEN_*`（见 `module4/shared/qwen_http.py`）；课时 4 未设 `LESSON4_REVIEW_MODERATION_PROVIDER` 时有 key 自动走 Qwen。后端仍需校验完整 4 位班学号、同班约束与自送拦截。
 

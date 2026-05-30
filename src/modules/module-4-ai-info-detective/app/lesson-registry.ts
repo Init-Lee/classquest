@@ -8,6 +8,7 @@ import type { Module4Portfolio, Module4ProgressPointer } from "@/modules/module-
 import { getCurrentLesson1Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-1/guards"
 import { getCurrentLesson2Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/guards"
 import { getCurrentLesson3Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/guards"
+import { getCurrentLesson4Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-4/guards"
 
 export interface Module4LessonEntry {
   id: number
@@ -45,11 +46,11 @@ export const MODULE4_LESSON_REGISTRY: Module4LessonEntry[] = [
   },
   {
     id: 4,
-    title: "同伴评审与终稿优化",
-    subtitle: "根据反馈优化题卡内容",
-    path: "/module/4",
-    available: false,
-    isComplete: () => false,
+    title: "题目卡互审与 V2 入库准备",
+    subtitle: "通过同伴互审拿到 V2 修改入口",
+    path: "/module/4/lesson/4/step/1",
+    available: true,
+    isComplete: portfolio => Boolean(portfolio?.lesson4.completed),
   },
   {
     id: 5,
@@ -81,6 +82,7 @@ export function canAccessModule4Lesson(
   if (!portfolio) return false
   if (lessonId === 2) return portfolio.lesson1.completed
   if (lessonId === 3) return portfolio.lesson2.completed
+  if (lessonId === 4) return portfolio.lesson3.completed
   return false
 }
 
@@ -91,5 +93,8 @@ export function resolveModule4PortfolioPointer(portfolio: Module4Portfolio): Mod
   if (!portfolio.lesson2.completed) {
     return { lessonId: 2, stepId: getCurrentLesson2Step(portfolio.lesson2) }
   }
-  return { lessonId: 3, stepId: getCurrentLesson3Step(portfolio.lesson3) }
+  if (!portfolio.lesson3.completed) {
+    return { lessonId: 3, stepId: getCurrentLesson3Step(portfolio.lesson3) }
+  }
+  return { lessonId: 4, stepId: getCurrentLesson4Step(portfolio.lesson4) }
 }
