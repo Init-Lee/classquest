@@ -6,15 +6,15 @@
 
 import { useMemo } from "react"
 
+import panel1Url from "../assets/第1格：原始材料是什么.jpg"
+import panel2Url from "../assets/第2格：我看到了什么.jpg"
+import panel3Url from "../assets/lesson3-frame-3-minimal-processing.jpg"
+import panel4Url from "../assets/lesson3-frame-4-poster-copy.jpg"
+
+const COMIC_PANEL_URLS = [panel1Url, panel2Url, panel3Url, panel4Url]
+
 export function useComicPanelUrls(): string[] {
   return useMemo(() => {
-    const modules = import.meta.glob<string>("../assets/*.{jpg,jpeg}", {
-      eager: true,
-      import: "default",
-    })
-    return Object.keys(modules)
-      .sort((a, b) => a.localeCompare(b, "zh-Hans-CN", { numeric: true }))
-      .map((key) => modules[key])
-      .slice(0, 4)
+    return COMIC_PANEL_URLS
   }, [])
 }
