@@ -1,0 +1,55 @@
+# 文件说明：ClassQuest 后端 rsync 上传排除清单（Mac → 服务器）。
+# 职责：从本机 rsync 到服务器时排除敏感文件、虚拟环境与缓存，避免覆盖服务器 .env 与 .venv。
+# 更新触发：发现新的敏感文件类型、服务器专有文档策略、本地目录结构变化，或服务器 backups/_shared/rsync-exclude.txt 策略调整时，需同步更新本文件与服务器 _shared 副本。
+
+# 服务器专有文档（不进 git；exclude 后 --delete 也不会删掉服务器上已有副本）
+DEPLOYMENT.md
+
+# 环境与密钥（绝不上传；勿用 .env.*，macOS rsync 会误伤 .env.example 且 ! 例外不生效）
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.p12
+*.crt
+secrets/
+credentials.json
+service-account*.json
+**/id_rsa*
+
+# Python 运行时/缓存
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
+dist/
+build/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Git（服务器不依赖仓库历史）
+.git/
+.gitignore
+
+# 日志与本地数据库
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# 测试/临时
+tmp/
+temp/
+*.tmp

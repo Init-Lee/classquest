@@ -52,8 +52,11 @@ HTTPS
 cp backend/.env.example backend/.env
 ```
 
-OSS 静态前端直连后端（方案 B）时，还需在服务器 `.env` 填写 `CORS_ALLOWED_ORIGINS`，允许 OSS 访问域名（逗号分隔，含 `https://` 协议）。
-本地或测试如需覆盖 SQLite 路径，可设置 `CLASSQUEST_DATABASE_PATH`（示例：`runtime/db/classquest.sqlite`，相对 `backend/` 目录）；留空时默认使用 `/var/lib/classquest/db/classquest.sqlite`。
+`.env.example` 随 git/rsync 更新；真实 `backend/.env` **不会**自动同步。拉代码或改 example 后，请把**新增变量行**合并进自己的 `.env`（保留已有 `DASHSCOPE_API_KEY`），不要只改 example 不改 `.env`。
+
+OSS 静态前端直连后端（方案 B）时，生产 `.env` 需含 `CORS_ALLOWED_ORIGINS`（逗号分隔，含 `https://` 协议）。课时 4 互审可选 `LESSON4_REVIEW_MODERATION_*`；留空时一般有 key 则走 Qwen。
+
+本地联调 SQLite：`CLASSQUEST_DATABASE_PATH=runtime/db/classquest.sqlite`（相对 `backend/`）；留空时默认 `/var/lib/classquest/db/classquest.sqlite`。生产服务器路径见 `BACKUP-RULES.md` §8。
 
 ## 本地启动
 
