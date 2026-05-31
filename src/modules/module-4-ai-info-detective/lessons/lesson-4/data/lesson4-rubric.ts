@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时 4 同伴互审量规数据。
- * 职责：提供单卡三档审查结论文案、综合考量维度说明，供互审工作台评价与帮助浮窗渲染。
- * 更新触发：互审档位文案、评价维度列表或 reviewJson.cards[].rubric 结构变化时，需要同步更新本文件。
+ * 职责：提供单卡三档审查结论文案、综合考量维度说明，以及 Lesson4 QuickCheck 评分阈值常量。
+ * 更新触发：互审档位文案、评价维度列表、reviewJson.cards[].rubric 结构或 QuickCheck 评分规则变化时，需要同步更新本文件。
  */
 
 import type { Lesson4ReviewRubricDimensionKey, Lesson4ReviewVerdict } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -31,3 +31,16 @@ export const LESSON4_VERDICT_LEVELS: Lesson4VerdictLevelConfig[] = [
   { level: "minor_fix", label: "小修", description: "基本可用，但建议补充一句或调整表述后再进入 V2。" },
   { level: "major_fix", label: "重改", description: "会影响同学作答或核验，需要回到编辑器重做。" },
 ]
+
+export const LESSON4_QUICK_CHECK_RUBRIC = {
+  targets: {
+    T1: { maxScore: 35, achievedThreshold: 25 },
+    T2: { maxScore: 30, achievedThreshold: 21 },
+    T3: { maxScore: 35, achievedThreshold: 25 },
+  },
+  levels: {
+    excellent: 90,
+    achieved: 75,
+    basic: 50,
+  },
+} as const

@@ -22,10 +22,7 @@ export function PeerReviewGateStatus({ gate }: { gate: Lesson4GateEvaluation }) 
     <Card className="border-primary/20 bg-primary/5">
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-sm font-semibold text-primary">通关条件</p>
-            <p className="text-xs text-muted-foreground">两个条件互相独立，三人环形互审也可以通关。</p>
-          </div>
+          <p className="text-sm font-semibold text-primary">通关条件</p>
           <Badge variant={gate.gatePassed ? "success" : "warning"}>
             {gate.gatePassed ? "可以进入 V2 修改" : "还需完成互审"}
           </Badge>
@@ -34,6 +31,9 @@ export function PeerReviewGateStatus({ gate }: { gate: Lesson4GateEvaluation }) 
           <ConditionRow done={gate.outboundReviewed} label="我的题卡已被同伴审查" />
           <ConditionRow done={gate.inboundReviewed} label="我已完成一次同伴题卡审查" />
         </div>
+        <p className="text-xs leading-5 text-muted-foreground">
+          两个条件互相独立；三人组可采用环形互审（1 号→2 号→3 号→1 号）分别完成送审与审查即可通关。
+        </p>
         {gate.gatePassed && <p className="text-sm font-medium text-green-700">两个条件都已完成，可以进入 V2 修改。</p>}
       </CardContent>
     </Card>

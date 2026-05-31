@@ -449,6 +449,164 @@ export interface Module4Lesson4ReviewJson {
   cards: Record<Module4MaterialKind, Module4Lesson4ReviewCardFeedback>
 }
 
+export type Lesson4FeedbackDecisionAction = "accept" | "partial_accept" | "keep_with_reason" | "must_revise"
+export type Lesson4FeedbackDecisionLevel = "minor_fix" | "major_fix" | "content_violation"
+
+export interface Lesson4FeedbackDecision {
+  id: string
+  cardKind: Module4MaterialKind
+  area: Lesson4ReviewArea | "overall"
+  level: Lesson4FeedbackDecisionLevel
+  reviewerReason: string
+  action: Lesson4FeedbackDecisionAction
+  authorPlan: string
+  resolved: boolean
+  resolvedAt: string
+}
+
+export interface Module4Lesson4FeedbackInboxState {
+  digestedAt: string
+  decisions: Lesson4FeedbackDecision[]
+  allFeedbackReviewed: boolean
+}
+
+export type Module4Lesson4V2CardStatus = "draft" | "confirmed" | "ready_for_lesson5"
+
+export interface Module4Lesson4V2CardDraft {
+  id: string
+  kind: Module4MaterialKind
+  version: "v2"
+  status: Module4Lesson4V2CardStatus
+  baseV1CardId: string
+  baseV1UpdatedAt: string
+  material: Module4Lesson3QuestionCardDraft["material"]
+  task: Module4Lesson3QuestionCardDraft["task"]
+  explanation: Module4Lesson3QuestionCardDraft["explanation"]
+  source: Module4Lesson3QuestionCardDraft["source"]
+  revision: {
+    summary: string
+    decisionIdsResolved: string[]
+    confirmedAt: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Module4Lesson4V2State {
+  newsCard: Module4Lesson4V2CardDraft
+  imageCard: Module4Lesson4V2CardDraft
+  newsConfirmed: boolean
+  imageConfirmed: boolean
+  confirmedAt: string
+}
+
+export interface Module4Lesson4ReadinessState {
+  newsReady: boolean
+  imageReady: boolean
+  readyForLesson5: boolean
+  checkedAt: string
+  exportedPackageJson?: unknown
+}
+
+export type Module4Lesson4QuickCheckLevel = "excellent" | "achieved" | "basic" | "not_achieved"
+
+export interface Module4Lesson4QuickCheckTarget<TEvidence extends Record<string, unknown>> {
+  score: number
+  achieved: boolean
+  evidence: TEvidence
+}
+
+export interface Module4Lesson4QuickCheckState {
+  T1: Module4Lesson4QuickCheckTarget<{
+    outboundCompleted: boolean
+    inboundCompleted: boolean
+    gatePassed: boolean
+    step1Completed: boolean
+    receivedReviewPresent: boolean
+  }>
+  T2: Module4Lesson4QuickCheckTarget<{
+    step2Completed: boolean
+    allFeedbackReviewed: boolean
+    reviewerPassOnly: boolean
+    decisionCount: number
+    minorFixDecisionCount: number
+    blockingDecisionCount: number
+    unresolvedBlockingDecisionIds: string[]
+    minorDecisionsMissingReasonIds: string[]
+  }>
+  T3: Module4Lesson4QuickCheckTarget<{
+    step3Completed: boolean
+    newsConfirmed: boolean
+    imageConfirmed: boolean
+    readyForLesson5Status: "green" | "amber" | "red"
+    newsSummaryRequired: boolean
+    imageSummaryRequired: boolean
+    newsRevisionSummaryReady: boolean
+    imageRevisionSummaryReady: boolean
+    allNewsSectionsPass: boolean
+    allImageSectionsPass: boolean
+    noRevisionNeeded: boolean
+    unresolvedBlockingDecisionIds: string[]
+  }>
+  totalScore: number
+  level: Module4Lesson4QuickCheckLevel
+  evaluatedAt: string
+  blockers: string[]
+}
+
+/** 课时 4 Step4 保存入库包时写入的阶段快照摘要（不含完整题卡正文，便于教师评分与继续学习包携带）。 */
+export interface Module4Lesson4StageSnapshot {
+  version: "lesson4-stage-v1"
+  snappedAt: string
+  stepsCompleted: {
+    step1: boolean
+    step2: boolean
+    step3: boolean
+    step4: boolean
+  }
+  gatePassed: boolean
+  v2: {
+    newsConfirmed: boolean
+    imageConfirmed: boolean
+    newsStatus: Module4Lesson4V2CardStatus
+    imageStatus: Module4Lesson4V2CardStatus
+    newsRevisionSummary: string
+    imageRevisionSummary: string
+    newsDecisionIdsResolved: string[]
+    imageDecisionIdsResolved: string[]
+  }
+  receivedReviewPresent: boolean
+  quickCheck: {
+    totalScore: number
+    level: Module4Lesson4QuickCheckLevel
+    evaluatedAt: string
+    targets: {
+      T1: Pick<Module4Lesson4QuickCheckState["T1"], "score" | "achieved">
+      T2: Pick<Module4Lesson4QuickCheckState["T2"], "score" | "achieved">
+      T3: Pick<Module4Lesson4QuickCheckState["T3"], "score" | "achieved">
+    }
+    blockers: string[]
+  }
+  rubricObservationSummary: {
+    passCount: number
+    minorFixCount: number
+    majorFixCount: number
+    contentViolationCount: number
+    unresolvedBlockingCount: number
+  }
+  decisionsSummary: Array<{
+    id: string
+    cardKind: Module4MaterialKind
+    area: Lesson4ReviewArea | "overall"
+    level: Lesson4FeedbackDecisionLevel
+    action: Lesson4FeedbackDecisionAction
+    resolved: boolean
+    authorPlan: string
+  }>
+  readiness: Pick<Module4Lesson4ReadinessState, "newsReady" | "imageReady" | "readyForLesson5" | "checkedAt">
+  readyForLesson5EvaluationStatus?: "green" | "amber" | "red"
+}
+
 /** 领取后冻结的送审题卡 JSON，与 api Lesson4ReviewRequestJson 结构一致。 */
 export interface Module4Lesson4ReviewRequestJson {
   cards: Record<Module4MaterialKind, Module4Lesson3QuestionCardDraft>
@@ -485,7 +643,17 @@ export interface Module4Lesson4State {
   }
   gatePassed: boolean
   step1Completed: boolean
+  step2Completed: boolean
+  step3Completed: boolean
+  step4Completed: boolean
+  feedbackInbox: Module4Lesson4FeedbackInboxState
+  v2: Module4Lesson4V2State
+  readiness: Module4Lesson4ReadinessState
+  quickCheck: Module4Lesson4QuickCheckState
+  /** Step4 保存入库包时写入；供阶段快照 HTML 与继续学习包携带摘要。 */
+  stageSnapshot?: Module4Lesson4StageSnapshot
   completed: boolean
+  completedAt: string
 }
 
 export interface Module4Lesson1Step5State {
@@ -924,6 +1092,110 @@ export function createEmptyModule4Lesson4ReviewJson(): Module4Lesson4ReviewJson 
   }
 }
 
+export function createEmptyModule4Lesson4FeedbackInboxState(): Module4Lesson4FeedbackInboxState {
+  return {
+    digestedAt: "",
+    decisions: [],
+    allFeedbackReviewed: false,
+  }
+}
+
+export function createEmptyModule4Lesson4V2CardDraft(kind: Module4MaterialKind): Module4Lesson4V2CardDraft {
+  const now = new Date().toISOString()
+  const emptyV1 = createEmptyModule4Lesson3QuestionCardDraft(kind)
+  return {
+    id: `lesson4-${kind}-v2`,
+    kind,
+    version: "v2",
+    status: "draft",
+    baseV1CardId: "",
+    baseV1UpdatedAt: "",
+    material: emptyV1.material,
+    task: emptyV1.task,
+    explanation: emptyV1.explanation,
+    source: emptyV1.source,
+    revision: {
+      summary: "",
+      decisionIdsResolved: [],
+      confirmedAt: "",
+    },
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createEmptyModule4Lesson4V2State(): Module4Lesson4V2State {
+  return {
+    newsCard: createEmptyModule4Lesson4V2CardDraft("news"),
+    imageCard: createEmptyModule4Lesson4V2CardDraft("image"),
+    newsConfirmed: false,
+    imageConfirmed: false,
+    confirmedAt: "",
+  }
+}
+
+export function createEmptyModule4Lesson4ReadinessState(): Module4Lesson4ReadinessState {
+  return {
+    newsReady: false,
+    imageReady: false,
+    readyForLesson5: false,
+    checkedAt: "",
+    exportedPackageJson: undefined,
+  }
+}
+
+export function createEmptyModule4Lesson4QuickCheckState(): Module4Lesson4QuickCheckState {
+  return {
+    T1: {
+      score: 0,
+      achieved: false,
+      evidence: {
+        outboundCompleted: false,
+        inboundCompleted: false,
+        gatePassed: false,
+        step1Completed: false,
+        receivedReviewPresent: false,
+      },
+    },
+    T2: {
+      score: 0,
+      achieved: false,
+      evidence: {
+        step2Completed: false,
+        allFeedbackReviewed: false,
+        reviewerPassOnly: true,
+        decisionCount: 0,
+        minorFixDecisionCount: 0,
+        blockingDecisionCount: 0,
+        unresolvedBlockingDecisionIds: [],
+        minorDecisionsMissingReasonIds: [],
+      },
+    },
+    T3: {
+      score: 0,
+      achieved: false,
+      evidence: {
+        step3Completed: false,
+        newsConfirmed: false,
+        imageConfirmed: false,
+        readyForLesson5Status: "red",
+        newsSummaryRequired: false,
+        imageSummaryRequired: false,
+        newsRevisionSummaryReady: false,
+        imageRevisionSummaryReady: false,
+        allNewsSectionsPass: false,
+        allImageSectionsPass: false,
+        noRevisionNeeded: false,
+        unresolvedBlockingDecisionIds: [],
+      },
+    },
+    totalScore: 0,
+    level: "not_achieved",
+    evaluatedAt: "",
+    blockers: [],
+  }
+}
+
 export function createEmptyModule4Lesson4State(): Module4Lesson4State {
   return {
     outbound: {
@@ -949,7 +1221,15 @@ export function createEmptyModule4Lesson4State(): Module4Lesson4State {
     },
     gatePassed: false,
     step1Completed: false,
+    step2Completed: false,
+    step3Completed: false,
+    step4Completed: false,
+    feedbackInbox: createEmptyModule4Lesson4FeedbackInboxState(),
+    v2: createEmptyModule4Lesson4V2State(),
+    readiness: createEmptyModule4Lesson4ReadinessState(),
+    quickCheck: createEmptyModule4Lesson4QuickCheckState(),
     completed: false,
+    completedAt: "",
   }
 }
 
@@ -1717,6 +1997,289 @@ function normalizeLesson4ReviewRequestJson(value: unknown): Module4Lesson4Review
   }
 }
 
+function normalizeLesson4FeedbackDecisionAction(value: unknown): Lesson4FeedbackDecisionAction {
+  return value === "accept" || value === "partial_accept" || value === "keep_with_reason" || value === "must_revise"
+    ? value
+    : "must_revise"
+}
+
+function normalizeLesson4FeedbackDecisionLevel(value: unknown): Lesson4FeedbackDecisionLevel {
+  return value === "minor_fix" || value === "content_violation" ? value : "major_fix"
+}
+
+function normalizeLesson4FeedbackDecisionArea(value: unknown): Lesson4ReviewArea | "overall" {
+  if (
+    value === "material"
+    || value === "task"
+    || value === "explanation"
+    || value === "source"
+    || value === "safety"
+    || value === "overall"
+  ) {
+    return value
+  }
+  return "overall"
+}
+
+function normalizeLesson4FeedbackDecision(value: unknown): Lesson4FeedbackDecision | null {
+  if (!value || typeof value !== "object") return null
+  const raw = value as Record<string, unknown>
+  const cardKind = raw.cardKind === "image" ? "image" : raw.cardKind === "news" ? "news" : undefined
+  const id = typeof raw.id === "string" ? raw.id : ""
+  if (!cardKind || !id) return null
+  const level = normalizeLesson4FeedbackDecisionLevel(raw.level)
+  const action = level === "minor_fix" ? normalizeLesson4FeedbackDecisionAction(raw.action) : "must_revise"
+  return {
+    id,
+    cardKind,
+    area: normalizeLesson4FeedbackDecisionArea(raw.area),
+    level,
+    reviewerReason: typeof raw.reviewerReason === "string" ? raw.reviewerReason : "",
+    action,
+    authorPlan: typeof raw.authorPlan === "string" ? raw.authorPlan : "",
+    resolved: raw.resolved === true,
+    resolvedAt: typeof raw.resolvedAt === "string" ? raw.resolvedAt : "",
+  }
+}
+
+function normalizeLesson4FeedbackInboxState(value: unknown): Module4Lesson4FeedbackInboxState {
+  const fallback = createEmptyModule4Lesson4FeedbackInboxState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    digestedAt: typeof raw.digestedAt === "string" ? raw.digestedAt : "",
+    decisions: Array.isArray(raw.decisions)
+      ? raw.decisions.map(normalizeLesson4FeedbackDecision).filter((decision): decision is Lesson4FeedbackDecision => decision !== null)
+      : [],
+    allFeedbackReviewed: raw.allFeedbackReviewed === true,
+  }
+}
+
+function normalizeLesson4V2CardStatus(value: unknown): Module4Lesson4V2CardStatus {
+  return value === "confirmed" || value === "ready_for_lesson5" ? value : "draft"
+}
+
+function normalizeLesson4V2CardDraft(value: unknown, kind: Module4MaterialKind): Module4Lesson4V2CardDraft {
+  const fallback = createEmptyModule4Lesson4V2CardDraft(kind)
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const revision = raw.revision && typeof raw.revision === "object" ? raw.revision as Record<string, unknown> : {}
+  const v1Like = normalizeLesson3QuestionCardDraft({ ...raw, version: "v1" }, kind)
+  return {
+    id: typeof raw.id === "string" && raw.id ? raw.id : fallback.id,
+    kind: normalizeMaterialKind(raw.kind, kind),
+    version: "v2",
+    status: normalizeLesson4V2CardStatus(raw.status),
+    baseV1CardId: typeof raw.baseV1CardId === "string" ? raw.baseV1CardId : "",
+    baseV1UpdatedAt: typeof raw.baseV1UpdatedAt === "string" ? raw.baseV1UpdatedAt : "",
+    material: v1Like.material,
+    task: v1Like.task,
+    explanation: v1Like.explanation,
+    source: v1Like.source,
+    revision: {
+      summary: typeof revision.summary === "string" ? revision.summary : "",
+      decisionIdsResolved: normalizeStringArray(revision.decisionIdsResolved),
+      confirmedAt: typeof revision.confirmedAt === "string" ? revision.confirmedAt : "",
+    },
+    createdAt: typeof raw.createdAt === "string" ? raw.createdAt : fallback.createdAt,
+    updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : fallback.updatedAt,
+  }
+}
+
+function normalizeLesson4V2State(value: unknown): Module4Lesson4V2State {
+  const fallback = createEmptyModule4Lesson4V2State()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    newsCard: normalizeLesson4V2CardDraft(raw.newsCard, "news"),
+    imageCard: normalizeLesson4V2CardDraft(raw.imageCard, "image"),
+    newsConfirmed: raw.newsConfirmed === true,
+    imageConfirmed: raw.imageConfirmed === true,
+    confirmedAt: typeof raw.confirmedAt === "string" ? raw.confirmedAt : "",
+  }
+}
+
+function normalizeLesson4ReadinessState(value: unknown): Module4Lesson4ReadinessState {
+  const fallback = createEmptyModule4Lesson4ReadinessState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  return {
+    newsReady: raw.newsReady === true,
+    imageReady: raw.imageReady === true,
+    readyForLesson5: raw.readyForLesson5 === true,
+    checkedAt: typeof raw.checkedAt === "string" ? raw.checkedAt : "",
+    exportedPackageJson: raw.exportedPackageJson,
+  }
+}
+
+function normalizeLesson4QuickCheckLevel(value: unknown): Module4Lesson4QuickCheckLevel {
+  return value === "excellent" || value === "achieved" || value === "basic" ? value : "not_achieved"
+}
+
+function normalizeLesson4ReadyStatus(value: unknown): "green" | "amber" | "red" {
+  return value === "green" || value === "amber" ? value : "red"
+}
+
+function normalizeLesson4QuickCheckState(value: unknown): Module4Lesson4QuickCheckState {
+  const fallback = createEmptyModule4Lesson4QuickCheckState()
+  if (!value || typeof value !== "object") return fallback
+  const raw = value as Record<string, unknown>
+  const t1Raw = raw.T1 && typeof raw.T1 === "object" ? raw.T1 as Record<string, unknown> : {}
+  const t2Raw = raw.T2 && typeof raw.T2 === "object" ? raw.T2 as Record<string, unknown> : {}
+  const t3Raw = raw.T3 && typeof raw.T3 === "object" ? raw.T3 as Record<string, unknown> : {}
+  const t1Evidence = t1Raw.evidence && typeof t1Raw.evidence === "object" ? t1Raw.evidence as Record<string, unknown> : {}
+  const t2Evidence = t2Raw.evidence && typeof t2Raw.evidence === "object" ? t2Raw.evidence as Record<string, unknown> : {}
+  const t3Evidence = t3Raw.evidence && typeof t3Raw.evidence === "object" ? t3Raw.evidence as Record<string, unknown> : {}
+  return {
+    T1: {
+      score: Number.isFinite(t1Raw.score) ? Number(t1Raw.score) : 0,
+      achieved: t1Raw.achieved === true,
+      evidence: {
+        outboundCompleted: t1Evidence.outboundCompleted === true,
+        inboundCompleted: t1Evidence.inboundCompleted === true,
+        gatePassed: t1Evidence.gatePassed === true,
+        step1Completed: t1Evidence.step1Completed === true,
+        receivedReviewPresent: t1Evidence.receivedReviewPresent === true,
+      },
+    },
+    T2: {
+      score: Number.isFinite(t2Raw.score) ? Number(t2Raw.score) : 0,
+      achieved: t2Raw.achieved === true,
+      evidence: {
+        step2Completed: t2Evidence.step2Completed === true,
+        allFeedbackReviewed: t2Evidence.allFeedbackReviewed === true,
+        reviewerPassOnly: t2Evidence.reviewerPassOnly !== false,
+        decisionCount: Number.isFinite(t2Evidence.decisionCount) ? Number(t2Evidence.decisionCount) : 0,
+        minorFixDecisionCount: Number.isFinite(t2Evidence.minorFixDecisionCount) ? Number(t2Evidence.minorFixDecisionCount) : 0,
+        blockingDecisionCount: Number.isFinite(t2Evidence.blockingDecisionCount) ? Number(t2Evidence.blockingDecisionCount) : 0,
+        unresolvedBlockingDecisionIds: normalizeStringArray(t2Evidence.unresolvedBlockingDecisionIds),
+        minorDecisionsMissingReasonIds: normalizeStringArray(t2Evidence.minorDecisionsMissingReasonIds),
+      },
+    },
+    T3: {
+      score: Number.isFinite(t3Raw.score) ? Number(t3Raw.score) : 0,
+      achieved: t3Raw.achieved === true,
+      evidence: {
+        step3Completed: t3Evidence.step3Completed === true,
+        newsConfirmed: t3Evidence.newsConfirmed === true,
+        imageConfirmed: t3Evidence.imageConfirmed === true,
+        readyForLesson5Status: normalizeLesson4ReadyStatus(t3Evidence.readyForLesson5Status),
+        newsSummaryRequired: t3Evidence.newsSummaryRequired === true,
+        imageSummaryRequired: t3Evidence.imageSummaryRequired === true,
+        newsRevisionSummaryReady: t3Evidence.newsRevisionSummaryReady === true,
+        imageRevisionSummaryReady: t3Evidence.imageRevisionSummaryReady === true,
+        allNewsSectionsPass: t3Evidence.allNewsSectionsPass === true,
+        allImageSectionsPass: t3Evidence.allImageSectionsPass === true,
+        noRevisionNeeded: t3Evidence.noRevisionNeeded === true,
+        unresolvedBlockingDecisionIds: normalizeStringArray(t3Evidence.unresolvedBlockingDecisionIds),
+      },
+    },
+    totalScore: Number.isFinite(raw.totalScore) ? Number(raw.totalScore) : 0,
+    level: normalizeLesson4QuickCheckLevel(raw.level),
+    evaluatedAt: typeof raw.evaluatedAt === "string" ? raw.evaluatedAt : "",
+    blockers: normalizeStringArray(raw.blockers),
+  }
+}
+
+function normalizeLesson4StageSnapshot(value: unknown): Module4Lesson4StageSnapshot | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const raw = value as Record<string, unknown>
+  if (raw.version !== "lesson4-stage-v1") return undefined
+  const steps = raw.stepsCompleted && typeof raw.stepsCompleted === "object"
+    ? raw.stepsCompleted as Record<string, unknown>
+    : {}
+  const v2Raw = raw.v2 && typeof raw.v2 === "object" ? raw.v2 as Record<string, unknown> : {}
+  const readinessRaw = raw.readiness && typeof raw.readiness === "object"
+    ? raw.readiness as Record<string, unknown>
+    : {}
+  const quickCheckRaw = raw.quickCheck && typeof raw.quickCheck === "object"
+    ? raw.quickCheck as Record<string, unknown>
+    : {}
+  const quickCheckTargetsRaw = quickCheckRaw.targets && typeof quickCheckRaw.targets === "object"
+    ? quickCheckRaw.targets as Record<string, unknown>
+    : {}
+  const rubricObservationRaw = raw.rubricObservationSummary && typeof raw.rubricObservationSummary === "object"
+    ? raw.rubricObservationSummary as Record<string, unknown>
+    : {}
+  const evaluationStatus = raw.readyForLesson5EvaluationStatus
+  const normalizeSnapshotTarget = (targetValue: unknown) => {
+    const target = targetValue && typeof targetValue === "object" ? targetValue as Record<string, unknown> : {}
+    return {
+      score: Number.isFinite(target.score) ? Number(target.score) : 0,
+      achieved: target.achieved === true,
+    }
+  }
+  return {
+    version: "lesson4-stage-v1",
+    snappedAt: typeof raw.snappedAt === "string" ? raw.snappedAt : "",
+    stepsCompleted: {
+      step1: steps.step1 === true,
+      step2: steps.step2 === true,
+      step3: steps.step3 === true,
+      step4: steps.step4 === true,
+    },
+    gatePassed: raw.gatePassed === true,
+    v2: {
+      newsConfirmed: v2Raw.newsConfirmed === true,
+      imageConfirmed: v2Raw.imageConfirmed === true,
+      newsStatus: normalizeLesson4V2CardStatus(v2Raw.newsStatus),
+      imageStatus: normalizeLesson4V2CardStatus(v2Raw.imageStatus),
+      newsRevisionSummary: typeof v2Raw.newsRevisionSummary === "string" ? v2Raw.newsRevisionSummary : "",
+      imageRevisionSummary: typeof v2Raw.imageRevisionSummary === "string" ? v2Raw.imageRevisionSummary : "",
+      newsDecisionIdsResolved: normalizeStringArray(v2Raw.newsDecisionIdsResolved),
+      imageDecisionIdsResolved: normalizeStringArray(v2Raw.imageDecisionIdsResolved),
+    },
+    receivedReviewPresent: raw.receivedReviewPresent === true,
+    quickCheck: {
+      totalScore: Number.isFinite(quickCheckRaw.totalScore) ? Number(quickCheckRaw.totalScore) : 0,
+      level: normalizeLesson4QuickCheckLevel(quickCheckRaw.level),
+      evaluatedAt: typeof quickCheckRaw.evaluatedAt === "string" ? quickCheckRaw.evaluatedAt : "",
+      targets: {
+        T1: normalizeSnapshotTarget(quickCheckTargetsRaw.T1),
+        T2: normalizeSnapshotTarget(quickCheckTargetsRaw.T2),
+        T3: normalizeSnapshotTarget(quickCheckTargetsRaw.T3),
+      },
+      blockers: normalizeStringArray(quickCheckRaw.blockers),
+    },
+    rubricObservationSummary: {
+      passCount: Number.isFinite(rubricObservationRaw.passCount) ? Number(rubricObservationRaw.passCount) : 0,
+      minorFixCount: Number.isFinite(rubricObservationRaw.minorFixCount) ? Number(rubricObservationRaw.minorFixCount) : 0,
+      majorFixCount: Number.isFinite(rubricObservationRaw.majorFixCount) ? Number(rubricObservationRaw.majorFixCount) : 0,
+      contentViolationCount: Number.isFinite(rubricObservationRaw.contentViolationCount) ? Number(rubricObservationRaw.contentViolationCount) : 0,
+      unresolvedBlockingCount: Number.isFinite(rubricObservationRaw.unresolvedBlockingCount) ? Number(rubricObservationRaw.unresolvedBlockingCount) : 0,
+    },
+    decisionsSummary: Array.isArray(raw.decisionsSummary)
+      ? raw.decisionsSummary
+        .map((item): Module4Lesson4StageSnapshot["decisionsSummary"][number] | null => {
+          if (!item || typeof item !== "object") return null
+          const decision = item as Record<string, unknown>
+          const cardKind = decision.cardKind === "image" ? "image" : decision.cardKind === "news" ? "news" : undefined
+          const id = typeof decision.id === "string" ? decision.id : ""
+          if (!cardKind || !id) return null
+          return {
+            id,
+            cardKind,
+            area: normalizeLesson4FeedbackDecisionArea(decision.area),
+            level: normalizeLesson4FeedbackDecisionLevel(decision.level),
+            action: normalizeLesson4FeedbackDecisionAction(decision.action),
+            resolved: decision.resolved === true,
+            authorPlan: typeof decision.authorPlan === "string" ? decision.authorPlan : "",
+          }
+        })
+        .filter((item): item is Module4Lesson4StageSnapshot["decisionsSummary"][number] => item !== null)
+      : [],
+    readiness: {
+      newsReady: readinessRaw.newsReady === true,
+      imageReady: readinessRaw.imageReady === true,
+      readyForLesson5: readinessRaw.readyForLesson5 === true,
+      checkedAt: typeof readinessRaw.checkedAt === "string" ? readinessRaw.checkedAt : "",
+    },
+    readyForLesson5EvaluationStatus: evaluationStatus === "green" || evaluationStatus === "amber" || evaluationStatus === "red"
+      ? evaluationStatus
+      : undefined,
+  }
+}
+
 function normalizeLesson4State(value: unknown): Module4Lesson4State {
   const fallback = createEmptyModule4Lesson4State()
   if (!value || typeof value !== "object") return fallback
@@ -1744,13 +2307,25 @@ function normalizeLesson4State(value: unknown): Module4Lesson4State {
     submittedReviewJson: normalizeLesson4ReviewJson(inbound.submittedReviewJson),
     completed: inbound.completed === true,
   }
-  const gatePassed = normalizedOutbound.completed && normalizedInbound.completed
+  const legacyGatePassed = normalizedOutbound.completed && normalizedInbound.completed
+  const step4Completed = raw.step4Completed === true
+  const wasLegacyStep1Completed = raw.completed === true && !step4Completed
+  const gatePassed = raw.gatePassed === true || raw.step1Completed === true || legacyGatePassed || wasLegacyStep1Completed
   return {
     outbound: normalizedOutbound,
     inbound: normalizedInbound,
     gatePassed,
     step1Completed: raw.step1Completed === true || gatePassed,
-    completed: raw.completed === true || gatePassed,
+    step2Completed: raw.step2Completed === true,
+    step3Completed: raw.step3Completed === true,
+    step4Completed,
+    feedbackInbox: normalizeLesson4FeedbackInboxState(raw.feedbackInbox),
+    v2: normalizeLesson4V2State(raw.v2),
+    readiness: normalizeLesson4ReadinessState(raw.readiness),
+    quickCheck: normalizeLesson4QuickCheckState(raw.quickCheck),
+    stageSnapshot: normalizeLesson4StageSnapshot(raw.stageSnapshot),
+    completed: step4Completed && raw.completed === true,
+    completedAt: typeof raw.completedAt === "string" && step4Completed ? raw.completedAt : "",
   }
 }
 

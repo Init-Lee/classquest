@@ -22,6 +22,7 @@ function getSnapshotType(pathname: string): Module4SnapshotType | null {
   if (/\/module\/4\/lesson\/1\/step\/\d+/.test(pathname)) return "lesson1-full"
   if (/\/module\/4\/lesson\/2\/step\/\d+/.test(pathname)) return "lesson2-full"
   if (/\/module\/4\/lesson\/3\/step\/\d+/.test(pathname)) return "lesson3-full"
+  if (/\/module\/4\/lesson\/4\/step\/\d+/.test(pathname)) return "lesson4-full"
   return null
 }
 

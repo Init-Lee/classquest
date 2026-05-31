@@ -11,19 +11,24 @@ import { Card, CardContent } from "@/shared/ui/card"
 export function Lesson4StepLayout({
   title,
   subtitle,
+  titleExtra,
   children,
   footer,
 }: {
   title: string
   subtitle: string
+  /** 标题行右侧附加内容（如同步连接状态），窄屏可换行。 */
+  titleExtra?: ReactNode
   children: ReactNode
   footer?: ReactNode
 }) {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6">
       <div className="mb-6">
-        <p className="text-sm font-medium text-primary">课时4 · 题目卡互审与 V2 入库准备</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          {titleExtra}
+        </div>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{subtitle}</p>
       </div>
       {children}

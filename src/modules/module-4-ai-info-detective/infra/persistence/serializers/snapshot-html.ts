@@ -15,13 +15,14 @@ import type {
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/evaluate-lesson2-quickcheck"
 import { evaluateLesson3QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/evaluate-lesson3-quickcheck"
+import { evaluateLesson4QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-4/utils/evaluate-lesson4-quick-check"
 import { LESSON3_SOURCE_TYPE_LABELS } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/data/default-options"
 import {
   deriveLesson3AiReviewTier,
   getLesson3AiReviewTierLabel,
 } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/derive-lesson3-ai-review-tier"
 
-export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full"
+export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full" | "lesson4-full"
 
 function escapeHtml(value: string): string {
   return value
@@ -618,21 +619,206 @@ export function buildModule4Lesson3SnapshotHtml(portfolio: Module4Portfolio): st
 </html>`
 }
 
+export function buildModule4Lesson4SnapshotHtml(portfolio: Module4Portfolio): string {
+  const { student, lesson4 } = portfolio
+  const snapshot = lesson4.stageSnapshot
+  const v2 = lesson4.v2
+  const decisions = lesson4.feedbackInbox.decisions
+  const generatedAt = new Date()
+  const generatedAtText = generatedAt.toLocaleString("zh-CN")
+  const quickCheck = evaluateLesson4QuickCheck(lesson4, generatedAt.toISOString())
+  const observation = snapshot?.rubricObservationSummary ?? {
+    passCount: 0,
+    minorFixCount: 0,
+    majorFixCount: 0,
+    contentViolationCount: 0,
+    unresolvedBlockingCount: quickCheck.T2.evidence.unresolvedBlockingDecisionIds.length,
+  }
+  const decisionRows = snapshot?.decisionsSummary ?? decisions
+  const levelLabel: Record<string, string> = {
+    excellent: "优秀",
+    achieved: "达标",
+    basic: "基础达成",
+    not_achieved: "未达成",
+  }
+  const readyStatusLabel: Record<string, string> = {
+    green: "绿色：可进入课时五",
+    amber: "黄色：基本可用，建议复核",
+    red: "红色：仍有阻塞",
+  }
+  const cardKindLabel: Record<string, string> = {
+    news: "新闻题卡",
+    image: "图片题卡",
+  }
+  const areaLabel: Record<string, string> = {
+    material: "素材",
+    task: "任务",
+    explanation: "解析",
+    source: "来源",
+    safety: "安全",
+    overall: "整体",
+  }
+  const decisionLevelLabel: Record<string, string> = {
+    minor_fix: "小修",
+    major_fix: "重改",
+    content_violation: "内容违规",
+  }
+  const actionLabel: Record<string, string> = {
+    accept: "采纳",
+    partial_accept: "部分采纳",
+    keep_with_reason: "保留并说明理由",
+    must_revise: "必须修改",
+  }
+
+  const renderDecisionRows = () => {
+    if (decisionRows.length === 0) {
+      return `<tr><td colspan="6" class="muted">无作者决策项（同伴四段均为通过）。</td></tr>`
+    }
+    return decisionRows.map(decision => `
+      <tr>
+        <td>${escapeHtml(cardKindLabel[decision.cardKind] ?? decision.cardKind)}</td>
+        <td>${escapeHtml(areaLabel[decision.area] ?? decision.area)}</td>
+        <td>${escapeHtml(decisionLevelLabel[decision.level] ?? decision.level)}</td>
+        <td>${escapeHtml(actionLabel[decision.action] ?? decision.action)}</td>
+        <td>${decision.resolved ? "已解决" : "未解决"}</td>
+        <td>${escapeHtml(decision.authorPlan || "无")}</td>
+      </tr>
+    `).join("")
+  }
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>模块四课时4阶段快照</title>
+  <style>
+    :root { color-scheme: light; --ink: #172033; --muted: #667085; --line: #d8e2f0; --primary: #2563eb; --soft: #eff6ff; --green: #ecfdf3; --warm: #fff7ed; --danger: #fef2f2; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif; line-height: 1.7; color: var(--ink); background: linear-gradient(135deg, #f8fbff 0%, #f3f7ff 50%, #fff7ed 100%); }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 24px 48px; }
+    h1, h2, p { margin-top: 0; }
+    .hero { border-radius: 28px; padding: 28px; color: white; background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #f97316 130%); box-shadow: 0 20px 50px rgba(37, 99, 235, 0.22); }
+    .hero h1 { font-size: 30px; margin-bottom: 8px; letter-spacing: 0.04em; }
+    .hero .muted { color: rgba(255, 255, 255, 0.78); }
+    section { border: 1px solid var(--line); border-radius: 22px; padding: 20px; margin-top: 18px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08); }
+    section h2 { font-size: 20px; margin-bottom: 12px; color: #1d4ed8; }
+    .muted { color: var(--muted); }
+    .item { margin: 8px 0; }
+    .info-grid, .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .info-card, .stat-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: #ffffff; }
+    .label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; }
+    .status { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; background: var(--soft); color: #1d4ed8; }
+    .status.done { background: var(--green); color: #067647; }
+    .status.warning { background: var(--warm); color: #c2410c; }
+    .status.danger { background: var(--danger); color: #b42318; }
+    .note { border-left: 4px solid #f97316; padding: 10px 12px; border-radius: 12px; background: var(--warm); }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; background: white; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    th { background: #eef4ff; color: #1e3a8a; }
+    @media print {
+      body { background: white; }
+      main { padding: 0; }
+      section, .hero { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <h1>ClassQuest 模块四：AI 信息辨识员</h1>
+      <p class="muted">课时4：同伴互审、V2 修改与入库准备 · 阶段快照 lesson4-full</p>
+      <p>本快照记录课时 4 的互审 gate、QuickCheck T1/T2/T3、两张 V2 题卡确认状态与入库准备摘要。</p>
+    </div>
+    <section>
+      <h2>学习者信息</h2>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">姓名</span><span class="value">${escapeHtml(student.studentName || "未登记")}</span></div>
+        <div class="info-card"><span class="label">班级</span><span class="value">${escapeHtml(student.clazz || "未选班")}</span></div>
+        <div class="info-card"><span class="label">班学号</span><span class="value">${escapeHtml(student.classSeatCode || "—")}</span></div>
+        <div class="info-card"><span class="label">生成时间</span><span class="value">${escapeHtml(generatedAtText)}</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>课时4进度概览</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">第 1 关互审</span><span class="status ${lesson4.step1Completed ? "done" : ""}">${lesson4.step1Completed ? "已完成" : "未完成"}</span></div>
+        <div class="stat-card"><span class="label">第 2 关反馈</span><span class="status ${lesson4.step2Completed ? "done" : ""}">${lesson4.step2Completed ? "已完成" : "未完成"}</span></div>
+        <div class="stat-card"><span class="label">第 3 关 V2</span><span class="status ${lesson4.step3Completed ? "done" : ""}">${lesson4.step3Completed ? "已完成" : "未完成"}</span></div>
+        <div class="stat-card"><span class="label">第 4 关就绪</span><span class="status ${lesson4.step4Completed ? "done" : ""}">${lesson4.step4Completed ? "已完成" : "未完成"}</span></div>
+        <div class="stat-card"><span class="label">互审 gate</span><span class="status ${lesson4.gatePassed ? "done" : ""}">${lesson4.gatePassed ? "已通过" : "未通过"}</span></div>
+        <div class="stat-card"><span class="label">收到同伴反馈</span><span class="value">${lesson4.outbound.receivedReviewJson ? "是" : "否"}</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>QuickCheck 自动记录</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">总分</span><span class="value">${quickCheck.totalScore}/100</span></div>
+        <div class="stat-card"><span class="label">等级</span><span class="value">${escapeHtml(levelLabel[quickCheck.level] ?? quickCheck.level)}</span></div>
+        <div class="stat-card"><span class="label">评估时间</span><span class="value">${escapeHtml(quickCheck.evaluatedAt || "未生成")}</span></div>
+        <div class="stat-card"><span class="label">快照时间</span><span class="value">${escapeHtml(snapshot?.snappedAt ?? "尚未保存阶段快照")}</span></div>
+      </div>
+      <p class="item">T1 同伴互审 gate：<span class="status ${quickCheck.T1.achieved ? "done" : ""}">${quickCheck.T1.score}/35 · ${quickCheck.T1.achieved ? "达成" : "未达成"}</span></p>
+      <p class="item">证据：作者送审 ${quickCheck.T1.evidence.outboundCompleted ? "完成" : "未完成"}；审查他人 ${quickCheck.T1.evidence.inboundCompleted ? "完成" : "未完成"}；gate ${quickCheck.T1.evidence.gatePassed ? "通过" : "未通过"}；收到反馈 ${quickCheck.T1.evidence.receivedReviewPresent ? "是" : "否"}。</p>
+      <p class="item">T2 反馈消化：<span class="status ${quickCheck.T2.achieved ? "done" : quickCheck.T2.score > 0 ? "warning" : ""}">${quickCheck.T2.score}/30 · ${quickCheck.T2.achieved ? "达成" : "未达成"}</span></p>
+      <p class="item">证据：反馈已读 ${quickCheck.T2.evidence.allFeedbackReviewed ? "是" : "否"}；作者决策 ${quickCheck.T2.evidence.decisionCount} 项；小修 ${quickCheck.T2.evidence.minorFixDecisionCount} 项；必改/安全 ${quickCheck.T2.evidence.blockingDecisionCount} 项；未解决 ${quickCheck.T2.evidence.unresolvedBlockingDecisionIds.length} 项。</p>
+      <p class="item">T3 V2 就绪：<span class="status ${quickCheck.T3.achieved ? "done" : quickCheck.T3.score > 0 ? "warning" : "danger"}">${quickCheck.T3.score}/35 · ${quickCheck.T3.achieved ? "达成" : "未达成"}</span></p>
+      <p class="item">证据：新闻确认 ${quickCheck.T3.evidence.newsConfirmed ? "是" : "否"}；图片确认 ${quickCheck.T3.evidence.imageConfirmed ? "是" : "否"}；就绪评估 ${escapeHtml(readyStatusLabel[quickCheck.T3.evidence.readyForLesson5Status] ?? quickCheck.T3.evidence.readyForLesson5Status)}；无需修改 ${quickCheck.T3.evidence.noRevisionNeeded ? "是" : "否"}。</p>
+      ${quickCheck.blockers.length ? `<p class="note"><strong>待处理：</strong>${escapeHtml(quickCheck.blockers.join("；"))}</p>` : `<p class="note"><strong>结论：</strong>QuickCheck 三项均已达成，可作为课时 4 阶段证据。</p>`}
+    </section>
+    <section>
+      <h2>V2 双卡状态</h2>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">新闻题卡</span><span class="value">${v2.newsConfirmed ? "已确认" : "未确认"} · ${escapeHtml(v2.newsCard.status)}</span></div>
+        <div class="info-card"><span class="label">图片题卡</span><span class="value">${v2.imageConfirmed ? "已确认" : "未确认"} · ${escapeHtml(v2.imageCard.status)}</span></div>
+        <div class="info-card"><span class="label">新闻已解决决策</span><span class="value">${escapeHtml(v2.newsCard.revision.decisionIdsResolved.join("、") || "无")}</span></div>
+        <div class="info-card"><span class="label">图片已解决决策</span><span class="value">${escapeHtml(v2.imageCard.revision.decisionIdsResolved.join("、") || "无")}</span></div>
+      </div>
+      <p class="note"><strong>新闻修改说明：</strong>${escapeHtml(v2.newsCard.revision.summary || "无，全通过时可省略")}</p>
+      <p class="note"><strong>图片修改说明：</strong>${escapeHtml(v2.imageCard.revision.summary || "无，全通过时可省略")}</p>
+    </section>
+    <section>
+      <h2>作者决策摘要</h2>
+      <table>
+        <thead><tr><th>题卡</th><th>维度</th><th>档位</th><th>动作</th><th>解决</th><th>作者计划</th></tr></thead>
+        <tbody>${renderDecisionRows()}</tbody>
+      </table>
+    </section>
+    <section>
+      <h2>就绪与入库包</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">readyForLesson5</span><span class="value">${lesson4.readiness.readyForLesson5 ? "是" : "否"}</span></div>
+        <div class="stat-card"><span class="label">就绪评估</span><span class="value">${escapeHtml(readyStatusLabel[quickCheck.T3.evidence.readyForLesson5Status] ?? quickCheck.T3.evidence.readyForLesson5Status)}</span></div>
+        <div class="stat-card"><span class="label">检查时间</span><span class="value">${escapeHtml(lesson4.readiness.checkedAt || "—")}</span></div>
+        <div class="stat-card"><span class="label">入库包</span><span class="value">${lesson4.readiness.exportedPackageJson ? "已生成" : "未生成"}</span></div>
+      </div>
+      <p class="item">量规观测：通过 ${observation.passCount}；小修 ${observation.minorFixCount}；重改 ${observation.majorFixCount}；内容违规 ${observation.contentViolationCount}；未解决必改/安全 ${observation.unresolvedBlockingCount}。</p>
+    </section>
+  </main>
+</body>
+</html>`
+}
+
 export function downloadModule4Snapshot(type: Module4SnapshotType, portfolio: Module4Portfolio): void {
-  const html = type === "lesson3-full"
-    ? buildModule4Lesson3SnapshotHtml(portfolio)
-    : type === "lesson2-full"
-      ? buildModule4Lesson2SnapshotHtml(portfolio)
-      : buildModule4Lesson1SnapshotHtml(portfolio)
+  const html = type === "lesson4-full"
+    ? buildModule4Lesson4SnapshotHtml(portfolio)
+    : type === "lesson3-full"
+      ? buildModule4Lesson3SnapshotHtml(portfolio)
+      : type === "lesson2-full"
+        ? buildModule4Lesson2SnapshotHtml(portfolio)
+        : buildModule4Lesson1SnapshotHtml(portfolio)
   const date = new Date().toISOString().slice(0, 10)
   const namePart = safeFilenamePart(portfolio.student.studentName || "未登记")
   const blob = new Blob([html], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
-  link.download = type === "lesson3-full"
-    ? `模块4_${namePart}_课时3题卡V1快照_${date}.html`
-    : `模块4_${namePart}_${type}_阶段快照_${date}.html`
+  link.download = type === "lesson4-full"
+    ? `模块4_${namePart}_课时4V2入库准备快照_${date}.html`
+    : type === "lesson3-full"
+      ? `模块4_${namePart}_课时3题卡V1快照_${date}.html`
+      : `模块4_${namePart}_${type}_阶段快照_${date}.html`
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

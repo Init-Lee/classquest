@@ -28,6 +28,5 @@ export function applyLesson4Gate(state: Module4Lesson4State): Module4Lesson4Stat
     ...state,
     gatePassed: gate.gatePassed,
     step1Completed: gate.gatePassed,
-    completed: gate.gatePassed,
   }
 }

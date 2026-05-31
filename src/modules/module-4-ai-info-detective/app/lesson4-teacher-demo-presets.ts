@@ -114,7 +114,6 @@ export function applyLesson4TeacherDemoPreset(
       },
       gatePassed: true,
       step1Completed: true,
-      completed: true,
     }),
   })
 }

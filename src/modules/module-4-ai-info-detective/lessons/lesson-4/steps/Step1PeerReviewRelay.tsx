@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import type {
   Module4Lesson4ReviewJson,
@@ -85,6 +86,7 @@ function validateReviewerSeatSuffix(raw: string): string | null {
 
 export default function Step1PeerReviewRelay() {
   const { portfolio, savePortfolio, isTeacherMode } = useModule4Portfolio()
+  const navigate = useNavigate()
   const [targetSeatSuffix, setTargetSeatSuffix] = useState("")
   const [reviewCode, setReviewCode] = useState("")
   /** HTTP 进页 hydrate 前勿用 fixture.serverNow，否则与 portfolio 中真实 pendingExpiresAt 相差数小时。 */
@@ -132,6 +134,16 @@ export default function Step1PeerReviewRelay() {
 
   const gate = useMemo(() => evaluateLesson4Gate(portfolio?.lesson4 ?? createEmptyModule4Lesson4State()), [portfolio?.lesson4])
   const httpMode = isLesson4PeerReviewHttpMode()
+
+  const handleContinueToStep2 = async () => {
+    if (!portfolio || !gate.gatePassed) return
+    await savePortfolio({
+      ...portfolio,
+      progress: { lessonId: 4, stepId: 2 },
+      lesson4: applyLesson4Gate(portfolio.lesson4),
+    })
+    navigate("/module/4/lesson/4/step/2")
+  }
 
   const reportSyncStart = useCallback(() => {
     if (!httpMode) return
@@ -1150,6 +1162,19 @@ export default function Step1PeerReviewRelay() {
     <Lesson4StepLayout
       title="第1关 · 同伴互审中转站"
       subtitle="左侧把我的 V1 双卡送出审查，右侧完成一次同伴题卡审查。"
+      titleExtra={(
+        <Lesson4SyncBanner
+          phase={syncPhase}
+          serverReachable={serverReachable}
+          httpMode={httpMode}
+          variant="inline"
+        />
+      )}
+      footer={(
+        <Button onClick={() => void handleContinueToStep2()} disabled={!gate.gatePassed}>
+          进入第 2 关：反馈收件箱
+        </Button>
+      )}
     >
       <div className="space-y-6">
         {isTeacherMode && (
@@ -1178,11 +1203,7 @@ export default function Step1PeerReviewRelay() {
             </div>
           </div>
         )}
-        <Lesson4SyncBanner phase={syncPhase} serverReachable={serverReachable} httpMode={httpMode} />
         <PeerReviewGateStatus gate={gate} />
-        <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-          如果你们是三人组，可以使用环形互审：1号送给2号，2号送给3号，3号送给1号。
-        </div>
         <div className="grid gap-4 lg:grid-cols-2">
           <OutboundReviewPanel
             state={portfolio.lesson4.outbound}
