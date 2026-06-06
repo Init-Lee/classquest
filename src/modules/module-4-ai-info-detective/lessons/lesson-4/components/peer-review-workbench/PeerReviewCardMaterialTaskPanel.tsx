@@ -1,10 +1,18 @@
 /**
  * 文件说明：课时 4 互审左栏题卡素材区。
- * 职责：展示作者题卡素材；判断任务与可交互试答由 PeerReviewSelfTrialPanel 承接，避免静态选项与 radio 重复。
- * 更新触发：题卡素材字段、materialOnly 开关或左栏滚动布局变化时，需要同步更新本文件。
+ * 职责：展示作者题卡素材（支持点击放大预览）；判断任务与可交互试答由 PeerReviewSelfTrialPanel 承接，避免静态选项与 radio 重复。
+ * 更新触发：题卡素材字段、materialOnly 开关、素材图预览交互或左栏滚动布局变化时，需要同步更新本文件。
  */
 
 import type { Module4Lesson3QuestionCardDraft } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/dialog"
 
 export function PeerReviewCardMaterialTaskPanel({
   card,
@@ -17,6 +25,8 @@ export function PeerReviewCardMaterialTaskPanel({
   materialOnly?: boolean
 }) {
   const cardLabel = card.kind === "news" ? "新闻题卡" : "图片题卡"
+  const materialTitle = card.material.titleOrName || cardLabel
+  const imageAlt = card.material.titleOrName || cardLabel
 
   return (
     <div className="flex min-h-0 flex-col overflow-y-auto p-4">
@@ -28,11 +38,32 @@ export function PeerReviewCardMaterialTaskPanel({
       )}
       {card.material.asset ? (
         <div className="mt-3 flex min-h-[10rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-slate-50">
-          <img
-            src={card.material.asset.dataUrl}
-            alt={card.material.titleOrName || cardLabel}
-            className="max-h-56 max-w-full object-contain"
-          />
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className="group flex w-full cursor-zoom-in items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label="放大查看素材"
+              >
+                <img
+                  src={card.material.asset.dataUrl}
+                  alt={imageAlt}
+                  className="max-h-56 max-w-full object-contain transition-opacity group-hover:opacity-90"
+                />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] max-w-[min(92vw,56rem)] overflow-y-auto border-none bg-transparent p-2 shadow-none">
+              <DialogHeader className="sr-only">
+                <DialogTitle>{materialTitle}放大预览</DialogTitle>
+                <DialogDescription>查看作者题卡素材原图</DialogDescription>
+              </DialogHeader>
+              <img
+                src={card.material.asset.dataUrl}
+                alt={`${imageAlt}原图`}
+                className="max-h-[85vh] w-full rounded-2xl bg-white object-contain shadow-2xl"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       ) : (
         <div className="mt-3 flex min-h-[10rem] shrink-0 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">

@@ -14,6 +14,8 @@ AUTHOR_ACTIVE_OUTBOUND_STATUSES = ("pending", "claimed", "submitted")
 TARGET_ACTIVE_INBOUND_STATUSES = ("pending", "claimed")
 # 仅 pending 可被 claim；cancelled/expired/submitted 等状态不可领取。
 CLAIMABLE_STATUSES = ("pending",)
+AUTHOR_RECOVERY_STATUSES = ("pending", "claimed", "submitted", "pulled")
+REVIEWER_RECOVERY_STATUSES = ("claimed", "submitted", "pulled")
 
 
 def expire_stale_requests(connection: sqlite3.Connection, server_now: str) -> None:
@@ -104,6 +106,72 @@ def list_reviewer_inbox_tasks(
         (class_id, target_reviewer_seat_code, *REVIEWER_INBOX_STATUSES),
     ).fetchall()
     return list(rows)
+
+
+def get_latest_author_recovery_request(
+    connection: sqlite3.Connection,
+    class_id: str,
+    author_seat_code: str,
+) -> sqlite3.Row | None:
+    """按班级与作者学号查询最近可恢复的出站请求。"""
+    placeholders = ", ".join("?" for _ in AUTHOR_RECOVERY_STATUSES)
+    return connection.execute(
+        f"""
+        SELECT
+          id,
+          author_seat_code,
+          target_reviewer_seat_code,
+          invite_code,
+          status,
+          request_json,
+          review_json,
+          created_at,
+          pending_expires_at,
+          review_expires_at,
+          submitted_at,
+          pulled_at
+        FROM module4_lesson4_review_requests
+        WHERE class_id = ?
+          AND author_seat_code = ?
+          AND status IN ({placeholders})
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+        (class_id, author_seat_code, *AUTHOR_RECOVERY_STATUSES),
+    ).fetchone()
+
+
+def get_latest_reviewer_recovery_request(
+    connection: sqlite3.Connection,
+    class_id: str,
+    reviewer_seat_code: str,
+) -> sqlite3.Row | None:
+    """按班级与已领取审查者学号查询最近可恢复的入站任务。"""
+    placeholders = ", ".join("?" for _ in REVIEWER_RECOVERY_STATUSES)
+    return connection.execute(
+        f"""
+        SELECT
+          id,
+          author_seat_code,
+          target_reviewer_seat_code,
+          claimed_reviewer_seat_code,
+          status,
+          request_json,
+          review_json,
+          created_at,
+          pending_expires_at,
+          review_expires_at,
+          submitted_at,
+          pulled_at
+        FROM module4_lesson4_review_requests
+        WHERE class_id = ?
+          AND claimed_reviewer_seat_code = ?
+          AND status IN ({placeholders})
+        ORDER BY COALESCE(pulled_at, submitted_at, created_at) DESC, created_at DESC
+        LIMIT 1
+        """,
+        (class_id, reviewer_seat_code, *REVIEWER_RECOVERY_STATUSES),
+    ).fetchone()
 
 
 def get_review_request_by_id(connection: sqlite3.Connection, request_id: str) -> sqlite3.Row | None:

@@ -19,7 +19,8 @@
 3. 让目标学生 B 用自己的班学号刷新任务，并输入审查码领取。
 4. 保存 B 提交的 review JSON。
 5. 让 A 轮询并拉取反馈。
-6. 自动处理 pending / claimed 超时。
+6. Step1 进页时按当前学生身份恢复服务器互审状态，补齐本地 IndexedDB 丢失的互审进度。
+7. 自动处理 pending / claimed 超时。
 
 ## 状态机
 
@@ -59,8 +60,13 @@ GET  /review-requests/inbox
 POST /review-requests/{request_id}/claim
 POST /review-requests/{request_id}/submit
 POST /review-requests/{request_id}/pull
+GET  /review-requests/recovery
 POST /review-requests/moderate-text
 ```
+
+### 进页恢复（recovery）
+
+`GET /review-requests/recovery?classId=...&authorSeatCode=...&reviewerSeatCode=...` 只返回当前班级与当前学生座位相关的最近状态：作者侧 active/submitted/pulled 请求，以及审查者侧 claimed/submitted/pulled 任务。Step1 用它在本地 IndexedDB 缺少 `requestId` 时恢复送审状态、可拉取反馈、已领取题卡或已提交审查；不会清空或迁移旧本地数据。
 
 ### 文字审核（moderate-text）
 

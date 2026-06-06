@@ -35,5 +35,8 @@ ON module4_lesson4_review_requests(class_id, author_seat_code, status);
 CREATE INDEX IF NOT EXISTS idx_lesson4_review_target_active
 ON module4_lesson4_review_requests(class_id, target_reviewer_seat_code, status);
 
+CREATE INDEX IF NOT EXISTS idx_lesson4_review_reviewer_recovery
+ON module4_lesson4_review_requests(class_id, claimed_reviewer_seat_code, status);
+
 CREATE INDEX IF NOT EXISTS idx_lesson4_review_status_expiry
 ON module4_lesson4_review_requests(status, pending_expires_at, review_expires_at);

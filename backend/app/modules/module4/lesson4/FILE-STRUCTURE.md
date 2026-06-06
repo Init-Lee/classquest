@@ -22,11 +22,11 @@ backend/app/modules/module4/lesson4/
 
 ## 职责
 
-- `routes.py`：FastAPI router，暴露学生侧 review request 接口；B1 `POST /review-requests`，B2 `GET /review-requests/{request_id}/status`，B3 `POST /review-requests/{request_id}/cancel`，B4 `GET /review-requests/inbox`，B5 `POST /review-requests/{request_id}/claim`，B6 `POST /review-requests/{request_id}/submit`，B7 `POST /review-requests/{request_id}/pull`；`POST /review-requests/moderate-text` 提交前文字审核（规则 + mock/Qwen）。
+- `routes.py`：FastAPI router，暴露学生侧 review request 接口；B1 `POST /review-requests`，B2 `GET /review-requests/{request_id}/status`，B3 `POST /review-requests/{request_id}/cancel`，B4 `GET /review-requests/inbox`，B5 `POST /review-requests/{request_id}/claim`，B6 `POST /review-requests/{request_id}/submit`，B7 `POST /review-requests/{request_id}/pull`，`GET /review-requests/recovery` 供 Step1 进页按当前学生身份恢复服务器互审事实；`POST /review-requests/moderate-text` 提交前文字审核（规则 + mock/Qwen）。
 - `moderation.py`：互审文字审核 provider（复用 `shared/qwen_http` 与 lesson3 相同 `DASHSCOPE_API_KEY` / `QWEN_*`），按 **fieldKey** 返回原因列表并聚合 `byCard`；未设 `LESSON4_REVIEW_MODERATION_PROVIDER` 时有 key 自动 qwen。
 - `schemas.py`：Pydantic request/response schema 与 status enum。
-- `service.py`：状态机、TTL、审查码、业务规则校验（同班/自送/唯一性）；含 `submit_review_request`（claimed→submitted）、`pull_review_request`（submitted→pulled）。
-- `repository.py`：SQLite 查询与写入，含机会式过期扫描。
+- `service.py`：状态机、TTL、审查码、业务规则校验（同班/自送/唯一性）；含 `submit_review_request`（claimed→submitted）、`pull_review_request`（submitted→pulled）与 `get_peer_review_recovery_state`（只读恢复）。
+- `repository.py`：SQLite 查询与写入，含机会式过期扫描与按 `class_id + seat_code` 过滤的 recovery 查询。
 
 ## 依赖方向
 

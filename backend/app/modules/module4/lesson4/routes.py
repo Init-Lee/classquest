@@ -20,6 +20,7 @@ from .schemas import (
     Lesson4ModerateTextResponse,
     Lesson4PullReviewRequestPayload,
     Lesson4PullReviewRequestResponse,
+    Lesson4RecoverPeerReviewStateResponse,
     Lesson4ReviewerInboxResponse,
     Lesson4SubmitReviewRequestPayload,
     Lesson4SubmitReviewRequestResponse,
@@ -29,6 +30,7 @@ from .service import (
     cancel_review_request,
     claim_review_request,
     create_review_request,
+    get_peer_review_recovery_state,
     get_review_request_status,
     get_reviewer_inbox,
     moderate_review_text,
@@ -56,6 +58,19 @@ def get_review_requests_inbox_route(
     """审查者刷新收件箱；仅返回任务摘要，不含 requestJson。"""
     try:
         return get_reviewer_inbox(classId, reviewerSeatCode)
+    except Lesson4PeerReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+
+@router.get("/review-requests/recovery", response_model=Lesson4RecoverPeerReviewStateResponse)
+def get_review_requests_recovery_route(
+    classId: str = Query(..., min_length=1),
+    authorSeatCode: str = Query(..., min_length=4, max_length=4),
+    reviewerSeatCode: str = Query(..., min_length=4, max_length=4),
+) -> Lesson4RecoverPeerReviewStateResponse:
+    """进页恢复当前学生作为作者/审查者的最近互审状态。"""
+    try:
+        return get_peer_review_recovery_state(classId, authorSeatCode, reviewerSeatCode)
     except Lesson4PeerReviewError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 

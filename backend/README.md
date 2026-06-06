@@ -94,5 +94,5 @@ uvicorn app.main:app --reload
 
 ## 当前状态
 
-当前已提供 `GET /api/v1/health` 健康检查、模块 4 基础 router、课时 3 题卡自检助手 `POST /api/v1/module4/lesson3/ai-review`，以及课时 4 同伴互审 SQLite 基座与业务端点 B1~B7（送审、状态、撤回、收件箱、领取、提交、拉取）与 `POST /api/v1/module4/lesson4/review-requests/moderate-text` 文字审核。课时 3 自检与课时 4 互审审核共用 `DASHSCOPE_API_KEY` / `QWEN_*`（见 `module4/shared/qwen_http.py`）；课时 4 未设 `LESSON4_REVIEW_MODERATION_PROVIDER` 时有 key 自动走 Qwen。后端仍需校验完整 4 位班学号、同班约束与自送拦截。
+当前已提供 `GET /api/v1/health` 健康检查、模块 4 基础 router、课时 3 题卡自检助手 `POST /api/v1/module4/lesson3/ai-review`，以及课时 4 同伴互审 SQLite 基座与业务端点 B1~B7（送审、状态、撤回、收件箱、领取、提交、拉取）、`GET /api/v1/module4/lesson4/review-requests/recovery` 进页恢复与 `POST /api/v1/module4/lesson4/review-requests/moderate-text` 文字审核。课时 3 自检与课时 4 互审审核共用 `DASHSCOPE_API_KEY` / `QWEN_*`（见 `module4/shared/qwen_http.py`）；课时 4 未设 `LESSON4_REVIEW_MODERATION_PROVIDER` 时有 key 自动走 Qwen。后端仍需校验完整 4 位班学号、同班约束与自送拦截。
 

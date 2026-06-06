@@ -9,12 +9,25 @@ import {
   createNewModule4Portfolio,
   normalizeModule4Portfolio,
   type Lesson4FeedbackDecision,
+  type Module4CompressedMaterialAsset,
   type Module4Lesson4ReviewJson,
   type Module4Lesson4V2CardDraft,
 } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
 import { buildLesson4ReadyPackage } from "./build-lesson4-ready-package"
 import { buildLesson4StageSnapshot } from "./build-lesson4-stage-snapshot"
 import { evaluateLesson4QuickCheck } from "./evaluate-lesson4-quick-check"
+
+const REPLACED_V2_ASSET: Module4CompressedMaterialAsset = {
+  dataUrl: "data:image/webp;base64,lesson4-v2-replaced-material",
+  mimeType: "image/webp",
+  originalName: "v2-replaced.webp",
+  originalSizeBytes: 204800,
+  compressedSizeBytes: 40960,
+  width: 960,
+  height: 540,
+  compressedAt: "2026-05-30T08:45:00.000Z",
+  uploadCount: 2,
+}
 
 function buildReadyCard(kind: "news" | "image", summary = ""): Module4Lesson4V2CardDraft {
   return {
@@ -24,7 +37,12 @@ function buildReadyCard(kind: "news" | "image", summary = ""): Module4Lesson4V2C
     status: "confirmed",
     baseV1CardId: `v1-${kind}`,
     baseV1UpdatedAt: "2026-05-30T08:00:00.000Z",
-    material: { titleOrName: "标题", displayNote: "说明", assetFingerprint: "" },
+    material: {
+      titleOrName: "标题",
+      displayNote: "说明",
+      asset: REPLACED_V2_ASSET,
+      assetFingerprint: `fingerprint-${kind}-v2-replaced`,
+    },
     task: {
       prompt: "判断任务",
       options: [
@@ -162,6 +180,8 @@ describe("lesson4 Step4 进度落盘 audit", () => {
     expect(l4.step3Completed).toBe(true)
     expect(l4.v2.newsConfirmed).toBe(true)
     expect(l4.v2.imageConfirmed).toBe(true)
+    expect(l4.v2.newsCard.material.asset?.originalName).toBe("v2-replaced.webp")
+    expect(l4.v2.newsCard.material.assetFingerprint).toBe("fingerprint-news-v2-replaced")
     expect(l4.v2.newsCard.revision.summary).toBe("已根据反馈调整新闻题卡")
     expect(l4.v2.newsCard.revision.decisionIdsResolved).toEqual(["d1"])
     expect(l4.feedbackInbox.decisions[0]?.authorPlan).toBe("已调整题干")

@@ -95,6 +95,40 @@ export interface Lesson4ReviewerInboxResponse {
   tasks: Lesson4ReviewerInboxTask[]
 }
 
+export interface Lesson4RecoverPeerReviewStatePayload {
+  classId: string
+  authorSeatCode: string
+  reviewerSeatCode: string
+}
+
+export interface Lesson4RecoveredOutboundRequest {
+  requestId: string
+  status: Extract<Lesson4OutboundStatus, "pending" | "claimed" | "submitted" | "pulled" | "cancelled" | "expired">
+  targetReviewerSeatCode: string
+  inviteCode?: string
+  sentAt: string
+  pendingExpiresAt?: string
+  reviewExpiresAt?: string
+  submittedAt?: string
+  reviewJson?: Module4Lesson4ReviewJson
+}
+
+export interface Lesson4RecoveredInboundRequest {
+  requestId: string
+  status: Extract<Lesson4OutboundStatus, "claimed" | "submitted" | "pulled">
+  authorSeatCode: string
+  reviewExpiresAt?: string
+  submittedAt?: string
+  requestJson?: Lesson4ReviewRequestJson
+  reviewJson?: Module4Lesson4ReviewJson
+}
+
+export interface Lesson4RecoverPeerReviewStateResponse {
+  serverNow: string
+  outbound?: Lesson4RecoveredOutboundRequest
+  inbound?: Lesson4RecoveredInboundRequest
+}
+
 export interface Lesson4ClaimReviewRequestPayload {
   requestId: string
   reviewerSeatCode: string

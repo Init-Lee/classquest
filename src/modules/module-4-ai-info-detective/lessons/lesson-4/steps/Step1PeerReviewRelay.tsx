@@ -29,6 +29,7 @@ import {
   lesson4PeerReviewFixture,
   Lesson4PeerReviewHttpError,
   pullReviewFeedback,
+  recoverMyPeerReviewState,
   submitReviewFeedback,
 } from "@/modules/module-4-ai-info-detective/api/lesson4-peer-review.adapter"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
@@ -129,6 +130,8 @@ export default function Step1PeerReviewRelay() {
   const hydratedInboundClaimedRequestIdRef = useRef<string | null>(null)
   /** 审查者 submitted 进页 hydrate：每个 requestId 仅与 SQLite 对齐一次。 */
   const hydratedInboundSubmittedRequestIdRef = useRef<string | null>(null)
+  /** 进页按当前学生身份恢复服务器互审事实，每个 classSeatCode 仅一次。 */
+  const hydratedRecoverySeatCodeRef = useRef<string | null>(null)
   /** 作者侧 create 409 或本地 cancelled/expired 时，用 status 端点对齐 portfolio 与 DB（每个 requestId 仅一次）。 */
   const reconciledOutboundRequestIdRef = useRef<string | null>(null)
 
@@ -580,6 +583,123 @@ export default function Step1PeerReviewRelay() {
     }
   }
 
+  const applyRecoveredPeerReviewState = useCallback(async (
+    response: Awaited<ReturnType<typeof recoverMyPeerReviewState>>,
+  ) => {
+    const current = portfolioRef.current
+    if (!current) return
+    setServerNow(response.serverNow)
+
+    let nextLesson4 = current.lesson4
+    let changed = false
+
+    if (response.outbound) {
+      const recovered = response.outbound
+      hydratedOutboundRequestIdRef.current = recovered.requestId
+      nextLesson4 = {
+        ...nextLesson4,
+        outbound: {
+          ...nextLesson4.outbound,
+          status: recovered.status,
+          requestId: recovered.requestId,
+          targetReviewerSeatCode: recovered.targetReviewerSeatCode,
+          inviteCode: recovered.inviteCode ?? "",
+          sentAt: recovered.sentAt,
+          pendingExpiresAt: recovered.pendingExpiresAt ?? "",
+          reviewExpiresAt: recovered.reviewExpiresAt ?? "",
+          receivedReviewJson: recovered.reviewJson ?? nextLesson4.outbound.receivedReviewJson,
+          completed: recovered.status === "pulled",
+        },
+      }
+      changed = true
+    } else if (
+      !nextLesson4.outbound.completed
+      && (nextLesson4.outbound.status === "pending" || nextLesson4.outbound.status === "claimed" || nextLesson4.outbound.status === "submitted")
+    ) {
+      hydratedOutboundRequestIdRef.current = null
+      reconciledOutboundRequestIdRef.current = null
+      nextLesson4 = {
+        ...nextLesson4,
+        outbound: createResetLesson4Outbound(),
+      }
+      changed = true
+    }
+
+    if (response.inbound?.status === "claimed" && response.inbound.requestJson) {
+      const recovered = response.inbound
+      const recoveredRequestJson = response.inbound.requestJson
+      const keepDraft = nextLesson4.inbound.requestId === recovered.requestId
+        ? nextLesson4.inbound.reviewDraftJson
+        : undefined
+      claimedRequestJsonRef.current = recoveredRequestJson
+      hydratedInboundClaimedRequestIdRef.current = recovered.requestId
+      hydratedReviewDraftRequestIdRef.current = recovered.requestId
+      setReviewJson(keepDraft ?? createEmptyModule4Lesson4ReviewJson())
+      setTasks([])
+      nextLesson4 = {
+        ...nextLesson4,
+        inbound: {
+          ...nextLesson4.inbound,
+          status: "claimed",
+          requestId: recovered.requestId,
+          authorSeatCode: recovered.authorSeatCode,
+          reviewExpiresAt: recovered.reviewExpiresAt ?? "",
+          claimedRequestJson: recoveredRequestJson,
+          reviewDraftJson: keepDraft,
+          submittedReviewJson: undefined,
+          completed: false,
+        },
+      }
+      changed = true
+    } else if (response.inbound?.status === "submitted" || response.inbound?.status === "pulled") {
+      const recovered = response.inbound
+      claimedRequestJsonRef.current = null
+      hydratedInboundSubmittedRequestIdRef.current = recovered.requestId
+      hydratedReviewDraftRequestIdRef.current = null
+      pendingReviewDraftRef.current = null
+      if (reviewDraftSaveTimerRef.current != null) {
+        window.clearTimeout(reviewDraftSaveTimerRef.current)
+        reviewDraftSaveTimerRef.current = null
+      }
+      setTasks([])
+      nextLesson4 = {
+        ...nextLesson4,
+        inbound: {
+          ...nextLesson4.inbound,
+          status: "submitted",
+          requestId: recovered.requestId,
+          authorSeatCode: recovered.authorSeatCode,
+          reviewExpiresAt: recovered.reviewExpiresAt ?? "",
+          claimedRequestJson: undefined,
+          reviewDraftJson: undefined,
+          submittedReviewJson: recovered.reviewJson ?? nextLesson4.inbound.submittedReviewJson,
+          completed: true,
+        },
+      }
+      changed = true
+    } else if (
+      !nextLesson4.inbound.completed
+      && (nextLesson4.inbound.status === "claimed" || nextLesson4.inbound.status === "submitted" || nextLesson4.inbound.status === "expired")
+    ) {
+      hydratedInboundClaimedRequestIdRef.current = null
+      hydratedInboundSubmittedRequestIdRef.current = null
+      hydratedReviewDraftRequestIdRef.current = null
+      claimedRequestJsonRef.current = null
+      nextLesson4 = {
+        ...nextLesson4,
+        inbound: createResetLesson4Inbound(),
+      }
+      changed = true
+    }
+
+    if (!changed) return
+    await savePortfolio({
+      ...current,
+      progress: { lessonId: 4, stepId: 1 },
+      lesson4: applyLesson4Gate(nextLesson4),
+    })
+  }, [savePortfolio])
+
   const handleOutboundCountdownExpire = useCallback(() => {
     if (!isLesson4PeerReviewHttpMode()) return
     void refreshOutboundStatusRef.current()
@@ -663,6 +783,39 @@ export default function Step1PeerReviewRelay() {
   const inboundRequestId = portfolio?.lesson4.inbound.requestId
   const classSeatCode = portfolio?.student.classSeatCode
   const pendingInboundTaskId = tasks.find(task => task.status === "pending")?.requestId
+
+  /** HTTP 模式进页：即使本地丢失 requestId，也按当前学生身份从服务器恢复 Step1 状态。 */
+  useEffect(() => {
+    if (!isLesson4PeerReviewHttpMode()) return
+    if (!portfolio || !classSeatCode) return
+    if (hydratedRecoverySeatCodeRef.current === classSeatCode) return
+    hydratedRecoverySeatCodeRef.current = classSeatCode
+    reportSyncStart()
+    void recoverMyPeerReviewState({
+      classId: deriveLesson4ClassId(classSeatCode, portfolio.student.clazz),
+      authorSeatCode: classSeatCode,
+      reviewerSeatCode: classSeatCode,
+    })
+      .then(async response => {
+        await applyRecoveredPeerReviewState(response)
+        reportSyncSuccess()
+      })
+      .catch(error => {
+        if (classifyLesson4PeerReviewError(error) === "offline") {
+          reportSyncOffline()
+          return
+        }
+        reportSyncIdle()
+      })
+  }, [
+    applyRecoveredPeerReviewState,
+    classSeatCode,
+    portfolio,
+    reportSyncIdle,
+    reportSyncOffline,
+    reportSyncStart,
+    reportSyncSuccess,
+  ])
 
   useEffect(() => {
     if (!outboundRequestId) {
@@ -1125,6 +1278,7 @@ export default function Step1PeerReviewRelay() {
     hydratedInboxSeatCodeRef.current = null
     hydratedInboundClaimedRequestIdRef.current = null
     hydratedInboundSubmittedRequestIdRef.current = null
+    hydratedRecoverySeatCodeRef.current = null
     hydratedReviewDraftRequestIdRef.current = null
     reconciledOutboundRequestIdRef.current = null
     claimedRequestJsonRef.current = next.lesson4.inbound.claimedRequestJson ?? null

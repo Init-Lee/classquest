@@ -18,7 +18,7 @@
 |------|----------|
 | **Step1 互审** | 每人须完成「送审自己的题卡」+「审别人的题卡」；互审表单含四维度评分、理由与总体建议。双条件 gate：`outbound.completed && inbound.completed` 同时满足才放行。 |
 | **Step2 反馈收件箱** | 学生逐条处理收到的互审反馈：`minor_fix` 需决策（含小修保留理由），`major_fix` / `content_violation` 为必改项。全部处理完方可进入 Step3。 |
-| **Step3 V2 修改台** | 按反馈分项修改新闻/图片题卡；若互审四段全通过，可不写整体修改说明，直接确认 V2。新闻、图片双卡均 `confirmed` 后进入 Step4。 |
+| **Step3 V2 修改台** | 按反馈分项修改新闻/图片题卡；素材区可替换 V2 入库版素材图，不影响送审时同伴看到的 V1 素材。若互审四段全通过，可不写整体修改说明，直接确认 V2。新闻、图片双卡均 `confirmed` 后进入 Step4。 |
 | **Step4 就绪报告** | 检查就绪三态（green/amber/red），green/amber 可保存 V2 入库包；保存时写入 `stageSnapshot` 供后续导出与审计。 |
 
 **课堂关注点：** 互审质量（四维度+理由是否具体）→ 反馈处理是否到位（必改未漏）→ V2 修改是否落实 → Step4 快照中 T1/T2/T3 与就绪三态是否一致。
@@ -33,6 +33,8 @@
 | Step2 | 反馈收件箱 | `step2Completed` | 读取 `receivedReviewJson`，生成并保存 `feedbackInbox.decisions` |
 | Step3 | V2 修改台 | `step3Completed` | 双卡 `newsConfirmed` / `imageConfirmed`；写入 `v2.*.revision` |
 | Step4 | V2 就绪报告 | `step4Completed` / `completed` | 评估就绪三态，保存入库包并写入 `stageSnapshot` |
+
+Step3 的素材图替换只写入 `lesson4.v2.*.material.asset` 与 `assetFingerprint`，属于入库版 V2 调整；`outbound.request_json` / 同伴互审看到的 V1 送审版保持冻结分离。已确认的 V2 题卡会锁定替换入口，未确认状态下替换后需重新确认题卡。
 
 ## Step4 · 保存 V2 入库准备包
 
@@ -73,7 +75,8 @@ Step4 对新闻、图片题卡分别评估，综合为整课状态：
 ## Step1 互审（摘要）
 
 - 前端 adapter：`api/lesson4-peer-review.adapter.ts`；`.env.local` 设置 `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 后走真实 HTTP（教师模式强制 fixture）。
-- **分卡提交 + 整体提交**、**fieldKey 约定**、**HTTP hydrate**、**倒计时与 20s 轮询** 等行为见历史联调记录（B1~B7 已落地）。
+- 进页会自动按当前 `classId + classSeatCode` 同步服务器互审状态；即使本地 IndexedDB 丢失 outbound/inbound `requestId`，也会恢复未完成送审、可拉取反馈、已领取审查或已提交审查，避免学生卡在 Step1。
+- **分卡提交 + 整体提交**、**fieldKey 约定**、**HTTP hydrate/recovery**、**倒计时与 20s 轮询** 等行为见历史联调记录（B1~B7 已落地，recovery 已补齐）。
 
 ## 教师演示模式
 

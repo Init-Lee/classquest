@@ -4,7 +4,10 @@
  * 更新触发：V2 可编辑字段、分区字段归属、Tab 内左右分栏、必改/采纳跟进或确认前撤销完成逻辑变化时，需要同步更新本文件。
  */
 
-import type { Lesson4FeedbackDecision, Module4Lesson3OptionKey, Module4Lesson4V2CardDraft } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import { useRef, useState, type ChangeEvent } from "react"
+import { Loader2, Replace } from "lucide-react"
+import type { Lesson4FeedbackDecision, Module4CompressedMaterialAsset, Module4Lesson3OptionKey, Module4Lesson4V2CardDraft } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
+import { compressModule4MaterialImage } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/compress-material-image"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Textarea } from "@/shared/ui/textarea"
@@ -20,6 +23,19 @@ const REVISION_ACTION_LABEL: Partial<Record<Lesson4FeedbackDecision["action"], s
   must_revise: "必改",
   accept: "采纳修改",
   partial_accept: "部分采纳",
+}
+
+function buildV2MaterialAssetFingerprint(asset?: Module4CompressedMaterialAsset): string {
+  if (!asset) return ""
+  const head = asset.dataUrl.slice(0, 64)
+  const tail = asset.dataUrl.slice(-64)
+  return [
+    asset.mimeType,
+    asset.compressedSizeBytes,
+    `${asset.width}x${asset.height}`,
+    head,
+    tail,
+  ].join(":")
 }
 
 export function V2RevisionSectionEditor({
@@ -43,9 +59,35 @@ export function V2RevisionSectionEditor({
   onUnresolveDecision: (decisionId: string) => void
   onChange: (card: Module4Lesson4V2CardDraft) => void
 }) {
+  const materialInputRef = useRef<HTMLInputElement>(null)
+  const [materialCompressing, setMaterialCompressing] = useState(false)
+  const [materialUploadError, setMaterialUploadError] = useState("")
+
   const touch = (patch: Partial<Module4Lesson4V2CardDraft>) => {
     if (locked) return
     onChange({ ...card, ...patch, status: "draft", updatedAt: new Date().toISOString() })
+  }
+
+  const handleMaterialAssetChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || locked) return
+    setMaterialCompressing(true)
+    setMaterialUploadError("")
+    try {
+      const nextAsset = await compressModule4MaterialImage(file, card.material.asset?.uploadCount ?? 0)
+      touch({
+        material: {
+          ...card.material,
+          asset: nextAsset,
+          assetFingerprint: buildV2MaterialAssetFingerprint(nextAsset),
+        },
+      })
+    } catch (err) {
+      setMaterialUploadError(err instanceof Error ? err.message : "图片处理失败，请重新上传。")
+    } finally {
+      setMaterialCompressing(false)
+      if (materialInputRef.current) materialInputRef.current.value = ""
+    }
   }
 
   const revisionDecisions = sectionDecisions.filter(isSectionRevisionDecision)
@@ -75,6 +117,38 @@ export function V2RevisionSectionEditor({
               暂无素材图片
             </div>
           )}
+          <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs leading-5 text-amber-900">
+                替换的是 V2 入库版素材图，不会改送审时同伴看到的 V1 素材；替换后需重新确认题卡。
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5 bg-white"
+                disabled={locked || materialCompressing}
+                onClick={() => materialInputRef.current?.click()}
+              >
+                {materialCompressing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Replace className="h-4 w-4" />}
+                替换素材图
+              </Button>
+              <input
+                ref={materialInputRef}
+                className="hidden"
+                type="file"
+                accept="image/*"
+                disabled={locked}
+                onChange={handleMaterialAssetChange}
+              />
+            </div>
+            {locked && (
+              <p className="text-[11px] text-amber-800">当前题卡已确认，替换入口已禁用，避免绕过确认锁定。</p>
+            )}
+            {materialUploadError && (
+              <p className="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs text-red-700">{materialUploadError}</p>
+            )}
+          </div>
           <label className="block space-y-1.5 text-sm">
             <span className="font-medium">素材短名</span>
             <Input

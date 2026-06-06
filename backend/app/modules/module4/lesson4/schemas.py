@@ -113,6 +113,40 @@ class Lesson4ReviewerInboxResponse(BaseModel):
     tasks: list[Lesson4ReviewerInboxTask]
 
 
+class Lesson4RecoveredOutboundRequest(BaseModel):
+    """作者侧恢复出的最近互审请求。"""
+
+    requestId: str
+    status: Lesson4OutboundStatus
+    targetReviewerSeatCode: str
+    inviteCode: Optional[str] = None
+    sentAt: str
+    pendingExpiresAt: Optional[str] = None
+    reviewExpiresAt: Optional[str] = None
+    submittedAt: Optional[str] = None
+    reviewJson: Optional[dict[str, Any]] = None
+
+
+class Lesson4RecoveredInboundRequest(BaseModel):
+    """审查者侧恢复出的最近互审任务。"""
+
+    requestId: str
+    status: Literal["claimed", "submitted", "pulled"]
+    authorSeatCode: str
+    reviewExpiresAt: Optional[str] = None
+    submittedAt: Optional[str] = None
+    requestJson: Optional[Lesson4ReviewRequestJson] = None
+    reviewJson: Optional[dict[str, Any]] = None
+
+
+class Lesson4RecoverPeerReviewStateResponse(BaseModel):
+    """GET /review-requests/recovery 成功响应。"""
+
+    serverNow: str
+    outbound: Optional[Lesson4RecoveredOutboundRequest] = None
+    inbound: Optional[Lesson4RecoveredInboundRequest] = None
+
+
 class Lesson4ClaimReviewRequestPayload(BaseModel):
     """POST /review-requests/{request_id}/claim 请求体。"""
 

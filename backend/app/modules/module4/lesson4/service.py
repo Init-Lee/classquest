@@ -27,6 +27,9 @@ from .schemas import (
     Lesson4ModerateTextPayload,
     Lesson4PullReviewRequestPayload,
     Lesson4PullReviewRequestResponse,
+    Lesson4RecoverPeerReviewStateResponse,
+    Lesson4RecoveredInboundRequest,
+    Lesson4RecoveredOutboundRequest,
     Lesson4ModerateTextResponse,
     Lesson4ReviewRequestJson,
     Lesson4ReviewerInboxResponse,
@@ -251,6 +254,61 @@ def get_reviewer_inbox(class_id: str, reviewer_seat_code: str) -> Lesson4Reviewe
         tasks.append(task)
 
     return Lesson4ReviewerInboxResponse(serverNow=server_now, tasks=tasks)
+
+
+def get_peer_review_recovery_state(
+    class_id: str,
+    author_seat_code: str,
+    reviewer_seat_code: str,
+) -> Lesson4RecoverPeerReviewStateResponse:
+    """按当前学生身份恢复作者侧与审查者侧最近互审状态。"""
+    if not class_id.strip():
+        raise Lesson4PeerReviewError("classId 不能为空。", 400)
+    _validate_seat_code(author_seat_code)
+    _validate_seat_code(reviewer_seat_code)
+
+    server_now_dt = _server_now()
+    server_now = _format_iso8601(server_now_dt)
+
+    with database_transaction() as connection:
+        repository.expire_stale_requests(connection, server_now)
+        outbound_row = repository.get_latest_author_recovery_request(connection, class_id, author_seat_code)
+        inbound_row = repository.get_latest_reviewer_recovery_request(connection, class_id, reviewer_seat_code)
+
+    outbound: Lesson4RecoveredOutboundRequest | None = None
+    if outbound_row is not None:
+        outbound = Lesson4RecoveredOutboundRequest(
+            requestId=outbound_row["id"],
+            status=outbound_row["status"],
+            targetReviewerSeatCode=outbound_row["target_reviewer_seat_code"],
+            inviteCode=outbound_row["invite_code"] if outbound_row["status"] == "pending" else None,
+            sentAt=outbound_row["created_at"],
+            pendingExpiresAt=outbound_row["pending_expires_at"],
+            reviewExpiresAt=outbound_row["review_expires_at"],
+            submittedAt=outbound_row["submitted_at"],
+            reviewJson=_parse_review_json(outbound_row["review_json"]),
+        )
+
+    inbound: Lesson4RecoveredInboundRequest | None = None
+    if inbound_row is not None:
+        request_json = None
+        if inbound_row["status"] == "claimed":
+            request_json = Lesson4ReviewRequestJson.parse_obj(_parse_request_json(inbound_row["request_json"]))
+        inbound = Lesson4RecoveredInboundRequest(
+            requestId=inbound_row["id"],
+            status=inbound_row["status"],
+            authorSeatCode=inbound_row["author_seat_code"],
+            reviewExpiresAt=inbound_row["review_expires_at"],
+            submittedAt=inbound_row["submitted_at"],
+            requestJson=request_json,
+            reviewJson=_parse_review_json(inbound_row["review_json"]),
+        )
+
+    return Lesson4RecoverPeerReviewStateResponse(
+        serverNow=server_now,
+        outbound=outbound,
+        inbound=inbound,
+    )
 
 
 def _parse_request_json(raw: str | None) -> dict[str, Any]:

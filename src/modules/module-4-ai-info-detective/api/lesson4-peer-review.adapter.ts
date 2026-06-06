@@ -2,7 +2,7 @@
  * 文件说明：模块 4 课时 4 同伴互审 adapter。
  * 职责：为前端 Step1 提供唯一互审 API 调用入口，默认返回轻量 fixture 状态，可通过环境变量切换到真实 HTTP 后端。
  * 更新触发：课时 4 互审 endpoint、请求/响应字段、fixture 展示状态或 HTTP 错误映射变化时，需要同步更新本文件。
- * HTTP 已接通：create、status、cancel、inbox（B4）、claim（B5）、submit（B6）、pull（B7，HTTP 模式）。
+ * HTTP 已接通：create、status、cancel、inbox（B4）、claim（B5）、submit（B6）、pull（B7）、recovery（Step1 进页恢复）。
  */
 
 import type { Module4Lesson3QuestionCardDraft, Module4Lesson4ReviewJson, Module4MaterialKind } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -18,6 +18,8 @@ import type {
   Lesson4FetchReviewRequestStatusResponse,
   Lesson4PullReviewFeedbackPayload,
   Lesson4PullReviewFeedbackResponse,
+  Lesson4RecoverPeerReviewStatePayload,
+  Lesson4RecoverPeerReviewStateResponse,
   Lesson4ReviewerInboxPayload,
   Lesson4ReviewerInboxResponse,
   Lesson4ReviewRequestJson,
@@ -280,6 +282,34 @@ export async function fetchReviewerInbox(payload: Lesson4ReviewerInboxPayload): 
   return {
     serverNow: serverNow.toISOString(),
     tasks: [],
+  }
+}
+
+export async function recoverMyPeerReviewState(
+  payload: Lesson4RecoverPeerReviewStatePayload,
+): Promise<Lesson4RecoverPeerReviewStateResponse> {
+  if (shouldUseHttp()) {
+    const params = new URLSearchParams({
+      classId: payload.classId,
+      authorSeatCode: payload.authorSeatCode,
+      reviewerSeatCode: payload.reviewerSeatCode,
+    })
+    const response = await fetchJson<Lesson4RecoverPeerReviewStateResponse>(`/review-requests/recovery?${params.toString()}`, {
+      method: "GET",
+    })
+    const requestJson = coerceLesson4ReviewRequestJson(response.inbound?.requestJson)
+    return {
+      ...response,
+      inbound: response.inbound
+        ? {
+            ...response.inbound,
+            requestJson: requestJson ?? undefined,
+          }
+        : undefined,
+    }
+  }
+  return {
+    serverNow: lesson4PeerReviewFixture.serverNow,
   }
 }
 
