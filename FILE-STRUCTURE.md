@@ -134,7 +134,7 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 ## 当前版本口径
 
 - 稳定发布：`v0.6.0`，模块 3 六课时完成。
-- 当前主线版本：`0.7.3`，模块 4 课时 3「题目卡 V1 制作与解析填写」本地前端流程已合入后的发布口径；当前开发分支已完成课时 4 第 1 关 Step1 全链路（B1~B7 + moderate-text）前后端联调。
+- 当前主线版本：`0.7.3`，模块 4 课时 3「题目卡 V1 制作与解析填写」本地前端流程已合入后的发布口径；主线文档已同步课时 4 Step1-Step4、V2 ready 包与 lesson4 后端 routes 的实际边界。
 - 上一发布：`0.7.2`，模块 4 课时 2「素材搜集与合规初筛」。
-- 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-3 已落地，课时 4 第 1 关 Step1 已可 HTTP 联调（SQLite + IndexedDB 双存储）；课时 4 Step2-4 与课时 5-6 后续按独立分支/阶段逐步开发。
+- 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-4 已落地；课时 4 已覆盖互审、反馈处理、V2 修改台、V2 就绪报告、QuickCheck、阶段快照和 V2 ready 包，并可通过 lesson4 peer-review / moderation / SQLite routes 联调；课时 5「云端 Live Lesson Session」进入规划/开发阶段，课时 6 后续按独立分支/阶段逐步开发。
 

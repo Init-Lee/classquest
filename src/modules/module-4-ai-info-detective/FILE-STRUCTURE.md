@@ -128,9 +128,9 @@ src/modules/module-4-ai-info-detective/
 - `app/`：模块 4 应用壳、Provider、教师讲解状态和课时注册表。
 - `pages/`：路由级页面。
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
-- `lessons/`：六个课时的本地学习挑战；当前课时 1-3 已合入，课时 4 第 1 关 Step1 全链路已合入，课时 4 Step2-4 与课时 5-6 后续按独立分支/阶段推进。
+- `lessons/`：六个课时的本地学习挑战；当前课时 1-4 已合入，课时 4 已覆盖 Step1 同伴互审、Step2 反馈收件箱、Step3 V2 修改台、Step4 V2 就绪报告与 ready 包；课时 5「云端 Live Lesson Session」进入规划/开发阶段，课时 6 后续按独立分支/阶段推进。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
-- `api/`：mock/fixture adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到后端；课时 4 同伴互审通过 `lesson4-peer-review.adapter.ts` 默认 fixture，并可用 `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 切到后端 B1~B7 全端点（教师模式 `isModule4TeacherModeActive()` 强制 fixture）；`lesson4-review-moderation.adapter.ts` 负责分卡/整体提交前文字审核，默认本地规则 mock，可设 `VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE=http` 或随 peer review HTTP 自动启用；`coerce-lesson4-review-request-json.ts` 规范化 claim 写入 portfolio 的题卡 JSON；`derive-lesson4-class-id.ts` 统一 create 与 inbox 的 `classId`；作者侧输入只收集目标同伴学号后两位；OSS 方案 B 另需 `VITE_API_BASE_URL`。
+- `api/`：mock/fixture adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到后端；课时 4 同伴互审通过 `lesson4-peer-review.adapter.ts` 默认 fixture，并可用 `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 切到后端 B1~B7 全端点、recovery 与 SQLite relay（教师模式 `isModule4TeacherModeActive()` 强制 fixture）；`lesson4-review-moderation.adapter.ts` 负责分卡/整体提交前文字审核，默认本地规则 mock，可设 `VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE=http` 或随 peer review HTTP 自动启用；`coerce-lesson4-review-request-json.ts` 规范化 claim 写入 portfolio 的题卡 JSON；`derive-lesson4-class-id.ts` 统一 create 与 inbox 的 `classId`；作者侧输入只收集目标同伴学号后两位；OSS 方案 B 另需 `VITE_API_BASE_URL`。
 - `components/`：模块 4 私有 UI 组件。
 - `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（课时 4 完成时进度段为 `课时4已完成`）；`serializers/snapshot-html.ts` 负责 `lesson1-full`～`lesson4-full` HTML 快照（课时 4 为 V2 入库准备摘要，文件名 `模块4_姓名_课时4V2入库准备快照_日期.html`）；Step4 保存入库包时写入 `lesson4.stageSnapshot` JSON。课时 3 快照仍含 AI 自检助手记录段与 `aiReview.history`（上限 5 条简化轨迹）。
 - `constants/`：教师讲解档案、班级选项等模块级常量。
