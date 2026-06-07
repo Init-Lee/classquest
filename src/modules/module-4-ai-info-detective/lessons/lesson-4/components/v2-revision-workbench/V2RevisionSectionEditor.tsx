@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 课时 4 V2 修改台单段编辑区。
- * 职责：在 Step3 左侧 wizard 当前 Tab 内以左 3/4 编辑、右 1/4 展示本项修改反馈摘要，避免反馈与编辑区上下堆叠。
+ * 职责：在 Step3 左侧 wizard 当前 Tab 内以左 3/4 编辑、右 1/4 展示当前分区反馈摘要，避免反馈与编辑区上下堆叠。
  * 更新触发：V2 可编辑字段、分区字段归属、Tab 内左右分栏、必改/采纳跟进或确认前撤销完成逻辑变化时，需要同步更新本文件。
  */
 
@@ -43,6 +43,7 @@ export function V2RevisionSectionEditor({
   card,
   sectionDecisions,
   locked,
+  showFeedbackPanel = true,
   resolveNote,
   onResolveNoteChange,
   onResolveDecision,
@@ -53,6 +54,7 @@ export function V2RevisionSectionEditor({
   card: Module4Lesson4V2CardDraft
   sectionDecisions: Lesson4FeedbackDecision[]
   locked: boolean
+  showFeedbackPanel?: boolean
   resolveNote: string
   onResolveNoteChange: (value: string) => void
   onResolveDecision: (decisionId: string) => void
@@ -275,9 +277,9 @@ export function V2RevisionSectionEditor({
   const feedbackPanel = (
     <aside className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3 lg:max-w-none">
       <div>
-        <p className="text-xs font-semibold text-foreground">本项修改反馈</p>
+        <p className="text-xs font-semibold text-foreground">当前分区反馈</p>
         <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
-          摘要；完整理由见右侧建议卡。
+          摘要；完整理由见右侧反馈明细。
         </p>
       </div>
 
@@ -385,15 +387,15 @@ export function V2RevisionSectionEditor({
       )}
 
       {!hasFeedbackPanel && (
-        <p className="text-xs text-muted-foreground">同伴未对本项提出修改建议。</p>
+        <p className="text-xs text-muted-foreground">当前分区暂无同伴修改建议。</p>
       )}
     </aside>
   )
 
   return (
-    <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] lg:items-start">
+    <div className={showFeedbackPanel ? "grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] lg:items-start" : "min-h-0"}>
       <div className="min-w-0 space-y-3">{editContent}</div>
-      {feedbackPanel}
+      {showFeedbackPanel && feedbackPanel}
     </div>
   )
 }

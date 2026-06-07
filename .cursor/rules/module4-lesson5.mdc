@@ -1,0 +1,76 @@
+---
+description: Module 4 Lesson 5 runtime, teacher console, backend, fixture seed, and implementation rules
+alwaysApply: false
+---
+
+# Module 4 Lesson 5 — Cursor Rules
+
+Before modifying Lesson5, read the skill package:
+
+```text
+classquest_module4_lesson5_skill/SKILL.md
+classquest_module4_lesson5_skill/docs/12-debug-fixtures-and-seed-data.md
+classquest_module4_lesson5_skill/docs/14-cursor-start-prompt.md
+```
+
+## Production data flow
+
+Students submit their local `lesson4-ready-for-lesson5-v1` package into a long-lived class question pool.
+
+Do not import Lesson4 cloud DB as production logic.
+
+## Debug data flow
+
+Before live UI work, build fixture inspection and seeding from:
+
+```text
+backend/runtime/fixtures/module4/lesson5/cloud_lesson4_question_bank/
+backend/runtime/fixtures/module4/lesson5/student_portfolio_json/
+```
+
+Compare both sources and generate normalized fixture submissions. Do not commit raw real student data.
+
+## Required architecture
+
+```text
+Student lesson: src/modules/module-4-ai-info-detective/lessons/lesson-5/
+Teacher console: src/teacher-console/
+Backend: backend/app/modules/module4/lesson5/
+```
+
+## Required database split
+
+```text
+auth_and_classes.sql
+question_bank.sql
+lesson5_runtime.sql
+```
+
+## Hard rules
+
+- Class pool starts empty.
+- First V2 submission creates first pool item/version.
+- Teacher selects class before creating session.
+- Sessions can be normal/makeup/test.
+- Locking a session freezes current V2 versions.
+- Assignments use frozen session pool only.
+- Assignments exclude self-authored items.
+- Answer and rating are separate steps.
+- Stats are session-scoped.
+- V3 is stored as ready_for_lesson6.
+- Stage snapshot HTML is generated locally.
+- Demo role is read-only and backend-enforced.
+- No WebSocket in v0.1.
+- No Q-score frequency adjustment in v0.1.
+
+## Build order
+
+1. SQL and fixture seed.
+2. Auth and class permissions.
+3. V2 class pool.
+4. Teacher session control.
+5. Student attach and assignments.
+6. Answer/rating.
+7. Stats/report.
+8. V3 and local snapshot.
+```

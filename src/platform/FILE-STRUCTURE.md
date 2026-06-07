@@ -26,10 +26,11 @@ src/platform/
 ## 依赖方向
 
 ```text
-platform → modules / shared
-modules  → shared
-shared   → 无业务依赖
+platform        → modules / teacher-console / shared
+teacher-console → shared
+modules         → shared
+shared          → 无业务依赖
 ```
 
-平台可以组合模块路由，但不承载模块内部业务。
+平台可以组合模块路由与 teacher-console 独立路由，但不承载模块内部业务或教师控制台业务。
 

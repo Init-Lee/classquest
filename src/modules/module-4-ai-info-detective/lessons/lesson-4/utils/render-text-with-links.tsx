@@ -1,14 +1,15 @@
 /**
  * 文件说明：课时 4 互审文案中的 URL 渲染工具。
  * 职责：将纯文本中的 http(s) 链接渲染为可点击超链接，避免在题卡解析区整段展示长 URL。
- * 更新触发：链接识别规则、锚文案策略或互审预览/反馈面板展示方式变化时，需要同步更新本文件。
+ * 更新触发：链接识别规则、锚文案策略（含统一「点击链接」）或互审预览/反馈面板展示方式变化时，需要同步更新本文件。
  */
 
 import type { ReactNode } from "react"
 
 const URL_PATTERN = /https?:\/\/[^\s<>"']+/gi
 
-function linkLabel(url: string): string {
+function linkLabel(url: string, fixedLabel?: string): string {
+  if (fixedLabel) return fixedLabel
   try {
     const host = new URL(url).hostname.replace(/^www\./, "")
     return host || "打开链接"
@@ -17,8 +18,8 @@ function linkLabel(url: string): string {
   }
 }
 
-/** 将一段文本中的 URL 转为 `<a>`，其余保持原文。 */
-export function renderTextWithLinks(text: string): ReactNode {
+/** 将一段文本中的 URL 转为 `<a>`，其余保持原文；`fixedLinkLabel` 可统一锚文案（如「点击链接」）。 */
+export function renderTextWithLinks(text: string, fixedLinkLabel?: string): ReactNode {
   if (!text.trim()) return text
 
   const parts: ReactNode[] = []
@@ -39,7 +40,7 @@ export function renderTextWithLinks(text: string): ReactNode {
         rel="noopener noreferrer"
         className="text-primary underline underline-offset-2"
       >
-        {linkLabel(url)}
+        {linkLabel(url, fixedLinkLabel)}
       </a>,
     )
     lastIndex = index + url.length

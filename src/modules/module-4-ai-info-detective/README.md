@@ -18,7 +18,7 @@
 
 课时 4「题目卡互审与 V2 入库准备」已完成 Step1-Step4：第 1 关「同伴互审中转站」送审/轮询/撤回/收件箱/领取/提交/拉取均可联调真实后端；第 2 关处理收到的互审反馈；第 3 关进入 V2 修改台完成新闻/图片双卡修订与确认；第 4 关生成 V2 就绪报告、QuickCheck、`stageSnapshot` 与 `ready_for_lesson5` 入库准备包。`VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 时学生端走 HTTP；**教师讲解模式强制 fixture**，不请求 lesson4 API、不写 IndexedDB。
 
-课时 5 将进入「云端 Live Lesson Session」规划/开发阶段，当前仅作为课时 4 ready 包的下一阶段入口；admin / Live Session 角色能力处于开始接入与规划中，不写作已完成。
+课时 5 已进入「云端 Live Lesson Session」开发阶段，当前完成后端 Phase 0 schema/fixture 管线、C1a auth/admin/teacher 账号权限 API、C2a 学生 V2 提交与教师题池 overview API、C3 session 控制、C4a 学生 active-session/participant/assignment 后端、C5a answer/rating/progress 后端、C6a compute-stats/analytics/my-report 后端、C7a V3 修订/completion-summary/revision-plans 后端，以及前端 C7b Step1「提交 V2 后连接课堂」、Step2「等待试答 + 紧凑题序 + 单题作答/揭示/快评」、Step3「本人题卡统计报告」与 Step4「V3 学习任务工作台 + completion-summary + 本地快照」。学生端默认 fixture，可用 `VITE_MODULE4_LESSON5_MODE=http` 切到真实后端；fixture 试答演示需设置 `VITE_MODULE4_LESSON5_FIXTURE_PHASE=trial_open`，报告与 V3 学习任务演示需设置为 `analytics_open`。Step2 会渲染 `material.asset.dataUrl` 图片素材；Step3 展示并保存本人 news/image 题卡统计、三色样本状态和诊断提示；Step4 在 `analytics_open` 后即可提交 V3，保存 `lesson5-stage-v1` 并支持 `lesson5-full` HTML 快照。
 
 首页建档与模块三一致：姓名、班级（初一（1）班～初一（12）班）、班学号（左侧班级序号只读 + 右侧学号后两位 01～50，合成四位存档）；无档案不可直接进入课时 1（直达 `/module/4/lesson/1/...` 会退回 `/module/4`）。
 
@@ -34,6 +34,7 @@
 - `lessons/lesson-2/`
 - `lessons/lesson-3/`
 - `lessons/lesson-4/`
+- `lessons/lesson-5/`
 - `api/`
 - `README.md`
 - `FILE-STRUCTURE.md`
@@ -49,14 +50,14 @@
 
 ## 开发策略
 
-- Phase A：本地前端流程。当前完成课时 1-4，其中课时 4 已覆盖互审、反馈处理、V2 修改台、V2 就绪报告、QuickCheck、阶段快照和 V2 ready 包；课时 5-6 按独立分支/阶段推进。
+- Phase A：本地前端流程。当前完成课时 1-4，其中课时 4 已覆盖互审、反馈处理、V2 修改台、V2 就绪报告、QuickCheck、阶段快照和 V2 ready 包；课时 5 已开放 Step1 提交 V2 到题池、Step2 等待/紧凑题序、单题作答、图片素材渲染、答案揭示和三维快评、Step3 本人题卡统计报告，以及 Step4 V3 修订、completion-summary 保存和 `lesson5-full` HTML 快照，课时 6 按独立分支/阶段推进。
 - Phase B：课时 4 已完成 SQLite 基座与 B1~B7 真实同伴互审联调；后续扩展云端 Live Lesson Session、试答、评分、画廊等运行时能力。
-- Phase C：按课时接入 FastAPI；课时 3 题卡自检助手与课时 4 peer-review / moderation / SQLite API 已接入，课时 5 Live Session 仍在规划/开发入口阶段。
+- Phase C：按课时接入 FastAPI；课时 3 题卡自检助手与课时 4 peer-review / moderation / SQLite API 已接入，课时 5 已接入 C1a 账号权限、C2a 学生 V2 提交/题池 overview、C3 session 控制、C4a 学生 attach/assignment 端点、C5a answer/rating/progress 端点、C6a compute-stats/analytics/my-report 端点与 C7a V3 修订/completion-summary/revision-plans 端点。
 - Phase D：统计重算与频段展示。
 
 ## 教师模式
 
-教师入口位于 `/module/4` 首页。进入后顶部显示教师讲解横幅，Guard 会放行，课时 1-4 各关可直接浏览；选择题、判断题、结构配对等客观答案默认隐藏，由教师按需点击显示；填空、素材工作台与计划类内容使用示例档案直接展示，保存只写内存讲解档案。课时 3 讲解档案预填新闻/图片题卡参考答案、解析、来源核验与第 4 步自测结果；题卡自检助手与学生端共用线上 API，演示素材的静态图片路径不会提交给后端。教师 demo 已可用；admin / Live Session 角色入口仍处于开始接入与规划中。
+教师入口位于 `/module/4` 首页。进入后顶部显示教师讲解横幅，Guard 会放行，课时 1-5 可直接浏览；选择题、判断题、结构配对等客观答案默认隐藏，由教师按需点击显示；填空、素材工作台与计划类内容使用示例档案直接展示，保存只写内存讲解档案。课时 3 讲解档案预填新闻/图片题卡参考答案、解析、来源核验与第 4 步自测结果；题卡自检助手与学生端共用线上 API，演示素材的静态图片路径不会提交给后端。课时 5 teacher-console 前端入口已可用，HTTP 模式可查看班级题池 overview、控制 session 到 `pool_locked/trial_open/trial_locked/analytics_open` 并在开放统计反馈后同步课堂收口，计算/重算统计，查看 C5 试答 progress 表、C6 analytics 面板与 C7 revision-plans 只读观察面板；学生端 Step2 可显示等待状态、紧凑题序、单题作答、图片素材、揭示和快评，Step3 可查看本人题卡统计报告，Step4 可在 `analytics_open` 后提交 V3 修订并导出阶段快照。
 
 **课时 4 教师演示**：与学生 Step1 同一 UI；`utils/module4-teacher-mode-flag.ts` 的 `isModule4TeacherModeActive()` 使 adapter 强制 fixture（零 lesson4 HTTP）；Step1 提供「演示状态」一键切换（`app/lesson4-teacher-demo-presets.ts`）；进入 `/module/4/lesson/4` 时横幅提示「演示 · 不写入学生数据」。
 

@@ -9,6 +9,7 @@ import { getCurrentLesson1Step } from "@/modules/module-4-ai-info-detective/less
 import { getCurrentLesson2Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/guards"
 import { getCurrentLesson3Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/guards"
 import { getCurrentLesson4Step } from "@/modules/module-4-ai-info-detective/lessons/lesson-4/guards"
+import { getLesson5CurrentStep } from "@/modules/module-4-ai-info-detective/lessons/lesson-5/utils/get-lesson5-current-step"
 
 export interface Module4LessonEntry {
   id: number
@@ -55,10 +56,10 @@ export const MODULE4_LESSON_REGISTRY: Module4LessonEntry[] = [
   {
     id: 5,
     title: "网页试答与反馈优化",
-    subtitle: "体验班级题库试答与快评",
-    path: "/module/4",
-    available: false,
-    isComplete: () => false,
+    subtitle: "提交 V2 到班级题池，准备后续网页试答",
+    path: "/module/4/lesson/5/step/1",
+    available: true,
+    isComplete: portfolio => Boolean(portfolio?.lesson5.completed),
   },
   {
     id: 6,
@@ -83,6 +84,7 @@ export function canAccessModule4Lesson(
   if (lessonId === 2) return portfolio.lesson1.completed
   if (lessonId === 3) return portfolio.lesson2.completed
   if (lessonId === 4) return portfolio.lesson3.completed
+  if (lessonId === 5) return portfolio.lesson4.completed && portfolio.lesson4.readiness.readyForLesson5
   return false
 }
 
@@ -96,5 +98,8 @@ export function resolveModule4PortfolioPointer(portfolio: Module4Portfolio): Mod
   if (!portfolio.lesson3.completed) {
     return { lessonId: 3, stepId: getCurrentLesson3Step(portfolio.lesson3) }
   }
-  return { lessonId: 4, stepId: getCurrentLesson4Step(portfolio.lesson4) }
+  if (!portfolio.lesson4.completed) {
+    return { lessonId: 4, stepId: getCurrentLesson4Step(portfolio.lesson4) }
+  }
+  return { lessonId: 5, stepId: getLesson5CurrentStep(portfolio.lesson5) }
 }

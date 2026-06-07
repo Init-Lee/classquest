@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 学习档案领域类型。
- * 职责：定义 Module4Portfolio、课时 1/2/3/4 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
- * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3/4 过程记录字段变化时，需要同步更新本文件。
+ * 职责：定义 Module4Portfolio、课时 1/2/3/4/5 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
+ * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3/4/5 过程记录字段变化时，需要同步更新本文件。
  */
 
 import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
@@ -656,6 +656,175 @@ export interface Module4Lesson4State {
   completedAt: string
 }
 
+export interface Module4Lesson5SubmissionItemSummary {
+  itemId: string
+  v2VersionId: string
+  status: string
+  deduped: boolean
+}
+
+export interface Module4Lesson5SubmissionSummary {
+  submittedAt: string
+  classId: string
+  studentName: string
+  classSeatCode: string
+  mode: "fixture" | "http"
+  items: Record<Module4MaterialKind, Module4Lesson5SubmissionItemSummary>
+}
+
+export type Module4Lesson5SessionPhase =
+  | "pool_locked"
+  | "trial_open"
+  | "trial_locked"
+  | "analytics_open"
+  | "revision_open"
+  | "closed"
+
+export interface Module4Lesson5ConnectedSessionState {
+  sessionId: string
+  participantId: string
+  classId: string
+  className: string
+  title: string
+  phase: Module4Lesson5SessionPhase
+  questionCount: number
+  newsCount: number
+  imageCount: number
+  attachedAt: string
+  serverNow: string
+  mode: "fixture" | "http"
+}
+
+export type Module4Lesson5RevisionAction = "keep" | "minor_fix" | "major_fix" | "hold"
+export type Module4Lesson5ReadyForLesson6 = "none" | "partial" | "full"
+
+export interface Module4Lesson5MyReportItemStats {
+  itemId: string
+  itemVersionId: string
+  kind: Module4MaterialKind
+  validAnswerCount: number
+  correctCount: number
+  correctRate: number
+  avgClarity: number | null
+  avgThinkingValue: number | null
+  avgExplanationHelpfulness: number | null
+  issueFlagCount: number
+  issueFlagRate: number
+  issueFlags: string[]
+  sampleComments: string[]
+  statsStatus: "insufficient" | "preliminary" | "stable"
+  computedAt: string
+  diagnosisHints: string[]
+}
+
+export interface Module4Lesson5MyReportState {
+  sessionId: string
+  participantId: string
+  items: Module4Lesson5MyReportItemStats[]
+  generatedAt: string
+}
+
+export interface Module4Lesson5RevisionPlanState {
+  revisionAction: Module4Lesson5RevisionAction
+  selectedProblems: string[]
+  evidence: string
+  revisionReason: string
+  expectedEffect: string
+}
+
+export interface Module4Lesson5RevisionCardState {
+  card: Module4Lesson4V2CardDraft
+  revisionPlan: Module4Lesson5RevisionPlanState
+  itemId: string
+  baseV2VersionId: string
+  v3VersionId?: string
+  submittedAt: string
+  updatedAt: string
+  deduped: boolean
+}
+
+export interface Module4Lesson5RevisionState {
+  cards: Record<Module4MaterialKind, Module4Lesson5RevisionCardState>
+  readyForLesson6: Module4Lesson5ReadyForLesson6
+  submittedCount: number
+  lastSubmittedAt: string
+}
+
+export type Module4Lesson5QuickCheckLevel = "excellent" | "achieved" | "basic" | "not_achieved"
+
+export interface Module4Lesson5QuickCheckTarget<TEvidence extends Record<string, unknown>> {
+  score: number
+  achieved: boolean
+  evidence: TEvidence
+}
+
+export interface Module4Lesson5QuickCheckState {
+  /** 兼容旧档案与后端 completion-summary 的布尔字段，展示层不要直接作为学生可见文案。 */
+  t1HasV2Submission: boolean
+  t2HasTrialStats: boolean
+  t3HasV3Submission: boolean
+  readyForLesson6: Module4Lesson5ReadyForLesson6
+  evaluatedAt: string
+  T1: Module4Lesson5QuickCheckTarget<{
+    v2Submitted: boolean
+    hasNewsItem: boolean
+    hasImageItem: boolean
+  }>
+  T2: Module4Lesson5QuickCheckTarget<{
+    trialStatsReady: boolean
+    reportItemCount: number
+    hasNewsStats: boolean
+    hasImageStats: boolean
+  }>
+  T3: Module4Lesson5QuickCheckTarget<{
+    v3Submitted: boolean
+    submittedCount: number
+    readyForLesson6: Module4Lesson5ReadyForLesson6
+    newsSubmitted: boolean
+    imageSubmitted: boolean
+  }>
+  totalScore: number
+  level: Module4Lesson5QuickCheckLevel
+  blockers: string[]
+}
+
+export interface Module4Lesson5StageSnapshot {
+  version: "lesson5-stage-v1"
+  snappedAt: string
+  sessionId: string
+  participantId: string
+  v2Submit: Record<string, unknown>
+  trial: Record<string, unknown>
+  revision: {
+    readyForLesson6: Module4Lesson5ReadyForLesson6
+    submittedCount: number
+    submittedItemIds: string[]
+  }
+  quickCheck: {
+    totalScore: number
+    level: Module4Lesson5QuickCheckLevel
+    evaluatedAt: string
+    targets: {
+      T1: Pick<Module4Lesson5QuickCheckState["T1"], "score" | "achieved">
+      T2: Pick<Module4Lesson5QuickCheckState["T2"], "score" | "achieved">
+      T3: Pick<Module4Lesson5QuickCheckState["T3"], "score" | "achieved">
+    }
+    blockers: string[]
+  }
+}
+
+export interface Module4Lesson5State {
+  clientId: string
+  submissionSummary?: Module4Lesson5SubmissionSummary
+  connectedSession?: Module4Lesson5ConnectedSessionState
+  revision?: Module4Lesson5RevisionState
+  quickCheck: Module4Lesson5QuickCheckState
+  stageSnapshot?: Module4Lesson5StageSnapshot
+  myReport?: Module4Lesson5MyReportState
+  completed: boolean
+  completedAt: string
+}
+
 export interface Module4Lesson1Step5State {
   newsPlanText: string
   imagePlanText: string
@@ -706,6 +875,7 @@ export interface Module4Portfolio {
   lesson2: Module4Lesson2State
   lesson3: Module4Lesson3State
   lesson4: Module4Lesson4State
+  lesson5: Module4Lesson5State
   createdAt: string
   updatedAt: string
 }
@@ -1228,6 +1398,59 @@ export function createEmptyModule4Lesson4State(): Module4Lesson4State {
     v2: createEmptyModule4Lesson4V2State(),
     readiness: createEmptyModule4Lesson4ReadinessState(),
     quickCheck: createEmptyModule4Lesson4QuickCheckState(),
+    completed: false,
+    completedAt: "",
+  }
+}
+
+export function createEmptyModule4Lesson5State(): Module4Lesson5State {
+  return {
+    clientId: "",
+    submissionSummary: undefined,
+    connectedSession: undefined,
+    revision: undefined,
+    quickCheck: {
+      t1HasV2Submission: false,
+      t2HasTrialStats: false,
+      t3HasV3Submission: false,
+      readyForLesson6: "none",
+      evaluatedAt: "",
+      T1: {
+        score: 0,
+        achieved: false,
+        evidence: {
+          v2Submitted: false,
+          hasNewsItem: false,
+          hasImageItem: false,
+        },
+      },
+      T2: {
+        score: 0,
+        achieved: false,
+        evidence: {
+          trialStatsReady: false,
+          reportItemCount: 0,
+          hasNewsStats: false,
+          hasImageStats: false,
+        },
+      },
+      T3: {
+        score: 0,
+        achieved: false,
+        evidence: {
+          v3Submitted: false,
+          submittedCount: 0,
+          readyForLesson6: "none",
+          newsSubmitted: false,
+          imageSubmitted: false,
+        },
+      },
+      totalScore: 0,
+      level: "not_achieved",
+      blockers: [],
+    },
+    stageSnapshot: undefined,
+    myReport: undefined,
     completed: false,
     completedAt: "",
   }
@@ -1976,6 +2199,294 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === "object" && !Array.isArray(value)
 }
 
+function normalizeLesson5SubmissionItemSummary(value: unknown): Module4Lesson5SubmissionItemSummary | undefined {
+  if (!isPlainObject(value)) return undefined
+  const itemId = typeof value.itemId === "string" ? value.itemId : ""
+  const v2VersionId = typeof value.v2VersionId === "string" ? value.v2VersionId : ""
+  if (!itemId || !v2VersionId) return undefined
+  return {
+    itemId,
+    v2VersionId,
+    status: typeof value.status === "string" ? value.status : "",
+    deduped: value.deduped === true,
+  }
+}
+
+function normalizeLesson5SubmissionSummary(value: unknown): Module4Lesson5SubmissionSummary | undefined {
+  if (!isPlainObject(value)) return undefined
+  const items = isPlainObject(value.items) ? value.items : {}
+  const news = normalizeLesson5SubmissionItemSummary(items.news)
+  const image = normalizeLesson5SubmissionItemSummary(items.image)
+  if (!news || !image) return undefined
+  return {
+    submittedAt: typeof value.submittedAt === "string" ? value.submittedAt : "",
+    classId: typeof value.classId === "string" ? value.classId : "",
+    studentName: typeof value.studentName === "string" ? value.studentName : "",
+    classSeatCode: typeof value.classSeatCode === "string" ? value.classSeatCode : "",
+    mode: value.mode === "http" ? "http" : "fixture",
+    items: { news, image },
+  }
+}
+
+function normalizeLesson5SessionPhase(value: unknown): Module4Lesson5SessionPhase {
+  if (
+    value === "trial_open"
+    || value === "trial_locked"
+    || value === "analytics_open"
+    || value === "revision_open"
+    || value === "closed"
+  ) {
+    return value
+  }
+  return "pool_locked"
+}
+
+function normalizeLesson5ConnectedSession(value: unknown): Module4Lesson5ConnectedSessionState | undefined {
+  if (!isPlainObject(value)) return undefined
+  const sessionId = typeof value.sessionId === "string" ? value.sessionId : ""
+  const participantId = typeof value.participantId === "string" ? value.participantId : ""
+  const classId = typeof value.classId === "string" ? value.classId : ""
+  if (!sessionId || !participantId || !classId) return undefined
+  return {
+    sessionId,
+    participantId,
+    classId,
+    className: typeof value.className === "string" ? value.className : "",
+    title: typeof value.title === "string" ? value.title : "",
+    phase: normalizeLesson5SessionPhase(value.phase),
+    questionCount: Number.isFinite(value.questionCount) ? Number(value.questionCount) : 0,
+    newsCount: Number.isFinite(value.newsCount) ? Number(value.newsCount) : 0,
+    imageCount: Number.isFinite(value.imageCount) ? Number(value.imageCount) : 0,
+    attachedAt: typeof value.attachedAt === "string" ? value.attachedAt : "",
+    serverNow: typeof value.serverNow === "string" ? value.serverNow : "",
+    mode: value.mode === "http" ? "http" : "fixture",
+  }
+}
+
+function normalizeLesson5ReadyForLesson6(value: unknown): Module4Lesson5ReadyForLesson6 {
+  return value === "full" || value === "partial" ? value : "none"
+}
+
+function normalizeLesson5QuickCheckLevel(value: unknown): Module4Lesson5QuickCheckLevel {
+  return value === "excellent" || value === "achieved" || value === "basic" ? value : "not_achieved"
+}
+
+function deriveLesson5QuickCheckLevel(totalScore: number, allTargetsAchieved: boolean): Module4Lesson5QuickCheckLevel {
+  if (totalScore === 100 && allTargetsAchieved) return "excellent"
+  if (totalScore >= 75 && allTargetsAchieved) return "achieved"
+  if (totalScore >= 60) return "basic"
+  return "not_achieved"
+}
+
+function normalizeLesson5RevisionAction(value: unknown): Module4Lesson5RevisionAction {
+  return value === "keep" || value === "major_fix" ? value : "minor_fix"
+}
+
+function normalizeLesson5QuickCheck(value: unknown): Module4Lesson5QuickCheckState {
+  const fallback = createEmptyModule4Lesson5State().quickCheck
+  if (!isPlainObject(value)) return fallback
+  const T1Raw = isPlainObject(value.T1) ? value.T1 : {}
+  const T2Raw = isPlainObject(value.T2) ? value.T2 : {}
+  const T3Raw = isPlainObject(value.T3) ? value.T3 : {}
+  const T1EvidenceRaw = isPlainObject(T1Raw.evidence) ? T1Raw.evidence : {}
+  const T2EvidenceRaw = isPlainObject(T2Raw.evidence) ? T2Raw.evidence : {}
+  const T3EvidenceRaw = isPlainObject(T3Raw.evidence) ? T3Raw.evidence : {}
+  const legacyT1 = value.t1HasV2Submission === true
+  const legacyT2 = value.t2HasTrialStats === true
+  const legacyT3 = value.t3HasV3Submission === true
+  const readyForLesson6 = normalizeLesson5ReadyForLesson6(value.readyForLesson6)
+  const T1 = {
+    score: Number.isFinite(T1Raw.score) ? Number(T1Raw.score) : legacyT1 ? 35 : 0,
+    achieved: typeof T1Raw.achieved === "boolean" ? T1Raw.achieved : legacyT1,
+    evidence: {
+      v2Submitted: T1EvidenceRaw.v2Submitted === true || legacyT1,
+      hasNewsItem: T1EvidenceRaw.hasNewsItem === true || legacyT1,
+      hasImageItem: T1EvidenceRaw.hasImageItem === true || legacyT1,
+    },
+  }
+  const T2 = {
+    score: Number.isFinite(T2Raw.score) ? Number(T2Raw.score) : legacyT2 ? 30 : 0,
+    achieved: typeof T2Raw.achieved === "boolean" ? T2Raw.achieved : legacyT2,
+    evidence: {
+      trialStatsReady: T2EvidenceRaw.trialStatsReady === true || legacyT2,
+      reportItemCount: Number.isFinite(T2EvidenceRaw.reportItemCount) ? Number(T2EvidenceRaw.reportItemCount) : 0,
+      hasNewsStats: T2EvidenceRaw.hasNewsStats === true || legacyT2,
+      hasImageStats: T2EvidenceRaw.hasImageStats === true || legacyT2,
+    },
+  }
+  const T3 = {
+    score: Number.isFinite(T3Raw.score) ? Number(T3Raw.score) : readyForLesson6 === "full" ? 35 : legacyT3 ? 30 : 0,
+    achieved: typeof T3Raw.achieved === "boolean" ? T3Raw.achieved : legacyT3,
+    evidence: {
+      v3Submitted: T3EvidenceRaw.v3Submitted === true || legacyT3,
+      submittedCount: Number.isFinite(T3EvidenceRaw.submittedCount) ? Number(T3EvidenceRaw.submittedCount) : legacyT3 ? 1 : 0,
+      readyForLesson6,
+      newsSubmitted: T3EvidenceRaw.newsSubmitted === true,
+      imageSubmitted: T3EvidenceRaw.imageSubmitted === true,
+    },
+  }
+  const totalScore = Number.isFinite(value.totalScore) ? Number(value.totalScore) : T1.score + T2.score + T3.score
+  return {
+    t1HasV2Submission: legacyT1 || T1.achieved,
+    t2HasTrialStats: legacyT2 || T2.achieved,
+    t3HasV3Submission: legacyT3 || T3.achieved,
+    readyForLesson6,
+    evaluatedAt: typeof value.evaluatedAt === "string" ? value.evaluatedAt : "",
+    T1,
+    T2,
+    T3,
+    totalScore,
+    level: typeof value.level === "string"
+      ? normalizeLesson5QuickCheckLevel(value.level)
+      : deriveLesson5QuickCheckLevel(totalScore, T1.achieved && T2.achieved && T3.achieved),
+    blockers: normalizeStringArray(value.blockers),
+  }
+}
+
+function normalizeLesson5RevisionPlan(value: unknown): Module4Lesson5RevisionPlanState {
+  const raw = isPlainObject(value) ? value : {}
+  return {
+    revisionAction: normalizeLesson5RevisionAction(raw.revisionAction),
+    selectedProblems: normalizeStringArray(raw.selectedProblems),
+    evidence: typeof raw.evidence === "string" ? raw.evidence : "",
+    revisionReason: typeof raw.revisionReason === "string" ? raw.revisionReason : "",
+    expectedEffect: typeof raw.expectedEffect === "string" ? raw.expectedEffect : "",
+  }
+}
+
+function normalizeLesson5RevisionCard(value: unknown, kind: Module4MaterialKind): Module4Lesson5RevisionCardState | undefined {
+  if (!isPlainObject(value)) return undefined
+  return {
+    card: normalizeLesson4V2CardDraft(value.card, kind),
+    revisionPlan: normalizeLesson5RevisionPlan(value.revisionPlan),
+    itemId: typeof value.itemId === "string" ? value.itemId : "",
+    baseV2VersionId: typeof value.baseV2VersionId === "string" ? value.baseV2VersionId : "",
+    v3VersionId: typeof value.v3VersionId === "string" ? value.v3VersionId : undefined,
+    submittedAt: typeof value.submittedAt === "string" ? value.submittedAt : "",
+    updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : "",
+    deduped: value.deduped === true,
+  }
+}
+
+function normalizeLesson5Revision(value: unknown): Module4Lesson5RevisionState | undefined {
+  if (!isPlainObject(value) || !isPlainObject(value.cards)) return undefined
+  const news = normalizeLesson5RevisionCard(value.cards.news, "news")
+  const image = normalizeLesson5RevisionCard(value.cards.image, "image")
+  if (!news || !image) return undefined
+  return {
+    cards: { news, image },
+    readyForLesson6: normalizeLesson5ReadyForLesson6(value.readyForLesson6),
+    submittedCount: Number.isFinite(value.submittedCount) ? Number(value.submittedCount) : 0,
+    lastSubmittedAt: typeof value.lastSubmittedAt === "string" ? value.lastSubmittedAt : "",
+  }
+}
+
+function normalizeLesson5StatsStatus(value: unknown): Module4Lesson5MyReportItemStats["statsStatus"] {
+  return value === "stable" || value === "preliminary" ? value : "insufficient"
+}
+
+function normalizeLesson5MyReportItem(value: unknown): Module4Lesson5MyReportItemStats | null {
+  if (!isPlainObject(value)) return null
+  const itemId = typeof value.itemId === "string" ? value.itemId : ""
+  const itemVersionId = typeof value.itemVersionId === "string" ? value.itemVersionId : ""
+  if (!itemId || !itemVersionId) return null
+  return {
+    itemId,
+    itemVersionId,
+    kind: value.kind === "image" ? "image" : "news",
+    validAnswerCount: Number.isFinite(value.validAnswerCount) ? Number(value.validAnswerCount) : 0,
+    correctCount: Number.isFinite(value.correctCount) ? Number(value.correctCount) : 0,
+    correctRate: Number.isFinite(value.correctRate) ? Number(value.correctRate) : 0,
+    avgClarity: Number.isFinite(value.avgClarity) ? Number(value.avgClarity) : null,
+    avgThinkingValue: Number.isFinite(value.avgThinkingValue) ? Number(value.avgThinkingValue) : null,
+    avgExplanationHelpfulness: Number.isFinite(value.avgExplanationHelpfulness) ? Number(value.avgExplanationHelpfulness) : null,
+    issueFlagCount: Number.isFinite(value.issueFlagCount) ? Number(value.issueFlagCount) : 0,
+    issueFlagRate: Number.isFinite(value.issueFlagRate) ? Number(value.issueFlagRate) : 0,
+    issueFlags: normalizeStringArray(value.issueFlags),
+    sampleComments: normalizeStringArray(value.sampleComments),
+    statsStatus: normalizeLesson5StatsStatus(value.statsStatus),
+    computedAt: typeof value.computedAt === "string" ? value.computedAt : "",
+    diagnosisHints: normalizeStringArray(value.diagnosisHints),
+  }
+}
+
+function normalizeLesson5MyReport(value: unknown): Module4Lesson5MyReportState | undefined {
+  if (!isPlainObject(value)) return undefined
+  const sessionId = typeof value.sessionId === "string" ? value.sessionId : ""
+  const participantId = typeof value.participantId === "string" ? value.participantId : ""
+  if (!sessionId || !participantId) return undefined
+  return {
+    sessionId,
+    participantId,
+    items: Array.isArray(value.items)
+      ? value.items.map(normalizeLesson5MyReportItem).filter((item): item is Module4Lesson5MyReportItemStats => item !== null)
+      : [],
+    generatedAt: typeof value.generatedAt === "string" ? value.generatedAt : "",
+  }
+}
+
+function normalizeLesson5StageSnapshot(value: unknown): Module4Lesson5StageSnapshot | undefined {
+  if (!isPlainObject(value) || value.version !== "lesson5-stage-v1") return undefined
+  const revision = isPlainObject(value.revision) ? value.revision : {}
+  const quickCheckRaw = isPlainObject(value.quickCheck) ? value.quickCheck : {}
+  const normalizedQuickCheck = normalizeLesson5QuickCheck(quickCheckRaw)
+  const targetsRaw = isPlainObject(quickCheckRaw.targets) ? quickCheckRaw.targets : {}
+  const normalizeSnapshotTarget = (
+    targetValue: unknown,
+    fallbackTarget: Pick<Module4Lesson5QuickCheckState["T1"], "score" | "achieved">,
+  ) => {
+    const target = isPlainObject(targetValue) ? targetValue : {}
+    return {
+      score: Number.isFinite(target.score) ? Number(target.score) : fallbackTarget.score,
+      achieved: typeof target.achieved === "boolean" ? target.achieved : fallbackTarget.achieved,
+    }
+  }
+  return {
+    version: "lesson5-stage-v1",
+    snappedAt: typeof value.snappedAt === "string" ? value.snappedAt : "",
+    sessionId: typeof value.sessionId === "string" ? value.sessionId : "",
+    participantId: typeof value.participantId === "string" ? value.participantId : "",
+    v2Submit: isPlainObject(value.v2Submit) ? { ...value.v2Submit } : {},
+    trial: isPlainObject(value.trial) ? { ...value.trial } : {},
+    revision: {
+      readyForLesson6: normalizeLesson5ReadyForLesson6(revision.readyForLesson6),
+      submittedCount: Number.isFinite(revision.submittedCount) ? Number(revision.submittedCount) : 0,
+      submittedItemIds: normalizeStringArray(revision.submittedItemIds),
+    },
+    quickCheck: {
+      totalScore: Number.isFinite(quickCheckRaw.totalScore) ? Number(quickCheckRaw.totalScore) : normalizedQuickCheck.totalScore,
+      level: typeof quickCheckRaw.level === "string" ? normalizeLesson5QuickCheckLevel(quickCheckRaw.level) : normalizedQuickCheck.level,
+      evaluatedAt: typeof quickCheckRaw.evaluatedAt === "string" ? quickCheckRaw.evaluatedAt : normalizedQuickCheck.evaluatedAt,
+      targets: {
+        T1: normalizeSnapshotTarget(targetsRaw.T1, normalizedQuickCheck.T1),
+        T2: normalizeSnapshotTarget(targetsRaw.T2, normalizedQuickCheck.T2),
+        T3: normalizeSnapshotTarget(targetsRaw.T3, normalizedQuickCheck.T3),
+      },
+      blockers: normalizeStringArray(quickCheckRaw.blockers).length > 0
+        ? normalizeStringArray(quickCheckRaw.blockers)
+        : normalizedQuickCheck.blockers,
+    },
+  }
+}
+
+function normalizeLesson5State(value: unknown): Module4Lesson5State {
+  const fallback = createEmptyModule4Lesson5State()
+  if (!isPlainObject(value)) return fallback
+  const submissionSummary = normalizeLesson5SubmissionSummary(value.submissionSummary)
+  const connectedSession = normalizeLesson5ConnectedSession(value.connectedSession)
+  return {
+    clientId: typeof value.clientId === "string" ? value.clientId : "",
+    submissionSummary,
+    connectedSession,
+    revision: normalizeLesson5Revision(value.revision),
+    quickCheck: normalizeLesson5QuickCheck(value.quickCheck),
+    stageSnapshot: normalizeLesson5StageSnapshot(value.stageSnapshot),
+    myReport: normalizeLesson5MyReport(value.myReport),
+    completed: value.completed === true && Boolean(submissionSummary),
+    completedAt: typeof value.completedAt === "string" && submissionSummary ? value.completedAt : "",
+  }
+}
+
 function normalizeLesson4ReviewRequestJson(value: unknown): Module4Lesson4ReviewRequestJson | undefined {
   const parsed = parseJsonObjectIfString(value)
   if (!isPlainObject(parsed)) return undefined
@@ -2396,6 +2907,7 @@ export function createNewModule4Portfolio(
     lesson2: createEmptyModule4Lesson2State(),
     lesson3: createEmptyModule4Lesson3State(),
     lesson4: createEmptyModule4Lesson4State(),
+    lesson5: createEmptyModule4Lesson5State(),
     createdAt: now,
     updatedAt: now,
   }
@@ -2432,6 +2944,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
   const lesson2 = normalizeLesson2State((input as Partial<Module4Portfolio>).lesson2)
   const lesson3 = normalizeLesson3State((input as Partial<Module4Portfolio>).lesson3)
   const lesson4 = normalizeLesson4State((input as Partial<Module4Portfolio>).lesson4)
+  const lesson5 = normalizeLesson5State((input as Partial<Module4Portfolio>).lesson5)
 
   const studentMerged = normalizeStudentShape(input.student)
 
@@ -2465,6 +2978,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
     lesson2,
     lesson3,
     lesson4,
+    lesson5,
     createdAt,
     updatedAt,
   }

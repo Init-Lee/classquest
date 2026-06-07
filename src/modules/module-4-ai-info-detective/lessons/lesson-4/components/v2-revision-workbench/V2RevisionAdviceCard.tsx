@@ -1,5 +1,5 @@
 /**
- * 文件说明：模块 4 课时 4 V2 修改台右侧建议卡。
+ * 文件说明：模块 4 课时 4 V2 修改台右侧反馈明细卡。
  * 职责：在单个 Card 内纵向展示当前分区同伴建议、分卡总体建议与内容合规、以及作者修改后的整体反馈。
  * 更新触发：右侧三区布局、receivedReviewJson 字段映射或整体反馈字段变化时，需要同步更新本文件。
  */
@@ -44,7 +44,7 @@ export function V2RevisionAdviceCard({
             {getLesson4CardLabel(cardKind)} · {getLesson4FeedbackAreaLabel(sectionId)}
           </p>
           {peerItems.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">同伴未对本项提出修改建议。</p>
+            <p className="mt-3 text-sm text-muted-foreground">当前分区暂无同伴修改建议。</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {peerItems.map(decision => (

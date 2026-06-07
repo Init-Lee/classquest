@@ -31,6 +31,8 @@ src/modules/module-4-ai-info-detective/
 │   ├── lesson3-ai-review.adapter.ts
 │   ├── lesson4-peer-review.adapter.ts
 │   ├── lesson4-review-moderation.adapter.ts
+│   ├── lesson5-student.adapter.ts
+│   ├── lesson5-types.ts
 │   ├── coerce-lesson4-review-request-json.ts
 │   └── types.ts
 ├── domains/
@@ -84,7 +86,7 @@ src/modules/module-4-ai-info-detective/
 │   │   ├── config.ts
 │   │   ├── guards.ts
 │   │   └── routes.tsx
-│   └── lesson-4/
+│   ├── lesson-4/
 │       ├── README.md
 │       ├── FILE-STRUCTURE.md
 │       ├── components/
@@ -94,6 +96,16 @@ src/modules/module-4-ai-info-detective/
 │       ├── config.ts
 │       ├── guards.ts
 │       └── routes.tsx
+│   └── lesson-5/
+│       ├── README.md
+│       ├── FILE-STRUCTURE.md
+│       ├── components/
+│       ├── steps/
+│       ├── utils/
+│       ├── config.ts
+│       ├── guards.ts
+│       ├── routes.tsx
+│       └── types.ts
 └── pages/
     └── Module4HomePage.tsx
 ```
@@ -128,11 +140,11 @@ src/modules/module-4-ai-info-detective/
 - `app/`：模块 4 应用壳、Provider、教师讲解状态和课时注册表。
 - `pages/`：路由级页面。
 - `features/`：与模块可视规范对齐的可复用 UI（如课内步骤进度条）；不反向依赖 `lessons/` 内部页面。
-- `lessons/`：六个课时的本地学习挑战；当前课时 1-4 已合入，课时 4 已覆盖 Step1 同伴互审、Step2 反馈收件箱、Step3 V2 修改台、Step4 V2 就绪报告与 ready 包；课时 5「云端 Live Lesson Session」进入规划/开发阶段，课时 6 后续按独立分支/阶段推进。
+- `lessons/`：六个课时的本地学习挑战；当前课时 1-4 已合入，课时 4 已覆盖 Step1 同伴互审、Step2 反馈收件箱、Step3 V2 修改台、Step4 V2 就绪报告与 ready 包；课时 5 已开放 Step1「提交 V2 到班级题池」、Step2「等待试答 + 紧凑题序 + 单题作答/揭示/快评」、Step3「本人题卡统计报告」与 Step4「V3 学习任务工作台 + completion-summary + 本地快照」，课时 6 后续按独立分支/阶段推进。
 - `domains/`：题卡、提交包、试答轮次、评分、统计等纯领域类型。
-- `api/`：mock/fixture adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到后端；课时 4 同伴互审通过 `lesson4-peer-review.adapter.ts` 默认 fixture，并可用 `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 切到后端 B1~B7 全端点、recovery 与 SQLite relay（教师模式 `isModule4TeacherModeActive()` 强制 fixture）；`lesson4-review-moderation.adapter.ts` 负责分卡/整体提交前文字审核，默认本地规则 mock，可设 `VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE=http` 或随 peer review HTTP 自动启用；`coerce-lesson4-review-request-json.ts` 规范化 claim 写入 portfolio 的题卡 JSON；`derive-lesson4-class-id.ts` 统一 create 与 inbox 的 `classId`；作者侧输入只收集目标同伴学号后两位；OSS 方案 B 另需 `VITE_API_BASE_URL`。
+- `api/`：mock/fixture adapter 与 HTTP adapter；课时 3 题卡自检助手通过 `lesson3-ai-review.adapter.ts` 默认 mock，并可用 `VITE_MODULE4_LESSON3_AI_REVIEW_MODE=http` 切到后端；课时 4 同伴互审通过 `lesson4-peer-review.adapter.ts` 默认 fixture，并可用 `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 切到后端 B1~B7 全端点、recovery 与 SQLite relay（教师模式 `isModule4TeacherModeActive()` 强制 fixture）；课时 5 学生端通过 `lesson5-student.adapter.ts` 默认 fixture，可用 `VITE_MODULE4_LESSON5_MODE=http` 调用 `/api/v1/module4/lesson5/v2-submissions`、`active-session`、`participants/attach`、`sessions/{session_id}/state`、`assignments`、`assignments/{assignment_id}/answer`、`answers/{answer_id}/rating`、`sessions/{session_id}/my-report`、`v3-submissions` 与 `sessions/{session_id}/my-completion-summary`（教师模式强制 fixture，fixture 试答演示需 `VITE_MODULE4_LESSON5_FIXTURE_PHASE=trial_open`，报告与 V3 学习任务演示需 `analytics_open`）；`lesson4-review-moderation.adapter.ts` 负责分卡/整体提交前文字审核，默认本地规则 mock，可设 `VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE=http` 或随 peer review HTTP 自动启用；`coerce-lesson4-review-request-json.ts` 规范化 claim 写入 portfolio 的题卡 JSON；`derive-lesson4-class-id.ts` 统一 create 与 inbox 的 `classId`；作者侧输入只收集目标同伴学号后两位；OSS 方案 B 另需 `VITE_API_BASE_URL`。
 - `components/`：模块 4 私有 UI 组件。
-- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（课时 4 完成时进度段为 `课时4已完成`）；`serializers/snapshot-html.ts` 负责 `lesson1-full`～`lesson4-full` HTML 快照（课时 4 为 V2 入库准备摘要，文件名 `模块4_姓名_课时4V2入库准备快照_日期.html`）；Step4 保存入库包时写入 `lesson4.stageSnapshot` JSON。课时 3 快照仍含 AI 自检助手记录段与 `aiReview.history`（上限 5 条简化轨迹）。
+- `infra/`：模块 4 本地持久化与序列化；`serializers/continue-package.ts` 负责继续学习包 JSON（课时 4 完成时进度段为 `课时4已完成`，课时 5 完成时为 `课时5已完成`）；`serializers/snapshot-html.ts` 负责 `lesson1-full`～`lesson5-full` HTML 快照（课时 4 为 V2 入库准备摘要，文件名 `模块4_姓名_课时4V2入库准备快照_日期.html`；课时 5 为 V3 学习任务摘要，文件名 `模块4_姓名_课时5V3学习任务快照_日期.html`）；课时 4 Step4 保存入库包时写入 `lesson4.stageSnapshot` JSON，课时 5 Step4 保存 `lesson5.stageSnapshot` JSON。课时 3 快照仍含 AI 自检助手记录段与 `aiReview.history`（上限 5 条简化轨迹）。
 - `constants/`：教师讲解档案、班级选项等模块级常量。
 - `lessons/lesson-3/utils/lesson2-snapshot-sync.ts`：课时 3 手动同步课时 2 最新素材快照的边界工具；只检测并同步素材/来源相关字段（素材图、素材指纹、素材短名、来源类型、来源记录、课时 2 疑点提示快照），不得覆盖题干、选项、参考答案、核心解析和核验观察指引；编辑器提示必须告知替换材料会让 AI 自检、自测试答与最终保存重新确认，并允许学生点击“不采纳”或关闭按钮忽略本次提醒；同步后必须让 AI 自检过期，并触发自测试答/最终确认重新完成。
 - `lessons/lesson-1/components/Lesson1ScreenLayout.tsx`：课时 1 已验证的全屏滚动布局约定，负责 `scroll-snap`、固定关卡栏下方内容高度和每屏基础排版；当前用于第 1、2 关，后续若提升到模块级再迁入 `components/` 或 `features/`。
@@ -161,6 +173,7 @@ src/modules/module-4-ai-info-detective/
 - `lessons/lesson-3/utils/evaluate-lesson3-quickcheck.ts`：根据两张 V1 题卡生成课时 3 QuickCheck。
 - `lessons/lesson-4/`：课时 4「题目卡互审与 V2 入库准备」；Step1 同伴互审、Step2 反馈收件箱、Step3 V2 修改台、Step4 就绪报告已按课时内组件/工具拆分。Step4 的 QuickCheck 评分在 `utils/evaluate-lesson4-quick-check.ts`，阶段快照在 `utils/build-lesson4-stage-snapshot.ts`，第 5 课入库包在 `utils/build-lesson4-ready-package.ts`，UI 不内联评分/快照/包字段拼装；内部结构详见 `lessons/lesson-4/FILE-STRUCTURE.md`。
 - `lessons/lesson-4/utils/evaluate-lesson4-gate.ts`：按 `outbound.completed && inbound.completed` 计算双条件 gate，不要求互审双方成对。
+- `lessons/lesson-5/`：课时 5「网页试答与反馈优化」当前开放 Step1 提交 V2 到班级题池、Step2 等待/紧凑题序、单题作答、图片素材渲染、答案揭示和三维快评、Step3 本人题卡统计报告，以及 Step4 V3 学习任务工作台、本地 QuickCheck、`lesson5-stage-v1` 和 HTML 快照；路由 Guard 要求 `lesson4.readiness.exportedPackageJson` 存在且课时 4 已完成，Step3 与 Step4 都要求 `connectedSession.phase=analytics_open`；提交成功写入 `portfolio.lesson5.submissionSummary`，连接成功写入轻量 `connectedSession` 以便刷新后继续读取同一 assignments、my-report 和 completion-summary，作答/评分进度以服务端 state 为准。内部结构详见 `lessons/lesson-5/FILE-STRUCTURE.md`。
 
 ## 依赖方向
 

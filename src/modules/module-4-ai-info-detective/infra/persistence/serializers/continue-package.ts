@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 继续学习包序列化工具。
  * 职责：将 Module4Portfolio 导出为学生可携带的 JSON 文件，并解析导入文件恢复本地学习状态。
- * 更新触发：Module4Portfolio 结构、继续学习包版本、课时进度口径或文件命名规则变化时，需要同步更新本文件。
+ * 更新触发：Module4Portfolio 结构、继续学习包版本、课时 1-5 进度口径或文件命名规则变化时，需要同步更新本文件。
  */
 
 import type { Module4Portfolio } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -20,6 +20,8 @@ function safeFilenamePart(value: string): string {
 
 function progressFilenamePart(portfolio: Module4Portfolio): string {
   const { lessonId, stepId } = portfolio.progress
+  if (portfolio.lesson5.completed) return "课时5已完成"
+  if (portfolio.lesson4.completed && lessonId === 5) return `课时5第${stepId}关`
   if (portfolio.lesson4.completed) return "课时4已完成"
   if (portfolio.lesson4.step1Completed) return "课时4第1关已完成"
   if (portfolio.lesson3.completed && lessonId === 4) return `课时4第${stepId}关`

@@ -276,6 +276,14 @@ export default function Module4HomePage() {
       navigate(`/module/4/lesson/3/step/${portfolio.progress.stepId}`)
       return
     }
+    if (portfolio.progress.lessonId === 4 && portfolio.lesson3.completed) {
+      navigate(`/module/4/lesson/4/step/${portfolio.progress.stepId}`)
+      return
+    }
+    if (portfolio.progress.lessonId === 5 && portfolio.lesson4.completed) {
+      navigate(`/module/4/lesson/5/step/${portfolio.progress.stepId}`)
+      return
+    }
     navigate("/module/4")
   }
 

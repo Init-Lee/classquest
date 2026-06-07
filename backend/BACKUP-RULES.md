@@ -195,7 +195,7 @@ rsync -avz --delete \
   root@${SERVER_HOST}:/srv/classquest/app/backend/
 ```
 
-清单排除 `.env`、`.venv`、`DEPLOYMENT.md`（服务器运维手册，不进 git）、密钥与缓存等；**禁止**用 rsync 覆盖服务器已有 `.env`。`.env.example` **会**上传（exclude 中禁止写 `.env.*`，否则 macOS rsync 会连 example 一并跳过）。
+清单排除 `.env`、`.venv`、`node_modules/`、`logs/`、`DEPLOYMENT.md`（服务器运维手册，不进 git）、`runtime/db/`、真实 fixture/testdata、本地 SQLite、密钥与缓存等；**禁止**用 rsync 覆盖服务器已有 `.env` 或上传本地测试库。`.env.example` **会**上传（exclude 中禁止写 `.env.*`，否则 macOS rsync 会连 example 一并跳过）。
 
 **会随 rsync 更新**：`.env.example`（进 git，是变量口径真相源）。  
 **不会随 rsync 更新**：生产 `.env`（含 API Key）。因此代码升级后，若 `.env.example` 新增了课时 4、`CLASSQUEST_DATABASE_PATH` 等项，**生产 `.env` 不会自动跟上**，需人工合并（见下节）。

@@ -14,7 +14,15 @@ from app.core.config import get_database_path
 DEFAULT_BUSY_TIMEOUT_MS = 5000
 APP_ROOT = Path(__file__).resolve().parents[1]
 LESSON4_REVIEW_REQUESTS_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "lesson4_review_requests.sql"
-DEFAULT_SCHEMA_PATHS = (LESSON4_REVIEW_REQUESTS_SCHEMA,)
+MODULE4_AUTH_AND_CLASSES_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "auth_and_classes.sql"
+MODULE4_QUESTION_BANK_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "question_bank.sql"
+MODULE4_LESSON5_RUNTIME_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "lesson5_runtime.sql"
+DEFAULT_SCHEMA_PATHS = (
+    LESSON4_REVIEW_REQUESTS_SCHEMA,
+    MODULE4_AUTH_AND_CLASSES_SCHEMA,
+    MODULE4_QUESTION_BANK_SCHEMA,
+    MODULE4_LESSON5_RUNTIME_SCHEMA,
+)
 
 
 def _ensure_database_parent(database_path: Path) -> None:

@@ -52,3 +52,8 @@ def get_database_path(raw_path: str | None = None) -> Path:
         return Path(value).expanduser()
     return DATABASE_PATH
 
+
+def get_teacher_shared_password() -> str:
+    """读取教师/管理员统一登录口令；仅来自后端环境变量 CLASSQUEST_TEACHER_PASSWORD，留空时由调用方报错。"""
+    return os.getenv("CLASSQUEST_TEACHER_PASSWORD", "")
+

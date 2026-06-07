@@ -22,6 +22,7 @@ const Lesson4Page = lazy(() => import("@/modules/module-3-ai-science-station/les
 const Lesson5Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-5/routes"))
 const Lesson6Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-6/routes"))
 const Module4Routes = lazy(() => import("@/modules/module-4-ai-info-detective/routes"))
+const TeacherConsoleRoutes = lazy(() => import("@/teacher-console/routes"))
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
@@ -71,5 +72,13 @@ export const router = createBrowserRouter([
       { index: true, element: withSuspense(<Module4Routes />) },
       { path: "*", element: withSuspense(<Module4Routes />) },
     ],
+  },
+  {
+    path: "/teacher/*",
+    element: withSuspense(<TeacherConsoleRoutes />),
+  },
+  {
+    path: "/admin/*",
+    element: <Navigate to="/teacher/admin" replace />,
   },
 ])

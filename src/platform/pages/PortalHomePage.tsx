@@ -4,7 +4,7 @@
  * 更新触发：模块清单展示、模块状态口径或平台首页说明文案变化时，需要同步更新本文件。
  */
 
-import { ArrowRight, CheckCircle2, Clock, Layers } from "lucide-react"
+import { ArrowRight, CheckCircle2, Clock, Layers, ShieldCheck } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { MODULE_REGISTRY } from "@/platform/module-registry"
 import { Badge } from "@/shared/ui/badge"
@@ -59,6 +59,28 @@ export default function PortalHomePage() {
             </CardContent>
           </Card>
         ))}
+      </section>
+
+      <section>
+        <Card className="border-primary/30 bg-primary/5 hover:shadow-md transition-shadow">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <Badge>教师端</Badge>
+              <ShieldCheck className="h-4 w-4 text-primary" />
+            </div>
+            <CardTitle className="pt-2">教师控制台</CardTitle>
+            <CardDescription>模块 4 课时 5 · 登录、班级查看与管理员授权</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              教师和管理员可从这里进入教师端，使用现有账号口径查看班级授权或维护教师班级可见范围。
+            </p>
+            <Button className="w-full sm:w-auto" onClick={() => navigate("/teacher/login")}>
+              进入教师控制台
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </CardContent>
+        </Card>
       </section>
     </div>
   )

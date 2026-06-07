@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 阶段快照 HTML 序列化工具。
- * 职责：根据 Module4Portfolio 生成课时 1/2/3 阶段快照，并提供浏览器下载入口，方便学生提交过程证据。
+ * 职责：根据 Module4Portfolio 生成课时 1/2/3/4/5 阶段快照，并提供浏览器下载入口，方便学生提交过程证据。
  * 更新触发：课时快照内容、文件命名规则、脱敏边界或新增课时快照类型时，需要同步更新本文件。
  */
 
@@ -16,13 +16,14 @@ import type {
 import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/evaluate-lesson2-quickcheck"
 import { evaluateLesson3QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/evaluate-lesson3-quickcheck"
 import { evaluateLesson4QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-4/utils/evaluate-lesson4-quick-check"
+import { evaluateLesson5QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-5/utils/evaluate-lesson5-quick-check"
 import { LESSON3_SOURCE_TYPE_LABELS } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/data/default-options"
 import {
   deriveLesson3AiReviewTier,
   getLesson3AiReviewTierLabel,
 } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/derive-lesson3-ai-review-tier"
 
-export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full" | "lesson4-full"
+export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full" | "lesson4-full" | "lesson5-full"
 
 function escapeHtml(value: string): string {
   return value
@@ -800,8 +801,193 @@ export function buildModule4Lesson4SnapshotHtml(portfolio: Module4Portfolio): st
 </html>`
 }
 
+export function buildModule4Lesson5SnapshotHtml(portfolio: Module4Portfolio): string {
+  const { student, lesson5 } = portfolio
+  const generatedAt = new Date()
+  const generatedAtText = generatedAt.toLocaleString("zh-CN")
+  const quickCheck = lesson5.quickCheck.evaluatedAt
+    ? lesson5.quickCheck
+    : evaluateLesson5QuickCheck(lesson5, generatedAt.toISOString())
+  const reportItems = lesson5.myReport?.items ?? []
+  const revision = lesson5.revision
+  const snapshot = lesson5.stageSnapshot
+  const cardKindLabel: Record<string, string> = {
+    news: "新闻题卡",
+    image: "图片题卡",
+  }
+  const actionLabel: Record<string, string> = {
+    keep: "基本保留",
+    minor_fix: "小修优化",
+    major_fix: "重改关键部分",
+  }
+  const readyLabel: Record<string, string> = {
+    none: "未准备",
+    partial: "部分准备",
+    full: "双卡已准备",
+  }
+  const phaseLabel: Record<string, string> = {
+    pool_locked: "题池锁定，等待试答",
+    trial_open: "正在开放试答",
+    trial_locked: "试答已锁定",
+    analytics_open: "统计报告已开放",
+    revision_open: "V3 修订已开放",
+    closed: "课堂已结束",
+  }
+  const statsStatusLabel: Record<string, string> = {
+    insufficient: "样本不足",
+    preliminary: "初步统计",
+    stable: "统计较稳定",
+  }
+  const problemLabel: Record<string, string> = {
+    needs_more_samples: "样本不足",
+    low_correct_rate: "正确率偏低",
+    low_clarity: "题干不够清晰",
+    low_thinking_value: "思考价值不足",
+    low_explanation_helpfulness: "解析帮助度不足",
+    high_issue_flag_rate: "问题标记偏高",
+  }
+  const levelLabel: Record<string, string> = {
+    excellent: "优秀",
+    achieved: "达标",
+    basic: "基础达成",
+    not_achieved: "未达成",
+  }
+  const problemLabelsText = (problems: string[]) => problems
+    .map(problem => problemLabel[problem] ?? problem)
+    .join("、")
+  const renderReportRows = () => {
+    if (reportItems.length === 0) {
+      return `<tr><td colspan="6" class="muted">尚未保存本人题卡统计报告。</td></tr>`
+    }
+    return reportItems.map(item => `
+      <tr>
+        <td>${escapeHtml(cardKindLabel[item.kind] ?? item.kind)}</td>
+        <td>${item.validAnswerCount}</td>
+        <td>${Math.round(item.correctRate * 100)}%</td>
+        <td>${Math.round(item.issueFlagRate * 100)}%</td>
+        <td>${escapeHtml(statsStatusLabel[item.statsStatus] ?? item.statsStatus)}</td>
+        <td>${escapeHtml(item.sampleComments[0] || "暂无样例评论")}</td>
+      </tr>
+    `).join("")
+  }
+  const renderRevisionRows = () => {
+    if (!revision) {
+      return `<tr><td colspan="7" class="muted">尚未保存 V3 修订草稿。</td></tr>`
+    }
+    return (["news", "image"] as const).map(kind => {
+      const item = revision.cards[kind]
+      return `
+        <tr>
+          <td>${escapeHtml(cardKindLabel[kind])}</td>
+          <td>${item.v3VersionId ? "已提交" : "草稿"}</td>
+          <td>${escapeHtml(actionLabel[item.revisionPlan.revisionAction] ?? "已停用选项")}</td>
+          <td>${escapeHtml(problemLabelsText(item.revisionPlan.selectedProblems) || "未选择")}</td>
+          <td>${escapeHtml(item.revisionPlan.revisionReason || "未填写")}</td>
+          <td>${escapeHtml(item.revisionPlan.expectedEffect || "未填写")}</td>
+          <td>${escapeHtml(item.v3VersionId || "未生成")}</td>
+        </tr>
+      `
+    }).join("")
+  }
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>模块四课时5阶段快照</title>
+  <style>
+    :root { color-scheme: light; --ink: #172033; --muted: #667085; --line: #d8e2f0; --primary: #2563eb; --soft: #eff6ff; --green: #ecfdf3; --warm: #fff7ed; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif; line-height: 1.7; color: var(--ink); background: linear-gradient(135deg, #f8fbff 0%, #f3f7ff 50%, #fff7ed 100%); }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 24px 48px; }
+    h1, h2, p { margin-top: 0; }
+    .hero { border-radius: 28px; padding: 28px; color: white; background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #0f766e 130%); box-shadow: 0 20px 50px rgba(37, 99, 235, 0.22); }
+    .hero h1 { font-size: 30px; margin-bottom: 8px; letter-spacing: 0.04em; }
+    .hero .muted { color: rgba(255, 255, 255, 0.78); }
+    section { border: 1px solid var(--line); border-radius: 22px; padding: 20px; margin-top: 18px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08); }
+    section h2 { font-size: 20px; margin-bottom: 12px; color: #1d4ed8; }
+    .muted { color: var(--muted); }
+    .item { margin: 8px 0; }
+    .info-grid, .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .info-card, .stat-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: #ffffff; }
+    .label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; }
+    .status { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; background: var(--soft); color: #1d4ed8; }
+    .status.done { background: var(--green); color: #067647; }
+    .status.warning { background: var(--warm); color: #c2410c; }
+    .note { border-left: 4px solid #0f766e; padding: 10px 12px; border-radius: 12px; background: var(--green); }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; background: white; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    th { background: #eef4ff; color: #1e3a8a; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <h1>ClassQuest 模块四：AI 信息辨识员</h1>
+      <p class="muted">课时5：网页试答与反馈优化 · 阶段快照</p>
+      <p>本快照记录 V2 入池、课堂试答反馈、本人统计、V3 修订计划与课时 6 准备度。</p>
+    </div>
+    <section>
+      <h2>学习者信息</h2>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">姓名</span><span class="value">${escapeHtml(student.studentName || "未登记")}</span></div>
+        <div class="info-card"><span class="label">班级</span><span class="value">${escapeHtml(student.clazz || "未选班")}</span></div>
+        <div class="info-card"><span class="label">班学号</span><span class="value">${escapeHtml(student.classSeatCode || "—")}</span></div>
+        <div class="info-card"><span class="label">生成时间</span><span class="value">${escapeHtml(generatedAtText)}</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>课时5进度概览</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">V2 提交</span><span class="status ${lesson5.submissionSummary ? "done" : ""}">${lesson5.submissionSummary ? "已提交" : "未提交"}</span></div>
+        <div class="stat-card"><span class="label">课堂阶段</span><span class="value">${escapeHtml(lesson5.connectedSession?.phase ? phaseLabel[lesson5.connectedSession.phase] : "未连接课堂")}</span></div>
+        <div class="stat-card"><span class="label">V3 已提交</span><span class="value">${revision?.submittedCount ?? 0}/2</span></div>
+        <div class="stat-card"><span class="label">课时 6 准备度</span><span class="value">${escapeHtml(readyLabel[quickCheck.readyForLesson6] ?? quickCheck.readyForLesson6)}</span></div>
+      </div>
+      <p class="item">最近完成摘要：${escapeHtml(snapshot?.snappedAt || "尚未保存阶段快照")}</p>
+    </section>
+    <section>
+      <h2>QuickCheck 自动记录</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">总分</span><span class="value">${quickCheck.totalScore}/100</span></div>
+        <div class="stat-card"><span class="label">等级</span><span class="value">${escapeHtml(levelLabel[quickCheck.level] ?? quickCheck.level)}</span></div>
+        <div class="stat-card"><span class="label">评估时间</span><span class="value">${escapeHtml(quickCheck.evaluatedAt || "未生成")}</span></div>
+        <div class="stat-card"><span class="label">快照时间</span><span class="value">${escapeHtml(snapshot?.snappedAt ?? "尚未保存阶段快照")}</span></div>
+      </div>
+      <p class="item">T1 V2 入池：<span class="status ${quickCheck.T1.achieved ? "done" : ""}">${quickCheck.T1.score}/35 · ${quickCheck.T1.achieved ? "达成" : "未达成"}</span></p>
+      <p class="item">证据：V2 双卡提交 ${quickCheck.T1.evidence.v2Submitted ? "已确认" : "未确认"}；新闻题卡 ${quickCheck.T1.evidence.hasNewsItem ? "已入池" : "未入池"}；图片题卡 ${quickCheck.T1.evidence.hasImageItem ? "已入池" : "未入池"}。</p>
+      <p class="item">T2 试答统计：<span class="status ${quickCheck.T2.achieved ? "done" : ""}">${quickCheck.T2.score}/30 · ${quickCheck.T2.achieved ? "达成" : "未达成"}</span></p>
+      <p class="item">证据：统计报告 ${quickCheck.T2.evidence.trialStatsReady ? "已保存" : "未保存"}；题卡统计 ${quickCheck.T2.evidence.reportItemCount} 项；新闻统计 ${quickCheck.T2.evidence.hasNewsStats ? "有" : "无"}；图片统计 ${quickCheck.T2.evidence.hasImageStats ? "有" : "无"}。</p>
+      <p class="item">T3 V3 修订：<span class="status ${quickCheck.T3.achieved ? "done" : quickCheck.T3.score > 0 ? "warning" : ""}">${quickCheck.T3.score}/35 · ${quickCheck.T3.achieved ? "达成" : "未达成"}</span></p>
+      <p class="item">证据：V3 修订 ${quickCheck.T3.evidence.v3Submitted ? "已提交" : "未提交"}；已提交 ${quickCheck.T3.evidence.submittedCount}/2；新闻题卡 ${quickCheck.T3.evidence.newsSubmitted ? "已提交" : "未提交"}；图片题卡 ${quickCheck.T3.evidence.imageSubmitted ? "已提交" : "未提交"}；课时 6 准备度 ${escapeHtml(readyLabel[quickCheck.T3.evidence.readyForLesson6] ?? quickCheck.T3.evidence.readyForLesson6)}。</p>
+      ${quickCheck.blockers.length ? `<p class="note"><strong>待处理：</strong>${escapeHtml(quickCheck.blockers.join("；"))}</p>` : `<p class="note"><strong>结论：</strong>QuickCheck 三项均已达成，可作为课时 5 阶段证据。</p>`}
+    </section>
+    <section>
+      <h2>本人题卡统计摘要</h2>
+      <table>
+        <thead><tr><th>题卡</th><th>有效作答</th><th>正确率</th><th>问题率</th><th>样本状态</th><th>样例评论</th></tr></thead>
+        <tbody>${renderReportRows()}</tbody>
+      </table>
+    </section>
+    <section>
+      <h2>V3 修订计划与提交</h2>
+      <table>
+        <thead><tr><th>题卡</th><th>状态</th><th>动作</th><th>诊断问题</th><th>修订原因</th><th>预期效果</th><th>V3 版本</th></tr></thead>
+        <tbody>${renderRevisionRows()}</tbody>
+      </table>
+      <p class="note">本快照不包含任何教师密钥，只记录本地学习档案内的课堂身份与修订证据。</p>
+    </section>
+  </main>
+</body>
+</html>`
+}
+
 export function downloadModule4Snapshot(type: Module4SnapshotType, portfolio: Module4Portfolio): void {
-  const html = type === "lesson4-full"
+  const html = type === "lesson5-full"
+    ? buildModule4Lesson5SnapshotHtml(portfolio)
+    : type === "lesson4-full"
     ? buildModule4Lesson4SnapshotHtml(portfolio)
     : type === "lesson3-full"
       ? buildModule4Lesson3SnapshotHtml(portfolio)
@@ -814,7 +1000,9 @@ export function downloadModule4Snapshot(type: Module4SnapshotType, portfolio: Mo
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
-  link.download = type === "lesson4-full"
+  link.download = type === "lesson5-full"
+    ? `模块4_${namePart}_课时5V3修订快照_${date}.html`
+    : type === "lesson4-full"
     ? `模块4_${namePart}_课时4V2入库准备快照_${date}.html`
     : type === "lesson3-full"
       ? `模块4_${namePart}_课时3题卡V1快照_${date}.html`

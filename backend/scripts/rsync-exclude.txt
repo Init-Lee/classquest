@@ -21,6 +21,7 @@ service-account*.json
 # Python 运行时/缓存
 .venv/
 venv/
+node_modules/
 __pycache__/
 *.py[cod]
 *.pyo
@@ -43,8 +44,12 @@ Thumbs.db
 .git/
 .gitignore
 
-# 日志与本地数据库
+# 运行时数据、日志与本地数据库（生产运行时只留服务器 /var/lib/classquest）
+logs/
 *.log
+runtime/db/
+runtime/testdata/
+runtime/fixtures/**
 *.sqlite
 *.sqlite3
 *.db

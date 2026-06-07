@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:oss": "node scripts/verify-oss-build-env.mjs && npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:lesson4-review": "vitest run"
