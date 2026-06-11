@@ -1,104 +1,165 @@
 <!--
 文件说明：ClassQuest 仓库对外入口说明。
-职责：介绍项目定位、平台化架构、模块清单、运行方式、技术栈、版本策略和文档入口。
-更新触发：项目定位、功能范围、运行方式、技术栈、部署模型、模块状态或发布版本变化时，需要同步更新本文件。
+职责：介绍项目定位、可用功能、本地运行、生产构建、部署入口与文档索引。
+更新触发：项目定位、功能范围、运行方式、技术栈、部署模型、发布版本或文档入口变化时，需要同步更新本文件。
 -->
 
 # ClassQuest — 程序化教学平台
 
-> 一个面向中学课堂的程序化教学平台。当前正在从「单一模块应用」升级为「平台门户 + 独立课程模块 + V1.5 轻量后端」结构。
+> 面向中学课堂的程序化教学平台。学生按「模块 → 课时 → 关卡」逐步完成学习任务；教师可在指定课时使用独立控制台组织同步课堂。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
-[![Release](https://img.shields.io/badge/release-v0.7.3-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-module4--lesson5--v0.7.5-emerald)](https://github.com/Init-Lee/classquest/releases)
 
-## 当前架构目标
+## 项目简介
+
+ClassQuest 采用 **平台门户 + 独立课程模块 + 轻量后端** 结构：
 
 ```text
 Platform Portal → Module → Lesson → Step
 ```
 
-```text
-src/
-├── platform/                         # 平台门户、全局路由、模块注册表
-├── teacher-console/                  # 模块 4 课时 5 教师控制台，独立挂载 /teacher/*
-├── modules/
-│   ├── module-3-ai-science-station/   # 已完成的模块 3：AI 科学传播站
-│   └── module-4-ai-info-detective/    # 模块 4：AI 信息辨识员，课时 1-5 已开放到课时 5 Step4 V3 修订
-└── shared/                            # 业务无关 UI 与纯工具
+- **学生端**：浏览器访问平台首页，选择课程模块，按课时与关卡学习；支持本地档案、继续学习包与阶段快照。
+- **教师端**：模块 4 课时 5 提供独立 [教师控制台](src/teacher-console/README.md)（`/teacher/*`），用于组织试答、统计反馈等同步课堂环节。
+- **后端**：FastAPI + SQLite，主要服务模块 4 的题卡提交、互审、Live Lesson Session 与统计（详见 [backend/README.md](backend/README.md)）。
 
-backend/                              # V1.5 FastAPI 轻量后端，已接入模块 4 课时 3/4 API 与课时 5 Phase 0 + C1a-C7a API
-```
+## 功能概览
 
-## 模块状态
+### 模块 3 · AI 科学传播站
 
-- **模块 3 · AI 科学传播站**：已完成 6 个课时、24 个关卡；保留本地优先学习进度、继续学习包、跨角色文件链路、阶段快照和教师演示模式。详见 `src/modules/module-3-ai-science-station/README.md`。
-- **模块 4 · AI 信息辨识员**：课时 1「框架发布与样例拆解」、课时 2「素材搜集与合规初筛」、课时 3「题目卡 V1 制作与解析填写」、课时 4「题目卡互审与 V2 入库准备」已开放；课时 5 已开放 Step1「提交 V2 到班级题池」、Step2「等待试答 + 单题作答/揭示/快评」、Step3「本人题卡统计报告」与 Step4「V3 学习任务工作台 + 本地快照」。模块 4 提供独立本地档案、继续学习包、阶段快照和教师演示模式；课时 4 已生成 `ready_for_lesson5` 入库准备包，课时 5 学生端可在 fixture/http 双模式下提交 V2、连接 active session、attach participant、读取紧凑题序、渲染 `material.asset.dataUrl` 图片素材、提交 answer/rating，在 `analytics_open` 后查看本人 news/image 题卡报告，并可提交 V3、保存 completion-summary 与 `lesson5-full` HTML 快照；教师控制台 HTTP 模式可只读查看班级题池 overview 与当前 V2 题卡详情预览，并支持建会话、改 draft 设置、锁池冻结、开放试答、锁定试答、计算/重算统计、开放统计反馈即同步课堂收口、session overview、phase 展示、C5 progress 表、C6 analytics 面板与 C7 revision-plans 只读观察面板。详见 `src/modules/module-4-ai-info-detective/README.md` 与 `src/teacher-console/README.md`。
-- **V1.5 后端**：已提供健康检查、模块 4 课时 3 题卡自检助手 API（mock / Qwen）、课时 4 同伴互审 SQLite 基座，以及课时 4 互审端点 B1~B7（送审、状态、撤回、收件箱、领取、提交、拉取）与 `moderate-text` 文字审核；课时 5 已新增 Phase 0 schema、fixture inspect/export、pool-only seed 地基、C1a auth/admin/teacher 账号权限 API、C2a 学生 V2 提交与教师 pool-overview / pool-item 详情 API、C3a 教师 session 生命周期/锁池/phase 后端 API、C4a 学生 active-session、participant attach、session state 与 assignment list API、C5a 学生 answer/rating 与教师 progress API、C6a compute-stats/analytics/my-report API，以及 C7a V3 修订、completion-summary 与 revision-plans API。详见 `backend/README.md`。
+已完成 6 个课时、24 个关卡。本地优先的学习进度、继续学习包、阶段快照与教师演示模式。详见 [模块 3 README](src/modules/module-3-ai-science-station/README.md)。
 
-## 运行方式
+### 模块 4 · AI 信息辨识员
 
-环境要求：Node.js >= 18。
+七年级收束模块，围绕新闻与图片中的 AI 痕迹判断，完成题卡创作、互审、试答与修订。
+
+| 课时 | 主题 | 状态 |
+|------|------|------|
+| 1 | 框架发布与样例拆解 | 已开放 |
+| 2 | 素材搜集与合规初筛 | 已开放 |
+| 3 | 题目卡 V1 制作与解析填写 | 已开放 |
+| 4 | 题目卡互审与 V2 入库准备 | 已开放（可联调后端互审） |
+| 5 | 网页试答与反馈优化 | 已开放（学生四步流程 + 教师控制台） |
+
+**课时 5 学生流程（简要）**
+
+1. 提交 V2 题卡到班级题池，连接课堂会话  
+2. 等待试答 → 匿名作答、揭示与快评  
+3. 查看本人题卡统计报告  
+4. 完成 V3 修订，生成本地完成摘要与 HTML 快照（异步个人任务，不依赖教师「开放修订」）
+
+**课时 5 教师流程（简要）**
+
+登录教师控制台 → 创建会话 → 锁定题池 → 开放/锁定试答 → 计算并开放统计反馈（同步课堂收口）→ 可只读查看学生修订计划。
+
+**老师上线使用**请优先阅读：[模块 4 课时 5 教师使用说明](docs/TEACHER-GUIDE-MODULE4-LESSON5.md)
+
+模块细节见 [模块 4 README](src/modules/module-4-ai-info-detective/README.md)。
+
+## 快速开始
+
+**环境要求**：Node.js ≥ 18。
+
+### 仅前端（本地演示 / fixture 模式）
 
 ```bash
 npm install
 npm run dev
 ```
 
-打开浏览器访问 `http://localhost:5173`。首页提供课程模块入口，并提供教师控制台入口跳转到 `/teacher/login`。
+浏览器打开 `http://localhost:5173`。首页可进入各课程模块；教师控制台入口为 `/teacher/login`。
 
-模块 4 课时 4 Step1 后端联调需在 `backend/` 目录设置 `CLASSQUEST_DATABASE_PATH=runtime/db/classquest.sqlite` 与 `PYTHONPATH=.`，先 `python scripts/init_db.py` 再 `uvicorn app.main:app --reload`；前端 `.env.local` 设置 `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http`（可选 `VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE=http` 走后端文字审核）。课时 5 联调中，`xnwy-demo` 免密码，其它账号需设置 `CLASSQUEST_TEACHER_PASSWORD`，并运行 `python scripts/seed_module4_accounts.py`；前端 teacher-console 默认 fixture，可设置 `VITE_TEACHER_CONSOLE_MODE=http VITE_MODULE4_LESSON5_MODE=http` 对接 auth/admin/teacher 账号权限 API、题池 overview/detail、C3a session API、C4a 学生 session/assignment API、C5a answer/rating/progress API、C6a compute-stats/analytics/my-report API 与 C7a V3 修订/completion-summary/revision-plans API。教师控制台访问 `/teacher/module/4/lesson/5`，支持 `POST /api/v1/teacher/module4/lesson5/sessions`、`POST .../{session_id}/lock-pool`、`POST .../{session_id}/phase` 开放/锁定试答/开放统计反馈、`POST .../{session_id}/compute-stats`、`GET .../{session_id}/analytics`、`GET .../{session_id}/revision-plans`、`GET .../{session_id}/overview`、`GET .../{session_id}/progress` 与 phase 状态展示；开放到 `analytics_open` 即同步课堂收口，revision-plans 只读观察学生异步 V3。学生端访问 `/module/4/lesson/5/step/1` 提交 V2 后进入 `/step/2` 查看等待状态、紧凑题序，并在 `trial_open` 下进入单题作答、揭示和快评，`analytics_open` 后进入 `/step/3` 查看本人题卡报告并可进入 `/step/4` 提交 V3、生成本地快照。详见 [`backend/README.md`](backend/README.md)、[`src/teacher-console/README.md`](src/teacher-console/README.md) 与 [`src/modules/module-4-ai-info-detective/lessons/lesson-5/README.md`](src/modules/module-4-ai-info-detective/lessons/lesson-5/README.md)。
+### 前端 + 后端联调（模块 4）
 
-生产构建：
+1. **后端**（在 `backend/` 目录，详见 [backend/README.md](backend/README.md)）：
 
 ```bash
-npm run build
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install -r requirements.txt
+cp .env.example .env   # 按需填写，勿提交真实密钥
+
+export CLASSQUEST_DATABASE_PATH=runtime/db/classquest.sqlite
+export PYTHONPATH=.
+
+python scripts/init_db.py
+python scripts/seed_module4_accounts.py   # 课时 5 账号
+uvicorn app.main:app --reload
 ```
 
-OSS 直连后端（方案 B）推荐使用防呆构建命令，它会先检查 `.env.production` 中的生产前端 `VITE_*` 配置，再生成可上传的 `dist/`：
+2. **前端**：复制并配置环境变量（参考 [.env.production.example](.env.production.example) 中的 `VITE_*` 键名，本地可写入 `.env.local`）：
+
+| 场景 | 关键变量 |
+|------|----------|
+| 课时 4 互审 | `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` |
+| 课时 5 学生端 | `VITE_MODULE4_LESSON5_MODE=http` |
+| 教师控制台 | `VITE_TEACHER_CONSOLE_MODE=http` |
+| API 地址 | `VITE_API_BASE_URL=http://127.0.0.1:8000` |
+
+各模块/课时的完整联调说明见对应目录下的 `README.md`，不要在本文件重复 API 清单。
+
+## 生产构建与部署
+
+```text
+前端：Vite build → OSS 静态托管
+后端：轻量服务器 → Nginx → FastAPI → SQLite / 本地运行时文件
+```
+
+**OSS 直连后端（推荐）** — 先配置 `.env.production`（从 [.env.production.example](.env.production.example) 复制），再执行防呆构建：
 
 ```bash
 npm run build:oss
 ```
 
+将生成的 `dist/` 上传 OSS。服务器端 `backend/.env` 需配置 `CORS_ALLOWED_ORIGINS` 允许 OSS 域名。
+
+| 文档 | 用途 |
+|------|------|
+| [docs/DEPLOYMENT-V1_5.md](docs/DEPLOYMENT-V1_5.md) | V1.5 部署模型总览 |
+| [backend/OPS-PRODUCTION-UPDATE.md](backend/OPS-PRODUCTION-UPDATE.md) | 生产环境后端更新步骤 |
+| [docs/TEACHER-GUIDE-MODULE4-LESSON5.md](docs/TEACHER-GUIDE-MODULE4-LESSON5.md) | 教师上课说明 |
+
 ## 技术栈
 
-- 前端：React + TypeScript + Vite
-- 路由：React Router v6
-- UI：Tailwind CSS + shadcn 风格封装
-- 模块 3 / 模块 4 本地数据：浏览器本地存储 + 继续学习包导出/导入
-- V1.5 后端目标：FastAPI + SQLite + 本地运行时文件 + Nginx + HTTPS
+- **前端**：React、TypeScript、Vite、React Router v6、Tailwind CSS
+- **本地数据**：浏览器存储 + 继续学习包导出/导入（模块 3 / 4）
+- **后端**：FastAPI、SQLite、本地文件存储；生产经 Nginx + HTTPS 对外
 
-## 部署模型（V1.5）
+## 仓库结构（摘要）
 
 ```text
-前端：Vite build output → OSS 静态托管
-后端：轻量服务器 → Nginx → FastAPI → SQLite / 本地运行时文件
+src/
+├── platform/              # 平台门户、全局路由、模块注册
+├── teacher-console/       # 模块 4 课时 5 教师控制台
+├── modules/               # 独立课程模块（module-3、module-4）
+└── shared/                # 业务无关 UI 与工具
+
+backend/                   # FastAPI 后端
+docs/                      # 架构、部署、教师指南
 ```
 
-OSS 直连后端（方案 B）生产构建前复制 `.env.production.example` 为 `.env.production`，设置 `VITE_API_BASE_URL`，并运行 `npm run build:oss`；服务器 `backend/.env` 需配置 `CORS_ALLOWED_ORIGINS` 允许 OSS 域名。详见 `docs/DEPLOYMENT-V1_5.md`。
+完整边界与依赖规则见 [FILE-STRUCTURE.md](FILE-STRUCTURE.md)。
 
-## 分支与版本策略
+## 版本与分支
 
-- 当前主线发布：`v0.7.3`，对应模块 4 课时 3 本地前端流程合并；主线文档已同步课时 4 Step1-Step4、V2 入库准备包与 lesson4 后端 routes 的实际边界。
-- 上一稳定里程碑：`v0.7.2`，模块 4 课时 2「素材搜集与合规初筛」。
-- 更早里程碑：`v0.6.0`，模块 3 六课时全部完成时的单应用形态。
-- 模块 4 后续开发：每个课时独立分支推进；课时 5 已进入「云端 Live Lesson Session」开发阶段，当前完成 Phase 0 后端地基、C1a auth/admin/teacher 账号权限 API、C1b 前端 teacher-console、C2a 学生 V2 提交/题池 overview 与详情预览 API、C2b 学生 Step1 提交流、C3a 教师 session 后端控制、C3b 前端教师控制台、C4a 学生 session/assignment 后端、C4b 学生 Step1 连接 + Step2 分配列表、C5a 后端 answer/rating/progress、C5b 学生作答评分 UI 与教师 progress 表、C6a 后端 compute-stats/analytics/my-report、C6b 学生 Step3 报告与教师 analytics 面板、C7a 后端 V3 修订/completion-summary/revision-plans，以及 C7b 学生 Step4 修订快照与教师 revision-plans 面板。
-- 模块 4 全部课时 mock 流程稳定后：进入 `v0.8.0`。
-- 模块 4 全部课时接入真实后端后：进入 `v0.9.0`。
+| 标签 | 说明 |
+|------|------|
+| `module4-lesson5-v0.7.5` | 模块 4 课时 5 Live Lesson Session 联调闭环 |
+| `module4-lesson4-v0.7.4` | 模块 4 课时 4 补丁 |
+| `v0.7.2` | 模块 4 课时 2 |
+| `v0.6.0` | 模块 3 六课时完成（单应用形态） |
 
-说明：学生学习包内的 `appVersion` 表示数据包格式口径，与产品发布号独立维护。
+模块 4 按课时独立分支推进；学生学习包内的 `appVersion` 表示数据包格式口径，与上述发布标签独立维护。
 
 ## 文档入口
 
-- `FILE-STRUCTURE.md`：仓库结构真相源，只描述平台/模块级边界。
-- `docs/TEACHER-GUIDE-MODULE4-LESSON5.md`：模块 4 课时 5 上线后的教师使用说明。
-- `docs/CURSOR-START-HERE.md`：开发前阅读入口。
-- `docs/MIGRATION-PLAN.md`：平台化迁移计划。
-- `docs/ARCHITECTURE-V1_5.md`：V1.5 总体架构。
-- `.cursor/rules/classquest-platform.mdc`：Cursor 开发规则。
+- [FILE-STRUCTURE.md](FILE-STRUCTURE.md) — 仓库结构真相源
+- [docs/DOCS-INDEX.md](docs/DOCS-INDEX.md) — 架构与开发文档索引
+- [docs/TEACHER-GUIDE-MODULE4-LESSON5.md](docs/TEACHER-GUIDE-MODULE4-LESSON5.md) — **教师上课说明（优先）**
+- [docs/CURSOR-START-HERE.md](docs/CURSOR-START-HERE.md) — 开发前阅读入口
+- [docs/ARCHITECTURE-V1_5.md](docs/ARCHITECTURE-V1_5.md) — V1.5 总体架构
 
 ## 开源许可
 
 [MIT License](LICENSE) © 2026 ClassQuest Contributors
-
