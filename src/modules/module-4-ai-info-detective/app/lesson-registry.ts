@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时注册表。
- * 职责：集中声明模块 4 课时入口、标题与完成状态，并根据档案内容修正可能落后的进度指针。
- * 更新触发：模块 4 新增课时、课时入口路径、完成判定或指针修正规则变化时，需要同步更新本文件。
+ * 职责：集中声明模块 4 课时入口、标题与完成状态，并根据档案内容修正可能落后的课时 1-6 进度指针。
+ * 更新触发：模块 4 新增课时、课时入口路径、完成判定、门禁或续学指针规则变化时，需要同步更新本文件。
  */
 
 import type { Module4Portfolio, Module4ProgressPointer } from "@/modules/module-4-ai-info-detective/domains/portfolio/types"
@@ -65,9 +65,9 @@ export const MODULE4_LESSON_REGISTRY: Module4LessonEntry[] = [
     id: 6,
     title: "题库发布与可信反思",
     subtitle: "完成发布复盘与可信表达反思",
-    path: "/module/4",
-    available: false,
-    isComplete: () => false,
+    path: "/module/4/lesson/6/step/1",
+    available: true,
+    isComplete: portfolio => Boolean(portfolio?.lesson6.completed),
   },
 ]
 
@@ -85,7 +85,15 @@ export function canAccessModule4Lesson(
   if (lessonId === 3) return portfolio.lesson2.completed
   if (lessonId === 4) return portfolio.lesson3.completed
   if (lessonId === 5) return portfolio.lesson4.completed && portfolio.lesson4.readiness.readyForLesson5
+  if (lessonId === 6) return portfolio.lesson5.completed
   return false
+}
+
+function getLesson6CurrentStep(portfolio: Module4Portfolio): number {
+  if (portfolio.lesson6.completed) return 3
+  if (portfolio.lesson6.publicChallenge?.completed) return 3
+  if (portfolio.lesson6.step1AckAt) return 2
+  return 1
 }
 
 export function resolveModule4PortfolioPointer(portfolio: Module4Portfolio): Module4ProgressPointer {
@@ -101,5 +109,9 @@ export function resolveModule4PortfolioPointer(portfolio: Module4Portfolio): Mod
   if (!portfolio.lesson4.completed) {
     return { lessonId: 4, stepId: getCurrentLesson4Step(portfolio.lesson4) }
   }
+  if (!portfolio.lesson6.completed && portfolio.lesson5.completed) {
+    return { lessonId: 6, stepId: getLesson6CurrentStep(portfolio) }
+  }
+  if (portfolio.lesson6.completed) return { lessonId: 6, stepId: 3 }
   return { lessonId: 5, stepId: getLesson5CurrentStep(portfolio.lesson5) }
 }

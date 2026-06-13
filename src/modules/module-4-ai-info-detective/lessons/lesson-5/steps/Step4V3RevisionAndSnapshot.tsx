@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时 5 第 4 关 V3 修订与快照页面。
- * 职责：在 analytics_open 后复用课时 4 V2 单段编辑器，基于本人统计报告填写 revisionPlan、提交 V3，保存 completion-summary、QuickCheck 与本地阶段快照，并提供完成本关后的首页出口。
- * 更新触发：C7 V3 提交 API、revisionPlan 字段、V2 编辑器接口、lesson5 本地快照结构、课时完成出口或课时 6 准备度口径变化时，需要同步更新本文件。
+ * 职责：在 analytics_open 后复用课时 4 V2 单段编辑器，基于本人统计报告填写 revisionPlan、提交 V3，保存 completion-summary、QuickCheck 与本地阶段快照，并提供完成课时 5 后进入课时 6 的主线出口。
+ * 更新触发：C7 V3 提交 API、revisionPlan 字段、V2 编辑器接口、lesson5 本地快照结构、课时 5 到课时 6 出口或课时 6 准备度口径变化时，需要同步更新本文件。
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -269,7 +269,7 @@ export default function Step4V3RevisionAndSnapshot() {
     }
   }
 
-  const finishStep4AndReturnHome = async () => {
+  const finishStep4AndEnterLesson6 = async () => {
     if (!isLesson5Step4Complete(portfolio.lesson5)) {
       setError("请先提交至少 1 张 V3 题卡，再完成第 4 关。")
       return
@@ -277,19 +277,17 @@ export default function Step4V3RevisionAndSnapshot() {
     setFinishingStep(true)
     setError("")
     try {
-      if (!portfolio.lesson5.completed) {
-        const now = new Date().toISOString()
-        await savePortfolio({
-          ...portfolio,
-          progress: { lessonId: 5, stepId: 4 },
-          lesson5: {
-            ...portfolio.lesson5,
-            completed: true,
-            completedAt: portfolio.lesson5.completedAt || now,
-          },
-        })
-      }
-      navigate("/module/4")
+      const now = new Date().toISOString()
+      await savePortfolio({
+        ...portfolio,
+        progress: { lessonId: 6, stepId: 1 },
+        lesson5: {
+          ...portfolio.lesson5,
+          completed: true,
+          completedAt: portfolio.lesson5.completedAt || now,
+        },
+      })
+      navigate("/module/4/lesson/6/step/1")
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存第 4 关完成状态失败，请稍后重试。")
     } finally {
@@ -398,11 +396,11 @@ export default function Step4V3RevisionAndSnapshot() {
               <div>
                 <p className="font-semibold text-emerald-900">第 4 关已完成</p>
                 <p className="mt-1 text-emerald-800">
-                  V3 修订已提交，{readyForLesson6Labels[readyForLesson6]}；可以回到首页，后续也可在反馈开放后继续更新。
+                  V3 修订已提交，{readyForLesson6Labels[readyForLesson6]}；可以进入课时 6，后续也可在反馈开放后继续更新。
                 </p>
               </div>
-              <Button onClick={() => void finishStep4AndReturnHome()} disabled={finishingStep}>
-                {finishingStep ? "保存中..." : "完成本关，回到首页"}
+              <Button onClick={() => void finishStep4AndEnterLesson6()} disabled={finishingStep}>
+                {finishingStep ? "保存中..." : "完成课时 5，进入课时 6"}
               </Button>
             </CardContent>
           </Card>
@@ -456,11 +454,11 @@ export default function Step4V3RevisionAndSnapshot() {
                   <div>
                     <p className="font-semibold text-emerald-900">第 4 关已完成</p>
                     <p className="mt-1 text-emerald-800">
-                      V3 修订已提交，{readyForLesson6Labels[readyForLesson6]}；完成摘要与本地快照已保存，可以回到首页。
+                      V3 修订已提交，{readyForLesson6Labels[readyForLesson6]}；完成摘要与本地快照已保存，可以进入课时 6。
                     </p>
                   </div>
-                  <Button onClick={() => void finishStep4AndReturnHome()} disabled={finishingStep}>
-                    {finishingStep ? "保存中..." : "完成本关，回到首页"}
+                  <Button onClick={() => void finishStep4AndEnterLesson6()} disabled={finishingStep}>
+                    {finishingStep ? "保存中..." : "完成课时 5，进入课时 6"}
                   </Button>
                 </CardContent>
               </Card>

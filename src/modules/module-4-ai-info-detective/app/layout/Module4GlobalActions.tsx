@@ -18,6 +18,7 @@ import { downloadModule4Snapshot, type Module4SnapshotType } from "@/modules/mod
 import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-2/utils/evaluate-lesson2-quickcheck"
 import { evaluateLesson3QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/evaluate-lesson3-quickcheck"
 import { evaluateLesson5QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-5/utils/evaluate-lesson5-quick-check"
+import { evaluateLesson6QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-6/utils/build-lesson6-stage-snapshot"
 
 function getSnapshotType(pathname: string): Module4SnapshotType | null {
   if (/\/module\/4\/lesson\/1\/step\/\d+/.test(pathname)) return "lesson1-full"
@@ -25,6 +26,7 @@ function getSnapshotType(pathname: string): Module4SnapshotType | null {
   if (/\/module\/4\/lesson\/3\/step\/\d+/.test(pathname)) return "lesson3-full"
   if (/\/module\/4\/lesson\/4\/step\/\d+/.test(pathname)) return "lesson4-full"
   if (/\/module\/4\/lesson\/5\/step\/\d+/.test(pathname)) return "lesson5-full"
+  if (/\/module\/4\/lesson\/6\/step\/\d+/.test(pathname)) return "lesson6-full"
   return null
 }
 
@@ -61,6 +63,10 @@ export function Module4GlobalActions() {
         lesson5: {
           ...portfolio.lesson5,
           quickCheck: evaluateLesson5QuickCheck(portfolio.lesson5, new Date().toISOString()),
+        },
+        lesson6: {
+          ...portfolio.lesson6,
+          quickCheck: evaluateLesson6QuickCheck(portfolio.lesson6, portfolio.lesson6.reflection, new Date().toISOString()),
         },
       }
       await savePortfolio(portfolioToSave)
@@ -109,10 +115,14 @@ export function Module4GlobalActions() {
         ...portfolio.lesson3,
         quickCheck: evaluateLesson3QuickCheck(portfolio.lesson3),
       },
-        lesson5: {
-          ...portfolio.lesson5,
-          quickCheck: evaluateLesson5QuickCheck(portfolio.lesson5, new Date().toISOString()),
-        },
+      lesson5: {
+        ...portfolio.lesson5,
+        quickCheck: evaluateLesson5QuickCheck(portfolio.lesson5, new Date().toISOString()),
+      },
+      lesson6: {
+        ...portfolio.lesson6,
+        quickCheck: evaluateLesson6QuickCheck(portfolio.lesson6, portfolio.lesson6.reflection, new Date().toISOString()),
+      },
     }
     void savePortfolio(portfolioToSnapshot)
     downloadModule4Snapshot(snapshotType, portfolioToSnapshot)

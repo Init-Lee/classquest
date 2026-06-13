@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 4 阶段快照 HTML 序列化工具。
- * 职责：根据 Module4Portfolio 生成课时 1/2/3/4/5 阶段快照，并提供浏览器下载入口，方便学生提交过程证据。
+ * 职责：根据 Module4Portfolio 生成课时 1/2/3/4/5/6 阶段快照，并提供浏览器下载入口，方便学生提交过程证据。
  * 更新触发：课时快照内容、文件命名规则、脱敏边界或新增课时快照类型时，需要同步更新本文件。
  */
 
@@ -17,13 +17,14 @@ import { evaluateLesson2QuickCheck } from "@/modules/module-4-ai-info-detective/
 import { evaluateLesson3QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/evaluate-lesson3-quickcheck"
 import { evaluateLesson4QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-4/utils/evaluate-lesson4-quick-check"
 import { evaluateLesson5QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-5/utils/evaluate-lesson5-quick-check"
+import { evaluateLesson6QuickCheck } from "@/modules/module-4-ai-info-detective/lessons/lesson-6/utils/build-lesson6-stage-snapshot"
 import { LESSON3_SOURCE_TYPE_LABELS } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/data/default-options"
 import {
   deriveLesson3AiReviewTier,
   getLesson3AiReviewTierLabel,
 } from "@/modules/module-4-ai-info-detective/lessons/lesson-3/utils/derive-lesson3-ai-review-tier"
 
-export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full" | "lesson4-full" | "lesson5-full"
+export type Module4SnapshotType = "lesson1-full" | "lesson2-full" | "lesson3-full" | "lesson4-full" | "lesson5-full" | "lesson6-full"
 
 function escapeHtml(value: string): string {
   return value
@@ -984,8 +985,146 @@ export function buildModule4Lesson5SnapshotHtml(portfolio: Module4Portfolio): st
 </html>`
 }
 
+export function buildModule4Lesson6SnapshotHtml(portfolio: Module4Portfolio): string {
+  const { student, lesson6 } = portfolio
+  const generatedAt = new Date()
+  const generatedAtText = generatedAt.toLocaleString("zh-CN")
+  const quickCheck = lesson6.quickCheck.evaluatedAt
+    ? lesson6.quickCheck
+    : evaluateLesson6QuickCheck(lesson6, lesson6.reflection, generatedAt.toISOString())
+  const snapshot = lesson6.stageSnapshot
+  const statusLabel: Record<string, string> = {
+    pending_teacher_check: "等待教师确认",
+    publishable: "已确认可发布",
+    unknown: "暂未同步",
+  }
+  const levelLabel: Record<string, string> = {
+    excellent: "优秀达成",
+    achieved: "达成",
+    basic: "基本达成",
+    not_achieved: "未达成",
+  }
+  const publicationRows = (snapshot?.publicationStatus.items ?? lesson6.publicationStatus?.items ?? [])
+    .map(item => `
+      <tr>
+        <td>${escapeHtml(item.kind === "image" ? "图片题卡" : "新闻题卡")}</td>
+        <td>${escapeHtml(statusLabel[item.status] ?? item.label ?? item.status)}</td>
+        <td>${escapeHtml(item.checkedAt || "未记录")}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="3" class="muted">尚未保存发布状态摘要。</td></tr>`
+  const reflectionRows = (snapshot?.reflection.principles ?? lesson6.reflection?.principles ?? [])
+    .map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(item.principle || "未填写")}</td>
+        <td>${escapeHtml(item.reason || "未填写")}</td>
+        <td>${escapeHtml(item.scenario || "未填写")}</td>
+        <td>${escapeHtml(item.action || "未填写")}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="5" class="muted">尚未填写可信复盘原则。</td></tr>`
+  const publicChallenge = snapshot?.publicChallenge ?? lesson6.publicChallenge
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>模块四课时6阶段快照</title>
+  <style>
+    :root { color-scheme: light; --ink: #172033; --muted: #667085; --line: #d8e2f0; --primary: #2563eb; --soft: #eff6ff; --green: #ecfdf3; --warm: #fff7ed; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif; line-height: 1.7; color: var(--ink); background: linear-gradient(135deg, #f8fbff 0%, #f3f7ff 50%, #fff7ed 100%); }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 24px 48px; }
+    h1, h2, p { margin-top: 0; }
+    .hero { border-radius: 28px; padding: 28px; color: white; background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #7c3aed 130%); box-shadow: 0 20px 50px rgba(37, 99, 235, 0.22); }
+    .hero h1 { font-size: 30px; margin-bottom: 8px; letter-spacing: 0.04em; }
+    .hero .muted { color: rgba(255, 255, 255, 0.78); }
+    section { border: 1px solid var(--line); border-radius: 22px; padding: 20px; margin-top: 18px; background: rgba(255, 255, 255, 0.9); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08); }
+    section h2 { font-size: 20px; margin-bottom: 12px; color: #1d4ed8; }
+    .muted { color: var(--muted); }
+    .item { margin: 8px 0; }
+    .info-grid, .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .info-card, .stat-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: #ffffff; }
+    .label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; }
+    .status { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; background: var(--soft); color: #1d4ed8; }
+    .status.done { background: var(--green); color: #067647; }
+    .note { border-left: 4px solid #7c3aed; padding: 10px 12px; border-radius: 12px; background: var(--warm); }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; background: white; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    th { background: #eef4ff; color: #1e3a8a; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <h1>ClassQuest 模块四：AI 信息辨识员</h1>
+      <p class="muted">课时6：题库发布与可信反思 · 阶段快照 lesson6-stage-v1</p>
+      <p>本快照记录发布状态摘要、课时内公共挑战完成证明与可信复盘，不包含 runId、答案、得分、排名、匿名 session 或完整题卡 JSON。</p>
+    </div>
+    <section>
+      <h2>学习者信息</h2>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">姓名</span><span class="value">${escapeHtml(student.studentName || "未登记")}</span></div>
+        <div class="info-card"><span class="label">班级</span><span class="value">${escapeHtml(student.clazz || "未选班")}</span></div>
+        <div class="info-card"><span class="label">班学号</span><span class="value">${escapeHtml(student.classSeatCode || "—")}</span></div>
+        <div class="info-card"><span class="label">生成时间</span><span class="value">${escapeHtml(generatedAtText)}</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>课时6进度概览</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">课时状态</span><span class="status ${lesson6.completed ? "done" : ""}">${lesson6.completed ? "已完成" : "进行中"}</span></div>
+        <div class="stat-card"><span class="label">完成时间</span><span class="value">${escapeHtml(lesson6.completedAt || "未完成")}</span></div>
+        <div class="stat-card"><span class="label">快照时间</span><span class="value">${escapeHtml(snapshot?.snappedAt ?? "尚未保存阶段快照")}</span></div>
+        <div class="stat-card"><span class="label">QuickCheck</span><span class="value">${quickCheck.completed ? "三项达成" : "仍有待处理项"}</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>QuickCheck 自动记录</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">总分</span><span class="value">${quickCheck.totalScore}/100</span></div>
+        <div class="stat-card"><span class="label">等级</span><span class="value">${escapeHtml(levelLabel[quickCheck.level] ?? quickCheck.level)}</span></div>
+        <div class="stat-card"><span class="label">评估时间</span><span class="value">${escapeHtml(quickCheck.evaluatedAt || "未生成")}</span></div>
+        <div class="stat-card"><span class="label">快照时间</span><span class="value">${escapeHtml(snapshot?.snappedAt ?? "尚未保存阶段快照")}</span></div>
+      </div>
+      <p class="item">T1 发布状态查看：<span class="status ${quickCheck.T1.achieved ? "done" : ""}">${quickCheck.T1.score}/35 · ${quickCheck.T1.achieved ? "达成" : "未达成"}</span>；发布状态摘要 ${quickCheck.T1.evidence.publicationItemCount} 项，其中已确认可发布 ${quickCheck.T1.evidence.publishableCount} 项。</p>
+      <p class="item">T2 公共挑战完成：<span class="status ${quickCheck.T2.achieved ? "done" : ""}">${quickCheck.T2.score}/30 · ${quickCheck.T2.achieved ? "达成" : "未达成"}</span>；已答 ${quickCheck.T2.evidence.answeredCount}/${quickCheck.T2.evidence.questionCount} 题。</p>
+      <p class="item">T3 可信复盘：<span class="status ${quickCheck.T3.achieved ? "done" : ""}">${quickCheck.T3.score}/35 · ${quickCheck.T3.achieved ? "达成" : "未达成"}</span>；原则 ${quickCheck.T3.evidence.principleCount}/3，发布责任说明 ${quickCheck.T3.evidence.responsibilityWritten ? "已填写" : "未填写"}。</p>
+      ${quickCheck.blockers.length ? `<p class="note"><strong>待处理：</strong>${escapeHtml(quickCheck.blockers.join("；"))}</p>` : `<p class="note"><strong>结论：</strong>QuickCheck 三项均已达成，可作为课时 6 阶段证据。</p>`}
+    </section>
+    <section>
+      <h2>发布状态摘要</h2>
+      <table>
+        <thead><tr><th>题卡类型</th><th>状态</th><th>确认时间</th></tr></thead>
+        <tbody>${publicationRows}</tbody>
+      </table>
+    </section>
+    <section>
+      <h2>公共挑战完成证明</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="label">context</span><span class="value">${escapeHtml(publicChallenge?.context ?? "lesson6_class")}</span></div>
+        <div class="stat-card"><span class="label">答题数量</span><span class="value">${publicChallenge?.answeredCount ?? 0}/${publicChallenge?.questionCount ?? 0}</span></div>
+        <div class="stat-card"><span class="label">完成时间</span><span class="value">${escapeHtml(publicChallenge?.completedAt ?? "未完成")}</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>可信复盘</h2>
+      <table>
+        <thead><tr><th>#</th><th>原则</th><th>理由</th><th>场景</th><th>操作</th></tr></thead>
+        <tbody>${reflectionRows}</tbody>
+      </table>
+      <p class="note"><strong>发布责任说明：</strong>${escapeHtml(snapshot?.reflection.responsibilityText ?? lesson6.reflection?.responsibilityText ?? "未填写")}</p>
+    </section>
+  </main>
+</body>
+</html>`
+}
+
 export function downloadModule4Snapshot(type: Module4SnapshotType, portfolio: Module4Portfolio): void {
-  const html = type === "lesson5-full"
+  const html = type === "lesson6-full"
+    ? buildModule4Lesson6SnapshotHtml(portfolio)
+    : type === "lesson5-full"
     ? buildModule4Lesson5SnapshotHtml(portfolio)
     : type === "lesson4-full"
     ? buildModule4Lesson4SnapshotHtml(portfolio)
@@ -1000,7 +1139,9 @@ export function downloadModule4Snapshot(type: Module4SnapshotType, portfolio: Mo
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
-  link.download = type === "lesson5-full"
+  link.download = type === "lesson6-full"
+    ? `模块4_${namePart}_课时6可信复盘快照_${date}.html`
+    : type === "lesson5-full"
     ? `模块4_${namePart}_课时5V3修订快照_${date}.html`
     : type === "lesson4-full"
     ? `模块4_${namePart}_课时4V2入库准备快照_${date}.html`

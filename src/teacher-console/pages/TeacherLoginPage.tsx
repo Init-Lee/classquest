@@ -48,10 +48,10 @@ export default function TeacherLoginPage() {
     <div className="mx-auto flex min-h-[calc(100vh-66px)] w-full max-w-5xl items-center px-4 py-10">
       <div className="grid w-full gap-6 lg:grid-cols-[1fr_420px]">
         <section className="rounded-2xl bg-slate-900 p-8 text-white shadow-sm">
-          <p className="text-sm text-slate-300">Lesson 5 · C1b 停点</p>
+          <p className="text-sm text-slate-300">模块 4 教师端</p>
           <h1 className="mt-4 text-3xl font-semibold leading-tight">教师控制台登录与班级授权</h1>
           <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
-            本批只开放登录、刷新保活、角色首页、管理员授权页与教师班级只读视图。Live Session 的建课、锁池和阶段机留到后续 C3。
+            登录后可按角色进入班级管理、课堂控制、发布审核与管理员授权等教师工具。
           </p>
           <div className="mt-6 rounded-lg border border-white/10 bg-white/10 p-4 text-sm text-slate-200">
             当前运行：

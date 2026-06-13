@@ -22,6 +22,7 @@
 - 模块 4 题卡逻辑
 - 继续学习包格式
 - 教师审核业务
+- 公共挑战题目状态机
 - 后端 API 具体实现
 
 ## 当前路由
@@ -29,7 +30,8 @@
 ```text
 /             → 平台门户
 /module/3     → 模块 3 首页
-/module/4     → 模块 4 占位首页
+/module/4     → 模块 4 首页（Module4Shell + Module4Provider）
+/m4/challenge → 模块 4 课时 6 公共挑战匿名页（绕开 Module4Shell/Module4Provider/guards）
 /lesson/*     → 重定向到 /module/3/lesson/*
 ```
 

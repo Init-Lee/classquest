@@ -1,7 +1,7 @@
 /**
  * 文件说明：teacher-console 前端类型契约。
- * 职责：集中定义教师控制台登录、会话、班级授权、题池 overview、session progress、analytics、revision-plans、admin 管理与 adapter 共享的数据结构，字段对齐后端 camelCase API。
- * 更新触发：课时 5 账号/权限/题池 overview/progress/analytics/revision-plans API 字段、角色枚举、权限枚举或 teacher-console 页面数据契约变化时，需要同步更新本文件。
+ * 职责：集中定义教师控制台登录、会话、班级授权、题池 overview、session progress、analytics、revision-plans、Lesson6 发布审核、admin 管理与 adapter 共享的数据结构，字段对齐后端 camelCase API。
+ * 更新触发：课时 5 账号/权限/题池 overview/progress/analytics/revision-plans API 字段、课时 6 发布审核/公共题库 overview 字段、角色枚举、权限枚举或 teacher-console 页面数据契约变化时，需要同步更新本文件。
  */
 
 export type TeacherConsoleMode = "fixture" | "http"
@@ -66,6 +66,7 @@ export interface TeacherVisibleClass extends TeacherAdminClass {
 export type TeacherPoolCardKind = "news" | "image"
 export type Lesson5StatsStatus = "insufficient" | "preliminary" | "stable"
 export type Lesson5RevisionAction = "keep" | "minor_fix" | "major_fix" | "hold"
+export type Lesson6PublicationCheckStatus = "pending_teacher_check" | "publishable"
 export type Lesson5IssueFlag =
   | "source_insufficient"
   | "explanation_unclear"
@@ -294,6 +295,143 @@ export interface Lesson5RevisionPlansResponse {
   generatedAt: string
 }
 
+export interface Lesson6Lesson5StatsSummary {
+  validAnswerCount: number
+  correctRate: number
+  avgClarity: number | null
+  avgThinkingValue: number | null
+  avgExplanationHelpfulness: number | null
+  issueFlagRate: number
+  statsStatus: string
+}
+
+export interface Lesson6ReviewItem {
+  reviewId: string
+  itemId: string
+  itemVersionId: string
+  classId: string
+  className: string
+  cardKind: TeacherPoolCardKind
+  itemShortName: string
+  studentDisplay: string
+  submittedAt: string
+  checkStatus: Lesson6PublicationCheckStatus
+  isActivePublic: boolean
+  lesson5StatsSummary: Lesson6Lesson5StatsSummary | null
+}
+
+export interface Lesson6ReviewsSummary {
+  pendingCount: number
+  publishableCount: number
+  activePublicCount: number
+}
+
+export interface Lesson6ReviewsResponse {
+  items: Lesson6ReviewItem[]
+  summary: Lesson6ReviewsSummary
+}
+
+export interface Lesson6RevisionPlanPreview {
+  revisionAction?: string | null
+  diagnosis: Record<string, unknown>
+  revisionReason: string
+  expectedEffect: string
+  submittedAt?: string | null
+  updatedAt?: string | null
+}
+
+export interface Lesson6ReviewDetail extends Lesson6ReviewItem {
+  cardJson: Record<string, unknown>
+  lesson5Stats: Lesson6Lesson5StatsSummary | null
+  revisionPlan: Lesson6RevisionPlanPreview | null
+  checkedByUserId?: string | null
+  checkedAt?: string | null
+  teacherNote: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Lesson6ReviewListQuery {
+  status?: Lesson6PublicationCheckStatus
+  classId?: string
+}
+
+export interface Lesson6PublishRequest {
+  teacherNote: string
+}
+
+export interface Lesson6PublishResponse {
+  reviewId: string
+  checkStatus: Lesson6PublicationCheckStatus
+  isActivePublic: boolean
+  checkedAt: string
+}
+
+export interface Lesson6KindCount {
+  totalPublishable: number
+  newsCount: number
+  imageCount: number
+}
+
+export interface Lesson6PendingReviewCount {
+  totalPending: number
+  newsCount: number
+  imageCount: number
+}
+
+export interface Lesson6ChallengeStats {
+  lesson6ClassRuns: number
+  publicShowcaseRuns: number
+  totalRuns: number
+  totalAnswers: number
+  overallCorrectRate: number
+}
+
+export interface Lesson6PublicQuestionTopStatsItem {
+  itemId?: string
+  itemVersionId?: string
+  itemShortName?: string | null
+  cardKind?: TeacherPoolCardKind
+  totalAnswerCount?: number
+  totalCorrectRate?: number
+  [key: string]: unknown
+}
+
+export interface Lesson6PublicQuestionTopStats {
+  mostAnswered: Lesson6PublicQuestionTopStatsItem[]
+  lowestCorrectRate: Lesson6PublicQuestionTopStatsItem[]
+  highestCorrectRate: Lesson6PublicQuestionTopStatsItem[]
+}
+
+export interface Lesson6PublicItemStat {
+  itemId: string
+  itemVersionId: string
+  publishStatus: Lesson6PublicationCheckStatus
+  cardKind: TeacherPoolCardKind
+  itemShortName: string
+  totalAnswerCount: number
+  totalCorrectCount: number
+  totalCorrectRate: number
+  lesson6ClassAnswerCount: number
+  lesson6ClassCorrectCount: number
+  lesson6ClassCorrectRate: number
+  publicShowcaseAnswerCount: number
+  publicShowcaseCorrectCount: number
+  publicShowcaseCorrectRate: number
+  lastAnsweredAt: string | null
+}
+
+export interface Lesson6PublicItemStatsResponse {
+  items: Lesson6PublicItemStat[]
+}
+
+export interface Lesson6Overview {
+  publicBank: Lesson6KindCount
+  pendingReview: Lesson6PendingReviewCount
+  challengeStats: Lesson6ChallengeStats
+  topStats: Lesson6PublicQuestionTopStats
+}
+
 export interface TeacherAdminAssignment {
   userId: string
   account: TeacherLoginAccount
@@ -369,4 +507,12 @@ export interface TeacherLesson5Adapter {
   fetchSessionAnalytics: (token: string, sessionId: string) => Promise<Lesson5SessionAnalyticsResponse>
   fetchRevisionPlans: (token: string, sessionId: string) => Promise<Lesson5RevisionPlansResponse>
   checkSessionStatsComputed: (token: string, sessionId: string) => Promise<boolean>
+}
+
+export interface TeacherLesson6Adapter {
+  listReviews: (token: string, query?: Lesson6ReviewListQuery) => Promise<Lesson6ReviewsResponse>
+  getReviewDetail: (token: string, reviewId: string) => Promise<Lesson6ReviewDetail>
+  publishReview: (token: string, reviewId: string, payload: Lesson6PublishRequest) => Promise<Lesson6PublishResponse>
+  getOverview: (token: string) => Promise<Lesson6Overview>
+  getPublicItemStats: (token: string) => Promise<Lesson6PublicItemStatsResponse>
 }

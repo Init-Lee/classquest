@@ -17,11 +17,13 @@ LESSON4_REVIEW_REQUESTS_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "les
 MODULE4_AUTH_AND_CLASSES_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "auth_and_classes.sql"
 MODULE4_QUESTION_BANK_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "question_bank.sql"
 MODULE4_LESSON5_RUNTIME_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "lesson5_runtime.sql"
+MODULE4_LESSON6_PUBLIC_CHALLENGE_SCHEMA = APP_ROOT / "modules" / "module4" / "sql" / "lesson6_public_challenge.sql"
 DEFAULT_SCHEMA_PATHS = (
     LESSON4_REVIEW_REQUESTS_SCHEMA,
     MODULE4_AUTH_AND_CLASSES_SCHEMA,
     MODULE4_QUESTION_BANK_SCHEMA,
     MODULE4_LESSON5_RUNTIME_SCHEMA,
+    MODULE4_LESSON6_PUBLIC_CHALLENGE_SCHEMA,
 )
 
 

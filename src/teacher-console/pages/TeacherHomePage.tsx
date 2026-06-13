@@ -1,7 +1,7 @@
 /**
  * 文件说明：teacher-console 角色首页。
- * 职责：按 admin/teacher/demo 角色展示当前账号能力；teacher/demo 列出可见班级的只读题池概览与最近会话，manage 班级提供课时 5 控制台入口。
- * 更新触发：角色首页信息架构、教师可见班级字段、题池概览展示、最近会话摘要、课时 5 控制台入口、demo 只读口径或 admin 入口变化时，需要同步更新本文件。
+ * 职责：按 admin/teacher/demo 角色展示当前账号能力；teacher/demo 列出可见班级的只读题池概览、最近会话与课时 5/课时 6 操作入口。
+ * 更新触发：角色首页信息架构、教师可见班级字段、题池概览展示、最近会话摘要、课时 5/课时 6 入口、demo 只读口径或 admin 入口变化时，需要同步更新本文件。
  */
 
 import { useEffect, useState } from "react"
@@ -97,19 +97,37 @@ function ClassList({
               <div className="grid gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-700 sm:grid-cols-3">
                 <span>最近会话 {recentSessions.length} 个</span>
                 <span>题池更新时间 {overview ? formatUpdatedTime(overview.generatedAt) : "待加载"}</span>
-                <span>{item.permission === "manage" ? "可创建/锁池" : "仅看板只读"}</span>
+                <span>{item.permission === "manage" ? "可控制课堂/审核发布" : "仅看板与审核只读"}</span>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-medium text-slate-900">最近课时 5 会话</h3>
-                  {item.permission === "manage" && (
+              <div className="space-y-2 rounded-xl border bg-white p-3">
+                <h3 className="text-sm font-medium text-slate-900">课堂工作台</h3>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  课时 5 用于同步课堂会话控制；课时 6 用于 V3 发布审核，非 manage 授权只能只读查看。
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {item.permission === "manage" ? (
                     <Button asChild size="sm">
                       <Link to={`/teacher/module/4/lesson/5?classId=${encodeURIComponent(item.classId)}`}>
                         进入课时5控制台
                       </Link>
                     </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" disabled>
+                      课时5仅 manage 可操作
+                    </Button>
                   )}
+                  <Button asChild size="sm" variant={item.permission === "manage" ? "default" : "outline"}>
+                    <Link to={`/teacher/module/4/lesson/6?classId=${encodeURIComponent(item.classId)}`}>
+                      {item.permission === "manage" ? "进入课时6发布审核" : "查看课时6发布审核"}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-medium text-slate-900">最近课时 5 会话</h3>
                 </div>
                 {recentSessions.length > 0 ? (
                   recentSessions.map(session => (
@@ -214,7 +232,7 @@ export default function TeacherHomePage() {
             </div>
             <h1 className="text-2xl font-semibold">你好，{session.user.displayName}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              这里是课时 5 C3b 教师看板。只读账号可查看可见班级的题池规模与最近会话；可管理班级才开放控制台操作。
+              这里是模块 4 教师工作台。可管理班级可进入课时 5 同步课堂控制台与课时 6 发布审核；只读账号可查看班级题池、最近会话和课时 6 审核详情。
             </p>
           </div>
         </div>
@@ -241,7 +259,7 @@ export default function TeacherHomePage() {
           <div>
             <h2 className="text-xl font-semibold">我的可见班级</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              可管理班级可进入课时 5 控制台执行 C3b 操作；只读班级展示题池规模、最近会话和阶段状态。
+              每个班级卡片提供课堂工作台入口：课时 5 只对 manage 开放写操作，课时 6 对可见班级开放审核查看并由 manage 执行发布确认。
             </p>
           </div>
           {loading ? <p className="text-sm text-muted-foreground">正在加载班级、题池与最近会话...</p> : <ClassList classes={classes} poolOverviews={poolOverviews} sessionsByClass={sessionsByClass} />}
@@ -254,12 +272,12 @@ export default function TeacherHomePage() {
           <CardHeader>
             <CardTitle>演示只读账号</CardTitle>
             <CardDescription>
-              demo 账号是全局只读看板，可查看全部班级的题池规模、最近会话和阶段状态，不进入操作控制台。
+              demo 账号是全局只读看板，可查看全部班级的题池规模、最近会话、阶段状态和课时 6 审核详情，不执行写操作。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              当前账号无创建、修改、锁池或阶段推进权限；如需操作，请使用有 manage 授权的教师账号登录。
+              当前账号无创建、修改、锁池、阶段推进或发布确认权限；如需操作，请使用有 manage 授权的教师账号登录。
             </p>
             {loading ? <p className="text-sm text-muted-foreground">正在加载班级、题池与最近会话...</p> : <ClassList classes={classes} poolOverviews={poolOverviews} sessionsByClass={sessionsByClass} />}
             {error && <p className="text-sm text-red-600">{error}</p>}

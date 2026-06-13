@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 课时 5 教师控制台页面。
  * 职责：串联可管理班级选择、会话创建/列表、草稿设置修改、锁池控制、试答开放、试答锁定、统计计算/开放、同步课堂收口、概览、进度表、analytics 与 revision-plans 观察面板，作为课时 5 教师端操作入口。
- * 更新触发：课时 5 教师端 C3-C7 范围、页面信息架构、会话/progress/analytics/revision-plans API 契约、中文展示口径或人机验证路径变化时，需要同步更新本文件。
+ * 更新触发：课时 5 教师端功能范围、页面信息架构、会话/progress/analytics/revision-plans API 契约、中文展示口径或人机验证路径变化时，需要同步更新本文件。
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -300,7 +300,7 @@ export default function Module4Lesson5ConsolePage() {
             <div>
               <h1 className="text-2xl font-semibold">模块 4 · 课时 5 教师控制台</h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                操作控制台只面向可管理班级，覆盖创建会话、查看会话列表、修改草稿设置、锁池冻结、阶段状态、题池概览、C5 试答进度与统计反馈开放；统计开放后同步课堂收口，V3 由学生端学习任务完成。
+                操作控制台只面向可管理班级，覆盖创建会话、查看会话列表、修改草稿设置、锁池冻结、阶段状态、题池概览、试答进度与统计反馈开放；统计开放后同步课堂收口，V3 由学生端学习任务完成。
               </p>
             </div>
             {selectedClass && (

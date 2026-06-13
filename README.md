@@ -21,7 +21,7 @@ Platform Portal → Module → Lesson → Step
 ```
 
 - **学生端**：浏览器访问平台首页，选择课程模块，按课时与关卡学习；支持本地档案、继续学习包与阶段快照。
-- **教师端**：模块 4 课时 5 提供独立 [教师控制台](src/teacher-console/README.md)（`/teacher/*`），用于组织试答、统计反馈等同步课堂环节。
+- **教师端**：模块 4 课时 5/课时 6 提供独立 [教师控制台](src/teacher-console/README.md)（`/teacher/*`），用于组织试答、统计反馈与 V3 发布审核。
 - **后端**：FastAPI + SQLite，主要服务模块 4 的题卡提交、互审、Live Lesson Session 与统计（详见 [backend/README.md](backend/README.md)）。
 
 ## 功能概览
@@ -41,6 +41,7 @@ Platform Portal → Module → Lesson → Step
 | 3 | 题目卡 V1 制作与解析填写 | 已开放 |
 | 4 | 题目卡互审与 V2 入库准备 | 已开放（可联调后端互审） |
 | 5 | 网页试答与反馈优化 | 已开放（学生四步流程 + 教师控制台） |
+| 6 | 发布确认、公共挑战与可信复盘 | 已开放（教师端发布审核与统计增强、学生三步流、匿名访客公共挑战已接入） |
 
 **课时 5 学生流程（简要）**
 
@@ -52,6 +53,18 @@ Platform Portal → Module → Lesson → Step
 **课时 5 教师流程（简要）**
 
 登录教师控制台 → 创建会话 → 锁定题池 → 开放/锁定试答 → 计算并开放统计反馈（同步课堂收口）→ 可只读查看学生修订计划。
+
+**课时 6 教师流程（简要）**
+
+登录教师控制台 → 在班级卡片进入课时 6 发布审核 → 查看公共题库概览与待确认数 → 预览学生 V3 题卡、课时 5 统计与修订说明 → 单张或勾选后批量确认可发布 → 查看基础运行统计、Top N 简表、全量逐题统计、课上/访客对比与中性质量信号。
+
+**课时 6 访客公共挑战（简要）**
+
+从 `/m4/challenge?context=public_showcase` 进入，无需登录或学生档案即可完成 6 题公共挑战；模块 4 首页会在无档案状态提示它适合已完成课时五或有同等基础的学生，有进度学生需完成课时五后才在当前进度行动区看到入口。答题前不展示答案、解析、来源或作者，答题后只展示正解、解析和来源摘要。
+
+**课时 6 学生端（简要）**
+
+完成课时 5 后从 `/module/4/lesson/6/step/1` 进入，查看本人 V3 发布状态，完成课时内 `lesson6_class` 公共 6 题挑战，再填写可信复盘并生成 `lesson6-stage-v1` 本地快照；快照不包含 runId、答案、得分、排名、匿名 session 或完整题卡 JSON。
 
 **老师上线使用**请优先阅读：[模块 4 课时 5 教师使用说明](docs/TEACHER-GUIDE-MODULE4-LESSON5.md)
 
@@ -85,6 +98,7 @@ export PYTHONPATH=.
 
 python scripts/init_db.py
 python scripts/seed_module4_accounts.py   # 课时 5 账号
+python scripts/seed_module4_lesson6_dev_demo.py --reset   # 可选：课时 6 教师端与公共挑战 2班演示数据，仅本地联调
 uvicorn app.main:app --reload
 ```
 
@@ -94,7 +108,8 @@ uvicorn app.main:app --reload
 |------|----------|
 | 课时 4 互审 | `VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` |
 | 课时 5 学生端 | `VITE_MODULE4_LESSON5_MODE=http` |
-| 教师控制台 | `VITE_TEACHER_CONSOLE_MODE=http` |
+| 课时 6 发布状态/公共挑战/教师发布审核 | `VITE_MODULE4_LESSON6_MODE=http` |
+| 教师控制台全量联调 | `VITE_TEACHER_CONSOLE_MODE=http` |
 | API 地址 | `VITE_API_BASE_URL=http://127.0.0.1:8000` |
 
 各模块/课时的完整联调说明见对应目录下的 `README.md`，不要在本文件重复 API 清单。
@@ -131,7 +146,7 @@ npm run build:oss
 ```text
 src/
 ├── platform/              # 平台门户、全局路由、模块注册
-├── teacher-console/       # 模块 4 课时 5 教师控制台
+├── teacher-console/       # 模块 4 课时 5/课时 6 教师控制台
 ├── modules/               # 独立课程模块（module-3、module-4）
 └── shared/                # 业务无关 UI 与工具
 

@@ -8,6 +8,7 @@
 
 > **适用**：`/srv/classquest/app/backend/` 已完成步骤 1 备份、步骤 2 rsync（或等价代码已到位）。  
 > **参考**：详细备份/回滚见同目录 `BACKUP-RULES.md`；Mac 侧 rsync 见 `scripts/rsync-exclude.txt`（已修复，`.env.example` 会正常上传）。
+> **最近更新**：2026-06-13，补充 Lesson6 生产 HTTP 开关与 `item-stats` 冒烟验收点。
 
 ---
 
@@ -135,7 +136,7 @@ systemctl status classquest-backend --no-pager
 
 ## 5. 前端生产构建配置提醒
 
-若本次同时发布 OSS 静态前端，生产构建前在 `classquest/.env.production` 至少确认：
+若本次同时发布 OSS 静态前端，生产构建前在 `classquest/.env.production` 至少确认（2026-06-13 已补 Lesson6）：
 
 ```env
 VITE_API_BASE_URL=https://api.xnwyedu.com
@@ -144,6 +145,7 @@ VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http
 VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE=http
 VITE_TEACHER_CONSOLE_MODE=http
 VITE_MODULE4_LESSON5_MODE=http
+VITE_MODULE4_LESSON6_MODE=http
 ```
 
 `VITE_API_BASE_URL` 对应的后端域名必须使用 HTTPS；后端生产 `.env` 的 `CORS_ALLOWED_ORIGINS` 必须包含前端生产域名（如 `https://tool.xnwyedu.com`）。教师端流程以 `analytics_open` 作为统计反馈开放与课堂收口点；学生 V3 是学生端学习任务，不需要教师端再开放 `revision_open`。
@@ -164,6 +166,7 @@ journalctl -u classquest-backend -n 50 --no-pager
 - 课时 3：`POST .../module4/lesson3/ai-review` → 200，`provider: qwen`
 - 课时 4：互审 B1~B7 / `moderate-text` 可写可读 SQLite（无「no such table」类错误）
 - 课时 5：教师端 HTTP 登录、建 session、锁池、开放试答、锁定试答、计算统计、开放到 `analytics_open` 可用；学生端 Step1~Step4 可连接课堂、试答、查看本人报告并提交 V3
+- 课时 6（2026-06-13 C5）：教师端 HTTP 可登录并请求 `GET .../teacher/module4/lesson6/public-bank/overview` 与 `GET .../teacher/module4/lesson6/public-bank/item-stats`；生产库已有 Lesson6 schema（含 `module4_public_question_stats`），且已有 publishable/active public V3 题卡时返回逐题统计，未作答题卡计数为 0
 
 ---
 

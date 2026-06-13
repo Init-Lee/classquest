@@ -6,7 +6,7 @@
 
 # Module 4 — AI 信息辨识员
 
-模块 4 是七年级收束模块，目标是围绕新闻与图片中的 AI 痕迹判断，完成题卡创作、教师审核、匿名试答、快速评分和画廊发布。
+模块 4 是七年级收束模块，目标是围绕新闻与图片中的 AI 痕迹判断，完成题卡创作、教师审核、匿名试答、快速评分、公共挑战和画廊发布。
 
 ## 当前状态
 
@@ -19,6 +19,8 @@
 课时 4「题目卡互审与 V2 入库准备」已完成 Step1-Step4：第 1 关「同伴互审中转站」送审/轮询/撤回/收件箱/领取/提交/拉取均可联调真实后端；第 2 关处理收到的互审反馈；第 3 关进入 V2 修改台完成新闻/图片双卡修订与确认；第 4 关生成 V2 就绪报告、QuickCheck、`stageSnapshot` 与 `ready_for_lesson5` 入库准备包。`VITE_MODULE4_LESSON4_PEER_REVIEW_MODE=http` 时学生端走 HTTP；**教师讲解模式强制 fixture**，不请求 lesson4 API、不写 IndexedDB。
 
 课时 5 已进入「云端 Live Lesson Session」开发阶段，当前完成后端 Phase 0 schema/fixture 管线、C1a auth/admin/teacher 账号权限 API、C2a 学生 V2 提交与教师题池 overview API、C3 session 控制、C4a 学生 active-session/participant/assignment 后端、C5a answer/rating/progress 后端、C6a compute-stats/analytics/my-report 后端、C7a V3 修订/completion-summary/revision-plans 后端，以及前端 C7b Step1「提交 V2 后连接课堂」、Step2「等待试答 + 紧凑题序 + 单题作答/揭示/快评」、Step3「本人题卡统计报告」与 Step4「V3 学习任务工作台 + completion-summary + 本地快照」。学生端默认 fixture，可用 `VITE_MODULE4_LESSON5_MODE=http` 切到真实后端；fixture 试答演示需设置 `VITE_MODULE4_LESSON5_FIXTURE_PHASE=trial_open`，报告与 V3 学习任务演示需设置为 `analytics_open`。Step2 会渲染 `material.asset.dataUrl` 图片素材；Step3 展示并保存本人 news/image 题卡统计、三色样本状态和诊断提示；Step4 在 `analytics_open` 后即可提交 V3，保存 `lesson5-stage-v1` 并支持 `lesson5-full` HTML 快照。
+
+课时 6 已接入教师端发布审核、匿名公共挑战基础前端与学生端三步流。教师端可在 `/teacher/*` 查看公共题库概览、待确认题卡、批量发布确认、基础统计、全量逐题统计、课上/访客 context 对比与中性质量信号；公共挑战可从 `/m4/challenge?context=public_showcase` 进入，无需登录或学生档案即可完成 6 题挑战。学生完成课时 5 后可进入 `/module/4/lesson/6/step/1`，查看本人 V3 发布状态、完成课时内 `lesson6_class` 公共挑战，并在 Step3 填写可信复盘，生成 `lesson6-stage-v1` 本地阶段快照与 `portfolio.lesson6.completed` 完成态。公共挑战、学生发布状态与教师发布审核默认 fixture，可用 `VITE_MODULE4_LESSON6_MODE=http` 切到真实 `/api/v1/module4/lesson6/my-v3-publication-status`、`/api/v1/module4/public-challenge` 与 `/api/v1/teacher/module4/lesson6/*` 端点。
 
 首页建档与模块三一致：姓名、班级（初一（1）班～初一（12）班）、班学号（左侧班级序号只读 + 右侧学号后两位 01～50，合成四位存档）；无档案不可直接进入课时 1（直达 `/module/4/lesson/1/...` 会退回 `/module/4`）。
 
@@ -35,7 +37,9 @@
 - `lessons/lesson-3/`
 - `lessons/lesson-4/`
 - `lessons/lesson-5/`
+- `lessons/lesson-6/`
 - `api/`
+- `features/public-challenge/`
 - `README.md`
 - `FILE-STRUCTURE.md`
 
@@ -50,9 +54,9 @@
 
 ## 开发策略
 
-- Phase A：本地前端流程。当前完成课时 1-4，其中课时 4 已覆盖互审、反馈处理、V2 修改台、V2 就绪报告、QuickCheck、阶段快照和 V2 ready 包；课时 5 已开放 Step1 提交 V2 到题池、Step2 等待/紧凑题序、单题作答、图片素材渲染、答案揭示和三维快评、Step3 本人题卡统计报告，以及 Step4 V3 修订、completion-summary 保存和 `lesson5-full` HTML 快照，课时 6 按独立分支/阶段推进。
+- Phase A：本地前端流程。当前完成课时 1-4，其中课时 4 已覆盖互审、反馈处理、V2 修改台、V2 就绪报告、QuickCheck、阶段快照和 V2 ready 包；课时 5 已开放 Step1 提交 V2 到题池、Step2 等待/紧凑题序、单题作答、图片素材渲染、答案揭示和三维快评、Step3 本人题卡统计报告，以及 Step4 V3 修订、completion-summary 保存和 `lesson5-full` HTML 快照；课时 6 已开放 Step1 发布状态查看、Step2 课时内公共挑战嵌入、Step3 可信复盘、QuickCheck、`lesson6-stage-v1` 和 `lesson6-full` HTML 快照。
 - Phase B：课时 4 已完成 SQLite 基座与 B1~B7 真实同伴互审联调；后续扩展云端 Live Lesson Session、试答、评分、画廊等运行时能力。
-- Phase C：按课时接入 FastAPI；课时 3 题卡自检助手与课时 4 peer-review / moderation / SQLite API 已接入，课时 5 已接入 C1a 账号权限、C2a 学生 V2 提交/题池 overview、C3 session 控制、C4a 学生 attach/assignment 端点、C5a answer/rating/progress 端点、C6a compute-stats/analytics/my-report 端点与 C7a V3 修订/completion-summary/revision-plans 端点。
+- Phase C：按课时接入 FastAPI；课时 3 题卡自检助手与课时 4 peer-review / moderation / SQLite API 已接入，课时 5 已接入 C1a 账号权限、C2a 学生 V2 提交/题池 overview、C3 session 控制、C4a 学生 attach/assignment 端点、C5a answer/rating/progress 端点、C6a compute-stats/analytics/my-report 端点与 C7a V3 修订/completion-summary/revision-plans 端点；课时 6 已接入教师端发布审核 API 与匿名公共挑战 runs/current/answers/summary API。
 - Phase D：统计重算与频段展示。
 
 ## 教师模式
@@ -64,3 +68,5 @@
 ## 边界规则
 
 模块 4 业务组件留在本目录内。即使与模块 3 视觉相似，也不要直接 import 模块 3 业务代码。
+
+公共挑战 standalone 是顶层匿名公开页 `/m4/challenge`，不依赖 `Module4Shell`、`Module4Provider`、学生档案或课时 guard；答题前不得展示答案、解析、来源摘要或作者身份，答题后仍不得展示作者身份。课时 6 嵌入模式只在本地 portfolio 保存 `context/questionCount/answeredCount/completedAt/completed` 摘要，不保存 runId、答案、得分、排名或匿名 session id。

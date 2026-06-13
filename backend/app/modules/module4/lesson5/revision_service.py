@@ -13,6 +13,8 @@ from typing import Any
 
 from app.core.database import database_transaction
 
+from app.modules.module4.lesson6.publication_service import ensure_publication_review_for_v3
+
 from . import repository
 from .auth import server_now, to_iso8601
 from .dependencies import SessionContext
@@ -267,6 +269,14 @@ def submit_v3(payload: V3SubmissionRequest) -> V3SubmissionResponse:
             connection,
             item_id=item_id,
             version_id=version_row["item_version_id"],
+            now=now,
+        )
+        ensure_publication_review_for_v3(
+            connection,
+            item_id=item_id,
+            item_version_id=version_row["item_version_id"],
+            class_id=session_row["class_id"],
+            card_kind=item["card_kind"],
             now=now,
         )
         repository.upsert_revision_plan(

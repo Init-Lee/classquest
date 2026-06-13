@@ -17,7 +17,7 @@
 - **C4a 学生 attach/assignment 后端停点**：学生可查 active session、绑定 participant、轮询 session state，并从冻结池生成/读取稳定 assignments。
 - **C5a answer/rating/progress 后端停点**：学生在 `trial_open` 下提交 answer 并获得正解/解析/来源揭示，随后提交三维快评；教师可读取 session progress 聚合。
 - **C6a stats/report 后端停点**：教师在 `trial_locked` 及之后触发 compute-stats，写入题卡级 `item_stats`；教师/demo 可读 analytics，学生在 `analytics_open` 后可读本人 my-report。
-- **C7a V3 revision/completion 后端停点**：`analytics_open` 表示统计反馈开放并完成同步课堂收口；学生在 `analytics_open` 后即可提交本人题卡 V3，服务端写入长期题库 `version_label='v3'` 与 `revision_plans`；学生可读 completion-summary，教师/demo 可读 revision-plans 只读观察。`revision_open/closed` 仅作为底层保留阶段存在，不再进入教师或学生产品流程。
+- **C7a V3 revision/completion 后端停点**：`analytics_open` 表示统计反馈开放并完成同步课堂收口；学生在 `analytics_open` 后即可提交本人题卡 V3，服务端写入长期题库 `version_label='v3'`、`revision_plans`，并进入 Lesson6 教师发布确认队列；学生可读 completion-summary，教师/demo 可读 revision-plans 只读观察。`revision_open/closed` 仅作为底层保留阶段存在，不再进入教师或学生产品流程。
 
 ## C1a 已落地能力
 
@@ -64,7 +64,7 @@
 
 ## C7a 已落地能力
 
-- **学生 V3 提交**（`routes_student.py` → `revision_service.py`）：`POST /api/v1/module4/lesson5/v3-submissions` 要求 session `phase >= analytics_open`，并校验 `participantId + lesson5ClientId` 与本人题卡归属；按完整 `v3CardJson` 计算 content_hash，命中同 item/v3/hash 时返回 `deduped=true`，否则写入 `module4_question_item_versions(version_label='v3', status='ready_for_lesson6')`，回填 `module4_question_items.current_v3_version_id` 与 `status=ready_for_lesson6`。
+- **学生 V3 提交**（`routes_student.py` → `revision_service.py`）：`POST /api/v1/module4/lesson5/v3-submissions` 要求 session `phase >= analytics_open`，并校验 `participantId + lesson5ClientId` 与本人题卡归属；按完整 `v3CardJson` 计算 content_hash，命中同 item/v3/hash 时返回 `deduped=true`，否则写入 `module4_question_item_versions(version_label='v3', status='ready_for_lesson6')`，回填 `module4_question_items.current_v3_version_id` 与 `status=ready_for_lesson6`。V3 ready 只表示进入 Lesson6 教师发布确认队列；教师确认前不会进入公共题库。
 - **revision plan 入库**：同一次 V3 提交会 upsert `module4_lesson5_revision_plans`，唯一键为 `session_id + participant_id + item_id`；`revisionAction` 固定为 `keep / minor_fix / major_fix / hold`，重复提交覆盖计划并保留单行。
 - **学生 completion-summary**（`routes_student.py` → `completion_service.py`）：`GET /api/v1/module4/lesson5/sessions/{session_id}/my-completion-summary?participantId=...&lesson5ClientId=...` 要求至少 `analytics_open` 且已 compute；返回本人 V2/试答进度/my-report/V3 修订状态与 QuickCheck 证据，用于 C7b 本地快照。
 - **教师 revision-plans**（`routes_teacher.py` → `revision_service.py`）：`GET /api/v1/teacher/module4/lesson5/sessions/{session_id}/revision-plans` 要求 `phase >= analytics_open`；teacher 任意授权与 demo 只读可见，按冻结题池 item 返回提交状态与聚合计数，仅作为观察面板。
@@ -78,7 +78,7 @@
 - 账号/班级 seed：`backend/scripts/seed_module4_accounts.py`（幂等，可重复跑）。
 - fixture 检视与题池 seed：`backend/scripts/`。
 - 真实学生 JSON 和 SQLite 导出物只允许写入 `backend/runtime/fixtures/module4/lesson5/` 下的被忽略路径，不得提交。
-- C7a 已开放后端 V3 提交、completion-summary 与教师 revision-plans；assignment 只从 session 冻结池读取，不回读长期题池可变指针。学生 Step4 UI、本地快照/HTML、教师观察面板前端与课时 6 发布仍留后续阶段。
+- C7a 已开放后端 V3 提交、completion-summary 与教师 revision-plans；assignment 只从 session 冻结池读取，不回读长期题池可变指针。学生 Step4 UI、本地快照/HTML 与教师观察面板前端仍留后续阶段。课时 6 C0 已接入 V3 提交后的 `pending_teacher_check` 发布审核记录，正式发布确认与公共挑战路由留到后续阶段。
 
 ## 后续更新触发
 

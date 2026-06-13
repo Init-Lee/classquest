@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 学习档案领域类型。
- * 职责：定义 Module4Portfolio、课时 1/2/3/4/5 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
- * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3/4/5 过程记录字段变化时，需要同步更新本文件。
+ * 职责：定义 Module4Portfolio、课时 1/2/3/4/5/6 本地状态、默认空状态和归一化逻辑，是模块 4 local-first 数据的唯一领域入口。
+ * 更新触发：模块 4 新增课时状态、继续学习包字段、学生资料字段、进度指针规则或课时 1/2/3/4/5/6 过程记录字段变化时，需要同步更新本文件。
  */
 
 import type { JudgmentOption } from "@/modules/module-4-ai-info-detective/domains/question-card/types"
@@ -825,6 +825,125 @@ export interface Module4Lesson5State {
   completedAt: string
 }
 
+export type Module4Lesson6PublicationStatus = "pending_teacher_check" | "publishable" | "unknown"
+
+export interface Module4Lesson6PublicationStatusItem {
+  kind: Module4MaterialKind
+  itemId: string
+  itemVersionId: string
+  status: Module4Lesson6PublicationStatus
+  label: string
+  checkedAt: string
+}
+
+export interface Module4Lesson6PublicationStatusState {
+  items: Module4Lesson6PublicationStatusItem[]
+  syncedAt: string
+}
+
+export interface Module4Lesson6PublicChallengeState {
+  context: "lesson6_class"
+  questionCount: number
+  answeredCount: number
+  completedAt: string
+  completed: boolean
+}
+
+export interface Module4Lesson6ReflectionPrinciple {
+  principle: string
+  reason: string
+  scenario: string
+  action: string
+}
+
+export interface Module4Lesson6ReflectionState {
+  principles: Module4Lesson6ReflectionPrinciple[]
+  responsibilityText: string
+  submittedAt: string
+}
+
+export type Module4Lesson6QuickCheckLevel = "excellent" | "achieved" | "basic" | "not_achieved"
+
+export interface Module4Lesson6QuickCheckTarget<TEvidence extends Record<string, unknown>> {
+  score: number
+  achieved: boolean
+  evidence: TEvidence
+}
+
+export interface Module4Lesson6QuickCheckState {
+  evaluatedAt: string
+  T1: Module4Lesson6QuickCheckTarget<{
+    publicationReviewed: boolean
+    publicationItemCount: number
+    publishableCount: number
+  }>
+  T2: Module4Lesson6QuickCheckTarget<{
+    context: "lesson6_class" | ""
+    questionCount: number
+    answeredCount: number
+    completedAt: string
+  }>
+  T3: Module4Lesson6QuickCheckTarget<{
+    principleCount: number
+    responsibilityWritten: boolean
+  }>
+  totalScore: number
+  level: Module4Lesson6QuickCheckLevel
+  completed: boolean
+  blockers: string[]
+}
+
+export interface Module4Lesson6StageSnapshot {
+  version: "lesson6-stage-v1"
+  snappedAt: string
+  publicationStatus: {
+    syncedAt: string
+    items: Array<{
+      kind: Module4MaterialKind
+      status: Module4Lesson6PublicationStatus
+      label: string
+      checkedAt: string
+    }>
+  }
+  publicChallenge: {
+    context: "lesson6_class"
+    questionCount: number
+    answeredCount: number
+    completedAt: string
+  }
+  reflection: Module4Lesson6ReflectionState
+  quickCheck: {
+    totalScore: number
+    level: Module4Lesson6QuickCheckLevel
+    evaluatedAt: string
+    targets: {
+      T1: Pick<Module4Lesson6QuickCheckState["T1"], "score" | "achieved">
+      T2: Pick<Module4Lesson6QuickCheckState["T2"], "score" | "achieved">
+      T3: Pick<Module4Lesson6QuickCheckState["T3"], "score" | "achieved">
+    }
+    blockers: string[]
+    evidence: {
+      T1: Module4Lesson6QuickCheckState["T1"]["evidence"]
+      T2: Module4Lesson6QuickCheckState["T2"]["evidence"]
+      T3: Module4Lesson6QuickCheckState["T3"]["evidence"]
+    }
+  }
+  completed: boolean
+  completedAt: string
+}
+
+export interface Module4Lesson6State {
+  clientId: string
+  step1AckAt: string
+  publicationStatus?: Module4Lesson6PublicationStatusState
+  publicChallenge?: Module4Lesson6PublicChallengeState
+  reflection?: Module4Lesson6ReflectionState
+  quickCheck: Module4Lesson6QuickCheckState
+  stageSnapshot?: Module4Lesson6StageSnapshot
+  completed: boolean
+  completedAt: string
+}
+
 export interface Module4Lesson1Step5State {
   newsPlanText: string
   imagePlanText: string
@@ -876,6 +995,7 @@ export interface Module4Portfolio {
   lesson3: Module4Lesson3State
   lesson4: Module4Lesson4State
   lesson5: Module4Lesson5State
+  lesson6: Module4Lesson6State
   createdAt: string
   updatedAt: string
 }
@@ -1451,6 +1571,53 @@ export function createEmptyModule4Lesson5State(): Module4Lesson5State {
     },
     stageSnapshot: undefined,
     myReport: undefined,
+    completed: false,
+    completedAt: "",
+  }
+}
+
+export function createEmptyModule4Lesson6State(): Module4Lesson6State {
+  return {
+    clientId: "",
+    step1AckAt: "",
+    publicationStatus: undefined,
+    publicChallenge: undefined,
+    reflection: undefined,
+    quickCheck: {
+      evaluatedAt: "",
+      T1: {
+        score: 0,
+        achieved: false,
+        evidence: {
+          publicationReviewed: false,
+          publicationItemCount: 0,
+          publishableCount: 0,
+        },
+      },
+      T2: {
+        score: 0,
+        achieved: false,
+        evidence: {
+          context: "",
+          questionCount: 0,
+          answeredCount: 0,
+          completedAt: "",
+        },
+      },
+      T3: {
+        score: 0,
+        achieved: false,
+        evidence: {
+          principleCount: 0,
+          responsibilityWritten: false,
+        },
+      },
+      totalScore: 0,
+      level: "not_achieved",
+      completed: false,
+      blockers: [],
+    },
+    stageSnapshot: undefined,
     completed: false,
     completedAt: "",
   }
@@ -2487,6 +2654,218 @@ function normalizeLesson5State(value: unknown): Module4Lesson5State {
   }
 }
 
+function normalizeLesson6PublicationStatus(value: unknown): Module4Lesson6PublicationStatus {
+  return value === "pending_teacher_check" || value === "publishable" ? value : "unknown"
+}
+
+function normalizeLesson6PublicationStatusItem(value: unknown): Module4Lesson6PublicationStatusItem | null {
+  if (!isPlainObject(value)) return null
+  const itemId = typeof value.itemId === "string" ? value.itemId : ""
+  const itemVersionId = typeof value.itemVersionId === "string" ? value.itemVersionId : ""
+  if (!itemId || !itemVersionId) return null
+  return {
+    kind: value.kind === "image" ? "image" : "news",
+    itemId,
+    itemVersionId,
+    status: normalizeLesson6PublicationStatus(value.status),
+    label: typeof value.label === "string" ? value.label : "",
+    checkedAt: typeof value.checkedAt === "string" ? value.checkedAt : "",
+  }
+}
+
+function normalizeLesson6PublicationStatusState(value: unknown): Module4Lesson6PublicationStatusState | undefined {
+  if (!isPlainObject(value)) return undefined
+  const items = Array.isArray(value.items)
+    ? value.items.map(normalizeLesson6PublicationStatusItem).filter((item): item is Module4Lesson6PublicationStatusItem => item !== null)
+    : []
+  return {
+    items,
+    syncedAt: typeof value.syncedAt === "string" ? value.syncedAt : "",
+  }
+}
+
+function normalizeLesson6PublicChallengeState(value: unknown): Module4Lesson6PublicChallengeState | undefined {
+  if (!isPlainObject(value)) return undefined
+  const context = value.context === "lesson6_class" ? "lesson6_class" : undefined
+  if (!context) return undefined
+  const questionCount = Number.isFinite(value.questionCount) ? Number(value.questionCount) : 0
+  const answeredCount = Number.isFinite(value.answeredCount) ? Number(value.answeredCount) : 0
+  return {
+    context,
+    questionCount,
+    answeredCount,
+    completedAt: typeof value.completedAt === "string" ? value.completedAt : "",
+    completed: value.completed === true && questionCount > 0 && answeredCount >= questionCount,
+  }
+}
+
+function normalizeLesson6ReflectionPrinciples(value: unknown): Module4Lesson6ReflectionPrinciple[] {
+  if (!Array.isArray(value)) return []
+  return value.slice(0, 3).map((item) => {
+    const record = isPlainObject(item) ? item : {}
+    return {
+      principle: typeof record.principle === "string" ? record.principle : "",
+      reason: typeof record.reason === "string" ? record.reason : "",
+      scenario: typeof record.scenario === "string" ? record.scenario : "",
+      action: typeof record.action === "string" ? record.action : "",
+    }
+  })
+}
+
+function normalizeLesson6ReflectionState(value: unknown): Module4Lesson6ReflectionState | undefined {
+  if (!isPlainObject(value)) return undefined
+  const principles = normalizeLesson6ReflectionPrinciples(value.principles)
+  return {
+    principles,
+    responsibilityText: typeof value.responsibilityText === "string" ? value.responsibilityText : "",
+    submittedAt: typeof value.submittedAt === "string" ? value.submittedAt : "",
+  }
+}
+
+function normalizeLesson6QuickCheckLevel(value: unknown): Module4Lesson6QuickCheckLevel {
+  return value === "excellent" || value === "achieved" || value === "basic" ? value : "not_achieved"
+}
+
+function deriveLesson6QuickCheckLevel(totalScore: number, allTargetsAchieved: boolean): Module4Lesson6QuickCheckLevel {
+  if (totalScore === 100 && allTargetsAchieved) return "excellent"
+  if (totalScore >= 75 && allTargetsAchieved) return "achieved"
+  if (totalScore >= 60) return "basic"
+  return "not_achieved"
+}
+
+function normalizeLesson6QuickCheckState(value: unknown): Module4Lesson6QuickCheckState {
+  const fallback = createEmptyModule4Lesson6State().quickCheck
+  if (!isPlainObject(value)) return fallback
+  const T1Raw = isPlainObject(value.T1) ? value.T1 : {}
+  const T2Raw = isPlainObject(value.T2) ? value.T2 : {}
+  const T3Raw = isPlainObject(value.T3) ? value.T3 : {}
+  const T1EvidenceRaw = isPlainObject(T1Raw.evidence) ? T1Raw.evidence : {}
+  const T2EvidenceRaw = isPlainObject(T2Raw.evidence) ? T2Raw.evidence : {}
+  const T3EvidenceRaw = isPlainObject(T3Raw.evidence) ? T3Raw.evidence : {}
+  const T1Achieved = T1Raw.achieved === true
+  const T2Achieved = T2Raw.achieved === true
+  const T3Achieved = T3Raw.achieved === true
+  const publicChallengeContext: "lesson6_class" | "" = T2EvidenceRaw.context === "lesson6_class" ? "lesson6_class" : ""
+  const T1 = {
+    score: Number.isFinite(T1Raw.score) ? Number(T1Raw.score) : T1Achieved ? 35 : 0,
+    achieved: T1Achieved,
+    evidence: {
+      publicationReviewed: T1EvidenceRaw.publicationReviewed === true,
+      publicationItemCount: Number.isFinite(T1EvidenceRaw.publicationItemCount) ? Number(T1EvidenceRaw.publicationItemCount) : 0,
+      publishableCount: Number.isFinite(T1EvidenceRaw.publishableCount) ? Number(T1EvidenceRaw.publishableCount) : 0,
+    },
+  }
+  const T2 = {
+    score: Number.isFinite(T2Raw.score) ? Number(T2Raw.score) : T2Achieved ? 30 : 0,
+    achieved: T2Achieved,
+    evidence: {
+      context: publicChallengeContext,
+      questionCount: Number.isFinite(T2EvidenceRaw.questionCount) ? Number(T2EvidenceRaw.questionCount) : 0,
+      answeredCount: Number.isFinite(T2EvidenceRaw.answeredCount) ? Number(T2EvidenceRaw.answeredCount) : 0,
+      completedAt: typeof T2EvidenceRaw.completedAt === "string" ? T2EvidenceRaw.completedAt : "",
+    },
+  }
+  const T3 = {
+    score: Number.isFinite(T3Raw.score) ? Number(T3Raw.score) : T3Achieved ? 35 : 0,
+    achieved: T3Achieved,
+    evidence: {
+      principleCount: Number.isFinite(T3EvidenceRaw.principleCount) ? Number(T3EvidenceRaw.principleCount) : 0,
+      responsibilityWritten: T3EvidenceRaw.responsibilityWritten === true,
+    },
+  }
+  const totalScore = Number.isFinite(value.totalScore) ? Number(value.totalScore) : T1.score + T2.score + T3.score
+  return {
+    evaluatedAt: typeof value.evaluatedAt === "string" ? value.evaluatedAt : "",
+    T1,
+    T2,
+    T3,
+    totalScore,
+    level: typeof value.level === "string"
+      ? normalizeLesson6QuickCheckLevel(value.level)
+      : deriveLesson6QuickCheckLevel(totalScore, T1.achieved && T2.achieved && T3.achieved),
+    completed: value.completed === true,
+    blockers: normalizeStringArray(value.blockers),
+  }
+}
+
+function normalizeLesson6StageSnapshot(value: unknown): Module4Lesson6StageSnapshot | undefined {
+  if (!isPlainObject(value) || value.version !== "lesson6-stage-v1") return undefined
+  const publicationStatusRaw = isPlainObject(value.publicationStatus) ? value.publicationStatus : {}
+  const publicChallengeRaw = isPlainObject(value.publicChallenge) ? value.publicChallenge : {}
+  const quickCheck = normalizeLesson6QuickCheckState(value.quickCheck)
+  const publicChallenge = normalizeLesson6PublicChallengeState({
+    ...publicChallengeRaw,
+    completed: true,
+  })
+  const reflection = normalizeLesson6ReflectionState(value.reflection)
+  if (!publicChallenge || !reflection) return undefined
+  const items = Array.isArray(publicationStatusRaw.items)
+    ? publicationStatusRaw.items.flatMap((item) => {
+      if (!isPlainObject(item)) return []
+      return [{
+        kind: item.kind === "image" ? "image" as const : "news" as const,
+        status: normalizeLesson6PublicationStatus(item.status),
+        label: typeof item.label === "string" ? item.label : "",
+        checkedAt: typeof item.checkedAt === "string" ? item.checkedAt : "",
+      }]
+    })
+    : []
+  return {
+    version: "lesson6-stage-v1",
+    snappedAt: typeof value.snappedAt === "string" ? value.snappedAt : "",
+    publicationStatus: {
+      syncedAt: typeof publicationStatusRaw.syncedAt === "string" ? publicationStatusRaw.syncedAt : "",
+      items,
+    },
+    publicChallenge: {
+      context: "lesson6_class",
+      questionCount: publicChallenge.questionCount,
+      answeredCount: publicChallenge.answeredCount,
+      completedAt: publicChallenge.completedAt,
+    },
+    reflection,
+    quickCheck: {
+      totalScore: quickCheck.totalScore,
+      level: quickCheck.level,
+      evaluatedAt: quickCheck.evaluatedAt,
+      targets: {
+        T1: { score: quickCheck.T1.score, achieved: quickCheck.T1.achieved },
+        T2: { score: quickCheck.T2.score, achieved: quickCheck.T2.achieved },
+        T3: { score: quickCheck.T3.score, achieved: quickCheck.T3.achieved },
+      },
+      blockers: [...quickCheck.blockers],
+      evidence: {
+        T1: quickCheck.T1.evidence,
+        T2: quickCheck.T2.evidence,
+        T3: quickCheck.T3.evidence,
+      },
+    },
+    completed: quickCheck.completed,
+    completedAt: typeof value.completedAt === "string" ? value.completedAt : "",
+  }
+}
+
+function normalizeLesson6State(value: unknown): Module4Lesson6State {
+  const fallback = createEmptyModule4Lesson6State()
+  if (!isPlainObject(value)) return fallback
+  const publicChallenge = normalizeLesson6PublicChallengeState(value.publicChallenge)
+  const reflection = normalizeLesson6ReflectionState(value.reflection)
+  const quickCheck = normalizeLesson6QuickCheckState(value.quickCheck)
+  const stageSnapshot = normalizeLesson6StageSnapshot(value.stageSnapshot)
+  const completed = value.completed === true && publicChallenge?.completed === true && Boolean(reflection?.submittedAt)
+  return {
+    clientId: typeof value.clientId === "string" ? value.clientId : "",
+    step1AckAt: typeof value.step1AckAt === "string" ? value.step1AckAt : "",
+    publicationStatus: normalizeLesson6PublicationStatusState(value.publicationStatus),
+    publicChallenge,
+    reflection,
+    quickCheck,
+    stageSnapshot,
+    completed,
+    completedAt: completed && typeof value.completedAt === "string" ? value.completedAt : "",
+  }
+}
+
 function normalizeLesson4ReviewRequestJson(value: unknown): Module4Lesson4ReviewRequestJson | undefined {
   const parsed = parseJsonObjectIfString(value)
   if (!isPlainObject(parsed)) return undefined
@@ -2908,6 +3287,7 @@ export function createNewModule4Portfolio(
     lesson3: createEmptyModule4Lesson3State(),
     lesson4: createEmptyModule4Lesson4State(),
     lesson5: createEmptyModule4Lesson5State(),
+    lesson6: createEmptyModule4Lesson6State(),
     createdAt: now,
     updatedAt: now,
   }
@@ -2945,6 +3325,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
   const lesson3 = normalizeLesson3State((input as Partial<Module4Portfolio>).lesson3)
   const lesson4 = normalizeLesson4State((input as Partial<Module4Portfolio>).lesson4)
   const lesson5 = normalizeLesson5State((input as Partial<Module4Portfolio>).lesson5)
+  const lesson6 = normalizeLesson6State((input as Partial<Module4Portfolio>).lesson6)
 
   const studentMerged = normalizeStudentShape(input.student)
 
@@ -2979,6 +3360,7 @@ export function normalizeModule4Portfolio(input: Partial<Module4Portfolio> | nul
     lesson3,
     lesson4,
     lesson5,
+    lesson6,
     createdAt,
     updatedAt,
   }

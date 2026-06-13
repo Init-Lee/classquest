@@ -11,6 +11,7 @@ import TeacherLoginPage from "@/teacher-console/pages/TeacherLoginPage"
 import TeacherHomePage from "@/teacher-console/pages/TeacherHomePage"
 import AdminClassAssignmentPage from "@/teacher-console/pages/AdminClassAssignmentPage"
 import Module4Lesson5ConsolePage from "@/teacher-console/pages/Module4Lesson5ConsolePage"
+import Module4Lesson6ReviewPage from "@/teacher-console/pages/Module4Lesson6ReviewPage"
 
 export default function TeacherConsoleRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function TeacherConsoleRoutes() {
           <Route path="login" element={<TeacherLoginPage />} />
           <Route path="admin" element={<AdminClassAssignmentPage />} />
           <Route path="module/4/lesson/5" element={<Module4Lesson5ConsolePage />} />
+          <Route path="module/4/lesson/6" element={<Module4Lesson6ReviewPage />} />
           <Route path="*" element={<Navigate to="/teacher" replace />} />
         </Route>
       </Routes>

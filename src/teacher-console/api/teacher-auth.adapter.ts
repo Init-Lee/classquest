@@ -1,6 +1,6 @@
 /**
  * 文件说明：teacher-console 认证 adapter。
- * 职责：提供登录、me 与登出入口，默认使用 fixture 数据，设置 VITE_TEACHER_CONSOLE_MODE=http 后对接 C1a 后端 auth API。
+ * 职责：提供登录、me 与登出入口，默认使用 fixture 数据，设置教师控制台或课时 6 HTTP 开关后对接 C1a 后端 auth API。
  * 更新触发：认证 endpoint、Authorization 头格式、环境变量、fixture 账号或错误映射变化时，需要同步更新本文件。
  */
 
@@ -78,7 +78,10 @@ export const fixtureClassPermissions: Record<TeacherLoginAccount, TeacherClassPe
 }
 
 export function resolveTeacherConsoleMode(): TeacherConsoleMode {
-  return import.meta.env.VITE_TEACHER_CONSOLE_MODE === "http" ? "http" : "fixture"
+  return import.meta.env.VITE_TEACHER_CONSOLE_MODE === "http"
+    || import.meta.env.VITE_MODULE4_LESSON6_MODE === "http"
+    ? "http"
+    : "fixture"
 }
 
 export function resolveTeacherConsoleEndpoint(path: string, basePath: string): string {

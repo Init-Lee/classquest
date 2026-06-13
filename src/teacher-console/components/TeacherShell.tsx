@@ -37,7 +37,7 @@ export function TeacherShell() {
             </div>
             <div>
               <div className="text-sm font-semibold">ClassQuest 教师控制台</div>
-              <div className="text-xs text-muted-foreground">模块 4 · 课时 5 C3b 教师控制台</div>
+              <div className="text-xs text-muted-foreground">模块 4 · 教师控制台</div>
             </div>
           </Link>
 

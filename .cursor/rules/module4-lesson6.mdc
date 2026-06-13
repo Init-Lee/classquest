@@ -1,0 +1,41 @@
+---
+description: Module 4 Lesson 6 V3 publication review, public challenge, IndexedDB and snapshot rules
+alwaysApply: false
+---
+
+# Module 4 Lesson 6 Rules
+
+Work from branch `module-4-lesson-6-dev`.
+
+Read before editing:
+
+```text
+README.md
+FILE-STRUCTURE.md
+src/modules/module-4-ai-info-detective/README.md
+src/modules/module-4-ai-info-detective/FILE-STRUCTURE.md
+src/modules/module-4-ai-info-detective/lessons/lesson-5/README.md
+src/teacher-console/README.md
+backend/README.md
+backend/app/modules/module4/lesson5/README.md
+backend/app/modules/module4/lesson6/README.md
+backend/app/modules/module4/lesson6/FILE-STRUCTURE.md
+```
+
+Lesson 6 decisions:
+
+```text
+V3 submitted -> pending_teacher_check
+Teacher confirms -> publishable + active public
+Public challenge draws 6 questions globally from all publishable V3
+No class-specific anonymous pool
+No public session creation by teacher
+Two contexts: lesson6_class, public_showcase
+Student IndexedDB stores process evidence only, not challenge answer correctness
+```
+
+Student UI must not expose technical terms such as IndexedDB, JSON, API, database, schema.
+
+Public challenge API must not leak author identity.
+
+Update nearest README/FILE-STRUCTURE when adding directories, routes, SQL files, or dependency rules.

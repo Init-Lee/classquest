@@ -22,6 +22,7 @@ const Lesson4Page = lazy(() => import("@/modules/module-3-ai-science-station/les
 const Lesson5Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-5/routes"))
 const Lesson6Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-6/routes"))
 const Module4Routes = lazy(() => import("@/modules/module-4-ai-info-detective/routes"))
+const Module4PublicChallengePage = lazy(() => import("@/modules/module-4-ai-info-detective/pages/Module4PublicChallengePage"))
 const TeacherConsoleRoutes = lazy(() => import("@/teacher-console/routes"))
 
 const LoadingFallback = () => (
@@ -72,6 +73,10 @@ export const router = createBrowserRouter([
       { index: true, element: withSuspense(<Module4Routes />) },
       { path: "*", element: withSuspense(<Module4Routes />) },
     ],
+  },
+  {
+    path: "/m4/challenge",
+    element: withSuspense(<Module4PublicChallengePage />),
   },
   {
     path: "/teacher/*",

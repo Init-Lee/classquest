@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 4 首页。
- * 职责：与模块三首页一致的建档与课时网格流程——无档案时仅展示介绍与课时预览，须点击「开始新的闯关」登记姓名、班级与学号后两位（与只读班级前缀合成四位班学号）后方可闯关。
- * 更新触发：建档字段、课时卡片布局、进度卡或与模块三首页对齐策略变化时，需要同步更新本文件。
+ * 职责：与模块三首页一致的建档、课时网格、主线续学流程，并提供可匿名访问的课时 6 公共挑战入口。
+ * 更新触发：建档字段、课时卡片布局、进度卡、课时 5 到课时 6 续学入口、公共挑战入口或与模块三首页对齐策略变化时，需要同步更新本文件。
  */
 
 import { useState, type ReactNode } from "react"
@@ -15,6 +15,7 @@ import {
   Eye,
   GraduationCap,
   Lock,
+  Sparkles,
   User,
 } from "lucide-react"
 import { Button } from "@/shared/ui/button"
@@ -22,7 +23,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Badge } from "@/shared/ui/badge"
 import { Input } from "@/shared/ui/input"
 import { useModule4Portfolio } from "@/modules/module-4-ai-info-detective/app/providers/Module4Provider"
-import { canAccessModule4Lesson, MODULE4_LESSON_REGISTRY } from "@/modules/module-4-ai-info-detective/app/lesson-registry"
+import {
+  canAccessModule4Lesson,
+  MODULE4_LESSON_REGISTRY,
+  resolveModule4PortfolioPointer,
+} from "@/modules/module-4-ai-info-detective/app/lesson-registry"
 import {
   createNewModule4Portfolio,
   type Module4StudentProfile,
@@ -256,14 +261,25 @@ export default function Module4HomePage() {
   const [showNewForm, setShowNewForm] = useState(false)
 
   const lesson1Completed = Boolean(portfolio?.lesson1.completed)
+  const lesson5Completed = Boolean(portfolio?.lesson5.completed)
+  const lesson6Completed = Boolean(portfolio?.lesson6.completed)
   const showTeacherEntry = !isTeacherMode
 
   const handleCreated = () => {
     navigate("/module/4/lesson/1/step/1")
   }
 
+  const handlePublicChallenge = () => {
+    navigate("/m4/challenge?context=public_showcase")
+  }
+
   const handleContinueLearning = () => {
     if (!portfolio) return
+    if (portfolio.lesson5.completed) {
+      const pointer = resolveModule4PortfolioPointer(portfolio)
+      navigate(`/module/4/lesson/${pointer.lessonId}/step/${pointer.stepId}`)
+      return
+    }
     if (portfolio.progress.lessonId === 1) {
       navigate(`/module/4/lesson/1/step/${portfolio.progress.stepId}`)
       return
@@ -316,10 +332,15 @@ export default function Module4HomePage() {
               开始新的闯关
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
+            <Button className="bg-amber-500 text-white hover:bg-amber-600" onClick={handlePublicChallenge} size="lg">
+              <Sparkles className="h-4 w-4 mr-1" />
+              试试公共挑战
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            已有进度？请使用右上角的「导入进度」按钮
+          <p className="mx-auto max-w-md text-xs leading-relaxed text-amber-800">
+            公共挑战适合已经完成课时五或有同等基础的同学，用来挑战老师发布的 6 道公共题卡；新同学请优先登记身份开始主线闯关。
           </p>
+          <p className="text-xs text-muted-foreground">已有进度？请使用右上角的「导入进度」按钮</p>
         </div>
 
         <div>
@@ -427,7 +448,9 @@ export default function Module4HomePage() {
           {portfolio.student.studentName}
           ！
         </h1>
-        <p className="text-muted-foreground text-sm">继续你的闯关之旅吧</p>
+        <p className="text-muted-foreground text-sm">
+          {lesson6Completed ? "你已完成模块四，可以查看课时 6 回顾。" : "继续你的闯关之旅吧"}
+        </p>
       </div>
 
       <Card className="max-w-lg mx-auto border-primary/20 bg-primary/5">
@@ -466,10 +489,18 @@ export default function Module4HomePage() {
               {formatDateReadable(portfolio.updatedAt)}
             </p>
           </div>
-          <Button className="w-full" onClick={handleContinueLearning}>
-            继续闯关
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button className="flex-1" onClick={handleContinueLearning}>
+              {lesson6Completed ? "查看回顾" : "继续闯关"}
+              {lesson6Completed ? <Eye className="h-4 w-4 ml-1" /> : <ArrowRight className="h-4 w-4 ml-1" />}
+            </Button>
+            {lesson5Completed && (
+              <Button variant="outline" className="flex-1 border-amber-300 text-amber-950" onClick={handlePublicChallenge}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                进入公共挑战
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -520,10 +551,10 @@ export default function Module4HomePage() {
                     >
                       {isTeacherMode
                         ? "浏览本课"
-                        : isCurrent
-                          ? "继续闯关"
-                          : isCompleted
-                            ? "查看回顾"
+                        : isCompleted
+                          ? "查看回顾"
+                          : isCurrent
+                            ? "继续闯关"
                             : "进入课时"}
                     </Button>
                   </CardContent>
