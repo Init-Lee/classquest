@@ -32,6 +32,7 @@ interface Lesson5SessionDataTabsProps {
   classPoolOverview: TeacherClassPoolOverview | null
   loadingOverview?: boolean
   analyticsRefreshKey?: number
+  maskDemo?: boolean
 }
 
 export function Lesson5SessionDataTabs({
@@ -42,6 +43,7 @@ export function Lesson5SessionDataTabs({
   classPoolOverview,
   loadingOverview = false,
   analyticsRefreshKey = 0,
+  maskDemo = false,
 }: Lesson5SessionDataTabsProps) {
   const hasSession = Boolean(selectedSessionId)
   const phase = selectedSession?.phase
@@ -127,6 +129,7 @@ export function Lesson5SessionDataTabs({
             overview={sessionOverview}
             classPoolOverview={classPoolOverview}
             loading={loadingOverview}
+            maskDemo={maskDemo}
           />
         )}
 
@@ -136,6 +139,7 @@ export function Lesson5SessionDataTabs({
             embedded
             token={token}
             sessionId={selectedSessionId}
+            maskDemo={maskDemo}
           />
         )}
 
@@ -147,6 +151,7 @@ export function Lesson5SessionDataTabs({
             sessionId={selectedSession.sessionId}
             phase={selectedSession.phase}
             refreshKey={analyticsRefreshKey}
+            maskDemo={maskDemo}
           />
         )}
 
@@ -157,6 +162,7 @@ export function Lesson5SessionDataTabs({
             token={token}
             sessionId={selectedSession.sessionId}
             phase={selectedSession.phase}
+            maskDemo={maskDemo}
           />
         )}
       </section>

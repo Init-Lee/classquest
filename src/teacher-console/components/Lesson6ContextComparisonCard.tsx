@@ -12,11 +12,13 @@ import {
   getLesson6ContextRateDifference,
   LESSON6_DEFAULT_CONTEXT_DIFFERENCE_THRESHOLDS,
 } from "@/teacher-console/utils/lesson6-stat-signals"
+import { maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson6ContextComparisonCardProps {
   items: Lesson6PublicItemStat[]
   loading?: boolean
   publicBankCount?: number
+  maskDemo?: boolean
 }
 
 function formatRate(value: number | null | undefined): string {
@@ -27,8 +29,9 @@ function formatRatePoint(value: number | null | undefined): string {
   return value == null ? "暂无" : `${Math.round(value * 100)} 个百分点`
 }
 
-function itemTitle(item: Lesson6PublicItemStat): string {
-  return item.itemShortName.trim() || item.itemVersionId || item.itemId
+function itemTitle(item: Lesson6PublicItemStat, maskDemo: boolean): string {
+  const title = item.itemShortName.trim() || item.itemVersionId || item.itemId
+  return maskDemo ? maskDemoText(title) : title
 }
 
 function ContextStatCard({
@@ -55,6 +58,7 @@ export function Lesson6ContextComparisonCard({
   items,
   loading = false,
   publicBankCount = items.length,
+  maskDemo = false,
 }: Lesson6ContextComparisonCardProps) {
   const notReady = publicBankCount < 6
   const summary = buildLesson6ContextComparisonSummary(items)
@@ -150,7 +154,7 @@ export function Lesson6ContextComparisonCard({
                     <div key={item.itemVersionId} className="py-3 first:pt-0 last:pb-0">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="font-medium">{itemTitle(item)}</p>
+                          <p className="font-medium">{itemTitle(item, maskDemo)}</p>
                           <p className="mt-1 text-sm text-muted-foreground">
                             这道题在课上学生和访客中的正确率差异较大。
                           </p>

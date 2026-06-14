@@ -10,17 +10,20 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { teacherLesson5Adapter } from "@/teacher-console/api/teacher-lesson5.adapter"
 import type { Lesson5SessionProgressResponse } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoStudentName } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson5TrialProgressTableProps {
   token: string
   sessionId: string
   embedded?: boolean
+  maskDemo?: boolean
 }
 
 export function Lesson5TrialProgressTable({
   token,
   sessionId,
   embedded = false,
+  maskDemo = false,
 }: Lesson5TrialProgressTableProps) {
   const [progress, setProgress] = useState<Lesson5SessionProgressResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -108,8 +111,8 @@ export function Lesson5TrialProgressTable({
                   <tbody>
                     {progress.participants.map(participant => (
                       <tr key={participant.participantId} className="border-b last:border-b-0">
-                        <td className="py-2 pr-4">{participant.classSeatCode}</td>
-                        <td className="py-2 pr-4">{participant.studentName}</td>
+                        <td className="py-2 pr-4">{maskDemo ? maskDemoIdentifier(participant.classSeatCode) : participant.classSeatCode}</td>
+                        <td className="py-2 pr-4">{maskDemo ? maskDemoStudentName(participant.studentName) : participant.studentName}</td>
                         <td className="py-2 pr-4">{participant.answeredCount} / {progress.summary.questionCount}</td>
                         <td className="py-2 pr-4">{participant.ratedCount} / {progress.summary.questionCount}</td>
                         <td className="py-2 pr-4">

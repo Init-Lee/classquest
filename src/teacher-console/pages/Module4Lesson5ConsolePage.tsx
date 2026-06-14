@@ -22,6 +22,7 @@ import type {
   TeacherClassPoolOverview,
   TeacherVisibleClass,
 } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoText, shouldMaskTeacherDemo } from "@/teacher-console/utils/demo-masking"
 
 const phaseLabels: Record<Lesson5SessionPhase, string> = {
   draft: "草稿",
@@ -58,6 +59,7 @@ export default function Module4Lesson5ConsolePage() {
     [sessions, selectedSessionId],
   )
   const canManageSelectedClass = selectedClass?.permission === "manage"
+  const maskDemo = shouldMaskTeacherDemo(session)
 
   const loadOverview = useCallback(async (sessionId: string) => {
     if (!session || !sessionId) {
@@ -168,7 +170,7 @@ export default function Module4Lesson5ConsolePage() {
     setError("")
     try {
       const created = await teacherLesson5Adapter.createSession(session.token, payload)
-      setMessage(`已创建会话：${created.title}`)
+      setMessage(`已创建会话：${maskDemo ? maskDemoText(created.title) : created.title}`)
       await reloadClassData(created.classId, created.sessionId)
     } catch (err) {
       setError(err instanceof Error ? err.message : "创建会话失败，请稍后再试。")
@@ -305,7 +307,7 @@ export default function Module4Lesson5ConsolePage() {
             </div>
             {selectedClass && (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">
-                {selectedClass.className} · {selectedClass.permission === "manage" ? "可管理" : "只读"}
+                {maskDemo ? maskDemoIdentifier(selectedClass.className) : selectedClass.className} · {selectedClass.permission === "manage" ? "可管理" : "只读"}
               </span>
             )}
           </div>
@@ -327,6 +329,7 @@ export default function Module4Lesson5ConsolePage() {
                 sessions={sessions}
                 selectedSessionId={selectedSessionId}
                 canManage={canManageSelectedClass}
+                maskDemo={maskDemo}
                 loading={loadingSessions}
                 onSelect={sessionId => {
                   setSelectedSessionId(sessionId)
@@ -349,6 +352,7 @@ export default function Module4Lesson5ConsolePage() {
                 }}
                 onCreate={handleCreate}
                 disabled={busy}
+                maskDemo={maskDemo}
               />
             </div>
 
@@ -378,6 +382,7 @@ export default function Module4Lesson5ConsolePage() {
                   classPoolOverview={classPoolOverview}
                   loadingOverview={loadingOverview || loadingSessions}
                   analyticsRefreshKey={analyticsRefreshKey}
+                  maskDemo={maskDemo}
                 />
               )}
             </div>

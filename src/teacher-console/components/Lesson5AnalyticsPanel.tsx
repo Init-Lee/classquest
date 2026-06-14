@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { cn } from "@/shared/utils/cn"
 import { teacherLesson5Adapter } from "@/teacher-console/api/teacher-lesson5.adapter"
 import type { Lesson5ItemStatsDto, Lesson5SessionAnalyticsResponse, Lesson5StatsStatus } from "@/teacher-console/types"
+import { maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson5AnalyticsPanelProps {
   token: string
@@ -18,6 +19,7 @@ interface Lesson5AnalyticsPanelProps {
   phase: string
   refreshKey?: number
   embedded?: boolean
+  maskDemo?: boolean
 }
 
 const statusLabels: Record<Lesson5StatsStatus, string> = {
@@ -36,10 +38,10 @@ function formatRate(value: number | null): string {
   return value == null ? "暂无" : `${Math.round(value * 100)}%`
 }
 
-function statsCardTitle(item: Lesson5ItemStatsDto): string {
+function statsCardTitle(item: Lesson5ItemStatsDto, maskDemo: boolean): string {
   const shortName = item.itemShortName?.trim()
-  if (shortName) return shortName
-  return item.kind === "news" ? "新闻题卡" : "图片题卡"
+  const title = shortName || (item.kind === "news" ? "新闻题卡" : "图片题卡")
+  return maskDemo ? maskDemoText(title) : title
 }
 
 function MetricBar({ label, value, max, legendClass }: { label: string; value: number | null; max: number; legendClass: string }) {
@@ -67,13 +69,13 @@ function TripleMetricRow({ item }: { item: Lesson5ItemStatsDto }) {
   )
 }
 
-function ItemRow({ item }: { item: Lesson5ItemStatsDto }) {
+function ItemRow({ item, maskDemo }: { item: Lesson5ItemStatsDto; maskDemo: boolean }) {
   return (
     <tr className="border-b align-top last:border-b-0">
       <td className="py-3 pr-4">
         <div className="space-y-1">
           <Badge variant={item.kind === "news" ? "secondary" : "warning"}>{item.kind === "news" ? "新闻" : "图片"}</Badge>
-          <p className="max-w-[180px] truncate text-xs text-muted-foreground">{statsCardTitle(item)}</p>
+          <p className="max-w-[180px] truncate text-xs text-muted-foreground">{statsCardTitle(item, maskDemo)}</p>
         </div>
       </td>
       <td className="py-3 pr-4">
@@ -108,6 +110,7 @@ export function Lesson5AnalyticsPanel({
   phase,
   refreshKey = 0,
   embedded = false,
+  maskDemo = false,
 }: Lesson5AnalyticsPanelProps) {
   const [analytics, setAnalytics] = useState<Lesson5SessionAnalyticsResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -197,7 +200,7 @@ export function Lesson5AnalyticsPanel({
                 </thead>
                 <tbody>
                   {analytics.items.map(item => (
-                    <ItemRow key={item.itemVersionId} item={item} />
+                    <ItemRow key={item.itemVersionId} item={item} maskDemo={maskDemo} />
                   ))}
                 </tbody>
               </table>

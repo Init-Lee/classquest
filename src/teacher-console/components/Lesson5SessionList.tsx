@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { cn } from "@/shared/utils/cn"
 import { ClassSelector } from "@/teacher-console/components/ClassSelector"
 import type { Lesson5Session, TeacherVisibleClass } from "@/teacher-console/types"
+import { maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson5SessionListProps {
   classes: TeacherVisibleClass[]
@@ -18,6 +19,7 @@ interface Lesson5SessionListProps {
   sessions: Lesson5Session[]
   selectedSessionId: string
   canManage: boolean
+  maskDemo?: boolean
   loading?: boolean
   onSelect: (sessionId: string) => void
   onRefresh: () => void
@@ -74,6 +76,7 @@ export function Lesson5SessionList({
   sessions,
   selectedSessionId,
   canManage,
+  maskDemo = false,
   loading = false,
   onSelect,
   onRefresh,
@@ -120,6 +123,7 @@ export function Lesson5SessionList({
             value={selectedClassId}
             onChange={onClassChange}
             disabled={loading}
+            maskDemo={maskDemo}
           />
         </label>
       </CardHeader>
@@ -146,7 +150,7 @@ export function Lesson5SessionList({
                 onClick={() => onSelect(session.sessionId)}
                 className="w-full space-y-2 text-left"
               >
-                <p className="font-medium text-slate-900">{session.title}</p>
+                <p className="font-medium text-slate-900">{maskDemo ? maskDemoText(session.title) : session.title}</p>
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-xs text-muted-foreground">
                     创建于 {formatSessionTime(session.createdAt)}

@@ -14,11 +14,13 @@ import {
   getLesson6QualitySignalSortValue,
   LESSON6_QUALITY_SIGNAL_BADGE_CLASSES,
 } from "@/teacher-console/utils/lesson6-stat-signals"
+import { maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson6ItemPerformanceTableProps {
   items: Lesson6PublicItemStat[]
   loading?: boolean
   publicBankCount?: number
+  maskDemo?: boolean
 }
 
 type SortDirection = "asc" | "desc"
@@ -68,8 +70,9 @@ function cardKindLabel(kind: Lesson6PublicItemStat["cardKind"]): string {
   return kind === "image" ? "图片" : "新闻"
 }
 
-function itemTitle(item: Lesson6PublicItemStat): string {
-  return item.itemShortName.trim() || item.itemVersionId || item.itemId
+function itemTitle(item: Lesson6PublicItemStat, maskDemo = false): string {
+  const title = item.itemShortName.trim() || item.itemVersionId || item.itemId
+  return maskDemo ? maskDemoText(title) : title
 }
 
 function lastAnsweredTime(item: Lesson6PublicItemStat): number | null {
@@ -102,6 +105,7 @@ export function Lesson6ItemPerformanceTable({
   items,
   loading = false,
   publicBankCount = items.length,
+  maskDemo = false,
 }: Lesson6ItemPerformanceTableProps) {
   const notReady = publicBankCount < 6
   const [sortState, setSortState] = useState<SortState>({
@@ -208,8 +212,10 @@ export function Lesson6ItemPerformanceTable({
                 {sortedItems.map(item => (
                   <tr key={item.itemVersionId} className="border-b last:border-b-0">
                     <td className="py-3 pr-4">
-                      <p className="max-w-[220px] truncate font-medium">{itemTitle(item)}</p>
-                      <p className="mt-1 max-w-[220px] truncate text-xs text-muted-foreground">{item.itemVersionId}</p>
+                      <p className="max-w-[220px] truncate font-medium">{itemTitle(item, maskDemo)}</p>
+                      <p className="mt-1 max-w-[220px] truncate text-xs text-muted-foreground">
+                        {maskDemo ? maskDemoText(item.itemVersionId) : item.itemVersionId}
+                      </p>
                     </td>
                     <td className="py-3 pr-4">
                       <Badge variant={item.cardKind === "image" ? "warning" : "secondary"}>

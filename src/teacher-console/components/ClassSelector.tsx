@@ -5,15 +5,17 @@
  */
 
 import type { TeacherAdminClass } from "@/teacher-console/types"
+import { maskDemoIdentifier } from "@/teacher-console/utils/demo-masking"
 
 interface ClassSelectorProps {
   classes: TeacherAdminClass[]
   value: string
   onChange: (classId: string) => void
   disabled?: boolean
+  maskDemo?: boolean
 }
 
-export function ClassSelector({ classes, value, onChange, disabled = false }: ClassSelectorProps) {
+export function ClassSelector({ classes, value, onChange, disabled = false, maskDemo = false }: ClassSelectorProps) {
   return (
     <select
       value={value}
@@ -24,7 +26,7 @@ export function ClassSelector({ classes, value, onChange, disabled = false }: Cl
       <option value="">选择班级</option>
       {classes.map(item => (
         <option key={item.classId} value={item.classId} disabled={!item.active}>
-          {item.className}
+          {maskDemo ? maskDemoIdentifier(item.className) : item.className}
           {!item.active ? "（停用）" : ""}
         </option>
       ))}

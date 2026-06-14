@@ -43,6 +43,7 @@ src/teacher-console/
 │   ├── Lesson6ContextComparisonCard.tsx # 课时 6 课上/访客 context 正确率对比与逐题差异提示
 │   └── Lesson6ItemPerformanceTable.tsx # 课时 6 公共题库完整逐题统计表与质量信号标签
 ├── utils/
+│   ├── demo-masking.ts                # demo 账号展示层姓名、班级/座位与短标题脱敏规则
 │   ├── lesson5-session-data-tabs.ts   # 课时 5 数据标签页解锁/推荐切换规则
 │   └── lesson6-stat-signals.ts        # 课时 6 中性质量信号、context 差异阈值与聚合工具
 └── pages/

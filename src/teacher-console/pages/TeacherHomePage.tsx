@@ -14,6 +14,12 @@ import { teacherAdminAdapter } from "@/teacher-console/api/teacher-admin.adapter
 import { teacherLesson5Adapter } from "@/teacher-console/api/teacher-lesson5.adapter"
 import { RoleBadge } from "@/teacher-console/components/RoleBadge"
 import type { Lesson5Session, TeacherClassPoolOverview, TeacherVisibleClass } from "@/teacher-console/types"
+import {
+  maskDemoIdentifier,
+  maskDemoStudentName,
+  maskDemoText,
+  shouldMaskTeacherDemo,
+} from "@/teacher-console/utils/demo-masking"
 
 function poolCardTitle(shortName?: string | null): string {
   const normalized = shortName?.trim()
@@ -49,10 +55,12 @@ function ClassList({
   classes,
   poolOverviews,
   sessionsByClass,
+  maskDemo,
 }: {
   classes: TeacherVisibleClass[]
   poolOverviews: Record<string, TeacherClassPoolOverview>
   sessionsByClass: Record<string, Lesson5Session[]>
+  maskDemo: boolean
 }) {
   if (classes.length === 0) {
     return (
@@ -70,15 +78,17 @@ function ClassList({
         const newsCount = poolItems.filter(poolItem => poolItem.cardKind === "news").length
         const imageCount = poolItems.filter(poolItem => poolItem.cardKind === "image").length
         const recentSessions = (sessionsByClass[item.classId] ?? []).slice(0, 3)
+        const className = maskDemo ? maskDemoIdentifier(item.className) : item.className
+        const classId = maskDemo ? maskDemoIdentifier(item.classId) : item.classId
 
         return (
           <Card key={item.classId}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{item.className}</CardTitle>
+              <CardTitle className="text-lg">{className}</CardTitle>
               <CardDescription>
                 {item.gradeLabel}
                 {" · "}
-                {item.classId}
+                {classId}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -132,7 +142,7 @@ function ClassList({
                 {recentSessions.length > 0 ? (
                   recentSessions.map(session => (
                     <div key={session.sessionId} className="rounded-lg border bg-white px-3 py-2 text-xs">
-                      <p className="font-medium text-slate-800">{session.title}</p>
+                      <p className="font-medium text-slate-800">{maskDemo ? maskDemoText(session.title) : session.title}</p>
                       <p className="mt-1 text-muted-foreground">
                         {runTypeLabels[session.runType]}
                         {" · "}
@@ -160,12 +170,12 @@ function ClassList({
                         <p className="font-medium text-slate-800">
                           {poolItem.cardKind === "news" ? "新闻题卡" : "图片题卡"}
                           {" · "}
-                          {poolCardTitle(poolItem.currentV2ShortName)}
+                          {maskDemo ? maskDemoText(poolCardTitle(poolItem.currentV2ShortName)) : poolCardTitle(poolItem.currentV2ShortName)}
                         </p>
                         <p className="mt-1 text-muted-foreground">
-                          {poolItem.authorName}
+                          {maskDemo ? maskDemoStudentName(poolItem.authorName) : poolItem.authorName}
                           {" · "}
-                          {poolItem.authorSeatCode}
+                          {maskDemo ? maskDemoIdentifier(poolItem.authorSeatCode) : poolItem.authorSeatCode}
                           {" · "}
                           {poolItem.currentV2Status ?? poolItem.status}
                         </p>
@@ -194,6 +204,7 @@ export default function TeacherHomePage() {
   const [sessionsByClass, setSessionsByClass] = useState<Record<string, Lesson5Session[]>>({})
   const [loading, setLoading] = useState(Boolean(session))
   const [error, setError] = useState("")
+  const maskDemo = shouldMaskTeacherDemo(session)
 
   useEffect(() => {
     if (!session) return
@@ -262,7 +273,7 @@ export default function TeacherHomePage() {
               每个班级卡片提供课堂工作台入口：课时 5 只对 manage 开放写操作，课时 6 对可见班级开放审核查看并由 manage 执行发布确认。
             </p>
           </div>
-          {loading ? <p className="text-sm text-muted-foreground">正在加载班级、题池与最近会话...</p> : <ClassList classes={classes} poolOverviews={poolOverviews} sessionsByClass={sessionsByClass} />}
+          {loading ? <p className="text-sm text-muted-foreground">正在加载班级、题池与最近会话...</p> : <ClassList classes={classes} poolOverviews={poolOverviews} sessionsByClass={sessionsByClass} maskDemo={maskDemo} />}
           {error && <p className="text-sm text-red-600">{error}</p>}
         </section>
       )}
@@ -279,7 +290,7 @@ export default function TeacherHomePage() {
             <p className="text-sm text-muted-foreground">
               当前账号无创建、修改、锁池、阶段推进或发布确认权限；如需操作，请使用有 manage 授权的教师账号登录。
             </p>
-            {loading ? <p className="text-sm text-muted-foreground">正在加载班级、题池与最近会话...</p> : <ClassList classes={classes} poolOverviews={poolOverviews} sessionsByClass={sessionsByClass} />}
+            {loading ? <p className="text-sm text-muted-foreground">正在加载班级、题池与最近会话...</p> : <ClassList classes={classes} poolOverviews={poolOverviews} sessionsByClass={sessionsByClass} maskDemo={maskDemo} />}
             {error && <p className="text-sm text-red-600">{error}</p>}
           </CardContent>
         </Card>

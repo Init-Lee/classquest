@@ -22,6 +22,7 @@ import type {
   TeacherClassPoolItemDetail,
   TeacherClassPoolOverview,
 } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoStudentName, maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson5PoolOverviewProps {
   overview: Lesson5SessionOverview | null
@@ -29,6 +30,7 @@ interface Lesson5PoolOverviewProps {
   loading?: boolean
   embedded?: boolean
   token?: string
+  maskDemo?: boolean
 }
 
 function textValue(value: unknown): string {
@@ -61,7 +63,7 @@ function poolCardTitle(shortName?: string | null): string {
   return normalized || "未命名题卡"
 }
 
-function PoolItemPreview({ detail }: { detail: TeacherClassPoolItemDetail }) {
+function PoolItemPreview({ detail, maskDemo }: { detail: TeacherClassPoolItemDetail; maskDemo: boolean }) {
   const asset = detail.material.asset && typeof detail.material.asset === "object"
     ? detail.material.asset as Record<string, unknown>
     : null
@@ -84,7 +86,9 @@ function PoolItemPreview({ detail }: { detail: TeacherClassPoolItemDetail }) {
           </div>
         )}
         <h3 className="mt-3 text-sm font-semibold">
-          {textValue(detail.material.title) || textValue(detail.material.headline) || detail.itemShortName || "未填写素材短名"}
+          {maskDemo
+            ? maskDemoText(textValue(detail.material.title) || textValue(detail.material.headline) || detail.itemShortName || "未填写素材短名")
+            : textValue(detail.material.title) || textValue(detail.material.headline) || detail.itemShortName || "未填写素材短名"}
         </h3>
         {(textValue(detail.material.displayNote) || textValue(detail.material.description)) && (
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -143,6 +147,7 @@ export function Lesson5PoolOverview({
   loading = false,
   embedded = false,
   token,
+  maskDemo = false,
 }: Lesson5PoolOverviewProps) {
   const poolItems = classPoolOverview?.items ?? []
   const newsCount = poolItems.filter(item => item.cardKind === "news").length
@@ -245,12 +250,12 @@ export function Lesson5PoolOverview({
                   <p className="font-medium">
                     {item.cardKind === "news" ? "新闻题卡" : "图片题卡"}
                     {" · "}
-                    {poolCardTitle(item.currentV2ShortName)}
+                    {maskDemo ? maskDemoText(poolCardTitle(item.currentV2ShortName)) : poolCardTitle(item.currentV2ShortName)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {item.authorName}
+                    {maskDemo ? maskDemoStudentName(item.authorName) : item.authorName}
                     {" · "}
-                    {item.authorSeatCode}
+                    {maskDemo ? maskDemoIdentifier(item.authorSeatCode) : item.authorSeatCode}
                     {" · "}
                     {item.currentV2Status ?? item.status}
                   </p>
@@ -264,7 +269,7 @@ export function Lesson5PoolOverview({
           <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {previewItem ? `${previewItem.cardKind === "news" ? "新闻题卡" : "图片题卡"} · ${poolCardTitle(previewItem.currentV2ShortName)}` : "题卡预览"}
+                {previewItem ? `${previewItem.cardKind === "news" ? "新闻题卡" : "图片题卡"} · ${maskDemo ? maskDemoText(poolCardTitle(previewItem.currentV2ShortName)) : poolCardTitle(previewItem.currentV2ShortName)}` : "题卡预览"}
               </DialogTitle>
               <DialogDescription>
                 教师只读预览当前 V2 版本；内容来自班级长期题池，不会影响已冻结 session。
@@ -276,7 +281,7 @@ export function Lesson5PoolOverview({
                 {previewError}
               </div>
             )}
-            {previewDetail && <PoolItemPreview detail={previewDetail} />}
+            {previewDetail && <PoolItemPreview detail={previewDetail} maskDemo={maskDemo} />}
             {previewError && previewItem && (
               <div className="flex justify-end">
                 <Button variant="outline" onClick={() => void handlePreview(previewItem)}>重试</Button>

@@ -15,12 +15,14 @@ import type {
   Lesson5RevisionPlansResponse,
   Lesson5SessionPhase,
 } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoStudentName } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson5RevisionPlansPanelProps {
   token: string
   sessionId: string
   phase: Lesson5SessionPhase
   embedded?: boolean
+  maskDemo?: boolean
 }
 
 const actionLabels: Partial<Record<Lesson5RevisionAction, string>> = {
@@ -47,12 +49,12 @@ function diagnosisText(diagnosis: Record<string, unknown>): string {
   return [selected.join("、"), evidence].filter(Boolean).join("；") || "未填写"
 }
 
-function RevisionPlanRow({ item }: { item: Lesson5RevisionPlanItemDto }) {
+function RevisionPlanRow({ item, maskDemo }: { item: Lesson5RevisionPlanItemDto; maskDemo: boolean }) {
   return (
     <tr className="border-b align-top last:border-b-0">
       <td className="py-3 pr-4">
-        <p className="font-medium">{item.studentSeatCode}</p>
-        <p className="text-xs text-muted-foreground">{item.studentName}</p>
+        <p className="font-medium">{maskDemo ? maskDemoIdentifier(item.studentSeatCode) : item.studentSeatCode}</p>
+        <p className="text-xs text-muted-foreground">{maskDemo ? maskDemoStudentName(item.studentName) : item.studentName}</p>
       </td>
       <td className="py-3 pr-4">
         <Badge variant={item.cardKind === "news" ? "secondary" : "warning"}>
@@ -84,6 +86,7 @@ export function Lesson5RevisionPlansPanel({
   sessionId,
   phase,
   embedded = false,
+  maskDemo = false,
 }: Lesson5RevisionPlansPanelProps) {
   const [plans, setPlans] = useState<Lesson5RevisionPlansResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -172,7 +175,7 @@ export function Lesson5RevisionPlansPanel({
                 </thead>
                 <tbody>
                   {plans.items.map(item => (
-                    <RevisionPlanRow key={`${item.participantId ?? item.studentSeatCode}:${item.itemId}`} item={item} />
+                    <RevisionPlanRow key={`${item.participantId ?? item.studentSeatCode}:${item.itemId}`} item={item} maskDemo={maskDemo} />
                   ))}
                 </tbody>
               </table>

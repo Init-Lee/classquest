@@ -30,6 +30,7 @@ interface Lesson5SessionCreatePanelProps {
   onClassChange: (classId: string) => void
   onCreate: (payload: CreateLesson5SessionRequest) => Promise<void>
   disabled?: boolean
+  maskDemo?: boolean
 }
 
 const runTypeOptions: Array<{ value: Lesson5SessionRunType; label: string }> = [
@@ -61,6 +62,7 @@ export function Lesson5SessionCreatePanel({
   onClassChange,
   onCreate,
   disabled = false,
+  maskDemo = false,
 }: Lesson5SessionCreatePanelProps) {
   const [title, setTitle] = useState("")
   const [runType, setRunType] = useState<Lesson5SessionRunType>("normal")
@@ -123,6 +125,7 @@ export function Lesson5SessionCreatePanel({
               value={selectedClassId}
               onChange={onClassChange}
               disabled={disabled || saving}
+              maskDemo={maskDemo}
             />
           </label>
           <label className="space-y-1 text-sm">

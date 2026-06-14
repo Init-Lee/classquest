@@ -15,6 +15,7 @@ import type {
   TeacherPoolCardKind,
   TeacherVisibleClass,
 } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 type Lesson6StatusFilter = Lesson6PublicationCheckStatus | "all"
 type Lesson6KindFilter = TeacherPoolCardKind | "all"
@@ -27,6 +28,7 @@ interface Lesson6V3ReviewQueueProps {
   selectedStatus: Lesson6StatusFilter
   loading?: boolean
   bulkPublishing?: boolean
+  maskDemo?: boolean
   canPublishItem: (item: Lesson6ReviewItem) => boolean
   onClassChange: (classId: string) => void
   onStatusChange: (status: Lesson6StatusFilter) => void
@@ -53,8 +55,9 @@ function formatRate(value: number | null | undefined): string {
   return value == null ? "暂无" : `${Math.round(value * 100)}%`
 }
 
-function itemTitle(item: Lesson6ReviewItem): string {
-  return item.itemShortName.trim() || (item.cardKind === "news" ? "新闻 V3 题卡" : "图片 V3 题卡")
+function itemTitle(item: Lesson6ReviewItem, maskDemo: boolean): string {
+  const title = item.itemShortName.trim() || (item.cardKind === "news" ? "新闻 V3 题卡" : "图片 V3 题卡")
+  return maskDemo ? maskDemoText(title) : title
 }
 
 function StatusBadge({ status }: { status: Lesson6PublicationCheckStatus }) {
@@ -70,6 +73,7 @@ export function Lesson6V3ReviewQueue({
   selectedStatus,
   loading = false,
   bulkPublishing = false,
+  maskDemo = false,
   canPublishItem,
   onClassChange,
   onStatusChange,
@@ -172,7 +176,7 @@ export function Lesson6V3ReviewQueue({
               <option value="">全部可见班级</option>
               {classes.map(item => (
                 <option key={item.classId} value={item.classId}>
-                  {item.className} · {item.permission === "manage" ? "可管理" : "只读"}
+                  {maskDemo ? maskDemoIdentifier(item.className) : item.className} · {item.permission === "manage" ? "可管理" : "只读"}
                 </option>
               ))}
             </select>
@@ -243,7 +247,7 @@ export function Lesson6V3ReviewQueue({
                       <td className="py-3 pr-4">
                         <input
                           type="checkbox"
-                          aria-label={`选择 ${itemTitle(item)}`}
+                          aria-label={`选择 ${itemTitle(item, maskDemo)}`}
                           checked={selectedIdSet.has(item.reviewId)}
                           disabled={!canSelectItem}
                           onChange={event => handleToggleItem(item, event.target.checked)}
@@ -251,8 +255,10 @@ export function Lesson6V3ReviewQueue({
                         />
                       </td>
                       <td className="py-3 pr-4">
-                        <p className="max-w-[200px] truncate font-medium">{itemTitle(item)}</p>
-                        <p className="mt-1 max-w-[220px] truncate text-xs text-muted-foreground">{item.itemVersionId}</p>
+                        <p className="max-w-[200px] truncate font-medium">{itemTitle(item, maskDemo)}</p>
+                        <p className="mt-1 max-w-[220px] truncate text-xs text-muted-foreground">
+                          {maskDemo ? maskDemoText(item.itemVersionId) : item.itemVersionId}
+                        </p>
                       </td>
                       <td className="py-3 pr-4">
                         <Badge variant={item.cardKind === "news" ? "secondary" : "warning"}>
@@ -260,8 +266,8 @@ export function Lesson6V3ReviewQueue({
                         </Badge>
                       </td>
                       <td className="py-3 pr-4">
-                        <p className="font-medium">{item.className}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{item.studentDisplay}</p>
+                        <p className="font-medium">{maskDemo ? maskDemoIdentifier(item.className) : item.className}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{maskDemo ? maskDemoText(item.studentDisplay) : item.studentDisplay}</p>
                       </td>
                       <td className="py-3 pr-4 text-muted-foreground">{formatTime(item.submittedAt)}</td>
                       <td className="py-3 pr-4">

@@ -17,6 +17,7 @@ import {
 } from "@/shared/ui/dialog"
 import { Textarea } from "@/shared/ui/textarea"
 import type { Lesson6ReviewDetail } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson6V3ReviewPreviewDialogProps {
   open: boolean
@@ -24,6 +25,7 @@ interface Lesson6V3ReviewPreviewDialogProps {
   loading?: boolean
   publishing?: boolean
   canManage?: boolean
+  maskDemo?: boolean
   error?: string
   onOpenChange: (open: boolean) => void
   onPublish: (teacherNote: string) => void
@@ -89,21 +91,22 @@ function diagnosisText(diagnosis: Record<string, unknown>): string {
   return [selected.join("、"), evidence].filter(Boolean).join("；") || "未填写"
 }
 
-function cardTitle(detail: Lesson6ReviewDetail): string {
+function cardTitle(detail: Lesson6ReviewDetail, maskDemo: boolean): string {
   const material = recordValue(detail.cardJson.material)
-  return textValue(material.titleOrName)
+  const title = textValue(material.titleOrName)
     || textValue(material.title)
     || textValue(material.headline)
     || detail.itemShortName
     || "未命名 V3 题卡"
+  return maskDemo ? maskDemoText(title) : title
 }
 
-function CardPreview({ detail }: { detail: Lesson6ReviewDetail }) {
+function CardPreview({ detail, maskDemo }: { detail: Lesson6ReviewDetail; maskDemo: boolean }) {
   const material = recordValue(detail.cardJson.material)
   const task = recordValue(detail.cardJson.task)
   const asset = recordValue(material.asset)
   const assetUrl = textValue(asset.dataUrl)
-  const assetAlt = textValue(asset.alt) || textValue(asset.title) || cardTitle(detail)
+  const assetAlt = textValue(asset.alt) || textValue(asset.title) || cardTitle(detail, maskDemo)
   const prompt = textValue(task.prompt) || textValue(task.question) || "未填写判断任务"
   const explanation = textValue(recordValue(detail.cardJson.explanation).text)
     || textValue(task.explanation)
@@ -125,7 +128,7 @@ function CardPreview({ detail }: { detail: Lesson6ReviewDetail }) {
             当前题卡没有图片素材，或素材为文字/网页来源。
           </div>
         )}
-        <h3 className="mt-3 text-sm font-semibold">{cardTitle(detail)}</h3>
+        <h3 className="mt-3 text-sm font-semibold">{cardTitle(detail, maskDemo)}</h3>
         {(textValue(material.displayNote) || textValue(material.description)) && (
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {textValue(material.displayNote) || textValue(material.description)}
@@ -185,6 +188,7 @@ export function Lesson6V3ReviewPreviewDialog({
   loading = false,
   publishing = false,
   canManage = false,
+  maskDemo = false,
   error = "",
   onOpenChange,
   onPublish,
@@ -219,13 +223,13 @@ export function Lesson6V3ReviewPreviewDialog({
               <Badge variant={detail.checkStatus === "publishable" ? "success" : "warning"}>
                 {detail.checkStatus === "publishable" ? "已确认可发布" : "待确认"}
               </Badge>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{detail.className}</span>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{detail.studentDisplay}</span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{maskDemo ? maskDemoIdentifier(detail.className) : detail.className}</span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{maskDemo ? maskDemoText(detail.studentDisplay) : detail.studentDisplay}</span>
               <span className="text-muted-foreground">提交：{new Date(detail.submittedAt).toLocaleString()}</span>
               {detail.checkedAt && <span className="text-muted-foreground">确认：{new Date(detail.checkedAt).toLocaleString()}</span>}
             </div>
 
-            <CardPreview detail={detail} />
+            <CardPreview detail={detail} maskDemo={maskDemo} />
 
             <section className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border bg-white p-4">

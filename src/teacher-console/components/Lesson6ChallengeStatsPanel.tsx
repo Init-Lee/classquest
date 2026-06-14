@@ -7,22 +7,25 @@
 import { Badge } from "@/shared/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import type { Lesson6Overview, Lesson6PublicQuestionTopStatsItem } from "@/teacher-console/types"
+import { maskDemoText } from "@/teacher-console/utils/demo-masking"
 
 interface Lesson6ChallengeStatsPanelProps {
   overview: Lesson6Overview | null
   loading?: boolean
   topLimit?: number
+  maskDemo?: boolean
 }
 
 function formatRate(value: number | null | undefined): string {
   return value == null ? "暂无" : `${Math.round(value * 100)}%`
 }
 
-function itemTitle(item: Lesson6PublicQuestionTopStatsItem): string {
-  return item.itemShortName?.trim()
+function itemTitle(item: Lesson6PublicQuestionTopStatsItem, maskDemo: boolean): string {
+  const title = item.itemShortName?.trim()
     || item.itemVersionId
     || item.itemId
     || (item.cardKind === "image" ? "图片题卡" : "新闻题卡")
+  return maskDemo ? maskDemoText(title) : title
 }
 
 function StatCard({ label, value, hint }: { label: string, value: string | number, hint: string }) {
@@ -39,10 +42,12 @@ function TopStatsTable({
   title,
   items,
   emptyText,
+  maskDemo,
 }: {
   title: string
   items: Lesson6PublicQuestionTopStatsItem[]
   emptyText: string
+  maskDemo: boolean
 }) {
   return (
     <section className="rounded-2xl border p-4">
@@ -62,11 +67,13 @@ function TopStatsTable({
             </thead>
             <tbody>
               {items.map((item, index) => (
-                <tr key={`${item.itemId || item.itemVersionId || itemTitle(item)}-${index}`} className="border-b last:border-b-0">
+                <tr key={`${item.itemId || item.itemVersionId || itemTitle(item, maskDemo)}-${index}`} className="border-b last:border-b-0">
                   <td className="py-3 pr-4">
-                    <p className="max-w-[180px] truncate font-medium">{itemTitle(item)}</p>
+                    <p className="max-w-[180px] truncate font-medium">{itemTitle(item, maskDemo)}</p>
                     {item.itemVersionId && (
-                      <p className="mt-1 max-w-[180px] truncate text-xs text-muted-foreground">{item.itemVersionId}</p>
+                      <p className="mt-1 max-w-[180px] truncate text-xs text-muted-foreground">
+                        {maskDemo ? maskDemoText(item.itemVersionId) : item.itemVersionId}
+                      </p>
                     )}
                   </td>
                   <td className="py-3 pr-4">
@@ -90,6 +97,7 @@ export function Lesson6ChallengeStatsPanel({
   overview,
   loading = false,
   topLimit = 3,
+  maskDemo = false,
 }: Lesson6ChallengeStatsPanelProps) {
   if (loading && !overview) {
     return (
@@ -148,16 +156,19 @@ export function Lesson6ChallengeStatsPanel({
             title="作答最多"
             items={topStats.mostAnswered.slice(0, topLimit)}
             emptyText="暂无作答最多题卡。"
+            maskDemo={maskDemo}
           />
           <TopStatsTable
             title="正确率最低"
             items={topStats.lowestCorrectRate.slice(0, topLimit)}
             emptyText="暂无正确率最低题卡。"
+            maskDemo={maskDemo}
           />
           <TopStatsTable
             title="正确率最高"
             items={topStats.highestCorrectRate.slice(0, topLimit)}
             emptyText="暂无正确率最高题卡。"
+            maskDemo={maskDemo}
           />
         </div>
       </CardContent>

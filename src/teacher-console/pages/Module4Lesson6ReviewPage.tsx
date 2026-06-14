@@ -27,6 +27,7 @@ import type {
   Lesson6ReviewsResponse,
   TeacherVisibleClass,
 } from "@/teacher-console/types"
+import { maskDemoIdentifier, maskDemoText, shouldMaskTeacherDemo } from "@/teacher-console/utils/demo-masking"
 
 type Lesson6StatusFilter = Lesson6PublicationCheckStatus | "all"
 type Lesson6ReviewTabId = "review" | "challengeStats" | "itemStats"
@@ -84,6 +85,7 @@ export default function Module4Lesson6ReviewPage() {
     () => classes.find(item => item.classId === selectedClassId) ?? null,
     [classes, selectedClassId],
   )
+  const maskDemo = shouldMaskTeacherDemo(session)
 
   const canManagePreviewClass = previewDetail
     ? canManageTeacherClass(session, previewDetail.classId)
@@ -211,7 +213,7 @@ export default function Module4Lesson6ReviewPage() {
     setPreviewError("")
     try {
       const response = await teacherLesson6Adapter.publishReview(session.token, previewDetail.reviewId, { teacherNote })
-      setMessage(`已确认可发布：${previewDetail.itemShortName || previewDetail.itemVersionId}。`)
+      setMessage(`已确认可发布：${maskDemo ? maskDemoText(previewDetail.itemShortName || previewDetail.itemVersionId) : previewDetail.itemShortName || previewDetail.itemVersionId}。`)
       setPreviewDetail(current => current
         ? {
             ...current,
@@ -247,7 +249,7 @@ export default function Module4Lesson6ReviewPage() {
           })
           successCount += 1
         } catch {
-          failedNames.push(item.itemShortName || item.itemVersionId)
+          failedNames.push(maskDemo ? maskDemoText(item.itemShortName || item.itemVersionId) : item.itemShortName || item.itemVersionId)
         }
       }
       setMessage(`批量确认完成：成功 ${successCount} 张${failedNames.length > 0 ? `，失败 ${failedNames.length} 张：${failedNames.join("、")}` : ""}。`)
@@ -272,7 +274,7 @@ export default function Module4Lesson6ReviewPage() {
             </div>
             {selectedClass && (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">
-                {selectedClass.className} · {selectedClass.permission === "manage" ? "可管理" : "只读"}
+                {maskDemo ? maskDemoIdentifier(selectedClass.className) : selectedClass.className} · {selectedClass.permission === "manage" ? "可管理" : "只读"}
               </span>
             )}
           </div>
@@ -334,6 +336,7 @@ export default function Module4Lesson6ReviewPage() {
                     selectedStatus={selectedStatus}
                     loading={loadingReviews}
                     bulkPublishing={bulkPublishing}
+                    maskDemo={maskDemo}
                     canPublishItem={canPublishReviewItem}
                     onClassChange={handleClassChange}
                     onStatusChange={handleStatusChange}
@@ -347,11 +350,12 @@ export default function Module4Lesson6ReviewPage() {
 
             {activeTab === "challengeStats" && (
               <div className="space-y-4">
-                <Lesson6ChallengeStatsPanel overview={overview} loading={loadingOverview} />
+                <Lesson6ChallengeStatsPanel overview={overview} loading={loadingOverview} maskDemo={maskDemo} />
                 <Lesson6ContextComparisonCard
                   items={itemStats?.items ?? []}
                   loading={loadingItemStats}
                   publicBankCount={overview?.publicBank.totalPublishable ?? itemStats?.items.length ?? 0}
+                  maskDemo={maskDemo}
                 />
               </div>
             )}
@@ -361,6 +365,7 @@ export default function Module4Lesson6ReviewPage() {
                 items={itemStats?.items ?? []}
                 loading={loadingItemStats}
                 publicBankCount={overview?.publicBank.totalPublishable ?? itemStats?.items.length ?? 0}
+                maskDemo={maskDemo}
               />
             )}
           </section>
@@ -372,6 +377,7 @@ export default function Module4Lesson6ReviewPage() {
           loading={previewLoading}
           publishing={busy}
           canManage={canManagePreviewClass}
+          maskDemo={maskDemo}
           error={previewError}
           onOpenChange={setPreviewOpen}
           onPublish={handlePublish}
