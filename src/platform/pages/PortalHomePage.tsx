@@ -29,11 +29,11 @@ export default function PortalHomePage() {
         </div>
         <h1 className="text-3xl font-bold text-foreground">ClassQuest 程序化教学平台</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm leading-relaxed">
-          当前版本正在从单一模块应用升级为平台化结构。模块 3 保持原有学习流程；模块 4 先完成架构占位，课程内容将在后续独立分支中开发。
+          从模块门户进入独立课程：模块 1 已开放故事主题课，模块 3 已完成，模块 4 已开放六个课时。
         </p>
       </section>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {MODULE_REGISTRY.map(module => (
           <Card key={module.id} className={module.status === "draft" ? "border-dashed" : "hover:shadow-md transition-shadow"}>
             <CardHeader>

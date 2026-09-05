@@ -10,6 +10,7 @@ import { createBrowserRouter, Navigate, useLocation } from "react-router-dom"
 import { PlatformShell } from "@/platform/layout/PlatformShell"
 import { AppShell as Module3Shell } from "@/modules/module-3-ai-science-station/app/layout/AppShell"
 import { Module4Shell } from "@/modules/module-4-ai-info-detective/app/layout/Module4Shell"
+import { Module1Shell } from "@/modules/module-1-ai-story/app/layout/Module1Shell"
 
 const PortalHomePage = lazy(() => import("@/platform/pages/PortalHomePage"))
 const PlatformNotFoundPage = lazy(() => import("@/platform/pages/NotFoundPage"))
@@ -22,6 +23,7 @@ const Lesson4Page = lazy(() => import("@/modules/module-3-ai-science-station/les
 const Lesson5Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-5/routes"))
 const Lesson6Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-6/routes"))
 const Module4Routes = lazy(() => import("@/modules/module-4-ai-info-detective/routes"))
+const Module1Routes = lazy(() => import("@/modules/module-1-ai-story/routes"))
 const Module4PublicChallengePage = lazy(() => import("@/modules/module-4-ai-info-detective/pages/Module4PublicChallengePage"))
 const TeacherConsoleRoutes = lazy(() => import("@/teacher-console/routes"))
 
@@ -49,6 +51,14 @@ export const router = createBrowserRouter([
       { path: "legacy-import", element: <Navigate to="/module/3/legacy-import" replace /> },
       { path: "lesson/*", element: <LegacyLessonRedirect /> },
       { path: "*", element: withSuspense(<PlatformNotFoundPage />) },
+    ],
+  },
+  {
+    path: "/module/1",
+    element: <Module1Shell />,
+    children: [
+      { index: true, element: withSuspense(<Module1Routes />) },
+      { path: "*", element: withSuspense(<Module1Routes />) },
     ],
   },
   {

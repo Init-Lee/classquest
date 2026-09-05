@@ -8,6 +8,15 @@ import type { PlatformModuleEntry } from "./types"
 
 export const MODULE_REGISTRY: PlatformModuleEntry[] = [
   {
+    id: "module-1",
+    slug: "ai-story",
+    title: "未来来信",
+    subtitle: "课时 1 已开放：从 SDG、城市问题与受众关切确定未来城市故事主题。",
+    route: "/module/1",
+    status: "active",
+    grade: "七年级 · 模块一",
+  },
+  {
     id: "module-3",
     slug: "ai-science-station",
     title: "AI 科学传播站",
@@ -20,7 +29,7 @@ export const MODULE_REGISTRY: PlatformModuleEntry[] = [
     id: "module-4",
     slug: "ai-info-detective",
     title: "AI 信息辨识员",
-    subtitle: "课时 1 已开放；保留本地优先学习进度、继续学习包、阶段快照和教师演示模式。",
+    subtitle: "课时 1—6 已开放；含本地优先进度、继续学习包、公共挑战与教师控制台。",
     route: "/module/4",
     status: "active",
     grade: "七年级 · 模块四",
