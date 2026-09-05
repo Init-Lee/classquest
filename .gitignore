@@ -40,3 +40,9 @@ pnpm-debug.log*
 
 # Vite 缓存
 .vite
+
+# 后端本地运行时数据库（真实课堂数据，禁止提交）
+backend/runtime/db/
+
+# 本地导出的教师指南中间文件
+docs/.*.export.html

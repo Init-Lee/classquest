@@ -12,4 +12,5 @@ runtime/fixtures/**
 !runtime/fixtures/**/
 !runtime/fixtures/**/README.md
 runtime/testdata/**
+runtime/db/
 

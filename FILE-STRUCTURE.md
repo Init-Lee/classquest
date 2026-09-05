@@ -17,7 +17,7 @@ classquest/
 │   ├── main.tsx                    # 前端入口，挂载平台路由
 │   ├── index.css                   # 全局样式入口
 │   ├── platform/                   # 平台门户、全局路由、模块注册表
-│   ├── teacher-console/            # 模块 4 课时 5 教师控制台，独立挂载 /teacher/*
+│   ├── teacher-console/            # 模块 4 课时 5/课时 6 教师控制台，独立挂载 /teacher/*
 │   ├── modules/                    # 独立课程模块
 │   │   ├── module-3-ai-science-station/
 │   │   └── module-4-ai-info-detective/
@@ -48,7 +48,7 @@ classquest/
 
 ### `src/teacher-console/`
 
-教师控制台是模块 4 课时 5 的教师侧独立入口，拥有自己的：
+教师控制台是模块 4 课时 5/课时 6 的教师侧独立入口，拥有自己的：
 
 - README
 - FILE-STRUCTURE
@@ -59,7 +59,7 @@ classquest/
 - components
 - types
 
-它承载登录、刷新保活、角色首页、教师班级可见性、demo 全班只读、admin 班级授权，以及课时 5 教师 session 控制台。当前范围包含建 session、列 session、draft 设置修改、锁池冻结、开放试答、锁定试答、计算/开放统计、开放统计后同步课堂收口、overview、phase 展示、C5 progress 只读表、C6 analytics 面板和 C7 revision-plans 只读观察面板；不复用模块 4 学生端内部业务状态，也不承载学生 attach、分配、作答或 V3 修订。
+它承载登录、刷新保活、角色首页、教师班级可见性、demo 全班只读、admin 班级授权、课时 5 教师 session 控制台，以及课时 6 发布审核与公共挑战统计。当前范围包含建 session、列 session、draft 设置修改、锁池冻结、开放试答、锁定试答、计算/开放统计、开放统计后同步课堂收口、overview、phase 展示、C5 progress 只读表、C6 analytics 面板、C7 revision-plans 只读观察面板，以及课时 6 公共题库概览、V3 发布确认、基础统计、逐题统计、课上/访客对比与质量信号；不复用模块 4 学生端内部业务状态，也不承载学生 attach、分配、作答或 V3 修订。
 
 ### `src/modules/`
 
@@ -156,7 +156,7 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 ## 当前版本口径
 
 - 稳定发布：`v0.6.0`，模块 3 六课时完成。
-- 当前主线版本：`0.7.3`，模块 4 课时 3「题目卡 V1 制作与解析填写」本地前端流程已合入后的发布口径；主线文档已同步课时 4 Step1-Step4、V2 ready 包与 lesson4 后端 routes 的实际边界。
-- 上一发布：`0.7.2`，模块 4 课时 2「素材搜集与合规初筛」。
-- 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-5 已落地到课时 5 Step4；课时 4 已覆盖互审、反馈处理、V2 修改台、V2 就绪报告、QuickCheck、阶段快照和 V2 ready 包，并可通过 lesson4 peer-review / moderation / SQLite routes 联调；课时 5「云端 Live Lesson Session」已进入开发阶段，当前完成 Phase 0 后端 schema、fixture inspect/export/seed 管线、C1a auth/admin/teacher 账号权限 API、C1b/C2b 前端 teacher-console（含题池 overview 只读展示）、C2a 题池提交/overview API、学生 Step1 提交流、C3a session 后端控制、C3b 前端教师控制台、C4a 学生 session/assignment 后端、C4b 学生连接/分配列表、C5a 后端 answer/rating/progress、C5b 前端单题作答评分 UI/图片素材渲染/教师 progress 表/锁定试答按钮、C6a 后端 compute-stats/analytics/my-report、C6b 学生报告与教师 analytics 面板、C7a 后端 V3 修订/completion-summary/revision-plans，以及 C7b 学生 Step4 修订快照与教师 revision-plans 面板。课时 6 后端已完成 C0-C1b：发布审核、公共题库 overview、学生发布状态、匿名公共挑战和分 context 统计。
+- 当前课时分支发布：`module4-lesson6-v0.7.7`，模块 4 课时 6 发布审核、学生三步流、匿名公共挑战、教师端统计与文档口径收口。
+- 上一课时里程碑：`module4-lesson6-v0.7.6`（课时 6 功能合入）、`module4-lesson5-v0.7.5`（课时 5 Live Lesson Session 联调闭环）。
+- 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-6 已开放；课时 4 可联调 peer-review / moderation / SQLite routes；课时 5 已完成 Live Lesson Session 学生端四步流与教师控制台同步课堂收口；课时 6 已完成教师端发布审核与统计、学生端三步流和匿名访客公共挑战。
 

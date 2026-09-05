@@ -10,7 +10,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
-[![Release](https://img.shields.io/badge/release-module4--lesson5--v0.7.5-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-module4--lesson6--v0.7.7-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ## 项目简介
 
@@ -66,7 +66,7 @@ Platform Portal → Module → Lesson → Step
 
 完成课时 5 后从 `/module/4/lesson/6/step/1` 进入，查看本人 V3 发布状态，完成课时内 `lesson6_class` 公共 6 题挑战，再填写可信复盘并生成 `lesson6-stage-v1` 本地快照；快照不包含 runId、答案、得分、排名、匿名 session 或完整题卡 JSON。
 
-**老师上线使用**请优先阅读：[模块 4 课时 5 教师使用说明](docs/TEACHER-GUIDE-MODULE4-LESSON5.md)
+**老师上线使用**请优先阅读：[模块 4 课时 5 教师使用说明](docs/TEACHER-GUIDE-MODULE4-LESSON5.md)、[模块 4 课时 6 教师使用说明](docs/TEACHER-GUIDE-MODULE4-LESSON6.md)
 
 模块细节见 [模块 4 README](src/modules/module-4-ai-info-detective/README.md)。
 
@@ -133,7 +133,8 @@ npm run build:oss
 |------|------|
 | [docs/DEPLOYMENT-V1_5.md](docs/DEPLOYMENT-V1_5.md) | V1.5 部署模型总览 |
 | [backend/OPS-PRODUCTION-UPDATE.md](backend/OPS-PRODUCTION-UPDATE.md) | 生产环境后端更新步骤 |
-| [docs/TEACHER-GUIDE-MODULE4-LESSON5.md](docs/TEACHER-GUIDE-MODULE4-LESSON5.md) | 教师上课说明 |
+| [docs/TEACHER-GUIDE-MODULE4-LESSON5.md](docs/TEACHER-GUIDE-MODULE4-LESSON5.md) | 课时 5 教师上课说明 |
+| [docs/TEACHER-GUIDE-MODULE4-LESSON6.md](docs/TEACHER-GUIDE-MODULE4-LESSON6.md) | 课时 6 教师上课说明 |
 
 ## 技术栈
 
@@ -160,6 +161,8 @@ docs/                      # 架构、部署、教师指南
 
 | 标签 | 说明 |
 |------|------|
+| `module4-lesson6-v0.7.7` | 模块 4 课时 6 文档与发布口径收口 |
+| `module4-lesson6-v0.7.6` | 模块 4 课时 6 发布审核、公共挑战与统计 |
 | `module4-lesson5-v0.7.5` | 模块 4 课时 5 Live Lesson Session 联调闭环 |
 | `module4-lesson4-v0.7.4` | 模块 4 课时 4 补丁 |
 | `v0.7.2` | 模块 4 课时 2 |
@@ -171,7 +174,8 @@ docs/                      # 架构、部署、教师指南
 
 - [FILE-STRUCTURE.md](FILE-STRUCTURE.md) — 仓库结构真相源
 - [docs/DOCS-INDEX.md](docs/DOCS-INDEX.md) — 架构与开发文档索引
-- [docs/TEACHER-GUIDE-MODULE4-LESSON5.md](docs/TEACHER-GUIDE-MODULE4-LESSON5.md) — **教师上课说明（优先）**
+- [docs/TEACHER-GUIDE-MODULE4-LESSON5.md](docs/TEACHER-GUIDE-MODULE4-LESSON5.md) — **课时 5 教师上课说明**
+- [docs/TEACHER-GUIDE-MODULE4-LESSON6.md](docs/TEACHER-GUIDE-MODULE4-LESSON6.md) — **课时 6 教师上课说明**
 - [docs/CURSOR-START-HERE.md](docs/CURSOR-START-HERE.md) — 开发前阅读入口
 - [docs/ARCHITECTURE-V1_5.md](docs/ARCHITECTURE-V1_5.md) — V1.5 总体架构
 

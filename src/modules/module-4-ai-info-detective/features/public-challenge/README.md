@@ -20,7 +20,7 @@
 ## Context 口径
 
 - `public_showcase`：公开展示挑战，`/m4/challenge` 默认使用。
-- `lesson6_class`：课时 6 课堂挑战 context，当前仅允许 query 透传；嵌入学生端课时 6 的接线留给后续阶段。
+- `lesson6_class`：课时 6 课堂挑战 context。学生完成课时 5 后，在 `/module/4/lesson/6/step/2` 通过 `PublicChallengeShell` 嵌入同一套公共挑战；完成后只把 `context/questionCount/answeredCount/completedAt/completed` 摘要写入 `portfolio.lesson6`，不保存 runId、答案、得分、排名或匿名 session id。standalone 页仍可用 query 透传该 context。
 
 模块 4 首页只负责可发现入口：无档案状态用说明文案提示公共挑战适合已完成课时五或有同等基础的学生；有进度状态只有课时五完成后才在当前进度行动区展示入口。公共挑战不替代课时 1-5 主线闯关。
 

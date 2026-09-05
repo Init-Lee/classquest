@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB)](https://vitejs.dev)
 [![Chinese](https://img.shields.io/badge/README-中文-red)](README.md)
-[![Release](https://img.shields.io/badge/release-v0.7.3-emerald)](https://github.com/Init-Lee/classquest/releases)
+[![Release](https://img.shields.io/badge/release-module4--lesson6--v0.7.7-emerald)](https://github.com/Init-Lee/classquest/releases)
 
 ## Current Architecture Goal
 
@@ -24,17 +24,17 @@ src/
 ├── platform/                         # Platform portal, global routes, module registry
 ├── modules/
 │   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
-│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lessons 1-4 open; Lesson 4 Step1-Step4 complete
+│   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lessons 1-6 open
 └── shared/                            # Business-neutral UI and pure utilities
 
-backend/                              # V1.5 lightweight FastAPI backend with Module 4 Lesson 3/4 APIs
+backend/                              # V1.5 lightweight FastAPI backend for Module 4 Lessons 3-6
 ```
 
 ## Module Status
 
 - **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
-- **Module 4 · AI Information Detective**: Lessons 1 "Framework Release and Sample Analysis", 2 "Material Collection and Compliance Pre-check", 3 "Question Card V1 Authoring and Explanation Writing", and 4 "Peer Review and V2 Entry Preparation" are open with an independent local portfolio, continue packages, stage snapshots, and teacher demo mode. Lesson 4 now covers Step1-Step4: peer review, feedback handling, the V2 revision workbench, the V2 readiness report, and the `ready_for_lesson5` package with QuickCheck / `stageSnapshot`. Lesson 5 will enter the "Cloud Live Lesson Session" planning/development phase and is only the next-stage entry point for now. See `src/modules/module-4-ai-info-detective/README.md`.
-- **V1.5 Backend**: provides the health check, Module 4 Lesson 3 AI review API (mock / Qwen), the Lesson 4 peer-review SQLite base, Lesson 4 B1-B7 peer-review endpoints (create, status, cancel, inbox, claim, submit, pull/recovery), and `moderate-text` review moderation. See `backend/README.md`.
+- **Module 4 · AI Information Detective**: Lessons 1-6 are open. Lessons 1-4 cover local authoring and peer review; Lesson 5 covers the Live Lesson Session student flow and teacher console; Lesson 6 covers V3 publication review, the student three-step flow, and the anonymous public challenge. See `src/modules/module-4-ai-info-detective/README.md`.
+- **V1.5 Backend**: provides the health check, Module 4 Lesson 3 AI review, Lesson 4 peer-review APIs, Lesson 5 Live Lesson Session APIs, and Lesson 6 publication review / public-challenge / stats APIs. See `backend/README.md`.
 
 ## Getting Started
 
@@ -74,22 +74,20 @@ For OSS static frontend direct-to-backend deployment (option B), copy `.env.prod
 
 ## Branching and Version Strategy
 
-- Current mainline release: `v0.7.3`, after merging the local-first Module 4 Lesson 3 flow. Mainline documentation now reflects the actual Lesson 4 Step1-Step4, V2 ready package, and Lesson 4 backend routes boundary.
-- Previous milestone: `v0.7.2`, the Module 4 Lesson 2 material collection and compliance pre-check flow.
-- Earlier milestone: `v0.6.0`, when Module 3 shipped as a single-app layout.
-- Later Module 4 work: one branch per lesson. Lesson 5 will enter the "Cloud Live Lesson Session" planning/development phase; admin / Live Session roles are starting integration and planning, not completed.
-- After Module 4 mock workflows stabilize: move toward `v0.8.0`.
-- After Module 4 connects to the real backend: move toward `v0.9.0`.
+- Current lesson-branch release: `module4-lesson6-v0.7.7`, wrapping Module 4 Lesson 6 publication review, public challenge, teacher stats, and documentation.
+- Previous milestones: `module4-lesson6-v0.7.6` (Lesson 6 feature close), `module4-lesson5-v0.7.5` (Lesson 5 Live Lesson Session), `v0.7.2` (Lesson 2), `v0.6.0` (Module 3 complete).
+- Module 4 continues on per-lesson branches. Teacher classroom guides: `docs/TEACHER-GUIDE-MODULE4-LESSON5.md` and `docs/TEACHER-GUIDE-MODULE4-LESSON6.md`.
 
 Note: `appVersion` inside student learning packages tracks the data-package format and is maintained separately from the product release number.
 
 ## Documentation Entry Points
 
 - `FILE-STRUCTURE.md`: repository structure source of truth, limited to platform/module-level boundaries.
+- `docs/DOCS-INDEX.md`: architecture and development document index.
+- `docs/TEACHER-GUIDE-MODULE4-LESSON5.md`: Lesson 5 teacher classroom guide.
+- `docs/TEACHER-GUIDE-MODULE4-LESSON6.md`: Lesson 6 teacher classroom guide.
 - `docs/CURSOR-START-HERE.md`: development entry guide.
-- `docs/MIGRATION-PLAN.md`: platform migration plan.
 - `docs/ARCHITECTURE-V1_5.md`: V1.5 architecture overview.
-- `.cursor/rules/classquest-platform.mdc`: Cursor development rules.
 
 ## License
 

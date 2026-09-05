@@ -43,8 +43,8 @@ Platform Portal → Module → Lesson → Step
 
 ## 当前阶段约束
 
-- 模块 4 只保留占位入口，不写课程内容。
-- 后端只保留健康检查和空 router，不接入前端。
+- 模块 3 已完成，平台化改动不得破坏其本地进度、继续学习包、阶段快照和教师演示。
+- 模块 4 课时 1-6 已开放；新增改动按最近一层 README / FILE-STRUCTURE 边界推进，不要越层或反向依赖。
 - shared 只放业务无关 UI 与纯工具。
-- 不冻结数据库 schema。
+- 老师上线说明优先阅读 `docs/TEACHER-GUIDE-MODULE4-LESSON5.md` 与 `docs/TEACHER-GUIDE-MODULE4-LESSON6.md`。
 
