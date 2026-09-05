@@ -5,7 +5,7 @@
  */
 
 import { useRef, useState, type ChangeEvent } from "react"
-import { Download, Loader2, Trash2, Upload } from "lucide-react"
+import { Download, Loader2, MoreHorizontal, Trash2, Upload } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import {
@@ -29,7 +29,11 @@ export function Module1GlobalActions() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState("")
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showMore, setShowMore] = useState(false)
+  const [pendingClear, setPendingClear] = useState<"clear" | "export-clear" | null>(null)
   const [pendingImport, setPendingImport] = useState<ParsedModule1ContinuePackage | null>(null)
+  const [importError, setImportError] = useState("")
 
   const exportLatest = async () => {
     if (!portfolio) return
@@ -46,10 +50,11 @@ export function Module1GlobalActions() {
     if (!file) return
     setBusy(true)
     setMessage("")
+    setImportError("")
     try {
       setPendingImport(await deserializeModule1ContinuePackage(file))
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "导入失败，当前档案未发生变化。")
+      setImportError(error instanceof Error ? error.message : "导入失败，当前档案未发生变化。")
     } finally {
       setBusy(false)
       event.target.value = ""
@@ -62,31 +67,24 @@ export function Module1GlobalActions() {
     try {
       const imported = await importPortfolio(pendingImport.portfolio)
       setPendingImport(null)
+      setShowImportDialog(false)
       setMessage(`已恢复 ${imported.student.studentName} 的学习进度。`)
       navigate("/module/1")
     } catch (error) {
-      reportActionError(error)
+      const detail = error instanceof Error ? error.message : String(error)
+      setImportError(`恢复失败：${detail}。本机当前档案未被替换。`)
     } finally {
       setBusy(false)
     }
   }
 
-  const handleClear = async () => {
-    if (!portfolio || !window.confirm("确定清除本机模块一档案吗？未导出的进度无法恢复。")) return
-    try {
-      await clearPortfolio()
-      navigate("/module/1")
-    } catch (error) {
-      reportActionError(error)
-    }
-  }
-
-  const handleExportAndClear = async () => {
-    if (!portfolio || !window.confirm("将先下载最新学习包，再清除本机档案。是否继续？")) return
+  const confirmClear = async () => {
+    if (!portfolio || !pendingClear) return
     setBusy(true)
     try {
-      await exportLatest()
+      if (pendingClear === "export-clear") await exportLatest()
       await clearPortfolio()
+      setPendingClear(null)
       navigate("/module/1")
     } catch (error) {
       reportActionError(error)
@@ -97,35 +95,88 @@ export function Module1GlobalActions() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button size="sm" aria-label="导出学习包" title="导出学习包" onClick={() => void exportLatest().catch(reportActionError)} disabled={!portfolio || busy}>
-          <Download className="h-4 w-4 sm:mr-1" />
-          <span className="hidden sm:inline">导出</span>
+      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+        <Button
+          size="sm"
+          onClick={() => void exportLatest().catch(reportActionError)}
+          disabled={!portfolio || busy}
+          className="gap-1.5 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700 sm:px-3"
+        >
+          <Download className="h-3.5 w-3.5" />
+          导出学习包
         </Button>
-        <Button size="sm" variant="outline" aria-label="导入学习包" title="导入学习包" onClick={() => fileInputRef.current?.click()} disabled={busy}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin sm:mr-1" /> : <Upload className="h-4 w-4 sm:mr-1" />}
-          <span className="hidden sm:inline">导入</span>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowImportDialog(true)}
+          disabled={busy}
+          className="gap-1.5 px-2 text-xs sm:px-3"
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          导入学习包
         </Button>
-        <Button size="sm" variant="outline" aria-label="清除本机档案" title="清除本机档案" onClick={() => void handleClear()} disabled={!portfolio || busy}>
-          <Trash2 className="h-4 w-4 sm:mr-1" />
-          <span className="hidden sm:inline">清除</span>
-        </Button>
-        <Button size="sm" variant="outline" aria-label="导出学习包并清除本机档案" title="导出并清除" onClick={() => void handleExportAndClear()} disabled={!portfolio || busy}>
-          <span className="flex items-center -space-x-1 sm:hidden">
-            <Download className="h-3.5 w-3.5" />
-            <Trash2 className="h-3.5 w-3.5" />
-          </span>
-          <span className="hidden sm:inline">导出并清除</span>
-        </Button>
-        <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleFile} />
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!portfolio || busy}
+            aria-haspopup="menu"
+            aria-expanded={showMore}
+            onClick={() => setShowMore(current => !current)}
+            className="gap-1 px-2 text-xs sm:px-3"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+            更多
+          </Button>
+          {showMore && portfolio && (
+            <div role="menu" className="absolute right-0 top-11 z-50 w-52 space-y-1 rounded-md border bg-popover p-1 shadow-md">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => { setShowMore(false); setPendingClear("clear") }}
+                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-xs text-destructive hover:bg-accent"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                清除本机档案
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => { setShowMore(false); setPendingClear("export-clear") }}
+                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-xs hover:bg-accent"
+              >
+                <Download className="h-3.5 w-3.5" />
+                导出学习包后清除
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <Dialog open={Boolean(pendingImport)} onOpenChange={open => { if (!open) setPendingImport(null) }}>
+      <Dialog open={showImportDialog} onOpenChange={(open) => {
+        setShowImportDialog(open)
+        if (!open) {
+          setPendingImport(null)
+          setImportError("")
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>确认恢复学习进度</DialogTitle>
-            <DialogDescription>确认身份和恢复位置后，才会替换本机已有档案。</DialogDescription>
+            <DialogTitle>导入学习包</DialogTitle>
+            <DialogDescription>选择之前导出的模块一继续学习包；确认身份和恢复位置后才会替换本机档案。</DialogDescription>
           </DialogHeader>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-primary"
+          >
+            <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+            <span className="block text-sm text-muted-foreground">点击选择继续学习包文件</span>
+            <span className="mt-1 block text-xs text-muted-foreground">格式：模块1_姓名_课时N第M关_日期.json</span>
+          </button>
+          <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleFile} />
+          {busy && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />正在读取学习包...</p>}
+          {importError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{importError}</p>}
           {pendingImport && (
             <div className="space-y-2 rounded-lg bg-muted p-4 text-sm">
               <p>学生：{pendingImport.portfolio.student.clazz} · {pendingImport.portfolio.student.studentName} · {pendingImport.portfolio.student.classSeatCode}</p>
@@ -135,8 +186,27 @@ export function Module1GlobalActions() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingImport(null)}>取消</Button>
-            <Button onClick={() => void confirmImport()} disabled={busy}>确认替换</Button>
+            <Button variant="outline" onClick={() => setShowImportDialog(false)}>关闭</Button>
+            {pendingImport && <Button onClick={() => void confirmImport()} disabled={busy}>确认替换</Button>}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(pendingClear)} onOpenChange={open => { if (!open) setPendingClear(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{pendingClear === "export-clear" ? "导出学习包后清除" : "清除本机档案"}</DialogTitle>
+            <DialogDescription>
+              {pendingClear === "export-clear"
+                ? "系统会先下载最新学习包，再清除当前浏览器中的模块一档案。"
+                : "此操作会清除当前浏览器中的模块一身份与学习进度，未导出的内容无法恢复。"}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPendingClear(null)}>取消</Button>
+            <Button variant="destructive" onClick={() => void confirmClear()} disabled={busy}>
+              {busy ? "处理中..." : pendingClear === "export-clear" ? "确认导出并清除" : "确认清除"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
