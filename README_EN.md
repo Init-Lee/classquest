@@ -23,6 +23,7 @@ Platform Portal → Module → Lesson → Step
 src/
 ├── platform/                         # Platform portal, global routes, module registry
 ├── modules/
+│   ├── module-1-ai-story/             # Module 1: Future Letter, Lesson 1 open
 │   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
 │   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lessons 1-6 open
 └── shared/                            # Business-neutral UI and pure utilities
@@ -32,6 +33,7 @@ backend/                              # V1.5 lightweight FastAPI backend for Mod
 
 ## Module Status
 
+- **Module 1 · Future Letter**: a six-lesson AI storytelling project. Phase 1 opens Lesson 1 for choosing an SDG, a concrete city issue, an audience, and that audience's concern. It includes an independent local portfolio and version 1 continuation package; Lessons 2-6 and the derived complete-story view remain locked for later phases. See `src/modules/module-1-ai-story/README.md`.
 - **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
 - **Module 4 · AI Information Detective**: Lessons 1-6 are open. Lessons 1-4 cover local authoring and peer review; Lesson 5 covers the Live Lesson Session student flow and teacher console; Lesson 6 covers V3 publication review, the student three-step flow, and the anonymous public challenge. See `src/modules/module-4-ai-info-detective/README.md`.
 - **V1.5 Backend**: provides the health check, Module 4 Lesson 3 AI review, Lesson 4 peer-review APIs, Lesson 5 Live Lesson Session APIs, and Lesson 6 publication review / public-challenge / stats APIs. See `backend/README.md`.
@@ -60,7 +62,7 @@ npm run build
 - Frontend: React + TypeScript + Vite
 - Routing: React Router v6
 - UI: Tailwind CSS + shadcn-style local wrappers
-- Module 3 / Module 4 local data: browser local storage + continue package export/import
+- Module 1 / Module 3 / Module 4 local data: browser local storage + continuation-package export/import
 - V1.5 backend target: FastAPI + SQLite + local runtime files + Nginx + HTTPS
 
 ## Deployment Model (V1.5)
@@ -79,6 +81,8 @@ For OSS static frontend direct-to-backend deployment (option B), copy `.env.prod
 - Module 4 continues on per-lesson branches. Teacher classroom guides: `docs/TEACHER-GUIDE-MODULE4-LESSON5.md` and `docs/TEACHER-GUIDE-MODULE4-LESSON6.md`.
 
 Note: `appVersion` inside student learning packages tracks the data-package format and is maintained separately from the product release number.
+
+Module 1 Phase 1 is developed on `module-1-lesson-1-dev`; its data-package `appVersion` is `0.1.0`.
 
 ## Documentation Entry Points
 

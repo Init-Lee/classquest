@@ -34,5 +34,7 @@ shared          → 无业务依赖
 
 平台可以组合模块路由与 teacher-console 独立路由，但不承载模块内部业务或教师控制台业务。
 
+`router/index.tsx` 中 `/module/1` 挂载 `Module1Shell`，并把首页、课时 1 与后续 story 子路径交给模块自己的 lazy routes 分发。
+
 `router/index.tsx` 中 `/m4/challenge` 是模块 4 课时 6 公共挑战的顶层公开路由，直接 lazy 加载 `Module4PublicChallengePage`。该路由必须与 `/module/4` 平级，绕开 `Module4Shell`、`Module4Provider` 和课时访问 guard，以便访客无需登录或建档即可进入公共挑战。
 

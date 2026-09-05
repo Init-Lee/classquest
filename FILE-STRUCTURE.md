@@ -19,6 +19,7 @@ classquest/
 │   ├── platform/                   # 平台门户、全局路由、模块注册表
 │   ├── teacher-console/            # 模块 4 课时 5/课时 6 教师控制台，独立挂载 /teacher/*
 │   ├── modules/                    # 独立课程模块
+│   │   ├── module-1-ai-story/
 │   │   ├── module-3-ai-science-station/
 │   │   └── module-4-ai-info-detective/
 │   └── shared/                     # 业务无关 UI 与纯工具
@@ -141,6 +142,7 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 
 - 平台、teacher-console 或模块级目录变化：更新根 `FILE-STRUCTURE.md`。
 - 模块 3 内部变化：更新 `src/modules/module-3-ai-science-station/FILE-STRUCTURE.md`。
+- 模块 1 内部变化：更新 `src/modules/module-1-ai-story/FILE-STRUCTURE.md`。
 - 模块 4 内部变化：更新 `src/modules/module-4-ai-info-detective/FILE-STRUCTURE.md`。
 - 后端顶层变化：更新 `backend/FILE-STRUCTURE.md`。
 - 模块 4 后端内部变化：更新 `backend/app/modules/module4/FILE-STRUCTURE.md`。
@@ -159,4 +161,5 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 - 当前课时分支发布：`module4-lesson6-v0.7.7`，模块 4 课时 6 发布审核、学生三步流、匿名公共挑战、教师端统计与文档口径收口。
 - 上一课时里程碑：`module4-lesson6-v0.7.6`（课时 6 功能合入）、`module4-lesson5-v0.7.5`（课时 5 Live Lesson Session 联调闭环）。
 - 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-6 已开放；课时 4 可联调 peer-review / moderation / SQLite routes；课时 5 已完成 Live Lesson Session 学生端四步流与教师控制台同步课堂收口；课时 6 已完成教师端发布审核与统计、学生端三步流和匿名访客公共挑战。
+- 模块 1 已建立独立 app / domains / infra / lessons 结构，固定六课时；阶段 1 开放课时 1，并接入独立 IndexedDB 与 version 1 继续学习包。
 

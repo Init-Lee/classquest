@@ -45,6 +45,7 @@ Platform Portal → Module → Lesson → Step
 
 - 模块 3：`src/modules/module-3-ai-science-station/`
 - 模块 4：`src/modules/module-4-ai-info-detective/`
+- 模块 1：`src/modules/module-1-ai-story/`
 
 禁止模块之间互相 import 业务代码：
 

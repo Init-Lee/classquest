@@ -26,6 +26,10 @@ Platform Portal → Module → Lesson → Step
 
 ## 功能概览
 
+### 模块 1 · 未来来信
+
+七年级 AI 讲故事项目，固定包含六个课时。阶段 1 已开放课时 1，学生可围绕 SDG、具体城市问题和受众关切建立故事主题，并使用独立本地档案与 version 1 继续学习包；课时 2—6 和派生完整小说视图将在后续阶段开放。详见 [模块 1 README](src/modules/module-1-ai-story/README.md)。
+
 ### 模块 3 · AI 科学传播站
 
 已完成 6 个课时、24 个关卡。本地优先的学习进度、继续学习包、阶段快照与教师演示模式。详见 [模块 3 README](src/modules/module-3-ai-science-station/README.md)。
@@ -139,7 +143,7 @@ npm run build:oss
 ## 技术栈
 
 - **前端**：React、TypeScript、Vite、React Router v6、Tailwind CSS
-- **本地数据**：浏览器存储 + 继续学习包导出/导入（模块 3 / 4）
+- **本地数据**：浏览器存储 + 继续学习包导出/导入（模块 1 / 3 / 4）
 - **后端**：FastAPI、SQLite、本地文件存储；生产经 Nginx + HTTPS 对外
 
 ## 仓库结构（摘要）
@@ -148,7 +152,7 @@ npm run build:oss
 src/
 ├── platform/              # 平台门户、全局路由、模块注册
 ├── teacher-console/       # 模块 4 课时 5/课时 6 教师控制台
-├── modules/               # 独立课程模块（module-3、module-4）
+├── modules/               # 独立课程模块（module-1、module-3、module-4）
 └── shared/                # 业务无关 UI 与工具
 
 backend/                   # FastAPI 后端
@@ -169,6 +173,8 @@ docs/                      # 架构、部署、教师指南
 | `v0.6.0` | 模块 3 六课时完成（单应用形态） |
 
 模块 4 按课时独立分支推进；学生学习包内的 `appVersion` 表示数据包格式口径，与上述发布标签独立维护。
+
+模块 1 当前在 `module-1-lesson-1-dev` 推进阶段 1，数据包 `appVersion` 为 `0.1.0`，与产品发布版本独立。
 
 ## 文档入口
 

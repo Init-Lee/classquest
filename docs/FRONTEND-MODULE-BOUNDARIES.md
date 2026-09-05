@@ -30,6 +30,9 @@ src/shared/        → 业务无关 UI 与纯工具
 
 ```text
 /                         → 平台门户
+/module/1                 → 模块 1 首页
+/module/1/lesson/1/...    → 模块 1 课时 1 流程
+/module/1/story           → 模块 1 派生小说视图（当前阶段为开放提示）
 /module/3                 → 模块 3 首页
 /module/3/lesson/1/...    → 模块 3 课时流
 /module/4                 → 模块 4 首页
