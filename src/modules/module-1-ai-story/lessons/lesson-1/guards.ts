@@ -7,6 +7,7 @@
 import {
   hasMeaningfulModule1Lesson1Fields,
   type Module1Lesson1State,
+  type Module1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 
 export function isModule1Lesson1StepComplete(state: Module1Lesson1State, stepId: number): boolean {
@@ -35,4 +36,13 @@ export function getModule1Lesson1GuardReason(stepId: number): string {
   if (stepId === 3) return "请先选择 SDG，并说明它与你的生活或社区有什么连接。"
   if (stepId === 4) return "请先写清楚一个具体、可观察的城市问题。"
   return "请先完成前一关。"
+}
+
+export function getModule1Lesson1RouteRedirect(
+  portfolio: Module1Portfolio | null,
+  stepId: number,
+): string | null {
+  if (!portfolio) return "/module/1"
+  if (canEnterModule1Lesson1Step(portfolio.lesson1, stepId)) return null
+  return `/module/1/lesson/1/step/${getCurrentModule1Lesson1Step(portfolio.lesson1)}`
 }

@@ -5,7 +5,7 @@
  */
 
 import { useState, type FormEvent } from "react"
-import { ArrowRight, CheckCircle2, Lock, User } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Lock, User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
@@ -25,6 +25,7 @@ export default function Module1HomePage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ clazz: "", studentName: "", seatOnly: "" })
   const [saving, setSaving] = useState(false)
+  const [showNewForm, setShowNewForm] = useState(false)
   const seatError = form.seatOnly ? validateModule1SeatOnly(form.clazz, form.seatOnly) : null
   const valid = Boolean(form.studentName.trim() && form.clazz && form.seatOnly.length === 2 && !seatError)
 
@@ -46,14 +47,69 @@ export default function Module1HomePage() {
 
   if (loading) return <div className="py-24 text-center text-sm text-muted-foreground">正在读取本机学习档案...</div>
 
-  if (!portfolio) {
+  if (!portfolio && !showNewForm) {
+    return (
+      <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8">
+        <section className="space-y-3 py-6 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+            <BookOpen className="h-4 w-4" />
+            七年级 · 模块一
+          </div>
+          <h1 className="text-3xl font-bold">未来来信：城市故事的设定</h1>
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            从身边的城市问题出发，借助 AI 写作工具逐步完成主题、人物和“起—承—转—合”，
+            写出一封来自 2035 年的未来城市故事。
+          </p>
+          <Button size="lg" onClick={() => setShowNewForm(true)}>
+            开始新的闯关
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+          <p className="text-xs text-muted-foreground">已有进度？请使用右上角的“导入”选择模块一学习包。</p>
+        </section>
+
+        <section>
+          <h2 className="mb-4 text-lg font-semibold">本模块包含 6 个课时</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {MODULE1_LESSON_REGISTRY.map(lesson => (
+              <Card key={lesson.id} className={!lesson.available ? "opacity-65" : ""}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Badge variant={lesson.available ? "default" : "secondary"}>
+                      课时 {lesson.id}
+                    </Badge>
+                    {!lesson.available && <Lock className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                  <CardTitle className="mt-2 text-base">{lesson.title}</CardTitle>
+                  <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <Card className="bg-muted/30">
+          <CardContent className="pt-6">
+            <h2 className="mb-3 text-sm font-semibold">闯关须知</h2>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />首次开始需登记班级、姓名与四位班学号。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请导出最新学习包。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关，可从进度条回看已完成内容。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段只开放课时 1，其余课时会清楚标记为待开发。</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!portfolio && showNewForm) {
     const classNumber = parseModule1ClassNumber(form.clazz)
     return (
-      <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8">
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8">
         <div className="space-y-2 text-center">
           <Badge>七年级 · 模块一</Badge>
-          <h1 className="text-3xl font-bold">未来来信：城市故事的设定</h1>
-          <p className="text-sm text-muted-foreground">创建本机档案开始课时 1；已有学习包可使用右上角“导入”。</p>
+          <h1 className="text-2xl font-bold">新建你的学习档案</h1>
+          <p className="text-sm text-muted-foreground">完成登记后进入课时 1；档案只保存在当前浏览器。</p>
         </div>
         <Card className="mx-auto max-w-md">
           <CardHeader><CardTitle className="flex items-center gap-2"><User className="h-5 w-5" />登记身份</CardTitle></CardHeader>
@@ -73,9 +129,16 @@ export default function Module1HomePage() {
             </form>
           </CardContent>
         </Card>
+        <div className="text-center">
+          <button type="button" onClick={() => setShowNewForm(false)} className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">
+            ← 返回模块介绍
+          </button>
+        </div>
       </div>
     )
   }
+
+  if (!portfolio) return null
 
   const pointer = resolveModule1PortfolioPointer(portfolio)
   const lesson1Done = portfolio.lesson1.completed

@@ -9,7 +9,10 @@
 ```text
 module-1-ai-story/
 ├── app/
-│   ├── layout/Module1Shell.tsx
+│   ├── layout/
+│   │   ├── Module1Shell.tsx
+│   │   ├── Module1TopProgress.tsx
+│   │   └── module1-top-progress-state.ts
 │   ├── providers/
 │   │   ├── Module1Provider.tsx
 │   │   ├── module1-save-coordinator.ts
@@ -19,7 +22,12 @@ module-1-ai-story/
 │   ├── class-options.ts
 │   └── sdgs.ts
 ├── domains/portfolio/types.ts
-├── features/global-actions/Module1GlobalActions.tsx
+├── features/
+│   ├── global-actions/Module1GlobalActions.tsx
+│   └── progress-ui/
+│       ├── InnerStepProgress.tsx
+│       ├── inner-step-progress-state.ts
+│       └── progress-ui.regression.test.ts
 ├── infra/persistence/
 │   ├── indexeddb/connection.ts
 │   ├── repositories/portfolio.repository.ts
@@ -43,6 +51,8 @@ module-1-ai-story/
 ## 数据与路由边界
 
 - `Module1Provider` 是页面唯一状态入口；保存协调器负责乐观更新、串行写入、flush 与代次失效，只有 repository 可直接访问 IndexedDB。
+- `Module1TopProgress` 负责六课时模块级导航；无档案时课时 1 只回模块首页，状态计算留在纯函数文件中。
+- `features/progress-ui` 是模块 1 内部可复用的课时 Step 进度能力；各课时传入 Guard 派生的完成、可访问与锁定集合，不得跨模块引用。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。

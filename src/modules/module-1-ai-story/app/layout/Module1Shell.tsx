@@ -4,17 +4,37 @@
  * 更新触发：模块 1 顶栏、身份展示、全局操作或 Provider 边界变化时，需要同步更新本文件。
  */
 
+import { useLayoutEffect, useRef } from "react"
 import { Outlet, useNavigate } from "react-router-dom"
 import { Module1Provider, useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 import { Module1GlobalActions } from "@/modules/module-1-ai-story/features/global-actions/Module1GlobalActions"
+import { Module1TopProgress } from "@/modules/module-1-ai-story/app/layout/Module1TopProgress"
 
 function Module1ShellInner() {
   const { portfolio, saveError } = useModule1Portfolio()
   const navigate = useNavigate()
+  const headerRef = useRef<HTMLElement>(null)
+
+  useLayoutEffect(() => {
+    const header = headerRef.current
+    if (!header) return
+    const update = () => {
+      document.documentElement.style.setProperty("--module1-sticky-stack-height", `${header.offsetHeight}px`)
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(header)
+    window.addEventListener("resize", update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener("resize", update)
+      document.documentElement.style.removeProperty("--module1-sticky-stack-height")
+    }
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b bg-white shadow-sm">
+      <header ref={headerRef} className="sticky top-0 z-40 border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2">
           <button type="button" onClick={() => navigate("/module/1")} className="flex min-w-0 items-center gap-3 text-left">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">CQ</span>
@@ -23,7 +43,13 @@ function Module1ShellInner() {
               <span className="block text-xs text-muted-foreground">七年级 · 模块一</span>
             </span>
           </button>
+          <div className="hidden min-w-0 flex-1 justify-center overflow-hidden lg:flex">
+            <Module1TopProgress />
+          </div>
           <Module1GlobalActions />
+        </div>
+        <div className="border-t px-2 lg:hidden">
+          <Module1TopProgress />
         </div>
         {portfolio && (
           <div className="mx-auto flex w-full max-w-7xl flex-wrap gap-x-4 bg-muted/30 px-4 py-1 text-xs text-muted-foreground">

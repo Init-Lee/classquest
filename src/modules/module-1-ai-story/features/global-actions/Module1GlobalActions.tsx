@@ -98,20 +98,24 @@ export function Module1GlobalActions() {
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button size="sm" onClick={() => void exportLatest().catch(reportActionError)} disabled={!portfolio || busy}>
-          <Download className="mr-1 h-4 w-4" />
-          导出
+        <Button size="sm" aria-label="导出学习包" title="导出学习包" onClick={() => void exportLatest().catch(reportActionError)} disabled={!portfolio || busy}>
+          <Download className="h-4 w-4 sm:mr-1" />
+          <span className="hidden sm:inline">导出</span>
         </Button>
-        <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={busy}>
-          {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />}
-          导入
+        <Button size="sm" variant="outline" aria-label="导入学习包" title="导入学习包" onClick={() => fileInputRef.current?.click()} disabled={busy}>
+          {busy ? <Loader2 className="h-4 w-4 animate-spin sm:mr-1" /> : <Upload className="h-4 w-4 sm:mr-1" />}
+          <span className="hidden sm:inline">导入</span>
         </Button>
-        <Button size="sm" variant="outline" onClick={() => void handleClear()} disabled={!portfolio || busy}>
-          <Trash2 className="mr-1 h-4 w-4" />
-          清除
+        <Button size="sm" variant="outline" aria-label="清除本机档案" title="清除本机档案" onClick={() => void handleClear()} disabled={!portfolio || busy}>
+          <Trash2 className="h-4 w-4 sm:mr-1" />
+          <span className="hidden sm:inline">清除</span>
         </Button>
-        <Button size="sm" variant="outline" onClick={() => void handleExportAndClear()} disabled={!portfolio || busy}>
-          导出并清除
+        <Button size="sm" variant="outline" aria-label="导出学习包并清除本机档案" title="导出并清除" onClick={() => void handleExportAndClear()} disabled={!portfolio || busy}>
+          <span className="flex items-center -space-x-1 sm:hidden">
+            <Download className="h-3.5 w-3.5" />
+            <Trash2 className="h-3.5 w-3.5" />
+          </span>
+          <span className="hidden sm:inline">导出并清除</span>
         </Button>
         <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleFile} />
       </div>
