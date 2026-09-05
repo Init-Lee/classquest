@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 六课时注册表。
  * 职责：声明课时入口、锁定状态、访问规则，并从真实完成态修复继续学习指针。
- * 更新触发：课时标题、开放范围、完成判定、路由或续学规则变化时，需要同步更新本文件。
+ * 更新触发：课时标题、开放范围、完成判定、路由、续学规则或教师讲解放行变化时，需要同步更新本文件。
  */
 
 import type {
@@ -29,9 +29,15 @@ export const MODULE1_LESSON_REGISTRY: Module1LessonEntry[] = [
   { id: 6, title: "合：落点回响", subtitle: "后续阶段开放", path: "/module/1/lesson/6/step/1", available: false, isComplete: p => Boolean(p?.lesson6.completed) },
 ]
 
-export function canAccessModule1Lesson(portfolio: Module1Portfolio | null, lessonId: number): boolean {
+export function canAccessModule1Lesson(
+  portfolio: Module1Portfolio | null,
+  lessonId: number,
+  isTeacherMode = false,
+): boolean {
   const entry = MODULE1_LESSON_REGISTRY.find(lesson => lesson.id === lessonId)
-  if (!portfolio || !entry?.available) return false
+  if (!entry?.available) return false
+  if (isTeacherMode) return true
+  if (!portfolio) return false
   if (lessonId === 1) return true
   const previous = portfolio[`lesson${lessonId - 1}` as "lesson1" | "lesson2" | "lesson3" | "lesson4" | "lesson5"]
   return previous.completed

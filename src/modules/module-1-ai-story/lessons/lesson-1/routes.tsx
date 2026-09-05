@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 1 路由入口。
  * 职责：分发四个主题关卡、执行真实 Step Guard，并在无档案或越级时安全恢复。
- * 更新触发：课时 1 路径、关卡组件、门禁或进度展示变化时，需要同步更新本文件。
+ * 更新触发：课时 1 路径、关卡组件、门禁、教师讲解放行或进度展示变化时，需要同步更新本文件。
  */
 
 import { useLayoutEffect, useRef } from "react"
@@ -23,7 +23,7 @@ import Step3CityIssue from "./steps/Step3CityIssue"
 import Step4AudienceOutline from "./steps/Step4AudienceOutline"
 
 function Lesson1Frame({ children }: { children: React.ReactNode }) {
-  const { portfolio, loading } = useModule1Portfolio()
+  const { portfolio, loading, isTeacherMode } = useModule1Portfolio()
   const params = useParams<{ "*": string }>()
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
@@ -49,9 +49,9 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
   }, [])
 
   if (loading) return <div className="py-20 text-center text-sm text-muted-foreground">正在准备学习档案...</div>
-  const routeRedirect = getModule1Lesson1RouteRedirect(portfolio, stepId)
+  const routeRedirect = getModule1Lesson1RouteRedirect(portfolio, stepId, isTeacherMode)
   if (!portfolio) return <Navigate to={routeRedirect ?? "/module/1"} replace />
-  if (!canEnterModule1Lesson1Step(portfolio.lesson1, stepId)) {
+  if (!isTeacherMode && !canEnterModule1Lesson1Step(portfolio.lesson1, stepId)) {
     return (
       <div className="mx-auto max-w-xl px-4 py-12">
         <Card>
@@ -68,9 +68,11 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
   const completedStepIds = MODULE1_LESSON1_STEPS
     .filter(step => isModule1Lesson1StepComplete(portfolio.lesson1, step.id))
     .map(step => step.id)
-  const accessibleStepIds = MODULE1_LESSON1_STEPS
-    .filter(step => canEnterModule1Lesson1Step(portfolio.lesson1, step.id))
-    .map(step => step.id)
+  const accessibleStepIds = isTeacherMode
+    ? MODULE1_LESSON1_STEPS.map(step => step.id)
+    : MODULE1_LESSON1_STEPS
+      .filter(step => canEnterModule1Lesson1Step(portfolio.lesson1, step.id))
+      .map(step => step.id)
   const lockedStepIds = MODULE1_LESSON1_STEPS
     .filter(step => !accessibleStepIds.includes(step.id))
     .map(step => step.id)

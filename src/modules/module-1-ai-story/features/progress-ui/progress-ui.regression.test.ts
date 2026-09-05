@@ -28,6 +28,7 @@ describe("模块 1 顶部课时进度", () => {
     })
     expect(items.slice(1).every(item => item.status === "locked" && !item.clickable)).toBe(true)
     expect(getModule1Lesson1RouteRedirect(null, 1)).toBe("/module/1")
+    expect(getModule1Lesson1RouteRedirect(null, 4, true)).toBe("/module/1")
   })
 
   it("有档案时标出当前课时且遵守开放规则", () => {

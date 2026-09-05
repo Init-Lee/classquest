@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 学习档案 Provider。
- * 职责：集中负责乐观更新、串行保存、flush、新建、导入替换与清档，并阻止旧代次保存回写。
- * 更新触发：模块 1 状态容器、仓库边界、导入流程或清档保护规则变化时，需要同步更新本文件。
+ * 职责：集中负责乐观更新、串行保存、flush、新建、导入替换、清档，以及教师讲解模式的内存演示档案。
+ * 更新触发：模块 1 状态容器、仓库边界、导入流程、清档保护或教师模式旁路规则变化时，需要同步更新本文件。
  */
 /* eslint-disable react-refresh/only-export-components */
 
@@ -14,17 +14,26 @@ import {
 import { resolveModule1PortfolioPointer } from "@/modules/module-1-ai-story/app/lesson-registry"
 import { module1PortfolioRepository } from "@/modules/module-1-ai-story/infra/persistence/repositories/portfolio.repository"
 import { Module1SaveCoordinator } from "@/modules/module-1-ai-story/app/providers/module1-save-coordinator"
+import {
+  createModule1MemoryPersistence,
+  runModule1StudentArchiveMutation,
+} from "@/modules/module-1-ai-story/app/providers/module1-teacher-mode"
+import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
 
 interface Module1ContextValue {
   portfolio: Module1Portfolio | null
   loading: boolean
   saveError: string | null
+  isTeacherMode: boolean
   updatePortfolio: (updater: (current: Module1Portfolio) => Module1Portfolio) => Module1Portfolio
   flushPortfolio: () => Promise<Module1Portfolio>
   createPortfolio: (student: Module1Portfolio["student"]) => Promise<Module1Portfolio>
   importPortfolio: (portfolio: Module1Portfolio) => Promise<Module1Portfolio>
   clearPortfolio: () => Promise<void>
   reload: () => Promise<void>
+  enterTeacherMode: () => void
+  exitTeacherMode: () => void
+  resetTeacherMode: () => void
 }
 
 const Module1Context = createContext<Module1ContextValue | null>(null)
@@ -34,11 +43,18 @@ function repairPortfolio(portfolio: unknown): Module1Portfolio {
   return { ...normalized, progress: resolveModule1PortfolioPointer(normalized) }
 }
 
+function prepareTeacherDemo(): Module1Portfolio {
+  return createModule1TeacherLecturePortfolio()
+}
+
 export function Module1Provider({ children }: { children: React.ReactNode }) {
   const [portfolio, setPortfolio] = useState<Module1Portfolio | null>(null)
+  const [demoPortfolio, setDemoPortfolio] = useState<Module1Portfolio | null>(null)
+  const [isTeacherMode, setIsTeacherMode] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saveError, setSaveError] = useState<string | null>(null)
   const coordinatorRef = useRef<Module1SaveCoordinator | null>(null)
+  const teacherCoordinatorRef = useRef<Module1SaveCoordinator | null>(null)
   if (!coordinatorRef.current) {
     coordinatorRef.current = new Module1SaveCoordinator(
       module1PortfolioRepository,
@@ -50,6 +66,16 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
     )
   }
   const coordinator = coordinatorRef.current
+
+  const getTeacherCoordinator = useCallback(() => {
+    if (!teacherCoordinatorRef.current) {
+      teacherCoordinatorRef.current = new Module1SaveCoordinator(
+        createModule1MemoryPersistence(),
+        current => current,
+      )
+    }
+    return teacherCoordinatorRef.current
+  }, [])
 
   const reload = useCallback(async () => {
     setLoading(true)
@@ -81,13 +107,23 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const updatePortfolio = useCallback((updater: (current: Module1Portfolio) => Module1Portfolio) => {
+    if (isTeacherMode) {
+      const next = getTeacherCoordinator().update(updater)
+      setDemoPortfolio(next)
+      return next
+    }
     setSaveError(null)
     const next = coordinator.update(updater)
     setPortfolio(next)
     return next
-  }, [coordinator])
+  }, [coordinator, getTeacherCoordinator, isTeacherMode])
 
   const flushPortfolio = useCallback(async () => {
+    if (isTeacherMode) {
+      const latest = await getTeacherCoordinator().flush()
+      setDemoPortfolio(latest)
+      return latest
+    }
     try {
       const latest = await coordinator.flush()
       setPortfolio(latest)
@@ -98,40 +134,73 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
       setSaveError(`无法完成保存：${detail}。当前操作已停止，请重试。`)
       throw error
     }
-  }, [coordinator])
+  }, [coordinator, getTeacherCoordinator, isTeacherMode])
 
   const createPortfolio = useCallback(async (student: Module1Portfolio["student"]) => {
+    if (isTeacherMode) {
+      return getTeacherCoordinator().getCurrent() ?? prepareTeacherDemo()
+    }
     const created = await coordinator.replace(createNewModule1Portfolio(student))
     setSaveError(null)
     setPortfolio(created)
     return created
-  }, [coordinator])
+  }, [coordinator, getTeacherCoordinator, isTeacherMode])
 
   const importPortfolio = useCallback(async (imported: Module1Portfolio) => {
+    if (isTeacherMode) {
+      return getTeacherCoordinator().getCurrent() ?? prepareTeacherDemo()
+    }
     const repaired = repairPortfolio(imported)
     const replaced = await coordinator.replace(repaired)
     setSaveError(null)
     setPortfolio(replaced)
     return replaced
-  }, [coordinator])
+  }, [coordinator, getTeacherCoordinator, isTeacherMode])
 
   const clearPortfolio = useCallback(async () => {
-    await coordinator.clear()
+    const ran = await runModule1StudentArchiveMutation(isTeacherMode, () => coordinator.clear())
+    if (!ran) return
     setSaveError(null)
     setPortfolio(null)
-  }, [coordinator])
+  }, [coordinator, isTeacherMode])
+
+  const enterTeacherMode = useCallback(() => {
+    const demo = prepareTeacherDemo()
+    const teacherCoordinator = getTeacherCoordinator()
+    teacherCoordinator.hydrate(demo)
+    setDemoPortfolio(demo)
+    setIsTeacherMode(true)
+  }, [getTeacherCoordinator])
+
+  const exitTeacherMode = useCallback(() => {
+    setIsTeacherMode(false)
+    setDemoPortfolio(null)
+    teacherCoordinatorRef.current = null
+  }, [])
+
+  const resetTeacherMode = useCallback(() => {
+    const demo = prepareTeacherDemo()
+    getTeacherCoordinator().hydrate(demo)
+    setDemoPortfolio(demo)
+  }, [getTeacherCoordinator])
+
+  const effectivePortfolio = isTeacherMode ? demoPortfolio : portfolio
 
   return (
     <Module1Context.Provider value={{
-      portfolio,
+      portfolio: effectivePortfolio,
       loading,
       saveError,
+      isTeacherMode,
       updatePortfolio,
       flushPortfolio,
       createPortfolio,
       importPortfolio,
       clearPortfolio,
       reload,
+      enterTeacherMode,
+      exitTeacherMode,
+      resetTeacherMode,
     }}>
       {children}
     </Module1Context.Provider>

@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 1 关卡门禁。
  * 职责：根据已保存字段判断关卡完成与可进入状态，阻止通过直连地址跳过必要任务。
- * 更新触发：课时 1 字段、完成条件或关卡先后关系变化时，需要同步更新本文件。
+ * 更新触发：课时 1 字段、完成条件、关卡先后关系或教师讲解放行规则变化时，需要同步更新本文件。
  */
 
 import {
@@ -41,8 +41,10 @@ export function getModule1Lesson1GuardReason(stepId: number): string {
 export function getModule1Lesson1RouteRedirect(
   portfolio: Module1Portfolio | null,
   stepId: number,
+  isTeacherMode = false,
 ): string | null {
   if (!portfolio) return "/module/1"
+  if (isTeacherMode) return null
   if (canEnterModule1Lesson1Step(portfolio.lesson1, stepId)) return null
   return `/module/1/lesson/1/step/${getCurrentModule1Lesson1Step(portfolio.lesson1)}`
 }

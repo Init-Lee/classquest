@@ -17,7 +17,9 @@ import {
 import {
   canEnterModule1Lesson1Step,
   getCurrentModule1Lesson1Step,
+  getModule1Lesson1RouteRedirect,
 } from "@/modules/module-1-ai-story/lessons/lesson-1/guards"
+import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
 import {
   buildModule1ContinuePackage,
   deserializeModule1ContinuePackageText,
@@ -62,6 +64,11 @@ describe("模块 1 档案与进度", () => {
     expect(resolveModule1PortfolioPointer(portfolio)).toEqual({ lessonId: 1, stepId: 2 })
     expect(canAccessModule1Lesson(portfolio, 1)).toBe(true)
     expect(canAccessModule1Lesson(portfolio, 2)).toBe(false)
+    expect(canAccessModule1Lesson(portfolio, 1, true)).toBe(true)
+    expect(canAccessModule1Lesson(portfolio, 2, true)).toBe(false)
+    const demo = createModule1TeacherLecturePortfolio()
+    expect(getModule1Lesson1RouteRedirect(demo, 1, true)).toBeNull()
+    expect(getModule1Lesson1RouteRedirect(demo, 4, true)).toBeNull()
   })
 
   it("缺字段时降级伪造完成态并把指针修复到正确关卡", () => {
@@ -128,8 +135,14 @@ describe("模块 1 继续学习包", () => {
     ["错误模块", JSON.stringify({ ...buildModule1ContinuePackage(createStudent()), portfolio: { ...createStudent(), moduleId: "module-4-ai-info-detective" } }), "其他模块"],
     ["未来版本", JSON.stringify({ ...buildModule1ContinuePackage(createStudent()), version: 2 }), "更高版本"],
     ["旧扁平格式", JSON.stringify({ sdg: "11", cityIssue: "浪费" }), "暂不支持"],
+    ["阶段快照 HTML", "<!doctype html><html><body>阶段快照</body></html>", "阶段快照不能恢复进度，请选择继续学习包"],
   ])("拒绝%s且在写入边界前报错", (_name, text, expected) => {
     expect(() => deserializeModule1ContinuePackageText(text)).toThrow(expected)
+  })
+
+  it("按扩展名拒绝阶段快照文件", () => {
+    expect(() => deserializeModule1ContinuePackageText("{}", "模块1_演示学生_课时1主题设定快照_2026-09-05.html"))
+      .toThrow("阶段快照不能恢复进度，请选择继续学习包")
   })
 
   it("不同学生替换只保留导入档案字段", () => {

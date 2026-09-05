@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 继续学习包序列化器。
  * 职责：构建、命名、下载和严格解析 version 1 学习包；所有校验完成前不写入当前档案。
- * 更新触发：学习包类型、版本、体积限制、校验规则或文件命名口径变化时，需要同步更新本文件。
+ * 更新触发：学习包类型、版本、体积限制、校验规则、阶段快照拒绝或文件命名口径变化时，需要同步更新本文件。
  */
 
 import {
@@ -70,7 +70,20 @@ export function downloadModule1ContinuePackage(portfolio: Module1Portfolio): voi
   URL.revokeObjectURL(url)
 }
 
-export function deserializeModule1ContinuePackageText(text: string): ParsedModule1ContinuePackage {
+function looksLikeModule1Snapshot(text: string, fileName = ""): boolean {
+  const name = fileName.toLowerCase()
+  if (name.endsWith(".html") || name.endsWith(".htm")) return true
+  const head = text.trimStart().slice(0, 240).toLowerCase()
+  return head.startsWith("<!doctype html") || head.startsWith("<html")
+}
+
+export function deserializeModule1ContinuePackageText(
+  text: string,
+  fileName = "",
+): ParsedModule1ContinuePackage {
+  if (looksLikeModule1Snapshot(text, fileName)) {
+    throw new Error("阶段快照不能恢复进度，请选择继续学习包")
+  }
   if (new Blob([text]).size > MODULE1_CONTINUE_PACKAGE_MAX_BYTES) {
     throw new Error("学习包超过 2 MB，请选择模块一导出的文本学习包。")
   }
@@ -113,8 +126,11 @@ export function deserializeModule1ContinuePackageText(text: string): ParsedModul
 }
 
 export async function deserializeModule1ContinuePackage(file: File): Promise<ParsedModule1ContinuePackage> {
+  if (file.name.toLowerCase().endsWith(".html") || file.name.toLowerCase().endsWith(".htm") || file.type === "text/html") {
+    throw new Error("阶段快照不能恢复进度，请选择继续学习包")
+  }
   if (file.size > MODULE1_CONTINUE_PACKAGE_MAX_BYTES) {
     throw new Error("学习包超过 2 MB，请选择模块一导出的文本学习包。")
   }
-  return deserializeModule1ContinuePackageText(await file.text())
+  return deserializeModule1ContinuePackageText(await file.text(), file.name)
 }

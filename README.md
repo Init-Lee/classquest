@@ -28,7 +28,7 @@ Platform Portal → Module → Lesson → Step
 
 ### 模块 1 · 未来来信
 
-七年级 AI 讲故事项目，固定包含六个课时。阶段 1 已开放课时 1，学生可围绕 SDG、具体城市问题和受众关切建立故事主题，并使用独立本地档案与 version 1 继续学习包；课时 2—6 和派生完整小说视图将在后续阶段开放。详见 [模块 1 README](src/modules/module-1-ai-story/README.md)。
+七年级 AI 讲故事项目，固定包含六个课时。阶段 1 已开放课时 1，学生可围绕 SDG、具体城市问题和受众关切建立故事主题，并使用独立本地档案、version 1 继续学习包、课时 1 阶段快照与口令教师讲解模式；课时 2—6 和派生完整小说视图将在后续阶段开放。详见 [模块 1 README](src/modules/module-1-ai-story/README.md)。
 
 ### 模块 3 · AI 科学传播站
 

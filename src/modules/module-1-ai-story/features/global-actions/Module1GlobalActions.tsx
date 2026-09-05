@@ -1,12 +1,12 @@
 /**
  * 文件说明：模块 1 全局档案操作区。
- * 职责：在顶栏提供保存进度、导入进度与重置三个主按钮，视觉和文案对齐模块 3/4，失败不改变现态。
- * 更新触发：模块 1 学习包交互、身份确认、导出刷新、重置确认或顶栏三按钮口径变化时，需要同步更新本文件。
+ * 职责：学生模式提供保存进度、导入进度与重置；课时 1 页提供阶段快照；教师模式只保留阶段快照。
+ * 更新触发：模块 1 学习包交互、阶段快照入口、教师模式按钮策略或顶栏口径变化时，需要同步更新本文件。
  */
 
 import { useRef, useState, type ChangeEvent } from "react"
-import { Download, Loader2, RotateCcw, Upload } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Camera, Download, Loader2, RotateCcw, Upload } from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import {
   Dialog,
@@ -22,11 +22,39 @@ import {
   downloadModule1ContinuePackage,
   type ParsedModule1ContinuePackage,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
-import { getModule1GlobalActionAvailability } from "@/modules/module-1-ai-story/features/global-actions/module1-global-actions-state"
+import { downloadModule1Lesson1Snapshot } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
+import {
+  getModule1GlobalActionAvailability,
+  getModule1SnapshotDisabledReason,
+} from "@/modules/module-1-ai-story/features/global-actions/module1-global-actions-state"
+
+function SnapshotButton({
+  enabled,
+  reason,
+  onClick,
+}: {
+  enabled: boolean
+  reason: string
+  onClick: () => void
+}) {
+  return (
+    <Button
+      size="sm"
+      onClick={onClick}
+      disabled={!enabled}
+      title={enabled ? "下载阶段快照，不能用来恢复进度" : reason}
+      className="gap-1.5 border-green-600 bg-green-600 px-2 text-xs text-white hover:bg-green-700 sm:px-3"
+    >
+      <Camera className="h-3.5 w-3.5" />
+      阶段快照
+    </Button>
+  )
+}
 
 export function Module1GlobalActions() {
-  const { portfolio, flushPortfolio, importPortfolio, clearPortfolio } = useModule1Portfolio()
+  const { portfolio, flushPortfolio, importPortfolio, clearPortfolio, isTeacherMode } = useModule1Portfolio()
   const navigate = useNavigate()
+  const location = useLocation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -36,7 +64,14 @@ export function Module1GlobalActions() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [pendingImport, setPendingImport] = useState<ParsedModule1ContinuePackage | null>(null)
   const [importError, setImportError] = useState("")
-  const actions = getModule1GlobalActionAvailability(Boolean(portfolio), busy)
+  const showSnapshot = /\/module\/1\/lesson\/1/.test(location.pathname)
+  const lesson1Completed = Boolean(portfolio?.lesson1.completed)
+  const actions = getModule1GlobalActionAvailability(Boolean(portfolio), busy, {
+    isTeacherMode,
+    lesson1Completed,
+    showSnapshot,
+  })
+  const snapshotReason = getModule1SnapshotDisabledReason(Boolean(portfolio), lesson1Completed)
 
   const exportLatest = async () => {
     if (!portfolio) return
@@ -49,7 +84,7 @@ export function Module1GlobalActions() {
   }
 
   const handleSave = async () => {
-    if (!portfolio) return
+    if (!portfolio || isTeacherMode) return
     setBusy(true)
     setSaving(true)
     setMessage("")
@@ -63,6 +98,11 @@ export function Module1GlobalActions() {
       setSaving(false)
       setBusy(false)
     }
+  }
+
+  const handleSnapshot = () => {
+    if (!portfolio || !lesson1Completed) return
+    downloadModule1Lesson1Snapshot(portfolio)
   }
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -82,7 +122,7 @@ export function Module1GlobalActions() {
   }
 
   const confirmImport = async () => {
-    if (!pendingImport) return
+    if (!pendingImport || isTeacherMode) return
     setBusy(true)
     try {
       const imported = await importPortfolio(pendingImport.portfolio)
@@ -99,7 +139,7 @@ export function Module1GlobalActions() {
   }
 
   const confirmReset = async () => {
-    if (!portfolio) return
+    if (!portfolio || isTeacherMode) return
     setBusy(true)
     try {
       await clearPortfolio()
@@ -110,6 +150,16 @@ export function Module1GlobalActions() {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (isTeacherMode) {
+    return (
+      <div className="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
+        {showSnapshot && (
+          <SnapshotButton enabled={actions.canSnapshot} reason={snapshotReason} onClick={handleSnapshot} />
+        )}
+      </div>
+    )
   }
 
   return (
@@ -134,6 +184,9 @@ export function Module1GlobalActions() {
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
           导入进度
         </Button>
+        {showSnapshot && (
+          <SnapshotButton enabled={actions.canSnapshot} reason={snapshotReason} onClick={handleSnapshot} />
+        )}
         <Button
           size="sm"
           variant="outline"
@@ -156,7 +209,9 @@ export function Module1GlobalActions() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>导入进度</DialogTitle>
-            <DialogDescription>选择之前导出的模块一继续学习包；确认身份和恢复位置后才会替换本机档案。</DialogDescription>
+            <DialogDescription>
+              选择之前导出的模块一继续学习包；阶段快照不能恢复进度，请选择继续学习包。确认身份和恢复位置后才会替换本机档案。
+            </DialogDescription>
           </DialogHeader>
           <button
             type="button"
@@ -165,7 +220,7 @@ export function Module1GlobalActions() {
           >
             <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
             <span className="block text-sm text-muted-foreground">点击选择继续学习包文件</span>
-            <span className="mt-1 block text-xs text-muted-foreground">格式：模块1_姓名_课时N第M关_日期.json</span>
+            <span className="mt-1 block text-xs text-muted-foreground">格式：模块1_姓名_课时N第M关_日期（学习包）</span>
           </button>
           <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleFile} />
           {busy && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />正在读取学习包...</p>}
@@ -194,7 +249,7 @@ export function Module1GlobalActions() {
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            如需保留进度，请先点击「保存进度」下载继续学习包，再进行重置。
+            如需保留进度，请先点击「保存进度」下载继续学习包，再进行重置。阶段快照不能恢复进度。
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowResetDialog(false)}>取消</Button>

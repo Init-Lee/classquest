@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 1 首页。
- * 职责：承载建档入口、身份与续学信息，以及六课时完成、进行中和待开发状态卡。
- * 更新触发：身份字段、课时开放状态、首页行动或课程状态文案变化时，需要同步更新本文件。
+ * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及课时 1 完成后的阶段快照。
+ * 更新触发：身份字段、课时开放状态、教师入口、阶段快照入口或课程状态文案变化时，需要同步更新本文件。
  */
 
 import { useState, type FormEvent } from "react"
-import { ArrowRight, BookOpen, CheckCircle2, Lock, User } from "lucide-react"
+import { ArrowRight, BookOpen, Camera, CheckCircle2, Eye, GraduationCap, Lock, User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
@@ -19,15 +19,110 @@ import {
   parseModule1ClassNumber,
   validateModule1SeatOnly,
 } from "@/modules/module-1-ai-story/constants/class-options"
+import { verifyModule1TeacherPassphrase } from "@/modules/module-1-ai-story/constants/teacher-passphrase"
+import { downloadModule1Lesson1Snapshot } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
+
+function TeacherModeEntry() {
+  const { enterTeacherMode } = useModule1Portfolio()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [showInput, setShowInput] = useState(false)
+
+  const handleEnter = () => {
+    if (verifyModule1TeacherPassphrase(password)) {
+      enterTeacherMode()
+      navigate("/module/1")
+      return
+    }
+    setError("口令错误，请重试")
+    setPassword("")
+  }
+
+  return (
+    <Card className="mx-auto max-w-md border-amber-200 bg-amber-50">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-amber-800">
+          <GraduationCap className="h-5 w-5" />
+          教师讲解模式
+        </CardTitle>
+        <CardDescription className="text-amber-700/80">
+          可浏览课时 1 全部关卡做课堂演示，不写入学生本机档案
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!showInput ? (
+          <Button
+            variant="outline"
+            className="w-full border-amber-400 text-amber-800 hover:bg-amber-100"
+            onClick={() => setShowInput(true)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            进入讲解模式
+          </Button>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-amber-800">请输入教师口令</label>
+              <Input
+                type="password"
+                placeholder="输入口令后按回车"
+                value={password}
+                onChange={event => { setPassword(event.target.value); setError("") }}
+                onKeyDown={event => { if (event.key === "Enter") handleEnter() }}
+                autoFocus
+                className="border-amber-300 focus:border-amber-500"
+              />
+              {error && <p className="text-xs text-red-600">{error}</p>}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => { setShowInput(false); setPassword(""); setError("") }}
+              >
+                取消
+              </Button>
+              <Button
+                className="flex-1 bg-amber-500 text-xs text-white hover:bg-amber-600"
+                onClick={handleEnter}
+                disabled={!password}
+              >
+                确认进入
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function TeacherEntryBlock() {
+  return (
+    <>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-muted" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
+        </div>
+      </div>
+      <TeacherModeEntry />
+    </>
+  )
+}
 
 export default function Module1HomePage() {
-  const { portfolio, loading, createPortfolio } = useModule1Portfolio()
+  const { portfolio, loading, createPortfolio, isTeacherMode } = useModule1Portfolio()
   const navigate = useNavigate()
   const [form, setForm] = useState({ clazz: "", studentName: "", seatOnly: "" })
   const [saving, setSaving] = useState(false)
   const [showNewForm, setShowNewForm] = useState(false)
   const seatError = form.seatOnly ? validateModule1SeatOnly(form.clazz, form.seatOnly) : null
   const valid = Boolean(form.studentName.trim() && form.clazz && form.seatOnly.length === 2 && !seatError)
+  const showTeacherEntry = !isTeacherMode
 
   const create = async (event: FormEvent) => {
     event.preventDefault()
@@ -93,11 +188,13 @@ export default function Module1HomePage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />首次开始需登记班级、姓名与四位班学号。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请点击「保存进度」下载最新学习包。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成课时 1 后可下载「阶段快照」提交作业；阶段快照不能恢复进度。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关，可从进度条回看已完成内容。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段只开放课时 1，其余课时会清楚标记为待开发。</li>
             </ul>
           </CardContent>
         </Card>
+        {showTeacherEntry && <TeacherEntryBlock />}
       </div>
     )
   }
@@ -142,19 +239,42 @@ export default function Module1HomePage() {
 
   const pointer = resolveModule1PortfolioPointer(portfolio)
   const lesson1Done = portfolio.lesson1.completed
+  const browseStep = lesson1Done ? 4 : pointer.stepId
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8">
       <div className="text-center">
         <h1 className="text-2xl font-bold">欢迎回来，{portfolio.student.studentName}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{lesson1Done ? "课时 1 已完成；其余课时将在后续阶段开放。" : `继续课时 1 第 ${pointer.stepId} 关。`}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {isTeacherMode
+            ? "当前是课堂演示档案，不会写入本机学生档案。"
+            : lesson1Done
+              ? "课时 1 已完成；其余课时将在后续阶段开放。"
+              : `继续课时 1 第 ${pointer.stepId} 关。`}
+        </p>
       </div>
       <Card className="mx-auto max-w-xl border-primary/20 bg-primary/5">
         <CardHeader><CardTitle className="text-base">当前档案</CardTitle></CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>{portfolio.student.clazz} · {portfolio.student.studentName} · {portfolio.student.classSeatCode}</p>
-          <Button disabled={lesson1Done} onClick={() => navigate(`/module/1/lesson/1/step/${pointer.stepId}`)}>
-            {lesson1Done ? "等待课时 2 开放" : "继续学习"}<ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              disabled={!isTeacherMode && lesson1Done}
+              onClick={() => navigate(`/module/1/lesson/1/step/${browseStep}`)}
+            >
+              {isTeacherMode ? "浏览本课" : lesson1Done ? "等待课时 2 开放" : "继续学习"}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            {lesson1Done && (
+              <Button
+                variant="outline"
+                className="border-green-600 text-green-800 hover:bg-green-50"
+                onClick={() => downloadModule1Lesson1Snapshot(portfolio)}
+              >
+                <Camera className="mr-1 h-4 w-4" />
+                阶段快照
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -174,12 +294,28 @@ export default function Module1HomePage() {
                 <CardDescription>{lesson.subtitle}</CardDescription>
               </CardHeader>
               {lesson.available && (
-                <CardContent><Button variant="outline" className="w-full" onClick={() => navigate(complete ? "/module/1/lesson/1/step/4" : `/module/1/lesson/1/step/${pointer.stepId}`)}>{complete ? "查看主题" : "进入课时"}</Button></CardContent>
+                <CardContent>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => navigate(complete ? "/module/1/lesson/1/step/4" : `/module/1/lesson/1/step/${pointer.stepId}`)}
+                  >
+                    {isTeacherMode ? "浏览本课" : complete ? "查看主题" : "进入课时"}
+                  </Button>
+                </CardContent>
               )}
             </Card>
           )
         })}
       </div>
+      {isTeacherMode && (
+        <Card className="bg-amber-50">
+          <CardContent className="pt-6 text-sm text-amber-900">
+            教师讲解模式使用独立演示档案，演示操作不会写入、覆盖或清除本机学生档案。
+          </CardContent>
+        </Card>
+      )}
+      {showTeacherEntry && <TeacherEntryBlock />}
     </div>
   )
 }
