@@ -24,7 +24,7 @@ import {
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
 
 export function Module1GlobalActions() {
-  const { portfolio, savePortfolio, importPortfolio, clearPortfolio } = useModule1Portfolio()
+  const { portfolio, flushPortfolio, importPortfolio, clearPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -33,8 +33,12 @@ export function Module1GlobalActions() {
 
   const exportLatest = async () => {
     if (!portfolio) return
-    const saved = await savePortfolio(portfolio)
-    downloadModule1ContinuePackage(saved)
+    downloadModule1ContinuePackage(await flushPortfolio())
+  }
+
+  const reportActionError = (error: unknown) => {
+    const detail = error instanceof Error ? error.message : String(error)
+    setMessage(`操作未完成：${detail}。本机当前档案未被替换或清除。`)
   }
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +64,8 @@ export function Module1GlobalActions() {
       setPendingImport(null)
       setMessage(`已恢复 ${imported.student.studentName} 的学习进度。`)
       navigate("/module/1")
+    } catch (error) {
+      reportActionError(error)
     } finally {
       setBusy(false)
     }
@@ -67,8 +73,12 @@ export function Module1GlobalActions() {
 
   const handleClear = async () => {
     if (!portfolio || !window.confirm("确定清除本机模块一档案吗？未导出的进度无法恢复。")) return
-    await clearPortfolio()
-    navigate("/module/1")
+    try {
+      await clearPortfolio()
+      navigate("/module/1")
+    } catch (error) {
+      reportActionError(error)
+    }
   }
 
   const handleExportAndClear = async () => {
@@ -78,6 +88,8 @@ export function Module1GlobalActions() {
       await exportLatest()
       await clearPortfolio()
       navigate("/module/1")
+    } catch (error) {
+      reportActionError(error)
     } finally {
       setBusy(false)
     }
@@ -86,7 +98,7 @@ export function Module1GlobalActions() {
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button size="sm" onClick={() => void exportLatest()} disabled={!portfolio || busy}>
+        <Button size="sm" onClick={() => void exportLatest().catch(reportActionError)} disabled={!portfolio || busy}>
           <Download className="mr-1 h-4 w-4" />
           导出
         </Button>

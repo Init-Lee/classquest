@@ -14,7 +14,7 @@ import {
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 
 export default function Step4AudienceOutline() {
-  const { portfolio, savePortfolio } = useModule1Portfolio()
+  const { portfolio, updatePortfolio, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   if (!portfolio) return null
   const state = portfolio.lesson1
@@ -22,17 +22,21 @@ export default function Step4AudienceOutline() {
   const outline = `围绕“${state.cityIssue || "待填写城市问题"}”，从 2035 年写信给“${state.audience || "待填写受众"}”，回应其对“${state.audienceConcern || "待填写关注点"}”的关切，并体现 ${state.sdg || "待选择 SDG"} 的实践意义。`
 
   const update = (patch: Partial<typeof state>) => {
-    void savePortfolio({ ...portfolio, lesson1: { ...state, ...patch } })
+    updatePortfolio(current => ({
+      ...current,
+      lesson1: { ...current.lesson1, ...patch },
+    }))
   }
 
   const complete = async () => {
     if (!valid) return
     const completedAt = new Date().toISOString()
-    await savePortfolio({
-      ...portfolio,
+    updatePortfolio(current => ({
+      ...current,
       progress: { lessonId: 2, stepId: 1 },
-      lesson1: { ...state, step: 4, step4Completed: true, completed: true, completedAt },
-    })
+      lesson1: { ...current.lesson1, step: 4, step4Completed: true, completed: true, completedAt },
+    }))
+    await flushPortfolio()
     navigate("/module/1")
   }
 

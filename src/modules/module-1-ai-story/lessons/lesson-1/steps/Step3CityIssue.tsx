@@ -11,7 +11,7 @@ import { Input } from "@/shared/ui/input"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 
 export default function Step3CityIssue() {
-  const { portfolio, savePortfolio } = useModule1Portfolio()
+  const { portfolio, updatePortfolio, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   if (!portfolio) return null
   const state = portfolio.lesson1
@@ -19,11 +19,12 @@ export default function Step3CityIssue() {
 
   const continueNext = async () => {
     if (!valid) return
-    await savePortfolio({
-      ...portfolio,
+    updatePortfolio(current => ({
+      ...current,
       progress: { lessonId: 1, stepId: 4 },
-      lesson1: { ...state, step: 4, step3Completed: true },
-    })
+      lesson1: { ...current.lesson1, step: 4, step3Completed: true },
+    }))
+    await flushPortfolio()
     navigate("/module/1/lesson/1/step/4")
   }
 
@@ -34,7 +35,10 @@ export default function Step3CityIssue() {
         <p className="text-sm text-muted-foreground">越具体越好，最好能观察或测量。例如：校园食堂浪费、夜间小区照度过高、老楼缺少无障碍扶手。</p>
         <Input
           value={state.cityIssue}
-          onChange={event => void savePortfolio({ ...portfolio, lesson1: { ...state, cityIssue: event.target.value } })}
+          onChange={event => updatePortfolio(current => ({
+            ...current,
+            lesson1: { ...current.lesson1, cityIssue: event.target.value },
+          }))}
           placeholder="用一句话写下问题"
         />
         <Button disabled={!valid} onClick={() => void continueNext()}>保存并继续</Button>

@@ -23,7 +23,6 @@ import {
   deserializeModule1ContinuePackageText,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
 import { prepareModule1ImportedReplacement } from "@/modules/module-1-ai-story/infra/persistence/repositories/portfolio.repository"
-import { shouldBlockModule1StaleSave } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 
 function createStudent(name = "张三") {
   return createNewModule1Portfolio({
@@ -64,6 +63,54 @@ describe("模块 1 档案与进度", () => {
     expect(canAccessModule1Lesson(portfolio, 1)).toBe(true)
     expect(canAccessModule1Lesson(portfolio, 2)).toBe(false)
   })
+
+  it("缺字段时降级伪造完成态并把指针修复到正确关卡", () => {
+    const portfolio = createStudent()
+    portfolio.lesson1 = {
+      ...portfolio.lesson1,
+      step: 4,
+      step1Completed: true,
+      step2Completed: true,
+      step3Completed: true,
+      step4Completed: true,
+      completed: true,
+      completedAt: "2026-09-05T00:00:00.000Z",
+      sdg: "11 可持续城市和社区",
+      sdgWhy: "与社区生活相关",
+      cityIssue: "",
+      audience: "社区物业",
+      audienceConcern: "安全",
+    }
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson1.step2Completed).toBe(true)
+    expect(normalized.lesson1.step3Completed).toBe(false)
+    expect(normalized.lesson1.step4Completed).toBe(false)
+    expect(normalized.lesson1.completed).toBe(false)
+    expect(normalized.lesson1.completedAt).toBeNull()
+    expect(resolveModule1PortfolioPointer(normalized)).toEqual({ lessonId: 1, stepId: 3 })
+  })
+
+  it("保留字段和确认标记均有效的既有完成数据", () => {
+    const portfolio = createStudent()
+    portfolio.lesson1 = {
+      ...portfolio.lesson1,
+      step: 4,
+      step1Completed: true,
+      step2Completed: true,
+      step3Completed: true,
+      step4Completed: true,
+      completed: true,
+      completedAt: "2026-09-05T00:00:00.000Z",
+      sdg: "11 可持续城市和社区",
+      sdgWhy: "与社区生活相关",
+      cityIssue: "夜间照明影响睡眠",
+      audience: "社区物业",
+      audienceConcern: "安全与成本",
+    }
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson1.completed).toBe(true)
+    expect(normalized.lesson1.completedAt).toBe(portfolio.lesson1.completedAt)
+  })
 })
 
 describe("模块 1 继续学习包", () => {
@@ -91,12 +138,5 @@ describe("模块 1 继续学习包", () => {
     const imported = prepareModule1ImportedReplacement(createStudent("新学生"))
     expect(imported.student.studentName).toBe("新学生")
     expect(imported.lesson1.cityIssue).toBe("")
-  })
-})
-
-describe("模块 1 清档保护", () => {
-  it("只拦截已清除档案的迟到保存", () => {
-    expect(shouldBlockModule1StaleSave("old-id", "old-id")).toBe(true)
-    expect(shouldBlockModule1StaleSave("old-id", "new-id")).toBe(false)
   })
 })

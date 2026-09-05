@@ -9,7 +9,7 @@ import { Module1Provider, useModule1Portfolio } from "@/modules/module-1-ai-stor
 import { Module1GlobalActions } from "@/modules/module-1-ai-story/features/global-actions/Module1GlobalActions"
 
 function Module1ShellInner() {
-  const { portfolio } = useModule1Portfolio()
+  const { portfolio, saveError } = useModule1Portfolio()
   const navigate = useNavigate()
 
   return (
@@ -32,6 +32,11 @@ function Module1ShellInner() {
           </div>
         )}
       </header>
+      {saveError && (
+        <div role="alert" className="border-b border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-800">
+          {saveError}
+        </div>
+      )}
       <main className="flex-1"><Outlet /></main>
       <footer className="border-t py-3 text-center text-xs text-muted-foreground">ClassQuest · 未来来信 · MIT License</footer>
     </div>

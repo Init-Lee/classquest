@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 学习档案 Provider。
- * 职责：集中负责加载、显式保存、新建、导入替换与清档，并阻止清档后的旧页面回写。
+ * 职责：集中负责乐观更新、串行保存、flush、新建、导入替换与清档，并阻止旧代次保存回写。
  * 更新触发：模块 1 状态容器、仓库边界、导入流程或清档保护规则变化时，需要同步更新本文件。
  */
 /* eslint-disable react-refresh/only-export-components */
@@ -13,15 +13,14 @@ import {
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { resolveModule1PortfolioPointer } from "@/modules/module-1-ai-story/app/lesson-registry"
 import { module1PortfolioRepository } from "@/modules/module-1-ai-story/infra/persistence/repositories/portfolio.repository"
-
-export function shouldBlockModule1StaleSave(clearedPortfolioId: string | null, candidateId: string): boolean {
-  return clearedPortfolioId === candidateId
-}
+import { Module1SaveCoordinator } from "@/modules/module-1-ai-story/app/providers/module1-save-coordinator"
 
 interface Module1ContextValue {
   portfolio: Module1Portfolio | null
   loading: boolean
-  savePortfolio: (portfolio: Module1Portfolio) => Promise<Module1Portfolio>
+  saveError: string | null
+  updatePortfolio: (updater: (current: Module1Portfolio) => Module1Portfolio) => Module1Portfolio
+  flushPortfolio: () => Promise<Module1Portfolio>
   createPortfolio: (student: Module1Portfolio["student"]) => Promise<Module1Portfolio>
   importPortfolio: (portfolio: Module1Portfolio) => Promise<Module1Portfolio>
   clearPortfolio: () => Promise<void>
@@ -38,62 +37,97 @@ function repairPortfolio(portfolio: unknown): Module1Portfolio {
 export function Module1Provider({ children }: { children: React.ReactNode }) {
   const [portfolio, setPortfolio] = useState<Module1Portfolio | null>(null)
   const [loading, setLoading] = useState(true)
-  const clearedPortfolioIdRef = useRef<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const coordinatorRef = useRef<Module1SaveCoordinator | null>(null)
+  if (!coordinatorRef.current) {
+    coordinatorRef.current = new Module1SaveCoordinator(
+      module1PortfolioRepository,
+      repairPortfolio,
+      (error, operation) => {
+        console.error(`[module1 persistence] ${operation} failed`, error)
+        setSaveError(`本机进度保存失败：${error.message}。请不要关闭页面，并重试当前操作。`)
+      },
+    )
+  }
+  const coordinator = coordinatorRef.current
 
   const reload = useCallback(async () => {
     setLoading(true)
     try {
       const current = await module1PortfolioRepository.getCurrent()
       if (!current) {
+        coordinator.hydrate(null)
         setPortfolio(null)
         return
       }
       const repaired = repairPortfolio(current)
       const pointerChanged = repaired.progress.lessonId !== current.progress.lessonId
         || repaired.progress.stepId !== current.progress.stepId
-      if (pointerChanged) await module1PortfolioRepository.save(repaired)
-      setPortfolio(repaired)
+      coordinator.hydrate(repaired)
+      let loaded = repaired
+      if (pointerChanged) {
+        loaded = coordinator.update(() => repaired)
+        await coordinator.flush()
+      }
+      setSaveError(null)
+      setPortfolio(loaded)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [coordinator])
 
   useEffect(() => {
     void reload()
   }, [reload])
 
-  const savePortfolio = useCallback(async (updated: Module1Portfolio) => {
-    if (shouldBlockModule1StaleSave(clearedPortfolioIdRef.current, updated.id)) return updated
-    const repaired = repairPortfolio({ ...updated, updatedAt: new Date().toISOString() })
-    await module1PortfolioRepository.save(repaired)
-    clearedPortfolioIdRef.current = null
-    setPortfolio(repaired)
-    return repaired
-  }, [])
+  const updatePortfolio = useCallback((updater: (current: Module1Portfolio) => Module1Portfolio) => {
+    setSaveError(null)
+    const next = coordinator.update(updater)
+    setPortfolio(next)
+    return next
+  }, [coordinator])
+
+  const flushPortfolio = useCallback(async () => {
+    try {
+      const latest = await coordinator.flush()
+      setPortfolio(latest)
+      return latest
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      console.error("[module1 persistence] flush failed", error)
+      setSaveError(`无法完成保存：${detail}。当前操作已停止，请重试。`)
+      throw error
+    }
+  }, [coordinator])
 
   const createPortfolio = useCallback(async (student: Module1Portfolio["student"]) => {
-    return savePortfolio(createNewModule1Portfolio(student))
-  }, [savePortfolio])
+    const created = await coordinator.replace(createNewModule1Portfolio(student))
+    setSaveError(null)
+    setPortfolio(created)
+    return created
+  }, [coordinator])
 
   const importPortfolio = useCallback(async (imported: Module1Portfolio) => {
     const repaired = repairPortfolio(imported)
-    await module1PortfolioRepository.replaceWithImported(repaired)
-    clearedPortfolioIdRef.current = null
-    setPortfolio(repaired)
-    return repaired
-  }, [])
+    const replaced = await coordinator.replace(repaired)
+    setSaveError(null)
+    setPortfolio(replaced)
+    return replaced
+  }, [coordinator])
 
   const clearPortfolio = useCallback(async () => {
-    clearedPortfolioIdRef.current = portfolio?.id ?? null
-    await module1PortfolioRepository.clear()
+    await coordinator.clear()
+    setSaveError(null)
     setPortfolio(null)
-  }, [portfolio?.id])
+  }, [coordinator])
 
   return (
     <Module1Context.Provider value={{
       portfolio,
       loading,
-      savePortfolio,
+      saveError,
+      updatePortfolio,
+      flushPortfolio,
       createPortfolio,
       importPortfolio,
       clearPortfolio,

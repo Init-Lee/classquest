@@ -135,6 +135,26 @@ export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
   const lesson1 = isRecord(source.lesson1) ? source.lesson1 : {}
   const fallback = createNewModule1Portfolio()
   const lessonId = numberValue(progress.lessonId, 1)
+  const sdg = stringValue(lesson1.sdg)
+  const sdgWhy = stringValue(lesson1.sdgWhy)
+  const cityIssue = stringValue(lesson1.cityIssue)
+  const audience = stringValue(lesson1.audience)
+  const audienceConcern = stringValue(lesson1.audienceConcern)
+  const step1Completed = booleanValue(lesson1.step1Completed)
+  const step2Completed = step1Completed
+    && booleanValue(lesson1.step2Completed)
+    && Boolean(sdg.trim() && sdgWhy.trim())
+  const step3Completed = step2Completed
+    && booleanValue(lesson1.step3Completed)
+    && Boolean(cityIssue.trim())
+  const allLesson1FieldsComplete = [sdg, sdgWhy, cityIssue, audience, audienceConcern]
+    .every(value => value.trim().length > 0)
+  const step4Completed = step3Completed
+    && booleanValue(lesson1.step4Completed)
+    && Boolean(audience.trim() && audienceConcern.trim())
+    && allLesson1FieldsComplete
+  const lesson1Completed = step4Completed && booleanValue(lesson1.completed)
+  const safeLesson1Step = !step1Completed ? 1 : !step2Completed ? 2 : !step3Completed ? 3 : 4
 
   return {
     ...fallback,
@@ -153,18 +173,18 @@ export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
       stepId: Math.max(1, numberValue(progress.stepId, 1)),
     },
     lesson1: {
-      step: Math.max(1, numberValue(lesson1.step, 1)),
-      completed: booleanValue(lesson1.completed),
-      completedAt: lesson1.completedAt === null ? null : stringValue(lesson1.completedAt) || null,
-      step1Completed: booleanValue(lesson1.step1Completed),
-      step2Completed: booleanValue(lesson1.step2Completed),
-      step3Completed: booleanValue(lesson1.step3Completed),
-      step4Completed: booleanValue(lesson1.step4Completed),
-      sdg: stringValue(lesson1.sdg),
-      sdgWhy: stringValue(lesson1.sdgWhy),
-      cityIssue: stringValue(lesson1.cityIssue),
-      audience: stringValue(lesson1.audience),
-      audienceConcern: stringValue(lesson1.audienceConcern),
+      step: safeLesson1Step,
+      completed: lesson1Completed,
+      completedAt: lesson1Completed ? stringValue(lesson1.completedAt) || null : null,
+      step1Completed,
+      step2Completed,
+      step3Completed,
+      step4Completed,
+      sdg,
+      sdgWhy,
+      cityIssue,
+      audience,
+      audienceConcern,
     },
     lesson2: normalizeEmptyLesson(source.lesson2),
     lesson3: normalizeEmptyLesson(source.lesson3),

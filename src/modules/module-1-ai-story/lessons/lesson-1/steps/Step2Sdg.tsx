@@ -12,23 +12,27 @@ import { MODULE1_SDGS } from "@/modules/module-1-ai-story/constants/sdgs"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 
 export default function Step2Sdg() {
-  const { portfolio, savePortfolio } = useModule1Portfolio()
+  const { portfolio, updatePortfolio, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   if (!portfolio) return null
   const state = portfolio.lesson1
 
   const update = (patch: Partial<typeof state>) => {
-    void savePortfolio({ ...portfolio, lesson1: { ...state, ...patch } })
+    updatePortfolio(current => ({
+      ...current,
+      lesson1: { ...current.lesson1, ...patch },
+    }))
   }
   const valid = Boolean(state.sdg.trim() && state.sdgWhy.trim())
 
   const continueNext = async () => {
     if (!valid) return
-    await savePortfolio({
-      ...portfolio,
+    updatePortfolio(current => ({
+      ...current,
       progress: { lessonId: 1, stepId: 3 },
-      lesson1: { ...state, step: 3, step2Completed: true },
-    })
+      lesson1: { ...current.lesson1, step: 3, step2Completed: true },
+    }))
+    await flushPortfolio()
     navigate("/module/1/lesson/1/step/3")
   }
 

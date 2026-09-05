@@ -10,16 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 
 export default function Step1Mission() {
-  const { portfolio, savePortfolio } = useModule1Portfolio()
+  const { portfolio, updatePortfolio, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   if (!portfolio) return null
 
   const confirm = async () => {
-    await savePortfolio({
-      ...portfolio,
+    updatePortfolio(current => ({
+      ...current,
       progress: { lessonId: 1, stepId: 2 },
-      lesson1: { ...portfolio.lesson1, step: 2, step1Completed: true },
-    })
+      lesson1: { ...current.lesson1, step: 2, step1Completed: true },
+    }))
+    await flushPortfolio()
     navigate("/module/1/lesson/1/step/2")
   }
 

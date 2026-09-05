@@ -10,7 +10,10 @@
 module-1-ai-story/
 ├── app/
 │   ├── layout/Module1Shell.tsx
-│   ├── providers/Module1Provider.tsx
+│   ├── providers/
+│   │   ├── Module1Provider.tsx
+│   │   ├── module1-save-coordinator.ts
+│   │   └── module1-save-coordinator.regression.test.ts
 │   └── lesson-registry.ts
 ├── constants/
 │   ├── class-options.ts
@@ -39,7 +42,7 @@ module-1-ai-story/
 
 ## 数据与路由边界
 
-- `Module1Provider` 是页面唯一状态入口；只有 repository 可直接访问 IndexedDB。
+- `Module1Provider` 是页面唯一状态入口；保存协调器负责乐观更新、串行写入、flush 与代次失效，只有 repository 可直接访问 IndexedDB。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
