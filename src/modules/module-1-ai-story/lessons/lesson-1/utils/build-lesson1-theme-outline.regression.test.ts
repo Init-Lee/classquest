@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 1 结构化主题大纲回归测试。
- * 职责：验证空态、部分输入、完整输入和可复制文本始终保留原型字段结构与主题核心。
- * 更新触发：课时 1 大纲 selector、格式化模板、占位文案或故事年份口径变化时，需要同步更新本文件。
+ * 职责：验证空态、部分输入、完整输入、结构化展示文本和 Step 4 复制 payload（主题核心）始终保留原型字段结构。
+ * 更新触发：课时 1 大纲 selector、格式化模板、复制策略、占位文案或故事年份口径变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -9,6 +9,7 @@ import { createNewModule1Portfolio } from "@/modules/module-1-ai-story/domains/p
 import {
   buildModule1Lesson1ThemeOutline,
   formatModule1Lesson1ThemeOutline,
+  resolveModule1Lesson1CopyPayload,
 } from "@/modules/module-1-ai-story/lessons/lesson-1/utils/build-lesson1-theme-outline"
 
 function createLessonState() {
@@ -56,7 +57,7 @@ describe("模块 1 课时 1 结构化主题大纲", () => {
     expect(outline.themeCore).toContain("SDG“11 可持续城市和社区”")
   })
 
-  it("复制文本可直接交给外部 AI 且没有对象字符串", () => {
+  it("页面结构文本仍保留全部字段且没有对象字符串", () => {
     const state = {
       ...createLessonState(),
       sdg: "11 可持续城市和社区",
@@ -70,5 +71,24 @@ describe("模块 1 课时 1 结构化主题大纲", () => {
     expect(text).toContain("选择理由：与社区有关")
     expect(text).toContain("主题核心：")
     expect(text).not.toContain("[object Object]")
+  })
+
+  it("Step 4 主复制按钮只给出完整主题核心句子", () => {
+    const incomplete = resolveModule1Lesson1CopyPayload(buildModule1Lesson1ThemeOutline(createLessonState()))
+    expect(incomplete.enabled).toBe(false)
+    expect(incomplete.text).toContain("2035 年回信")
+
+    const complete = resolveModule1Lesson1CopyPayload(buildModule1Lesson1ThemeOutline({
+      ...createLessonState(),
+      sdg: "11 可持续城市和社区",
+      sdgWhy: "与社区有关",
+      cityIssue: "夜间照明影响睡眠",
+      audience: "社区物业",
+      audienceConcern: "安全与成本",
+    }))
+    expect(complete.enabled).toBe(true)
+    expect(complete.text).toBe("围绕“夜间照明影响睡眠”这个具体问题，通过 2035 年回信的形式，向“社区物业”展示解决方案，体现所选 SDG“11 可持续城市和社区”的实践意义。")
+    expect(complete.text).not.toContain("【故事主题设定大纲】")
+    expect(complete.text).not.toContain("选择理由")
   })
 })

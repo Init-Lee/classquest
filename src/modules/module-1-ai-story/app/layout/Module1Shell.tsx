@@ -46,7 +46,9 @@ function Module1ShellInner() {
           <div className="hidden min-w-0 flex-1 justify-center overflow-hidden lg:flex">
             <Module1TopProgress />
           </div>
-          <Module1GlobalActions />
+          <div className="shrink-0">
+            <Module1GlobalActions />
+          </div>
         </div>
         <div className="border-t px-2 lg:hidden">
           <Module1TopProgress />

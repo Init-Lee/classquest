@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 1 全局档案操作区。
- * 职责：提供显式保存后导出、预览确认导入、清档及导出并清档，确保失败不会改变现态。
- * 更新触发：模块 1 学习包交互、身份确认、导出刷新或共享设备清理流程变化时，需要同步更新本文件。
+ * 职责：在顶栏提供保存进度、导入进度与重置三个主按钮，视觉和文案对齐模块 3/4，失败不改变现态。
+ * 更新触发：模块 1 学习包交互、身份确认、导出刷新、重置确认或顶栏三按钮口径变化时，需要同步更新本文件。
  */
 
 import { useRef, useState, type ChangeEvent } from "react"
-import { Download, Loader2, MoreHorizontal, Trash2, Upload } from "lucide-react"
+import { Download, Loader2, RotateCcw, Upload } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import {
@@ -22,18 +22,21 @@ import {
   downloadModule1ContinuePackage,
   type ParsedModule1ContinuePackage,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
+import { getModule1GlobalActionAvailability } from "@/modules/module-1-ai-story/features/global-actions/module1-global-actions-state"
 
 export function Module1GlobalActions() {
   const { portfolio, flushPortfolio, importPortfolio, clearPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
   const [message, setMessage] = useState("")
   const [showImportDialog, setShowImportDialog] = useState(false)
-  const [showMore, setShowMore] = useState(false)
-  const [pendingClear, setPendingClear] = useState<"clear" | "export-clear" | null>(null)
+  const [showResetDialog, setShowResetDialog] = useState(false)
   const [pendingImport, setPendingImport] = useState<ParsedModule1ContinuePackage | null>(null)
   const [importError, setImportError] = useState("")
+  const actions = getModule1GlobalActionAvailability(Boolean(portfolio), busy)
 
   const exportLatest = async () => {
     if (!portfolio) return
@@ -43,6 +46,23 @@ export function Module1GlobalActions() {
   const reportActionError = (error: unknown) => {
     const detail = error instanceof Error ? error.message : String(error)
     setMessage(`操作未完成：${detail}。本机当前档案未被替换或清除。`)
+  }
+
+  const handleSave = async () => {
+    if (!portfolio) return
+    setBusy(true)
+    setSaving(true)
+    setMessage("")
+    try {
+      await exportLatest()
+      setSaveSuccess(true)
+      window.setTimeout(() => setSaveSuccess(false), 2000)
+    } catch (error) {
+      reportActionError(error)
+    } finally {
+      setSaving(false)
+      setBusy(false)
+    }
   }
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -78,13 +98,12 @@ export function Module1GlobalActions() {
     }
   }
 
-  const confirmClear = async () => {
-    if (!portfolio || !pendingClear) return
+  const confirmReset = async () => {
+    if (!portfolio) return
     setBusy(true)
     try {
-      if (pendingClear === "export-clear") await exportLatest()
       await clearPortfolio()
-      setPendingClear(null)
+      setShowResetDialog(false)
       navigate("/module/1")
     } catch (error) {
       reportActionError(error)
@@ -95,62 +114,36 @@ export function Module1GlobalActions() {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+      <div className="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
         <Button
           size="sm"
-          onClick={() => void exportLatest().catch(reportActionError)}
-          disabled={!portfolio || busy}
-          className="gap-1.5 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700 sm:px-3"
+          onClick={() => void handleSave()}
+          disabled={!actions.canSave}
+          className="gap-1.5 border-blue-600 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700 sm:px-3"
         >
-          <Download className="h-3.5 w-3.5" />
-          导出学习包
+          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+          {saveSuccess ? "已保存" : "保存进度"}
         </Button>
         <Button
           size="sm"
           variant="outline"
           onClick={() => setShowImportDialog(true)}
-          disabled={busy}
+          disabled={!actions.canImport}
           className="gap-1.5 px-2 text-xs sm:px-3"
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-          导入学习包
+          导入进度
         </Button>
-        <div className="relative">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!portfolio || busy}
-            aria-haspopup="menu"
-            aria-expanded={showMore}
-            onClick={() => setShowMore(current => !current)}
-            className="gap-1 px-2 text-xs sm:px-3"
-          >
-            <MoreHorizontal className="h-3.5 w-3.5" />
-            更多
-          </Button>
-          {showMore && portfolio && (
-            <div role="menu" className="absolute right-0 top-11 z-50 w-52 space-y-1 rounded-md border bg-popover p-1 shadow-md">
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => { setShowMore(false); setPendingClear("clear") }}
-                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-xs text-destructive hover:bg-accent"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                清除本机档案
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => { setShowMore(false); setPendingClear("export-clear") }}
-                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-xs hover:bg-accent"
-              >
-                <Download className="h-3.5 w-3.5" />
-                导出学习包后清除
-              </button>
-            </div>
-          )}
-        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowResetDialog(true)}
+          disabled={!actions.canReset}
+          className="gap-1.5 px-2 text-xs text-destructive hover:text-destructive sm:px-3"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          重置
+        </Button>
       </div>
 
       <Dialog open={showImportDialog} onOpenChange={(open) => {
@@ -162,7 +155,7 @@ export function Module1GlobalActions() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>导入学习包</DialogTitle>
+            <DialogTitle>导入进度</DialogTitle>
             <DialogDescription>选择之前导出的模块一继续学习包；确认身份和恢复位置后才会替换本机档案。</DialogDescription>
           </DialogHeader>
           <button
@@ -192,20 +185,21 @@ export function Module1GlobalActions() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(pendingClear)} onOpenChange={open => { if (!open) setPendingClear(null) }}>
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{pendingClear === "export-clear" ? "导出学习包后清除" : "清除本机档案"}</DialogTitle>
+            <DialogTitle>重置模块一学习数据</DialogTitle>
             <DialogDescription>
-              {pendingClear === "export-clear"
-                ? "系统会先下载最新学习包，再清除当前浏览器中的模块一档案。"
-                : "此操作会清除当前浏览器中的模块一身份与学习进度，未导出的内容无法恢复。"}
+              此操作会清除本设备上保存的模块一学习进度。需要保留时，请先保存继续学习包。
             </DialogDescription>
           </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            如需保留进度，请先点击「保存进度」下载继续学习包，再进行重置。
+          </p>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setPendingClear(null)}>取消</Button>
-            <Button variant="destructive" onClick={() => void confirmClear()} disabled={busy}>
-              {busy ? "处理中..." : pendingClear === "export-clear" ? "确认导出并清除" : "确认清除"}
+            <Button variant="outline" onClick={() => setShowResetDialog(false)}>取消</Button>
+            <Button variant="destructive" onClick={() => void confirmReset()} disabled={busy}>
+              {busy ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />重置中...</> : "确认重置"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -214,7 +208,7 @@ export function Module1GlobalActions() {
       <Dialog open={Boolean(message)} onOpenChange={open => { if (!open) setMessage("") }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>学习包提示</DialogTitle>
+            <DialogTitle>学习进度提示</DialogTitle>
             <DialogDescription>{message}</DialogDescription>
           </DialogHeader>
           <DialogFooter><Button onClick={() => setMessage("")}>知道了</Button></DialogFooter>

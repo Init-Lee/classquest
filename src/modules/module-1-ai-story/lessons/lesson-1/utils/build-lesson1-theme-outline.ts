@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 1 故事主题大纲 selector 与文本格式化器。
- * 职责：从五个课时字段实时派生结构化大纲、主题核心和可复制纯文本，不持久化派生结果。
- * 更新触发：课时 1 大纲字段、占位口径、主题核心模板或故事年份迁移到 Phase 3 集中常量时，需要同步更新本文件。
+ * 职责：从五个课时字段实时派生结构化大纲、主题核心，以及 Step 4 交给外部 AI 的复制 payload，不持久化派生结果。
+ * 更新触发：课时 1 大纲字段、占位口径、主题核心模板、复制策略或故事年份迁移到 Phase 3 集中常量时，需要同步更新本文件。
  */
 
 import type { Module1Lesson1State } from "@/modules/module-1-ai-story/domains/portfolio/types"
@@ -44,6 +44,16 @@ export function buildModule1Lesson1ThemeOutline(
     audienceConcern,
     themeCore: `围绕“${cityIssue}”这个具体问题，通过 ${MODULE1_LESSON1_STORY_YEAR} 年回信的形式，向“${audience}”展示解决方案，体现所选 SDG“${sdgTheme}”的实践意义。`,
     complete,
+  }
+}
+
+export function resolveModule1Lesson1CopyPayload(outline: Module1Lesson1ThemeOutline): {
+  enabled: boolean
+  text: string
+} {
+  return {
+    enabled: outline.complete,
+    text: outline.themeCore,
   }
 }
 

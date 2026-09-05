@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 1 实时结构化故事主题大纲组件。
- * 职责：在 Step 2—4 统一展示完整字段结构，并在最终结构完整时复制可直接交给外部 AI 的大纲文本。
- * 更新触发：课时 1 大纲视觉、复制反馈、字段结构或响应式布局变化时，需要同步更新本文件。
+ * 职责：在 Step 2—4 统一展示完整字段结构，并在 Step 4 于主题核心框内复制可交给外部 AI 的主题核心句子。
+ * 更新触发：课时 1 大纲视觉、复制入口位置、复制文本策略、字段结构或响应式布局变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import type { Module1Lesson1State } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import {
   buildModule1Lesson1ThemeOutline,
-  formatModule1Lesson1ThemeOutline,
+  resolveModule1Lesson1CopyPayload,
 } from "@/modules/module-1-ai-story/lessons/lesson-1/utils/build-lesson1-theme-outline"
 
 async function copyTextWithFallback(text: string): Promise<void> {
@@ -42,12 +42,13 @@ interface Lesson1ThemeOutlineProps {
 
 export function Lesson1ThemeOutline({ state, enableCopy = false }: Lesson1ThemeOutlineProps) {
   const outline = buildModule1Lesson1ThemeOutline(state)
+  const copyPayload = resolveModule1Lesson1CopyPayload(outline)
   const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">("idle")
 
-  const copyOutline = async () => {
+  const copyThemeCore = async () => {
     setCopyStatus("idle")
     try {
-      await copyTextWithFallback(formatModule1Lesson1ThemeOutline(outline))
+      await copyTextWithFallback(copyPayload.text)
       setCopyStatus("success")
     } catch (error) {
       console.error("[module1 lesson1 outline] copy failed", error)
@@ -57,20 +58,8 @@ export function Lesson1ThemeOutline({ state, enableCopy = false }: Lesson1ThemeO
 
   return (
     <Card className="h-fit">
-      <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <CardHeader>
         <CardTitle className="text-lg">📋 当前页面大纲</CardTitle>
-        {enableCopy && (
-          <Button
-            size="sm"
-            type="button"
-            disabled={!outline.complete}
-            onClick={() => void copyOutline()}
-            className="self-start gap-1.5"
-          >
-            {copyStatus === "success" ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
-            {copyStatus === "success" ? "已复制完整大纲" : "复制完整大纲"}
-          </Button>
-        )}
       </CardHeader>
       <CardContent className="space-y-4 text-sm leading-relaxed">
         <section>
@@ -88,15 +77,34 @@ export function Lesson1ThemeOutline({ state, enableCopy = false }: Lesson1ThemeO
           <p className="pl-6"><strong>写给：</strong>{outline.audience}</p>
           <p className="pl-6"><strong>关注点：</strong>{outline.audienceConcern}</p>
         </section>
-        <section className="rounded-lg bg-primary/5 p-3">
-          <p><span aria-hidden="true">💡 </span><strong>主题核心：</strong>{outline.themeCore}</p>
+        <section className="space-y-2 rounded-lg bg-primary/5 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold">
+              <span aria-hidden="true">💡 </span>
+              主题核心
+            </p>
+            {enableCopy && (
+              <Button
+                size="sm"
+                type="button"
+                variant="outline"
+                disabled={!copyPayload.enabled}
+                onClick={() => void copyThemeCore()}
+                className="h-7 shrink-0 gap-1 px-2 text-xs text-muted-foreground"
+              >
+                {copyStatus === "success" ? <Check className="h-3.5 w-3.5" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+                {copyStatus === "success" ? "已复制" : "复制主题核心"}
+              </Button>
+            )}
+          </div>
+          <p>{outline.themeCore}</p>
+          {enableCopy && !copyPayload.enabled && (
+            <p className="text-xs text-muted-foreground">五项内容填写完整后即可复制主题核心，方便交给外部 AI。</p>
+          )}
+          {copyStatus === "error" && (
+            <p role="alert" className="text-xs text-destructive">复制失败，请检查浏览器剪贴板权限后重试。</p>
+          )}
         </section>
-        {enableCopy && !outline.complete && (
-          <p className="text-xs text-muted-foreground">五项内容填写完整后即可复制完整大纲。</p>
-        )}
-        {copyStatus === "error" && (
-          <p role="alert" className="text-sm text-destructive">复制失败，请检查浏览器剪贴板权限后重试。</p>
-        )}
       </CardContent>
     </Card>
   )

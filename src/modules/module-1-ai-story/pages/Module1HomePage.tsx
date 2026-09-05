@@ -64,7 +64,7 @@ export default function Module1HomePage() {
             开始新的闯关
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
-          <p className="text-xs text-muted-foreground">已有进度？请使用右上角的“导入”选择模块一学习包。</p>
+          <p className="text-xs text-muted-foreground">已有进度？请使用右上角的「导入进度」选择模块一学习包。</p>
         </section>
 
         <section>
@@ -92,7 +92,7 @@ export default function Module1HomePage() {
             <h2 className="mb-3 text-sm font-semibold">闯关须知</h2>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />首次开始需登记班级、姓名与四位班学号。</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请导出最新学习包。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请点击「保存进度」下载最新学习包。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关，可从进度条回看已完成内容。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段只开放课时 1，其余课时会清楚标记为待开发。</li>
             </ul>

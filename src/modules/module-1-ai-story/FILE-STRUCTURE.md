@@ -23,7 +23,10 @@ module-1-ai-story/
 │   └── sdgs.ts
 ├── domains/portfolio/types.ts
 ├── features/
-│   ├── global-actions/Module1GlobalActions.tsx
+│   ├── global-actions/
+│   │   ├── Module1GlobalActions.tsx
+│   │   ├── module1-global-actions-state.ts
+│   │   └── module1-global-actions-state.regression.test.ts
 │   └── progress-ui/
 │       ├── InnerStepProgress.tsx
 │       ├── inner-step-progress-state.ts
@@ -57,7 +60,8 @@ module-1-ai-story/
 - `Module1Provider` 是页面唯一状态入口；保存协调器负责乐观更新、串行写入、flush 与代次失效，只有 repository 可直接访问 IndexedDB。
 - `Module1TopProgress` 负责六课时模块级导航；无档案时课时 1 只回模块首页，状态计算留在纯函数文件中。
 - `features/progress-ui` 是模块 1 内部可复用的课时 Step 进度能力；各课时传入 Guard 派生的完成、可访问与锁定集合，不得跨模块引用。
-- 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲及复制文本的唯一派生入口；组件只负责展示和复制反馈，大纲不进入档案。
+- `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏三按钮视觉与文案（保存进度 / 导入进度 / 重置），不得 import 其他模块业务组件；可用性规则放在纯函数中。
+- 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
