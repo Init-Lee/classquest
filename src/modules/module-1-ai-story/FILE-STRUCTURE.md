@@ -20,7 +20,8 @@ module-1-ai-story/
 │   └── lesson-registry.ts
 ├── constants/
 │   ├── class-options.ts
-│   └── sdgs.ts
+│   ├── sdgs.ts
+│   └── sdgs.regression.test.ts
 ├── domains/portfolio/types.ts
 ├── features/
 │   ├── global-actions/
@@ -66,3 +67,4 @@ module-1-ai-story/
 - 学习包先校验、归一化和修复指针，再经确认原子替换。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
 - `/module/1/story` 属于模块结果视图，不进入课时注册表。
+- 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时，也不把 `同主题不同风格写作模板.html` 挂入课时 1。

@@ -1,14 +1,15 @@
 /**
  * 文件说明：模块 1 课时 1 第二关 SDG 选择页。
  * 职责：让学生从 17 项 SDG 中选择主题并说明与生活、学校或社区的连接。
- * 更新触发：SDG 内容、理由完成条件或第二关交互变化时，需要同步更新本文件。
+ * 更新触发：SDG 内容、支架资料入口、理由完成条件或第二关交互变化时，需要同步更新本文件。
  */
 
+import { ExternalLink } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Textarea } from "@/shared/ui/textarea"
-import { MODULE1_SDGS } from "@/modules/module-1-ai-story/constants/sdgs"
+import { MODULE1_SDG_INTRO_HREF, MODULE1_SDGS } from "@/modules/module-1-ai-story/constants/sdgs"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 import { Lesson1ThemeOutline } from "@/modules/module-1-ai-story/lessons/lesson-1/components/Lesson1ThemeOutline"
 
@@ -42,6 +43,15 @@ export default function Step2Sdg() {
       <Card>
         <CardHeader><CardTitle>选择一个 SDG，并说清连接</CardTitle></CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">这是课堂支架资料，会在新窗口打开，不影响本页填写。</p>
+            <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs text-muted-foreground">
+              <a href={MODULE1_SDG_INTRO_HREF} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                查看 SDG 介绍资料
+              </a>
+            </Button>
+          </div>
           <label className="space-y-1 text-sm font-medium">
             <span>SDG（17 选 1）</span>
             <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={state.sdg} onChange={event => update({ sdg: event.target.value })}>

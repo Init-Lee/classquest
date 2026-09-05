@@ -12,7 +12,8 @@
 
 ```text
 classquest/
-├── public/                         # 静态公共资源
+├── public/                         # Vite 原样拷到站点根路径的静态资源
+│   └── module-1/                   # 模块 1 可独立打开的课堂支架页（如 sdg-intro.html）
 ├── src/                            # 前端源码
 │   ├── main.tsx                    # 前端入口，挂载平台路由
 │   ├── index.css                   # 全局样式入口

@@ -1,0 +1,728 @@
+<!--
+文件说明：模块 1 课时 1 第 2 关学生用 SDG 介绍支架页。
+职责：以独立静态页展示 17 项可持续发展目标、案例与参考链接，供学生选主题时查阅。
+更新触发：课堂 SDG 支架正文、案例或参考链接变化时，需要同步更新本文件；不要把本页嵌进课时 iframe，也不要改成模块成品页。
+-->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可持续发展目标（SDGs）项目支架</title>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 头部样式 */
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+
+        /* 内容卡片样式 */
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-card h2 {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+            position: relative;
+        }
+
+        .content-card h2::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .content-card h3 {
+            font-size: 1.4em;
+            color: #34495e;
+            margin: 25px 0 15px 0;
+            padding-left: 15px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .content-card p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        /* 表格样式 */
+        .sdg-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sdg-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .sdg-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 1em;
+        }
+
+        .sdg-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .sdg-table tr:hover {
+            background-color: #e3f2fd;
+            transition: background-color 0.3s ease;
+        }
+
+        .sdg-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 目标编号样式 */
+        .goal-number {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 1.1em;
+        }
+
+        /* 案例卡片样式 */
+        .case-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .case-card h3 {
+            color: white;
+            border-left: 4px solid white;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .case-card p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+        }
+
+        /* 横向滚动案例容器 - 全出血样式 */
+        .cases-scroll-wrapper {
+            position: relative;
+            margin: 0 -30px;
+            padding: 20px 0;
+        }
+
+        .cases-scroll-container {
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .cases-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cases-scroll-container:active {
+            cursor: grabbing;
+        }
+
+        .cases-grid {
+            display: flex;
+            gap: 20px;
+            min-width: max-content;
+            padding: 10px 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .case-card-horizontal {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            min-width: 350px;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .case-card-horizontal:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .case-card-horizontal h3 {
+            color: white;
+            border-left: 4px solid white;
+            padding-left: 15px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .case-card-horizontal p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .case-source {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* 导航按钮 */
+        .scroll-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .scroll-nav:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .scroll-nav:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .scroll-nav.prev {
+            left: 10px;
+        }
+
+        .scroll-nav.next {
+            right: 10px;
+        }
+
+        .scroll-nav.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 滚动提示 */
+        .scroll-hint {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* 进度条 */
+        .scroll-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 2px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .scroll-progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* 参考资料样式 */
+        .references {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .references h2 {
+            color: white;
+            border-bottom: 3px solid white;
+        }
+
+        .references h2::after {
+            background: white;
+        }
+
+        .references ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .references li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .references li::before {
+            content: '📚';
+            position: absolute;
+            left: 0;
+            top: 10px;
+        }
+
+        .references li:last-child {
+            border-bottom: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content-card {
+                padding: 20px;
+            }
+
+            .sdg-table {
+                font-size: 0.9em;
+            }
+
+            .sdg-table th,
+            .sdg-table td {
+                padding: 8px 10px;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🌍 可持续发展目标（SDGs）项目支架</h1>
+            <p>探索17个全球目标，共建美好未来</p>
+        </div>
+
+        <!-- 什么是SDGs -->
+        <div class="content-card">
+            <h2>🎯 什么是可持续发展目标？</h2>
+            <p>联合国于2015年提出了17个可持续发展目标（Sustainable Development Goals，简称SDGs），它们是实现所有人更美好和更可持续未来的蓝图。这些目标涵盖我们面临的全球挑战，包括贫困、不平等、气候变化、环境退化、繁荣以及和平与正义等问题。目标相互关联，旨在不让任何一个人掉队，需要在2030年之前实现。</p>
+        </div>
+
+        <!-- SDGs目标概览 -->
+        <div class="content-card">
+            <h2>📊 SDGs目标概览</h2>
+            <p>以下表格总结了17个可持续发展目标及其核心意义：</p>
+            
+            <table class="sdg-table">
+                <thead>
+                    <tr>
+                        <th>SDG编号</th>
+                        <th>目标</th>
+                        <th>内容</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="goal-number">SDG-1</td>
+                        <td>无贫穷</td>
+                        <td>在全世界消除一切形式的贫困</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-2</td>
+                        <td>零饥饿</td>
+                        <td>消除饥饿，实现粮食安全，改善营养状况和促进可持续农业</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-3</td>
+                        <td>良好健康与福祉</td>
+                        <td>确保健康的生活方式，促进各年龄段人群的福祉</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-4</td>
+                        <td>优质教育</td>
+                        <td>确保包容和公平的优质教育，让全民终身享有学习机会</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-5</td>
+                        <td>性别平等</td>
+                        <td>实现男女平等，是和平、繁荣和可持续世界的基石</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-6</td>
+                        <td>清洁饮水和卫生设施</td>
+                        <td>为所有人提供水和环境卫生并对其进行可持续管理</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-7</td>
+                        <td>经济适用的清洁能源</td>
+                        <td>确保人人获得负担得起的、可靠和可持续的现代能源</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-8</td>
+                        <td>体面工作和经济增长</td>
+                        <td>促进持久、包容和可持续的经济增长以及体面工作</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-9</td>
+                        <td>产业、创新和基础设施</td>
+                        <td>建设包容、可持续的产业，促进创新和基础设施投资</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-10</td>
+                        <td>减少不平等</td>
+                        <td>减少国家内部和国家之间的不平等</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-11</td>
+                        <td>可持续城市和社区</td>
+                        <td>建设包容、安全、有抵御灾害能力和可持续的城市和社区</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-12</td>
+                        <td>负责任消费和生产</td>
+                        <td>确保可持续的消费和生产模式</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-13</td>
+                        <td>气候行动</td>
+                        <td>采取紧急行动应对气候变化及其影响</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-14</td>
+                        <td>水下生物</td>
+                        <td>保护水下生物及海洋资源</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-15</td>
+                        <td>陆地生物</td>
+                        <td>可持续管理森林，遏制土地退化和生物多样性的丧失</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-16</td>
+                        <td>和平、正义与强大机构</td>
+                        <td>促进和平和包容社会，为所有人提供司法渠道，并建立有效、负责和包容的机构</td>
+                    </tr>
+                    <tr>
+                        <td class="goal-number">SDG-17</td>
+                        <td>促进目标实现的伙伴关系</td>
+                        <td>重振可持续发展全球伙伴关系</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SDG项目案例 -->
+        <div class="content-card">
+            <h2>💡 SDG项目案例</h2>
+            <p>以下是来自不同组织和机构的SDG实践案例，展示了政府、企业、国际组织等各方力量共同参与可持续发展目标的实现：</p>
+            
+            <div class="scroll-hint">💡 左右滑动或点击箭头查看更多案例</div>
+            
+            <div class="scroll-progress">
+                <div class="scroll-progress-bar" id="scrollProgress"></div>
+            </div>
+            
+            <div class="cases-scroll-wrapper">
+                <button class="scroll-nav prev" id="prevBtn">‹</button>
+                <button class="scroll-nav next" id="nextBtn">›</button>
+                
+                <div class="cases-scroll-container" id="casesContainer">
+                    <div class="cases-grid" id="casesGrid">
+                        <div class="case-card-horizontal">
+                            <h3>☀️ 支持小农户的太阳能干燥机</h3>
+                            <p><strong>涉及目标：</strong>SDG-1 & SDG-2</p>
+                            <p>科思创公司为东南亚和印度的小农户提供聚碳酸酯太阳能干燥机，以减少农作物损失并稳定收入。这种太阳能干燥机利用阳光自然烘干水果和农产品，帮助农民最大化收入，计划到2030年将受影响人群的贫困程度减半。</p>
+                            <div class="case-source">🏢 企业项目</div>
+                        </div>
+
+                        <div class="case-card-horizontal">
+                            <h3>❄️ 微型冷库保障粮食安全</h3>
+                            <p><strong>涉及目标：</strong>SDG-2</p>
+                            <p>为帮助小规模种植者减少收获后损失，科思创推出由聚氨酯材料制成的太阳能微型冷库。这些冷库独立于电网运行，能延长农产品的保质期并减少粮食浪费。</p>
+                            <div class="case-source">🏢 企业项目</div>
+                        </div>
+
+                        <div class="case-card-horizontal">
+                            <h3>🏥 医疗材料促进健康</h3>
+                            <p><strong>涉及目标：</strong>SDG-3</p>
+                            <p>科思创为医疗行业提供具有生物相容性的聚碳酸酯树脂、薄膜和粘合剂，广泛应用于心脏泵等救命设备。这些材料可靠性高，为患者健康和医疗技术的发展做出贡献。</p>
+                            <div class="case-source">🏢 企业项目</div>
+                        </div>
+
+                        <div class="case-card-horizontal">
+                            <h3>🎓 教育和性别平等项目</h3>
+                            <p><strong>涉及目标：</strong>SDG-4 & SDG-5</p>
+                            <p>为提高印度儿童的科学教育水平，科思创在印度建设"光明世界实验室"，为弱势群体提供科学实验室，预计服务16,000多名儿童，并为100多名教师提供支持。同时通过STEM4girls倡议鼓励女孩学习科学、技术、工程和数学，已惠及3,000多名女孩。</p>
+                            <div class="case-source">🏢 企业项目</div>
+                        </div>
+
+                        <div class="case-card-horizontal">
+                            <h3>🔬 SMART太阳能干燥机原型</h3>
+                            <p><strong>涉及目标：</strong>SDG-1 & SDG-2</p>
+                            <p>联合国开发计划署马来西亚加速器实验室与日本内阁府等伙伴合作，通过2021年的"SDGs创新挑战"开发了SMART太阳能干燥机原型，以解决食品供应链和减灾问题。</p>
+                            <p>2023年推出的第二代原型在多个地区进行试点，改进设计后大幅提升干燥速度，将干燥时间从24小时缩短到8小时，并采用更耐用且成本更低的材料。项目培训了50多名农民和微企业家，其中90%为女性。</p>
+                            <div class="case-source">🌍 国际组织项目</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结论 -->
+        <div class="content-card">
+            <h2>🎯 结论</h2>
+            <p>可持续发展目标不仅是全球发展的蓝图，也是政府、企业和社会各界行动的指南。通过上述案例可以看到，创新技术和合作能够在减贫、消除饥饿、健康、教育和性别平等等多个目标上发挥积极作用。每个项目都体现了SDGs互相关联、相互促进的精神。</p>
+        </div>
+
+        <!-- 参考资料 -->
+        <div class="references">
+            <h2>📚 参考资料</h2>
+            <ul>
+                <li><a href="https://www.un.org/sustainabledevelopment/zh/sustainable-development-goals/" target="_blank" style="color: white; text-decoration: underline;">联合国可持续发展目标官网</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const container = document.getElementById('casesContainer');
+        const grid = document.getElementById('casesGrid');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('scrollProgress');
+
+        // 拖动相关变量
+        let isDragging = false;
+        let startPos = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+
+        // 初始化
+        function init() {
+            updateNavButtons();
+            updateProgressBar();
+            
+            // 事件监听器
+            container.addEventListener('mousedown', startDragging);
+            container.addEventListener('touchstart', startDragging);
+            container.addEventListener('mousemove', drag);
+            container.addEventListener('touchmove', drag);
+            container.addEventListener('mouseup', stopDragging);
+            container.addEventListener('touchend', stopDragging);
+            container.addEventListener('mouseleave', stopDragging);
+            
+            prevBtn.addEventListener('click', () => scrollTo('prev'));
+            nextBtn.addEventListener('click', () => scrollTo('next'));
+            
+            container.addEventListener('scroll', () => {
+                updateNavButtons();
+                updateProgressBar();
+            });
+        }
+
+        // 开始拖动
+        function startDragging(e) {
+            isDragging = true;
+            startPos = getPositionX(e);
+            container.style.cursor = 'grabbing';
+            container.style.userSelect = 'none';
+        }
+
+        // 拖动中
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const currentPosition = getPositionX(e);
+            const diff = currentPosition - startPos;
+            
+            container.scrollLeft = container.scrollLeft - diff;
+            startPos = currentPosition;
+        }
+
+        // 停止拖动
+        function stopDragging() {
+            isDragging = false;
+            container.style.cursor = 'grab';
+            container.style.userSelect = 'auto';
+        }
+
+        // 获取鼠标/触摸位置
+        function getPositionX(e) {
+            return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        }
+
+        // 滚动到指定方向
+        function scrollTo(direction) {
+            const scrollAmount = container.clientWidth * 0.8;
+            const currentScroll = container.scrollLeft;
+            
+            if (direction === 'prev') {
+                container.scrollTo({
+                    left: currentScroll - scrollAmount,
+                    behavior: 'smooth'
+                });
+            } else {
+                container.scrollTo({
+                    left: currentScroll + scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // 更新导航按钮状态
+        function updateNavButtons() {
+            const isAtStart = container.scrollLeft <= 0;
+            const isAtEnd = container.scrollLeft >= container.scrollWidth - container.clientWidth;
+            
+            prevBtn.classList.toggle('hidden', isAtStart);
+            nextBtn.classList.toggle('hidden', isAtEnd);
+        }
+
+        // 更新进度条
+        function updateProgressBar() {
+            const scrollWidth = container.scrollWidth - container.clientWidth;
+            const scrollProgress = (container.scrollLeft / scrollWidth) * 100;
+            progressBar.style.width = Math.min(100, Math.max(0, scrollProgress)) + '%';
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
