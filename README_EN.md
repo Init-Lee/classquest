@@ -23,7 +23,7 @@ Platform Portal → Module → Lesson → Step
 src/
 ├── platform/                         # Platform portal, global routes, module registry
 ├── modules/
-│   ├── module-1-ai-story/             # Module 1: Future Letter, Lesson 1 open
+│   ├── module-1-ai-story/             # Module 1: Future Letter, Lessons 1-2 open
 │   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
 │   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lessons 1-6 open
 └── shared/                            # Business-neutral UI and pure utilities
@@ -33,7 +33,7 @@ backend/                              # V1.5 lightweight FastAPI backend for Mod
 
 ## Module Status
 
-- **Module 1 · Future Letter**: a six-lesson AI storytelling project. Phase 1 opens Lesson 1 for choosing an SDG, a concrete city issue, an audience, and that audience's concern. It includes an independent local portfolio, version 1 continuation package, Lesson 1 stage snapshot, and passphrase-gated teacher lecture mode; Lessons 2-6 and the derived complete-story view remain locked for later phases. See `src/modules/module-1-ai-story/README.md`.
+- **Module 1 · Future Letter**: a six-lesson AI storytelling project. Phase 2 opens Lessons 1 and 2 for choosing an SDG, a concrete city issue, an audience, a writing style, and a four-part character arc. It includes an independent local portfolio, version 1 continuation package, lesson stage snapshots, and passphrase-gated teacher lecture mode; Lessons 3-6 and the derived complete-story view remain locked for later phases. See `src/modules/module-1-ai-story/README.md`.
 - **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
 - **Module 4 · AI Information Detective**: Lessons 1-6 are open. Lessons 1-4 cover local authoring and peer review; Lesson 5 covers the Live Lesson Session student flow and teacher console; Lesson 6 covers V3 publication review, the student three-step flow, and the anonymous public challenge. See `src/modules/module-4-ai-info-detective/README.md`.
 - **V1.5 Backend**: provides the health check, Module 4 Lesson 3 AI review, Lesson 4 peer-review APIs, Lesson 5 Live Lesson Session APIs, and Lesson 6 publication review / public-challenge / stats APIs. See `backend/README.md`.

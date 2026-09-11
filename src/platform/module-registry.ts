@@ -11,7 +11,7 @@ export const MODULE_REGISTRY: PlatformModuleEntry[] = [
     id: "module-1",
     slug: "ai-story",
     title: "未来来信",
-    subtitle: "课时 1 已开放：从 SDG、城市问题与受众关切确定未来城市故事主题。",
+    subtitle: "课时 1、课时 2 已开放：从主题推进到写作风格与人物弧光。",
     route: "/module/1",
     status: "active",
     grade: "七年级 · 模块一",

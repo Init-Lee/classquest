@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 全局档案操作区。
- * 职责：学生模式提供保存进度、导入进度与重置；课时 1 页提供阶段快照；教师模式只保留阶段快照。
+ * 职责：学生模式提供保存进度、导入进度与重置；当前课时页提供对应阶段快照；教师模式只保留阶段快照。
  * 更新触发：模块 1 学习包交互、阶段快照入口、教师模式按钮策略或顶栏口径变化时，需要同步更新本文件。
  */
 
@@ -22,7 +22,11 @@ import {
   downloadModule1ContinuePackage,
   type ParsedModule1ContinuePackage,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
-import { downloadModule1Lesson1Snapshot } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
+import {
+  downloadModule1Snapshot,
+  isModule1SnapshotReady,
+  resolveModule1SnapshotKind,
+} from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
 import {
   getModule1GlobalActionAvailability,
   getModule1SnapshotDisabledReason,
@@ -64,14 +68,15 @@ export function Module1GlobalActions() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [pendingImport, setPendingImport] = useState<ParsedModule1ContinuePackage | null>(null)
   const [importError, setImportError] = useState("")
-  const showSnapshot = /\/module\/1\/lesson\/1/.test(location.pathname)
-  const lesson1Completed = Boolean(portfolio?.lesson1.completed)
+  const snapshotKind = resolveModule1SnapshotKind(location.pathname)
+  const showSnapshot = Boolean(snapshotKind)
+  const snapshotReady = Boolean(portfolio && snapshotKind && isModule1SnapshotReady(portfolio, snapshotKind))
   const actions = getModule1GlobalActionAvailability(Boolean(portfolio), busy, {
     isTeacherMode,
-    lesson1Completed,
+    snapshotReady,
     showSnapshot,
   })
-  const snapshotReason = getModule1SnapshotDisabledReason(Boolean(portfolio), lesson1Completed)
+  const snapshotReason = getModule1SnapshotDisabledReason(Boolean(portfolio), snapshotReady, snapshotKind)
 
   const exportLatest = async () => {
     if (!portfolio) return
@@ -101,8 +106,8 @@ export function Module1GlobalActions() {
   }
 
   const handleSnapshot = () => {
-    if (!portfolio || !lesson1Completed) return
-    downloadModule1Lesson1Snapshot(portfolio)
+    if (!portfolio || !snapshotKind || !snapshotReady) return
+    downloadModule1Snapshot(portfolio, snapshotKind)
   }
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {

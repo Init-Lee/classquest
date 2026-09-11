@@ -6,6 +6,7 @@
 
 export const MODULE1_ID = "module-1-ai-story" as const
 export const MODULE1_APP_VERSION = "0.1.0"
+export const MODULE1_CUSTOM_STYLE_ID = "custom"
 
 export type Module1LessonId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -38,6 +39,22 @@ export interface Module1Lesson1State extends Module1BaseLessonState {
   audienceConcern: string
 }
 
+export interface Module1Lesson2State extends Module1BaseLessonState {
+  step1Completed: boolean
+  step2Completed: boolean
+  step3Completed: boolean
+  step4Completed: boolean
+  styleId: string
+  styleName: string
+  styleWhy: string
+  styleHint: string
+  styleExamples: string[]
+  protagonistIdentity: string
+  goal: string
+  obstacle: string
+  changeAction: string
+}
+
 export type Module1EmptyLessonState = Module1BaseLessonState
 
 export interface Module1Portfolio {
@@ -49,7 +66,7 @@ export interface Module1Portfolio {
   student: Module1StudentProfile
   progress: Module1ProgressPointer
   lesson1: Module1Lesson1State
-  lesson2: Module1EmptyLessonState
+  lesson2: Module1Lesson2State
   lesson3: Module1EmptyLessonState
   lesson4: Module1EmptyLessonState
   lesson5: Module1EmptyLessonState
@@ -72,13 +89,58 @@ function numberValue(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback
 }
 
+function stringArrayValue(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === "string").slice(0, 2)
+}
+
 function createEmptyLesson(): Module1EmptyLessonState {
   return { step: 1, completed: false, completedAt: null }
+}
+
+export function createEmptyModule1Lesson2State(): Module1Lesson2State {
+  return {
+    step: 1,
+    completed: false,
+    completedAt: null,
+    step1Completed: false,
+    step2Completed: false,
+    step3Completed: false,
+    step4Completed: false,
+    styleId: "",
+    styleName: "",
+    styleWhy: "",
+    styleHint: "",
+    styleExamples: [],
+    protagonistIdentity: "",
+    goal: "",
+    obstacle: "",
+    changeAction: "",
+  }
 }
 
 export function hasMeaningfulModule1Lesson1Fields(state: Module1Lesson1State): boolean {
   return [state.sdg, state.sdgWhy, state.cityIssue, state.audience, state.audienceConcern]
     .every(value => value.trim().length > 0)
+}
+
+export function hasSelectedModule1Lesson2Style(state: Module1Lesson2State): boolean {
+  if (!state.styleId.trim() || !state.styleName.trim()) return false
+  if (state.styleId === MODULE1_CUSTOM_STYLE_ID) {
+    return Boolean(state.styleHint.trim() && state.styleExamples.filter(item => item.trim()).length >= 2)
+  }
+  return true
+}
+
+export function hasMeaningfulModule1Lesson2CharacterFields(state: Module1Lesson2State): boolean {
+  return [state.protagonistIdentity, state.goal, state.obstacle, state.changeAction]
+    .every(value => value.trim().length > 0)
+}
+
+export function hasMeaningfulModule1Lesson2Fields(state: Module1Lesson2State): boolean {
+  return hasSelectedModule1Lesson2Style(state)
+    && Boolean(state.styleWhy.trim())
+    && hasMeaningfulModule1Lesson2CharacterFields(state)
 }
 
 export function createNewModule1Portfolio(
@@ -111,7 +173,7 @@ export function createNewModule1Portfolio(
       audience: "",
       audienceConcern: "",
     },
-    lesson2: createEmptyLesson(),
+    lesson2: createEmptyModule1Lesson2State(),
     lesson3: createEmptyLesson(),
     lesson4: createEmptyLesson(),
     lesson5: createEmptyLesson(),
@@ -125,6 +187,56 @@ function normalizeEmptyLesson(raw: unknown): Module1EmptyLessonState {
     step: Math.max(1, numberValue(source.step, 1)),
     completed: booleanValue(source.completed),
     completedAt: source.completedAt === null ? null : stringValue(source.completedAt) || null,
+  }
+}
+
+function normalizeLesson2State(raw: unknown): Module1Lesson2State {
+  const source = isRecord(raw) ? raw : {}
+  const styleId = stringValue(source.styleId)
+  const styleName = stringValue(source.styleName)
+  const styleWhy = stringValue(source.styleWhy)
+  const styleHint = stringValue(source.styleHint)
+  const styleExamples = stringArrayValue(source.styleExamples)
+  const protagonistIdentity = stringValue(source.protagonistIdentity)
+  const goal = stringValue(source.goal)
+  const obstacle = stringValue(source.obstacle)
+  const changeAction = stringValue(source.changeAction)
+  const selectedStyle = hasSelectedModule1Lesson2Style({
+    ...createEmptyModule1Lesson2State(),
+    styleId,
+    styleName,
+    styleHint,
+    styleExamples,
+  })
+  const step1Completed = booleanValue(source.step1Completed)
+  const step2Completed = step1Completed && booleanValue(source.step2Completed) && selectedStyle
+  const step3Completed = step2Completed && booleanValue(source.step3Completed) && Boolean(styleWhy.trim())
+  const allFieldsComplete = selectedStyle
+    && Boolean(styleWhy.trim())
+    && [protagonistIdentity, goal, obstacle, changeAction].every(value => value.trim().length > 0)
+  const step4Completed = step3Completed
+    && booleanValue(source.step4Completed)
+    && allFieldsComplete
+  const completed = step4Completed && booleanValue(source.completed)
+  const safeStep = !step1Completed ? 1 : !step2Completed ? 2 : !step3Completed ? 3 : 4
+
+  return {
+    step: safeStep,
+    completed,
+    completedAt: completed ? stringValue(source.completedAt) || null : null,
+    step1Completed,
+    step2Completed,
+    step3Completed,
+    step4Completed,
+    styleId,
+    styleName,
+    styleWhy,
+    styleHint,
+    styleExamples,
+    protagonistIdentity,
+    goal,
+    obstacle,
+    changeAction,
   }
 }
 
@@ -186,7 +298,7 @@ export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
       audience,
       audienceConcern,
     },
-    lesson2: normalizeEmptyLesson(source.lesson2),
+    lesson2: normalizeLesson2State(source.lesson2),
     lesson3: normalizeEmptyLesson(source.lesson3),
     lesson4: normalizeEmptyLesson(source.lesson4),
     lesson5: normalizeEmptyLesson(source.lesson5),

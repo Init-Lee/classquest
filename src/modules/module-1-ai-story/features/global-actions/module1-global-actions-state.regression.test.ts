@@ -39,10 +39,10 @@ describe("模块 1 顶栏三按钮可用性", () => {
     expect(getModule1GlobalActionAvailability(false, true).canImport).toBe(false)
   })
 
-  it("教师模式禁用真实档案操作，仅在完成课时 1 后开放阶段快照", () => {
+  it("教师模式禁用真实档案操作，仅在当前课时完成后开放阶段快照", () => {
     expect(getModule1GlobalActionAvailability(true, false, {
       isTeacherMode: true,
-      lesson1Completed: true,
+      snapshotReady: true,
       showSnapshot: true,
     })).toEqual({
       canSave: false,
@@ -50,6 +50,7 @@ describe("模块 1 顶栏三按钮可用性", () => {
       canReset: false,
       canSnapshot: true,
     })
-    expect(getModule1SnapshotDisabledReason(true, false)).toContain("完成课时 1")
+    expect(getModule1SnapshotDisabledReason(true, false, "lesson1")).toContain("完成课时 1")
+    expect(getModule1SnapshotDisabledReason(true, false, "lesson2")).toContain("完成课时 2")
   })
 })

@@ -32,6 +32,7 @@ src/shared/        → 业务无关 UI 与纯工具
 /                         → 平台门户
 /module/1                 → 模块 1 首页
 /module/1/lesson/1/...    → 模块 1 课时 1 流程
+/module/1/lesson/2/...    → 模块 1 课时 2 流程
 /module/1/story           → 模块 1 派生小说视图（当前阶段为开放提示）
 /module/3                 → 模块 3 首页
 /module/3/lesson/1/...    → 模块 3 课时流

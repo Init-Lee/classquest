@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest"
 import { buildModule1TopProgressItems } from "@/modules/module-1-ai-story/app/layout/module1-top-progress-state"
 import { createNewModule1Portfolio } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { getModule1Lesson1RouteRedirect } from "@/modules/module-1-ai-story/lessons/lesson-1/guards"
+import { getModule1Lesson2RouteRedirect } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
 import { buildModule1InnerStepItems } from "@/modules/module-1-ai-story/features/progress-ui/inner-step-progress-state"
 
 function createPortfolio() {
@@ -29,6 +30,7 @@ describe("模块 1 顶部课时进度", () => {
     expect(items.slice(1).every(item => item.status === "locked" && !item.clickable)).toBe(true)
     expect(getModule1Lesson1RouteRedirect(null, 1)).toBe("/module/1")
     expect(getModule1Lesson1RouteRedirect(null, 4, true)).toBe("/module/1")
+    expect(getModule1Lesson2RouteRedirect(null, 1)).toBe("/module/1")
   })
 
   it("有档案时标出当前课时且遵守开放规则", () => {
@@ -37,13 +39,14 @@ describe("模块 1 顶部课时进度", () => {
     expect(items[1]).toMatchObject({ status: "locked", target: null, clickable: false })
   })
 
-  it("完成课时 1 后仍不开放待开发的课时 2", () => {
+  it("完成课时 1 后开放课时 2，课时 3 仍锁定", () => {
     const portfolio = createPortfolio()
     portfolio.lesson1.completed = true
     const items = buildModule1TopProgressItems(portfolio, 2)
     expect(items[0]).toMatchObject({ status: "completed", clickable: true })
-    expect(items[1]).toMatchObject({ status: "locked", target: null, clickable: false })
-    expect(items[1].subtitle).toContain("未开放")
+    expect(items[1]).toMatchObject({ status: "current", clickable: true, target: "/module/1/lesson/2/step/1" })
+    expect(items[2]).toMatchObject({ status: "locked", target: null, clickable: false })
+    expect(items[2].subtitle).toContain("未开放")
   })
 })
 

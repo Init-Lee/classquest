@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 首页。
- * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及课时 1 完成后的阶段快照。
+ * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及已完成课时的阶段快照。
  * 更新触发：身份字段、课时开放状态、教师入口、阶段快照入口或课程状态文案变化时，需要同步更新本文件。
  */
 
@@ -12,7 +12,7 @@ import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Input } from "@/shared/ui/input"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
-import { MODULE1_LESSON_REGISTRY, resolveModule1PortfolioPointer } from "@/modules/module-1-ai-story/app/lesson-registry"
+import { MODULE1_LESSON_REGISTRY, canAccessModule1Lesson, resolveModule1PortfolioPointer, getModule1LessonResumePath } from "@/modules/module-1-ai-story/app/lesson-registry"
 import {
   composeModule1ClassSeatCode,
   MODULE1_CLASS_OPTIONS,
@@ -20,7 +20,10 @@ import {
   validateModule1SeatOnly,
 } from "@/modules/module-1-ai-story/constants/class-options"
 import { verifyModule1TeacherPassphrase } from "@/modules/module-1-ai-story/constants/teacher-passphrase"
-import { downloadModule1Lesson1Snapshot } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
+import {
+  downloadModule1Lesson1Snapshot,
+  downloadModule1Lesson2Snapshot,
+} from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
 
 function TeacherModeEntry() {
   const { enterTeacherMode } = useModule1Portfolio()
@@ -47,7 +50,7 @@ function TeacherModeEntry() {
           教师讲解模式
         </CardTitle>
         <CardDescription className="text-amber-700/80">
-          可浏览课时 1 全部关卡做课堂演示，不写入学生本机档案
+          可浏览课时 1、课时 2 全部关卡做课堂演示，不写入学生本机档案
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -188,9 +191,9 @@ export default function Module1HomePage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />首次开始需登记班级、姓名与四位班学号。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请点击「保存进度」下载最新学习包。</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成课时 1 后可下载「阶段快照」提交作业；阶段快照不能恢复进度。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成对应课时后可下载「阶段快照」提交作业；阶段快照不能恢复进度。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关，可从进度条回看已完成内容。</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段只开放课时 1，其余课时会清楚标记为待开发。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段开放课时 1 和课时 2，其余课时会清楚标记为待开发。</li>
             </ul>
           </CardContent>
         </Card>
@@ -239,18 +242,32 @@ export default function Module1HomePage() {
 
   const pointer = resolveModule1PortfolioPointer(portfolio)
   const lesson1Done = portfolio.lesson1.completed
-  const browseStep = lesson1Done ? 4 : pointer.stepId
+  const lesson2Done = portfolio.lesson2.completed
+  const canContinue = canAccessModule1Lesson(portfolio, pointer.lessonId, isTeacherMode)
+  const continuePath = canContinue
+    ? getModule1LessonResumePath(portfolio, pointer.lessonId)
+    : lesson2Done
+      ? getModule1LessonResumePath(portfolio, 2)
+      : getModule1LessonResumePath(portfolio, 1)
+  const continueLabel = isTeacherMode
+    ? "浏览本课"
+    : canContinue
+      ? "继续学习"
+      : lesson2Done
+        ? "等待课时 3 开放"
+        : "等待下一课时开放"
+  const statusText = isTeacherMode
+    ? "当前是课堂演示档案，不会写入本机学生档案。"
+    : canContinue
+      ? `继续课时 ${pointer.lessonId} 第 ${pointer.stepId} 关。`
+      : lesson2Done
+        ? "课时 2 已完成；课时 3—6 将在后续阶段开放。"
+        : "请先完成已开放课时，再进入后续内容。"
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8">
       <div className="text-center">
         <h1 className="text-2xl font-bold">欢迎回来，{portfolio.student.studentName}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {isTeacherMode
-            ? "当前是课堂演示档案，不会写入本机学生档案。"
-            : lesson1Done
-              ? "课时 1 已完成；其余课时将在后续阶段开放。"
-              : `继续课时 1 第 ${pointer.stepId} 关。`}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{statusText}</p>
       </div>
       <Card className="mx-auto max-w-xl border-primary/20 bg-primary/5">
         <CardHeader><CardTitle className="text-base">当前档案</CardTitle></CardHeader>
@@ -258,13 +275,22 @@ export default function Module1HomePage() {
           <p>{portfolio.student.clazz} · {portfolio.student.studentName} · {portfolio.student.classSeatCode}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
-              disabled={!isTeacherMode && lesson1Done}
-              onClick={() => navigate(`/module/1/lesson/1/step/${browseStep}`)}
+              disabled={!isTeacherMode && !canContinue}
+              onClick={() => navigate(isTeacherMode && !canContinue ? getModule1LessonResumePath(portfolio, 2) : continuePath)}
             >
-              {isTeacherMode ? "浏览本课" : lesson1Done ? "等待课时 2 开放" : "继续学习"}
+              {continueLabel}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
-            {lesson1Done && (
+            {lesson2Done ? (
+              <Button
+                variant="outline"
+                className="border-green-600 text-green-800 hover:bg-green-50"
+                onClick={() => downloadModule1Lesson2Snapshot(portfolio)}
+              >
+                <Camera className="mr-1 h-4 w-4" />
+                阶段快照
+              </Button>
+            ) : lesson1Done ? (
               <Button
                 variant="outline"
                 className="border-green-600 text-green-800 hover:bg-green-50"
@@ -273,34 +299,35 @@ export default function Module1HomePage() {
                 <Camera className="mr-1 h-4 w-4" />
                 阶段快照
               </Button>
-            )}
+            ) : null}
           </div>
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {MODULE1_LESSON_REGISTRY.map((lesson) => {
           const complete = lesson.isComplete(portfolio)
-          const active = lesson.id === 1 && !complete
+          const accessible = canAccessModule1Lesson(portfolio, lesson.id, isTeacherMode)
+          const active = accessible && !complete
           return (
             <Card key={lesson.id} className={!lesson.available ? "opacity-65" : ""}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <Badge variant={complete ? "success" : active ? "default" : "secondary"}>
-                    {complete ? "已完成" : active ? "进行中" : "待开发"}
+                    {complete ? "已完成" : active ? "进行中" : lesson.available ? "未解锁" : "待开发"}
                   </Badge>
-                  {complete ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : !lesson.available && <Lock className="h-4 w-4 text-muted-foreground" />}
+                  {complete ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : !accessible && <Lock className="h-4 w-4 text-muted-foreground" />}
                 </div>
                 <CardTitle className="text-base">课时 {lesson.id}：{lesson.title}</CardTitle>
                 <CardDescription>{lesson.subtitle}</CardDescription>
               </CardHeader>
-              {lesson.available && (
+              {accessible && (
                 <CardContent>
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => navigate(complete ? "/module/1/lesson/1/step/4" : `/module/1/lesson/1/step/${pointer.stepId}`)}
+                    onClick={() => navigate(getModule1LessonResumePath(portfolio, lesson.id))}
                   >
-                    {isTeacherMode ? "浏览本课" : complete ? "查看主题" : "进入课时"}
+                    {isTeacherMode ? "浏览本课" : complete ? "查看本课" : "进入课时"}
                   </Button>
                 </CardContent>
               )}

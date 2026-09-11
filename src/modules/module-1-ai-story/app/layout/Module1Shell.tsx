@@ -45,7 +45,7 @@ function Module1ShellInner() {
           className="sticky top-0 z-50 border-b border-amber-600/30 bg-amber-400 text-amber-900"
         >
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm font-medium">
-            <span className="min-w-0">教师讲解模式 — 可浏览课时 1 全部关卡；演示不写入学生本机档案</span>
+            <span className="min-w-0">教师讲解模式 — 可浏览课时 1、课时 2 全部关卡；演示不写入学生本机档案</span>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
               <Button
                 variant="outline"

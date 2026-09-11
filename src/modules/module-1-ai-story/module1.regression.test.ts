@@ -1,12 +1,15 @@
 /**
- * 文件说明：模块 1 阶段 1 回归测试。
- * 职责：覆盖档案创建归一化、门禁指针、学习包拒绝与往返，以及替换和清档防旧回写边界。
+ * 文件说明：模块 1 阶段 1—2 回归测试。
+ * 职责：覆盖档案创建归一化、课时 2 完成判定与门禁、学习包拒绝与往返，以及替换和清档防旧回写边界。
  * 更新触发：模块 1 数据契约、Guard、指针、学习包或清档保护语义变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
 import {
+  createEmptyModule1Lesson2State,
   createNewModule1Portfolio,
+  hasMeaningfulModule1Lesson2Fields,
+  hasSelectedModule1Lesson2Style,
   MODULE1_ID,
   normalizeModule1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
@@ -19,7 +22,13 @@ import {
   getCurrentModule1Lesson1Step,
   getModule1Lesson1RouteRedirect,
 } from "@/modules/module-1-ai-story/lessons/lesson-1/guards"
+import {
+  canEnterModule1Lesson2Step,
+  getCurrentModule1Lesson2Step,
+  getModule1Lesson2RouteRedirect,
+} from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
 import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
+import { MODULE1_STYLE_CARDS } from "@/modules/module-1-ai-story/constants/story-options"
 import {
   buildModule1ContinuePackage,
   deserializeModule1ContinuePackageText,
@@ -34,6 +43,49 @@ function createStudent(name = "张三") {
   })
 }
 
+function completeLesson1(portfolio: ReturnType<typeof createStudent>) {
+  portfolio.lesson1 = {
+    ...portfolio.lesson1,
+    step: 4,
+    step1Completed: true,
+    step2Completed: true,
+    step3Completed: true,
+    step4Completed: true,
+    completed: true,
+    completedAt: "2026-09-05T00:00:00.000Z",
+    sdg: "11 可持续城市和社区",
+    sdgWhy: "与社区生活相关",
+    cityIssue: "夜间照明影响睡眠",
+    audience: "社区物业",
+    audienceConcern: "安全与成本",
+  }
+  return portfolio
+}
+
+function fillLesson2Preset(portfolio: ReturnType<typeof createStudent>) {
+  const card = MODULE1_STYLE_CARDS[0]
+  portfolio.lesson2 = {
+    ...createEmptyModule1Lesson2State(),
+    step: 4,
+    step1Completed: true,
+    step2Completed: true,
+    step3Completed: true,
+    step4Completed: true,
+    completed: true,
+    completedAt: "2026-09-05T01:00:00.000Z",
+    styleId: card.id,
+    styleName: card.title,
+    styleWhy: "给物业看，需要冷静证据。",
+    styleHint: card.hint,
+    styleExamples: [...card.examples],
+    protagonistIdentity: "七年级光学社成员",
+    goal: "把卧室照度降到可睡眠范围",
+    obstacle: "物业称没有人投诉",
+    changeAction: "连续三晚测光并贴图",
+  }
+  return portfolio
+}
+
 describe("模块 1 档案与进度", () => {
   it("显式创建六课时且不产生额外故事字段", () => {
     const portfolio = createStudent()
@@ -41,6 +93,7 @@ describe("模块 1 档案与进度", () => {
     expect(Object.keys(portfolio).filter(key => /^lesson\d+$/.test(key))).toEqual([
       "lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6",
     ])
+    expect(portfolio.lesson2).toMatchObject(createEmptyModule1Lesson2State())
     expect(portfolio).not.toHaveProperty("fullStory")
   })
 
@@ -56,6 +109,19 @@ describe("模块 1 档案与进度", () => {
     expect(normalized.lesson4).toEqual({ step: 1, completed: false, completedAt: null })
   })
 
+  it("旧学习包缺少课时 2 字段时补空态且不丢课时 1 数据", () => {
+    const oldPackage = completeLesson1(createStudent())
+    const raw = {
+      ...oldPackage,
+      lesson2: { step: 1, completed: false, completedAt: null },
+    }
+    const normalized = normalizeModule1Portfolio(raw)
+    expect(normalized.lesson1.sdg).toBe("11 可持续城市和社区")
+    expect(normalized.lesson1.completed).toBe(true)
+    expect(normalized.lesson2).toMatchObject(createEmptyModule1Lesson2State())
+    expect(resolveModule1PortfolioPointer(normalized)).toEqual({ lessonId: 2, stepId: 1 })
+  })
+
   it("按真实关卡完成态修复指针并阻止越级", () => {
     const portfolio = createStudent()
     expect(getCurrentModule1Lesson1Step(portfolio.lesson1)).toBe(1)
@@ -65,10 +131,68 @@ describe("模块 1 档案与进度", () => {
     expect(canAccessModule1Lesson(portfolio, 1)).toBe(true)
     expect(canAccessModule1Lesson(portfolio, 2)).toBe(false)
     expect(canAccessModule1Lesson(portfolio, 1, true)).toBe(true)
-    expect(canAccessModule1Lesson(portfolio, 2, true)).toBe(false)
+    expect(canAccessModule1Lesson(portfolio, 2, true)).toBe(true)
+    expect(canAccessModule1Lesson(portfolio, 3, true)).toBe(false)
     const demo = createModule1TeacherLecturePortfolio()
     expect(getModule1Lesson1RouteRedirect(demo, 1, true)).toBeNull()
     expect(getModule1Lesson1RouteRedirect(demo, 4, true)).toBeNull()
+    expect(getModule1Lesson2RouteRedirect(demo, 4, true)).toBeNull()
+  })
+
+  it("课时 1 完成后指针停在课时 2 对应关", () => {
+    const portfolio = completeLesson1(createStudent())
+    expect(canAccessModule1Lesson(portfolio, 2)).toBe(true)
+    expect(resolveModule1PortfolioPointer(portfolio)).toEqual({ lessonId: 2, stepId: 1 })
+    expect(canEnterModule1Lesson2Step(portfolio.lesson2, 2)).toBe(false)
+    expect(getModule1Lesson2RouteRedirect(portfolio, 3)).toBe("/module/1/lesson/2/step/1")
+    expect(getModule1Lesson2RouteRedirect(null, 1)).toBe("/module/1")
+  })
+
+  it("课时 2 完成判定要求风格、理由和四格都有意义填写", () => {
+    const portfolio = completeLesson1(createStudent())
+    const card = MODULE1_STYLE_CARDS[0]
+    portfolio.lesson2 = {
+      ...createEmptyModule1Lesson2State(),
+      step1Completed: true,
+      step2Completed: true,
+      step3Completed: true,
+      step4Completed: true,
+      completed: true,
+      styleId: card.id,
+      styleName: card.title,
+      styleWhy: "",
+      protagonistIdentity: "值日生",
+      goal: "西门可通行",
+      obstacle: "单车占道",
+      changeAction: "连续计数",
+    }
+    expect(hasSelectedModule1Lesson2Style(portfolio.lesson2)).toBe(true)
+    expect(hasMeaningfulModule1Lesson2Fields(portfolio.lesson2)).toBe(false)
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson2.completed).toBe(false)
+    expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(3)
+
+    fillLesson2Preset(portfolio)
+    const complete = normalizeModule1Portfolio(portfolio)
+    expect(complete.lesson2.completed).toBe(true)
+    expect(resolveModule1PortfolioPointer(complete)).toEqual({ lessonId: 3, stepId: 1 })
+    expect(canAccessModule1Lesson(complete, 3)).toBe(false)
+  })
+
+  it("自定义风格必须有名称、特点和两个示例才算已选", () => {
+    const incomplete = {
+      ...createEmptyModule1Lesson2State(),
+      styleId: "custom",
+      styleName: "冷白描",
+      styleHint: "短句",
+      styleExamples: ["只有一句"],
+    }
+    expect(hasSelectedModule1Lesson2Style(incomplete)).toBe(false)
+    const complete = {
+      ...incomplete,
+      styleExamples: ["开头一", "开头二"],
+    }
+    expect(hasSelectedModule1Lesson2Style(complete)).toBe(true)
   })
 
   it("缺字段时降级伪造完成态并把指针修复到正确关卡", () => {
@@ -98,22 +222,7 @@ describe("模块 1 档案与进度", () => {
   })
 
   it("保留字段和确认标记均有效的既有完成数据", () => {
-    const portfolio = createStudent()
-    portfolio.lesson1 = {
-      ...portfolio.lesson1,
-      step: 4,
-      step1Completed: true,
-      step2Completed: true,
-      step3Completed: true,
-      step4Completed: true,
-      completed: true,
-      completedAt: "2026-09-05T00:00:00.000Z",
-      sdg: "11 可持续城市和社区",
-      sdgWhy: "与社区生活相关",
-      cityIssue: "夜间照明影响睡眠",
-      audience: "社区物业",
-      audienceConcern: "安全与成本",
-    }
+    const portfolio = completeLesson1(createStudent())
     const normalized = normalizeModule1Portfolio(portfolio)
     expect(normalized.lesson1.completed).toBe(true)
     expect(normalized.lesson1.completedAt).toBe(portfolio.lesson1.completedAt)
@@ -130,6 +239,16 @@ describe("模块 1 继续学习包", () => {
     expect(parsed.portfolio.progress).toEqual({ lessonId: 1, stepId: 2 })
   })
 
+  it("课时 2 新字段可以完整往返", () => {
+    const portfolio = fillLesson2Preset(completeLesson1(createStudent()))
+    const parsed = deserializeModule1ContinuePackageText(JSON.stringify(buildModule1ContinuePackage(portfolio)))
+    expect(parsed.portfolio.lesson2.styleId).toBe(MODULE1_STYLE_CARDS[0].id)
+    expect(parsed.portfolio.lesson2.styleExamples).toEqual([...MODULE1_STYLE_CARDS[0].examples])
+    expect(parsed.portfolio.lesson2.protagonistIdentity).toBe("七年级光学社成员")
+    expect(parsed.portfolio.lesson2.completed).toBe(true)
+    expect(parsed.portfolio.progress).toEqual({ lessonId: 3, stepId: 1 })
+  })
+
   it.each([
     ["损坏内容", "{", "无法解析"],
     ["错误模块", JSON.stringify({ ...buildModule1ContinuePackage(createStudent()), portfolio: { ...createStudent(), moduleId: "module-4-ai-info-detective" } }), "其他模块"],
@@ -142,6 +261,8 @@ describe("模块 1 继续学习包", () => {
 
   it("按扩展名拒绝阶段快照文件", () => {
     expect(() => deserializeModule1ContinuePackageText("{}", "模块1_演示学生_课时1主题设定快照_2026-09-05.html"))
+      .toThrow("阶段快照不能恢复进度，请选择继续学习包")
+    expect(() => deserializeModule1ContinuePackageText("{}", "模块1_演示学生_课时2风格与人物快照_2026-09-05.html"))
       .toThrow("阶段快照不能恢复进度，请选择继续学习包")
   })
 
