@@ -9,10 +9,10 @@ import {
   normalizeModule1Portfolio,
   type Module1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
-import { MODULE1_STYLE_CARDS } from "@/modules/module-1-ai-story/constants/story-options"
+import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
+import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 
 const DEMO_COMPLETED_AT = "2026-09-05T02:00:00.000Z"
-const DEMO_STYLE = MODULE1_STYLE_CARDS[0]
 
 export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
   const base = createNewModule1Portfolio({
@@ -20,6 +20,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
     clazz: "初一（1）班",
     classSeatCode: "0101",
   })
+  const classroomReference = buildModule1ClassroomReference(MODULE1_LESSON2_EXAMPLE.referenceCase)
   const normalized = normalizeModule1Portfolio({
     ...base,
     id: "module1-teacher-demo-portfolio",
@@ -34,29 +35,42 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
       step2Completed: true,
       step3Completed: true,
       step4Completed: true,
-      sdg: "11 可持续城市和社区",
-      sdgWhy: "放学后在小区里走路，经常要绕开乱停的共享单车，这和我们每天回家的路直接相关。",
-      cityIssue: "学校西门放学后，共享单车占满人行道，同学只能走到机动车道边上。",
-      audience: "2025 年的值周老师和值班家长",
-      audienceConcern: "放学秩序、行人安全和门口通行是否还能保持畅通。",
+      sdg: MODULE1_LESSON2_EXAMPLE.sdg,
+      sdgWhy: "小区夜间照明和走路安全都和我每天回家的路有关。",
+      cityIssue: MODULE1_LESSON2_EXAMPLE.cityIssue,
+      audience: MODULE1_LESSON2_EXAMPLE.audience,
+      audienceConcern: MODULE1_LESSON2_EXAMPLE.audienceConcern,
     },
     lesson2: {
       step: 4,
       completed: true,
       completedAt: DEMO_COMPLETED_AT,
+      contentVersion: 2,
       step1Completed: true,
       step2Completed: true,
       step3Completed: true,
       step4Completed: true,
-      styleId: DEMO_STYLE.id,
-      styleName: DEMO_STYLE.title,
-      styleWhy: "值周老师和值班家长更信现场事实。纪实口吻能把西门占道写成可观察的放学秩序问题，而不是抱怨。",
-      styleHint: DEMO_STYLE.hint,
-      styleExamples: [...DEMO_STYLE.examples],
-      protagonistIdentity: "七年级值日生，每天放学帮老师看西门，给值班家长写说明。",
-      goal: "把放学后西门人行道连续 10 分钟保持可通行，同学不用走到机动车道边上。",
-      obstacle: "共享单车被随手停进盲道；有人说反正一会儿就走；门口没有立刻可看的停放提示。",
-      changeAction: "连续三天在 16:40 拍照并数占道车辆；把统计贴在值周看板；约物业在西门外画出临时停放框。",
+      study: {
+        caseId: MODULE1_LESSON2_EXAMPLE.referenceCase,
+        response: MODULE1_LESSON2_EXAMPLE.observation,
+        aiReply: "",
+      },
+      recommendationReply: "",
+      reference: classroomReference
+        ? { ...classroomReference, sourceConfirmed: true }
+        : undefined,
+      analysisReply: "",
+      writingPlan: MODULE1_LESSON2_EXAMPLE.writingPlan,
+      reasonAiReply: "",
+      reason: MODULE1_LESSON2_EXAMPLE.reason,
+      character: {
+        who: MODULE1_LESSON2_EXAMPLE.who,
+        want: MODULE1_LESSON2_EXAMPLE.want,
+        blocked: MODULE1_LESSON2_EXAMPLE.blocked,
+        firstAction: MODULE1_LESSON2_EXAMPLE.firstAction,
+        possibleChange: MODULE1_LESSON2_EXAMPLE.possibleChange,
+      },
+      characterAiReply: "",
     },
   })
   return {

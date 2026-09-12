@@ -13,7 +13,7 @@
 ```text
 classquest/
 ├── public/                         # Vite 原样拷到站点根路径的静态资源
-│   └── module-1/                   # 模块 1 可独立打开的课堂支架页（sdg-intro.html、style-writing-templates.html）
+│   └── module-1/                   # 模块 1 课堂支架：sdg-intro.html，以及课时 2 文学案例插图 literary-cases/
 ├── src/                            # 前端源码
 │   ├── main.tsx                    # 前端入口，挂载平台路由
 │   ├── index.css                   # 全局样式入口

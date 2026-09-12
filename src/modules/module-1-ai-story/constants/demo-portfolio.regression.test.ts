@@ -32,8 +32,12 @@ describe("模块 1 讲解演示档案", () => {
       step3Completed: true,
       step4Completed: true,
       completed: true,
-      styleId: "纪实",
+      study: { caseId: "shexi" },
+      reference: { workTitle: "社戏", sourceConfirmed: true },
     })
+    expect(portfolio.lesson2.character.who).toContain("林禾")
+    expect(portfolio.lesson2.character.firstAction).toBeTruthy()
+    expect(portfolio.lesson2.character.possibleChange).toBeTruthy()
     expect(portfolio.progress).toEqual({ lessonId: 2, stepId: 4 })
     expect(portfolio.lesson3).toEqual({ step: 1, completed: false, completedAt: null })
     expect(portfolio.lesson6).toEqual({ step: 1, completed: false, completedAt: null })

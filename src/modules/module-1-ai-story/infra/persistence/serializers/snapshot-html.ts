@@ -4,10 +4,11 @@
  * 更新触发：快照字段、文件名规则、转义策略、URL 映射或新增课时快照类型时，需要同步更新本文件。
  */
 
-import {
-  MODULE1_CUSTOM_STYLE_ID,
-  type Module1Portfolio,
-} from "@/modules/module-1-ai-story/domains/portfolio/types"
+import { MODULE1_STORY_YEAR, type Module1Portfolio } from "@/modules/module-1-ai-story/domains/portfolio/types"
+
+function snapshotValue(value: string): string {
+  return escapeHtml(value.trim() || "未填写")
+}
 
 export type Module1SnapshotKind = "lesson1" | "lesson2"
 
@@ -150,34 +151,39 @@ export function buildModule1Lesson1SnapshotHtml(portfolio: Module1Portfolio, now
 }
 
 export function buildModule1Lesson2SnapshotHtml(portfolio: Module1Portfolio, now = new Date()): string {
+  const lesson1 = portfolio.lesson1
   const lesson2 = portfolio.lesson2
-  const who = lesson2.protagonistIdentity.trim() || "未填写"
-  const want = lesson2.goal.trim() || "未填写"
-  const blocked = lesson2.obstacle.trim() || "未填写"
-  const change = lesson2.changeAction.trim() || "未填写"
-  const styleDetailsLabel = lesson2.styleId === MODULE1_CUSTOM_STYLE_ID ? "自定义风格特点" : "风格特点"
-  const examples = lesson2.styleExamples.filter(item => item.trim()).length > 0
-    ? lesson2.styleExamples.filter(item => item.trim()).map(example => escapeHtml(example)).join("<br />")
-    : "未填写"
-  const arcAnalysis = `作为“${who}”，从“${blocked}”的困境出发，通过“${change}”的具体行动，最终实现“${want}”的目标，体现个人成长与社会责任。`
   return wrapSnapshotHtml(
     "模块一课时2风格与人物快照",
     "课时 2：风格与人物 · 阶段快照",
     `${identitySection(portfolio, now)}
     <section>
-      <h2>课时 2 风格与人物</h2>
-      <p class="item"><span class="label">写作风格</span><span class="value">${escapeHtml(lesson2.styleName || "未填写")}</span></p>
-      <p class="item"><span class="label">选择理由</span><span class="value">${escapeHtml(lesson2.styleWhy || "未填写")}</span></p>
-      <p class="item"><span class="label">${escapeHtml(styleDetailsLabel)}</span><span class="value">${escapeHtml(lesson2.styleHint || "未填写")}</span></p>
-      <p class="item"><span class="label">示例开头</span><span class="value">${examples}</span></p>
-      <p class="item"><span class="label">我是谁</span><span class="value">${escapeHtml(lesson2.protagonistIdentity || "未填写")}</span></p>
-      <p class="item"><span class="label">我想要</span><span class="value">${escapeHtml(lesson2.goal || "未填写")}</span></p>
-      <p class="item"><span class="label">我卡在</span><span class="value">${escapeHtml(lesson2.obstacle || "未填写")}</span></p>
-      <p class="item"><span class="label">我改变</span><span class="value">${escapeHtml(lesson2.changeAction || "未填写")}</span></p>
+      <h2>课时 1 故事主题</h2>
+      <p class="item"><span class="label">故事年份</span><span class="value">${escapeHtml(MODULE1_STORY_YEAR)}</span></p>
+      <p class="item"><span class="label">SDG主题</span><span class="value">${snapshotValue(lesson1.sdg)}</span></p>
+      <p class="item"><span class="label">选择理由</span><span class="value">${snapshotValue(lesson1.sdgWhy)}</span></p>
+      <p class="item"><span class="label">城市问题</span><span class="value">${snapshotValue(lesson1.cityIssue)}</span></p>
+      <p class="item"><span class="label">写给谁</span><span class="value">${snapshotValue(lesson1.audience)}</span></p>
+      <p class="item"><span class="label">对方关心的事</span><span class="value">${snapshotValue(lesson1.audienceConcern)}</span></p>
     </section>
     <section>
-      <h2>弧光分析</h2>
-      <p class="value">${escapeHtml(arcAnalysis)}</p>
+      <h2>文学参照与写法</h2>
+      <p class="item"><span class="label">作品</span><span class="value">${snapshotValue(lesson2.reference.workTitle)}</span></p>
+      <p class="item"><span class="label">作者</span><span class="value">${snapshotValue(lesson2.reference.author)}</span></p>
+      <p class="item"><span class="label">片段位置</span><span class="value">${snapshotValue(lesson2.reference.location)}</span></p>
+      <p class="item"><span class="label">版本说明</span><span class="value">${snapshotValue(lesson2.reference.versionNote)}</span></p>
+      <p class="item"><span class="label">阅读出处</span><span class="value">${snapshotValue(lesson2.reference.sourceNote)}</span></p>
+      <p class="item"><span class="label">准备采用的写法</span><span class="value">${snapshotValue(lesson2.writingPlan)}</span></p>
+      <p class="item"><span class="label">选择理由</span><span class="value">${snapshotValue(lesson2.reason)}</span></p>
+      <p class="item"><span class="label">课堂片段观察</span><span class="value">${snapshotValue(lesson2.study.response)}</span></p>
+    </section>
+    <section>
+      <h2>人物四格</h2>
+      <p class="item"><span class="label">我是谁</span><span class="value">${snapshotValue(lesson2.character.who)}</span></p>
+      <p class="item"><span class="label">我想要</span><span class="value">${snapshotValue(lesson2.character.want)}</span></p>
+      <p class="item"><span class="label">我卡在</span><span class="value">${snapshotValue(lesson2.character.blocked)}</span></p>
+      <p class="item"><span class="label">准备先尝试的行动</span><span class="value">${snapshotValue(lesson2.character.firstAction)}</span></p>
+      <p class="item"><span class="label">可能发生的变化</span><span class="value">${snapshotValue(lesson2.character.possibleChange)}</span></p>
       <p class="note">阶段快照不能恢复进度。需要继续学习时，请选择继续学习包。</p>
     </section>`,
   )

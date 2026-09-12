@@ -9,7 +9,6 @@ import {
   createEmptyModule1Lesson2State,
   createNewModule1Portfolio,
   hasMeaningfulModule1Lesson2Fields,
-  hasSelectedModule1Lesson2Style,
   MODULE1_ID,
   normalizeModule1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
@@ -28,7 +27,8 @@ import {
   getModule1Lesson2RouteRedirect,
 } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
 import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
-import { MODULE1_STYLE_CARDS } from "@/modules/module-1-ai-story/constants/story-options"
+import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
+import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 import {
   buildModule1ContinuePackage,
   deserializeModule1ContinuePackageText,
@@ -62,8 +62,8 @@ function completeLesson1(portfolio: ReturnType<typeof createStudent>) {
   return portfolio
 }
 
-function fillLesson2Preset(portfolio: ReturnType<typeof createStudent>) {
-  const card = MODULE1_STYLE_CARDS[0]
+function fillLesson2Content(portfolio: ReturnType<typeof createStudent>) {
+  const reference = buildModule1ClassroomReference("shexi")
   portfolio.lesson2 = {
     ...createEmptyModule1Lesson2State(),
     step: 4,
@@ -73,15 +73,23 @@ function fillLesson2Preset(portfolio: ReturnType<typeof createStudent>) {
     step4Completed: true,
     completed: true,
     completedAt: "2026-09-05T01:00:00.000Z",
-    styleId: card.id,
-    styleName: card.title,
-    styleWhy: "给物业看，需要冷静证据。",
-    styleHint: card.hint,
-    styleExamples: [...card.examples],
-    protagonistIdentity: "七年级光学社成员",
-    goal: "把卧室照度降到可睡眠范围",
-    obstacle: "物业称没有人投诉",
-    changeAction: "连续三晚测光并贴图",
+    study: {
+      caseId: "shexi",
+      response: MODULE1_LESSON2_EXAMPLE.observation,
+      aiReply: "",
+    },
+    reference: reference
+      ? { ...reference, sourceConfirmed: true }
+      : createEmptyModule1Lesson2State().reference,
+    writingPlan: MODULE1_LESSON2_EXAMPLE.writingPlan,
+    reason: MODULE1_LESSON2_EXAMPLE.reason,
+    character: {
+      who: MODULE1_LESSON2_EXAMPLE.who,
+      want: MODULE1_LESSON2_EXAMPLE.want,
+      blocked: MODULE1_LESSON2_EXAMPLE.blocked,
+      firstAction: MODULE1_LESSON2_EXAMPLE.firstAction,
+      possibleChange: MODULE1_LESSON2_EXAMPLE.possibleChange,
+    },
   }
   return portfolio
 }
@@ -148,9 +156,8 @@ describe("模块 1 档案与进度", () => {
     expect(getModule1Lesson2RouteRedirect(null, 1)).toBe("/module/1")
   })
 
-  it("课时 2 完成判定要求风格、理由和四格都有意义填写", () => {
+  it("课时 2 完成判定要求观察、参照、写法和人物五项都有意义填写", () => {
     const portfolio = completeLesson1(createStudent())
-    const card = MODULE1_STYLE_CARDS[0]
     portfolio.lesson2 = {
       ...createEmptyModule1Lesson2State(),
       step1Completed: true,
@@ -158,41 +165,37 @@ describe("模块 1 档案与进度", () => {
       step3Completed: true,
       step4Completed: true,
       completed: true,
-      styleId: card.id,
-      styleName: card.title,
-      styleWhy: "",
-      protagonistIdentity: "值日生",
-      goal: "西门可通行",
-      obstacle: "单车占道",
-      changeAction: "连续计数",
+      study: { caseId: "shexi", response: "", aiReply: "" },
+      reason: "",
+      character: {
+        who: "值日生",
+        want: "西门可通行",
+        blocked: "单车占道",
+        firstAction: "",
+        possibleChange: "",
+      },
     }
-    expect(hasSelectedModule1Lesson2Style(portfolio.lesson2)).toBe(true)
     expect(hasMeaningfulModule1Lesson2Fields(portfolio.lesson2)).toBe(false)
     const normalized = normalizeModule1Portfolio(portfolio)
     expect(normalized.lesson2.completed).toBe(false)
-    expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(3)
+    expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(1)
 
-    fillLesson2Preset(portfolio)
+    fillLesson2Content(portfolio)
     const complete = normalizeModule1Portfolio(portfolio)
     expect(complete.lesson2.completed).toBe(true)
+    expect(complete.lesson2.character.who).toBe(MODULE1_LESSON2_EXAMPLE.who)
+    expect(complete.lesson2.protagonistIdentity).toBe(MODULE1_LESSON2_EXAMPLE.who)
     expect(resolveModule1PortfolioPointer(complete)).toEqual({ lessonId: 3, stepId: 1 })
     expect(canAccessModule1Lesson(complete, 3)).toBe(false)
   })
 
-  it("自定义风格必须有名称、特点和两个示例才算已选", () => {
-    const incomplete = {
-      ...createEmptyModule1Lesson2State(),
-      styleId: "custom",
-      styleName: "冷白描",
-      styleHint: "短句",
-      styleExamples: ["只有一句"],
-    }
-    expect(hasSelectedModule1Lesson2Style(incomplete)).toBe(false)
-    const complete = {
-      ...incomplete,
-      styleExamples: ["开头一", "开头二"],
-    }
-    expect(hasSelectedModule1Lesson2Style(complete)).toBe(true)
+  it("只填行动、变化为空时不能完成课时 2", () => {
+    const portfolio = fillLesson2Content(completeLesson1(createStudent()))
+    portfolio.lesson2.character.possibleChange = ""
+    expect(hasMeaningfulModule1Lesson2Fields(portfolio.lesson2)).toBe(false)
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson2.completed).toBe(false)
+    expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(4)
   })
 
   it("缺字段时降级伪造完成态并把指针修复到正确关卡", () => {
@@ -240,11 +243,13 @@ describe("模块 1 继续学习包", () => {
   })
 
   it("课时 2 新字段可以完整往返", () => {
-    const portfolio = fillLesson2Preset(completeLesson1(createStudent()))
+    const portfolio = fillLesson2Content(completeLesson1(createStudent()))
     const parsed = deserializeModule1ContinuePackageText(JSON.stringify(buildModule1ContinuePackage(portfolio)))
-    expect(parsed.portfolio.lesson2.styleId).toBe(MODULE1_STYLE_CARDS[0].id)
-    expect(parsed.portfolio.lesson2.styleExamples).toEqual([...MODULE1_STYLE_CARDS[0].examples])
-    expect(parsed.portfolio.lesson2.protagonistIdentity).toBe("七年级光学社成员")
+    expect(parsed.portfolio.lesson2.study.caseId).toBe("shexi")
+    expect(parsed.portfolio.lesson2.reference.workTitle).toBe("社戏")
+    expect(parsed.portfolio.lesson2.reference.excerpt).toContain("两岸的豆麦")
+    expect(parsed.portfolio.lesson2.writingPlan).toBe(MODULE1_LESSON2_EXAMPLE.writingPlan)
+    expect(parsed.portfolio.lesson2.character.who).toBe(MODULE1_LESSON2_EXAMPLE.who)
     expect(parsed.portfolio.lesson2.completed).toBe(true)
     expect(parsed.portfolio.progress).toEqual({ lessonId: 3, stepId: 1 })
   })

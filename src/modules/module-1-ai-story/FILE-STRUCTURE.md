@@ -26,11 +26,15 @@ module-1-ai-story/
 │   ├── demo-portfolio.regression.test.ts
 │   ├── sdgs.ts
 │   ├── sdgs.regression.test.ts
+│   ├── literary-cases.ts
+│   ├── lesson2-copy.ts
 │   ├── story-options.ts
 │   ├── story-options.regression.test.ts
 │   ├── teacher-passphrase.ts
 │   └── teacher-passphrase.regression.test.ts
-├── domains/portfolio/types.ts
+├── domains/portfolio/
+│   ├── types.ts
+│   └── lesson2-update.ts
 ├── features/
 │   ├── global-actions/
 │   │   ├── Module1GlobalActions.tsx
@@ -40,11 +44,10 @@ module-1-ai-story/
 │   │   ├── InnerStepProgress.tsx
 │   │   ├── inner-step-progress-state.ts
 │   │   └── progress-ui.regression.test.ts
-│   └── style-selector/
-│       ├── StyleSelectorDialog.tsx
-│       ├── StyleSummary.tsx
-│       ├── build-custom-style-prompt.ts
-│       └── build-custom-style-prompt.regression.test.ts
+│   └── lesson2-support/
+│       ├── ClassroomExampleDialog.tsx
+│       ├── CopyPromptControl.tsx
+│       └── copy-text.ts
 ├── infra/persistence/
 │   ├── indexeddb/connection.ts
 │   ├── repositories/portfolio.repository.ts
@@ -62,14 +65,12 @@ module-1-ai-story/
 │       ├── build-lesson1-theme-outline.ts
 │       └── build-lesson1-theme-outline.regression.test.ts
 ├── lessons/lesson-2/
-│   ├── components/Lesson2CharacterOutline.tsx
+│   ├── components/
 │   ├── config.ts
 │   ├── guards.ts
 │   ├── routes.tsx
 │   ├── steps/
 │   └── utils/
-│       ├── build-lesson2-character-outline.ts
-│       └── build-lesson2-character-outline.regression.test.ts
 ├── pages/Module1HomePage.tsx
 ├── module.config.ts
 ├── routes.tsx
@@ -88,14 +89,14 @@ module-1-ai-story/
 - `constants/demo-portfolio.ts` 提供课堂演示档案，预填课时 1 与课时 2；`constants/teacher-passphrase.ts` 只做授课入口校验。
 - `Module1TopProgress` 负责六课时模块级导航；无档案时课时 1 只回模块首页，状态计算留在纯函数文件中。课时 1 完成后课时 2 可点，课时 3—6 仍锁定。
 - `features/progress-ui` 是模块 1 内部可复用的课时 Step 进度能力；各课时传入 Guard 派生的完成、可访问与锁定集合，不得跨模块引用。
-- `features/style-selector` 提供预设卡 + 自定义风格双页签；抽取器只生成并复制给外部 AI 的提示词，不得暗示站内调用模型。
+- `features/lesson2-support` 提供课堂虚构示例弹层与外部 AI 提示词复制控件；只生成并复制提示词，不得暗示站内调用模型。
 - `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏视觉与文案；学生模式为保存进度 / 导入进度 / 重置，当前课时页按 URL 切换阶段快照；教师模式只保留阶段快照。可用性规则放在纯函数中。
 - `infra/persistence/serializers/snapshot-html.ts` 生成不可导入的课时 1 主题设定或课时 2 风格与人物 HTML；导入器必须拒绝 HTML/非继续学习包。
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
-- 课时 2 的 `utils/build-lesson2-character-outline.ts` 是风格与人物四格到结构化大纲、弧光分析和 Step 4 复制 payload 的唯一派生入口；大纲不进入档案。
-- 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`，旧学习包缺字段时归一化为安全空态，不丢课时 1 数据。
+- 课时 2 的 `utils/build-lesson2-writing-summary.ts` 是已确认写作设定汇总的唯一派生入口；`utils/build-lesson2-prompts.ts` 拼装 P1—P4 外部提示词。汇总与提示词都不进入档案。
+- 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3，但课时 3 路由仍未开放。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
 - `/module/1/story` 属于模块结果视图，不进入课时注册表。
 - 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时。
-- 课时 2 第 1 关提供「查看风格写作模板」入口，用新窗口打开 `public/module-1/style-writing-templates.html`（站点路径 `/module-1/style-writing-templates.html`）；该页同样是自有支架资料，不 iframe 嵌进课时。
+- 课时 2 第 1 关在页面内阅读三则课堂文学案例；插图位于 `public/module-1/literary-cases/`（站点路径 `/module-1/literary-cases/*.png`），不 iframe 嵌进课时。旧风格写作模板页已删除。

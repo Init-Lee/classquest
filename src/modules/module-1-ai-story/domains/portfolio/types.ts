@@ -7,6 +7,8 @@
 export const MODULE1_ID = "module-1-ai-story" as const
 export const MODULE1_APP_VERSION = "0.1.0"
 export const MODULE1_CUSTOM_STYLE_ID = "custom"
+export const MODULE1_LESSON2_CONTENT_VERSION = 2
+export const MODULE1_STORY_YEAR = "2035"
 
 export type Module1LessonId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -39,11 +41,59 @@ export interface Module1Lesson1State extends Module1BaseLessonState {
   audienceConcern: string
 }
 
+export type Module1Lesson2ReferenceOrigin = "" | "classroom" | "external"
+
+export interface Module1Lesson2Study {
+  caseId: string
+  response: string
+  aiReply: string
+}
+
+export interface Module1Lesson2Reference {
+  origin: Module1Lesson2ReferenceOrigin
+  caseId: string
+  workTitle: string
+  author: string
+  location: string
+  versionNote: string
+  excerpt: string
+  sourceNote: string
+  sourceConfirmed: boolean
+}
+
+export interface Module1Lesson2Character {
+  who: string
+  want: string
+  blocked: string
+  firstAction: string
+  possibleChange: string
+}
+
+export interface Module1Lesson2ReviewNeeded {
+  study: boolean
+  reference: boolean
+  writingPlan: boolean
+  reason: boolean
+  character: boolean
+}
+
 export interface Module1Lesson2State extends Module1BaseLessonState {
+  contentVersion: number
   step1Completed: boolean
   step2Completed: boolean
   step3Completed: boolean
   step4Completed: boolean
+  study: Module1Lesson2Study
+  recommendationReply: string
+  reference: Module1Lesson2Reference
+  analysisReply: string
+  writingPlan: string
+  reasonAiReply: string
+  reason: string
+  character: Module1Lesson2Character
+  characterAiReply: string
+  reviewNeeded: Module1Lesson2ReviewNeeded
+  legacyLesson2: Record<string, unknown> | null
   styleId: string
   styleName: string
   styleWhy: string
@@ -98,15 +148,65 @@ function createEmptyLesson(): Module1EmptyLessonState {
   return { step: 1, completed: false, completedAt: null }
 }
 
+export function createEmptyModule1Lesson2Study(): Module1Lesson2Study {
+  return { caseId: "", response: "", aiReply: "" }
+}
+
+export function createEmptyModule1Lesson2Reference(): Module1Lesson2Reference {
+  return {
+    origin: "",
+    caseId: "",
+    workTitle: "",
+    author: "",
+    location: "",
+    versionNote: "",
+    excerpt: "",
+    sourceNote: "",
+    sourceConfirmed: false,
+  }
+}
+
+export function createEmptyModule1Lesson2Character(): Module1Lesson2Character {
+  return {
+    who: "",
+    want: "",
+    blocked: "",
+    firstAction: "",
+    possibleChange: "",
+  }
+}
+
+export function createEmptyModule1Lesson2ReviewNeeded(): Module1Lesson2ReviewNeeded {
+  return {
+    study: false,
+    reference: false,
+    writingPlan: false,
+    reason: false,
+    character: false,
+  }
+}
+
 export function createEmptyModule1Lesson2State(): Module1Lesson2State {
   return {
     step: 1,
     completed: false,
     completedAt: null,
+    contentVersion: MODULE1_LESSON2_CONTENT_VERSION,
     step1Completed: false,
     step2Completed: false,
     step3Completed: false,
     step4Completed: false,
+    study: createEmptyModule1Lesson2Study(),
+    recommendationReply: "",
+    reference: createEmptyModule1Lesson2Reference(),
+    analysisReply: "",
+    writingPlan: "",
+    reasonAiReply: "",
+    reason: "",
+    character: createEmptyModule1Lesson2Character(),
+    characterAiReply: "",
+    reviewNeeded: createEmptyModule1Lesson2ReviewNeeded(),
+    legacyLesson2: null,
     styleId: "",
     styleName: "",
     styleWhy: "",
@@ -124,23 +224,81 @@ export function hasMeaningfulModule1Lesson1Fields(state: Module1Lesson1State): b
     .every(value => value.trim().length > 0)
 }
 
-export function hasSelectedModule1Lesson2Style(state: Module1Lesson2State): boolean {
-  if (!state.styleId.trim() || !state.styleName.trim()) return false
-  if (state.styleId === MODULE1_CUSTOM_STYLE_ID) {
-    return Boolean(state.styleHint.trim() && state.styleExamples.filter(item => item.trim()).length >= 2)
-  }
-  return true
+export function hasModule1Lesson1PromptContext(state: Module1Lesson1State): boolean {
+  return Boolean(state.sdg.trim() && state.cityIssue.trim() && state.audience.trim())
 }
 
-export function hasMeaningfulModule1Lesson2CharacterFields(state: Module1Lesson2State): boolean {
-  return [state.protagonistIdentity, state.goal, state.obstacle, state.changeAction]
+export function parseModule1WritingPlanItems(plan: string): [string, string, string] {
+  const numbered = [...plan.matchAll(/^\s*(\d+)\.\s*(.*)$/gm)]
+  if (numbered.length >= 2) {
+    const map = new Map(numbered.map(match => [Number(match[1]), match[2] ?? ""]))
+    return [map.get(1)?.trim() ?? "", map.get(2)?.trim() ?? "", map.get(3)?.trim() ?? ""]
+  }
+  const lines = plan.split(/\n+/).map(line => line.replace(/^\s*\d+\.\s*/, "").trim()).filter(Boolean)
+  return [lines[0] ?? "", lines[1] ?? "", lines[2] ?? ""]
+}
+
+export function joinModule1WritingPlanItems(items: [string, string, string]): string {
+  return items
+    .map(item => item.trim())
+    .map((item, index) => (item ? `${index + 1}. ${item}` : ""))
+    .filter(Boolean)
+    .join("\n")
+}
+
+export function hasModule1Lesson2StudyFields(state: Module1Lesson2State): boolean {
+  return Boolean(state.study.caseId.trim() && state.study.response.trim())
+}
+
+export function hasModule1Lesson2ReferenceFields(state: Module1Lesson2State): boolean {
+  const reference = state.reference
+  return Boolean(
+    (reference.origin === "classroom" || reference.origin === "external")
+    && reference.workTitle.trim()
+    && reference.author.trim()
+    && reference.location.trim()
+    && reference.excerpt.trim()
+    && reference.sourceNote.trim()
+    && reference.sourceConfirmed,
+  )
+}
+
+export function hasModule1Lesson2WritingPlan(state: Module1Lesson2State): boolean {
+  const [first, second] = parseModule1WritingPlanItems(state.writingPlan)
+  return Boolean(first && second)
+}
+
+export function hasModule1Lesson2Reason(state: Module1Lesson2State): boolean {
+  return Boolean(state.reason.trim())
+}
+
+export function hasModule1Lesson2CharacterFields(state: Module1Lesson2State): boolean {
+  const character = state.character
+  return [character.who, character.want, character.blocked, character.firstAction, character.possibleChange]
     .every(value => value.trim().length > 0)
 }
 
 export function hasMeaningfulModule1Lesson2Fields(state: Module1Lesson2State): boolean {
-  return hasSelectedModule1Lesson2Style(state)
-    && Boolean(state.styleWhy.trim())
-    && hasMeaningfulModule1Lesson2CharacterFields(state)
+  return hasModule1Lesson2StudyFields(state)
+    && !state.reviewNeeded.study
+    && hasModule1Lesson2ReferenceFields(state)
+    && hasModule1Lesson2WritingPlan(state)
+    && !state.reviewNeeded.reference
+    && !state.reviewNeeded.writingPlan
+    && hasModule1Lesson2Reason(state)
+    && !state.reviewNeeded.reason
+    && hasModule1Lesson2CharacterFields(state)
+    && !state.reviewNeeded.character
+}
+
+export function syncModule1Lesson2MappedFields(state: Module1Lesson2State): Module1Lesson2State {
+  return {
+    ...state,
+    styleWhy: state.reason,
+    protagonistIdentity: state.character.who,
+    goal: state.character.want,
+    obstacle: state.character.blocked,
+  }
 }
 
 export function createNewModule1Portfolio(
@@ -190,8 +348,94 @@ function normalizeEmptyLesson(raw: unknown): Module1EmptyLessonState {
   }
 }
 
+function normalizeStudy(raw: unknown): Module1Lesson2Study {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    caseId: stringValue(source.caseId),
+    response: stringValue(source.response),
+    aiReply: stringValue(source.aiReply),
+  }
+}
+
+function normalizeReferenceOrigin(value: unknown): Module1Lesson2ReferenceOrigin {
+  return value === "classroom" || value === "external" ? value : ""
+}
+
+function normalizeReference(raw: unknown): Module1Lesson2Reference {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    origin: normalizeReferenceOrigin(source.origin),
+    caseId: stringValue(source.caseId),
+    workTitle: stringValue(source.workTitle),
+    author: stringValue(source.author),
+    location: stringValue(source.location),
+    versionNote: stringValue(source.versionNote),
+    excerpt: stringValue(source.excerpt),
+    sourceNote: stringValue(source.sourceNote),
+    sourceConfirmed: booleanValue(source.sourceConfirmed),
+  }
+}
+
+function normalizeCharacter(raw: unknown, fallback: Module1Lesson2Character): Module1Lesson2Character {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    who: stringValue(source.who, fallback.who),
+    want: stringValue(source.want, fallback.want),
+    blocked: stringValue(source.blocked, fallback.blocked),
+    firstAction: stringValue(source.firstAction, fallback.firstAction),
+    possibleChange: stringValue(source.possibleChange, fallback.possibleChange),
+  }
+}
+
+function normalizeReviewNeeded(raw: unknown, fallback: Module1Lesson2ReviewNeeded): Module1Lesson2ReviewNeeded {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    study: booleanValue(source.study, fallback.study),
+    reference: booleanValue(source.reference, fallback.reference),
+    writingPlan: booleanValue(source.writingPlan, fallback.writingPlan),
+    reason: booleanValue(source.reason, fallback.reason),
+    character: booleanValue(source.character, fallback.character),
+  }
+}
+
+function cloneLegacyLesson2(raw: Record<string, unknown>): Record<string, unknown> {
+  const archived = { ...raw }
+  delete archived.legacyLesson2
+  return archived
+}
+
+function hasNewLesson2Shape(source: Record<string, unknown>): boolean {
+  return numberValue(source.contentVersion, 0) >= MODULE1_LESSON2_CONTENT_VERSION
+    || isRecord(source.study)
+    || isRecord(source.reference)
+    || isRecord(source.character)
+    || typeof source.writingPlan === "string"
+    || typeof source.reason === "string"
+}
+
+function hasLegacyLesson2Content(source: Record<string, unknown>): boolean {
+  return Boolean(
+    stringValue(source.styleId)
+    || stringValue(source.styleName)
+    || stringValue(source.styleWhy)
+    || stringValue(source.styleHint)
+    || stringValue(source.protagonistIdentity)
+    || stringValue(source.goal)
+    || stringValue(source.obstacle)
+    || stringValue(source.changeAction)
+    || stringArrayValue(source.styleExamples).length > 0,
+  )
+}
+
 function normalizeLesson2State(raw: unknown): Module1Lesson2State {
   const source = isRecord(raw) ? raw : {}
+  const empty = createEmptyModule1Lesson2State()
+  const alreadyArchived = isRecord(source.legacyLesson2) ? source.legacyLesson2 : null
+  const isLegacyRecord = Boolean(alreadyArchived)
+    || (!hasNewLesson2Shape(source) && hasLegacyLesson2Content(source))
+  const legacyLesson2 = alreadyArchived
+    ?? (isLegacyRecord && hasLegacyLesson2Content(source) ? cloneLegacyLesson2(source) : null)
+
   const styleId = stringValue(source.styleId)
   const styleName = stringValue(source.styleName)
   const styleWhy = stringValue(source.styleWhy)
@@ -201,33 +445,44 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
   const goal = stringValue(source.goal)
   const obstacle = stringValue(source.obstacle)
   const changeAction = stringValue(source.changeAction)
-  const selectedStyle = hasSelectedModule1Lesson2Style({
-    ...createEmptyModule1Lesson2State(),
-    styleId,
-    styleName,
-    styleHint,
-    styleExamples,
-  })
-  const step1Completed = booleanValue(source.step1Completed)
-  const step2Completed = step1Completed && booleanValue(source.step2Completed) && selectedStyle
-  const step3Completed = step2Completed && booleanValue(source.step3Completed) && Boolean(styleWhy.trim())
-  const allFieldsComplete = selectedStyle
-    && Boolean(styleWhy.trim())
-    && [protagonistIdentity, goal, obstacle, changeAction].every(value => value.trim().length > 0)
-  const step4Completed = step3Completed
-    && booleanValue(source.step4Completed)
-    && allFieldsComplete
-  const completed = step4Completed && booleanValue(source.completed)
-  const safeStep = !step1Completed ? 1 : !step2Completed ? 2 : !step3Completed ? 3 : 4
 
-  return {
-    step: safeStep,
-    completed,
-    completedAt: completed ? stringValue(source.completedAt) || null : null,
-    step1Completed,
-    step2Completed,
-    step3Completed,
-    step4Completed,
+  const mappedCharacter = {
+    who: protagonistIdentity,
+    want: goal,
+    blocked: obstacle,
+    firstAction: "",
+    possibleChange: "",
+  }
+  const character = normalizeCharacter(source.character, isLegacyRecord ? mappedCharacter : empty.character)
+  const reason = stringValue(source.reason) || (isLegacyRecord ? styleWhy : "")
+  const writingPlan = stringValue(source.writingPlan)
+  const study = normalizeStudy(source.study)
+  const reference = normalizeReference(source.reference)
+
+  const reviewFallback: Module1Lesson2ReviewNeeded = isLegacyRecord
+    ? {
+      study: false,
+      reference: !hasModule1Lesson2ReferenceFields({ ...empty, reference }),
+      writingPlan: !hasModule1Lesson2WritingPlan({ ...empty, writingPlan }),
+      reason: Boolean(reason.trim()),
+      character: Boolean(character.who.trim() || character.want.trim() || character.blocked.trim()),
+    }
+    : empty.reviewNeeded
+  const reviewNeeded = normalizeReviewNeeded(source.reviewNeeded, reviewFallback)
+
+  const draft = syncModule1Lesson2MappedFields({
+    ...empty,
+    study,
+    recommendationReply: stringValue(source.recommendationReply),
+    reference,
+    analysisReply: stringValue(source.analysisReply),
+    writingPlan,
+    reasonAiReply: stringValue(source.reasonAiReply),
+    reason,
+    character,
+    characterAiReply: stringValue(source.characterAiReply),
+    reviewNeeded,
+    legacyLesson2,
     styleId,
     styleName,
     styleWhy,
@@ -237,6 +492,32 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
     goal,
     obstacle,
     changeAction,
+  })
+
+  const studyReady = hasModule1Lesson2StudyFields(draft) && !draft.reviewNeeded.study
+  const referenceReady = hasModule1Lesson2ReferenceFields(draft)
+    && hasModule1Lesson2WritingPlan(draft)
+    && !draft.reviewNeeded.reference
+    && !draft.reviewNeeded.writingPlan
+  const reasonReady = hasModule1Lesson2Reason(draft) && !draft.reviewNeeded.reason
+  const characterReady = hasModule1Lesson2CharacterFields(draft) && !draft.reviewNeeded.character
+  const step1Completed = booleanValue(source.step1Completed) && studyReady
+  const step2Completed = step1Completed && booleanValue(source.step2Completed) && referenceReady
+  const step3Completed = step2Completed && booleanValue(source.step3Completed) && reasonReady
+  const step4Completed = step3Completed && booleanValue(source.step4Completed) && characterReady
+  const completed = step4Completed && booleanValue(source.completed)
+  const safeStep = !step1Completed ? 1 : !step2Completed ? 2 : !step3Completed ? 3 : 4
+
+  return {
+    ...draft,
+    step: safeStep,
+    completed,
+    completedAt: completed ? stringValue(source.completedAt) || null : null,
+    contentVersion: MODULE1_LESSON2_CONTENT_VERSION,
+    step1Completed,
+    step2Completed,
+    step3Completed,
+    step4Completed,
   }
 }
 
@@ -272,7 +553,7 @@ export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
     ...fallback,
     id: stringValue(source.id, fallback.id),
     moduleId: MODULE1_ID,
-    appVersion: stringValue(source.appVersion, MODULE1_APP_VERSION),
+    appVersion: stringValue(source.appVersion, fallback.appVersion),
     createdAt: stringValue(source.createdAt, fallback.createdAt),
     updatedAt: stringValue(source.updatedAt, fallback.updatedAt),
     student: {

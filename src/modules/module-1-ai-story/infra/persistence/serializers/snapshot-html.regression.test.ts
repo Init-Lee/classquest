@@ -59,20 +59,30 @@ describe("模块 1 课时 1 阶段快照", () => {
 })
 
 describe("模块 1 课时 2 阶段快照", () => {
-  it("转义风格与人物字段中的脚本片段", () => {
+  it("转义参照、写法和人物字段中的脚本片段", () => {
     const portfolio = createSnapshotPortfolio()
     portfolio.lesson2 = {
       ...portfolio.lesson2,
       completed: true,
-      styleId: "custom",
-      styleName: "冷白描<script>",
-      styleWhy: "理由<img src=x>",
-      styleHint: "短句&证据",
-      styleExamples: ['开头"一', "开头二"],
-      protagonistIdentity: "值日生</div>",
-      goal: "西门可通行",
-      obstacle: "单车占道",
-      changeAction: "连续计数",
+      study: { caseId: "shexi", response: "观察<script>", aiReply: "" },
+      reference: {
+        ...portfolio.lesson2.reference,
+        workTitle: "社戏<script>",
+        author: "鲁迅",
+        location: "夜航",
+        versionNote: "版本<img src=x>",
+        excerpt: "片段&原文",
+        sourceNote: '出处"一',
+      },
+      writingPlan: "1. 写法\n2. 另一条",
+      reason: "理由</div>",
+      character: {
+        who: "林禾<script>",
+        want: "关灯",
+        blocked: "邻居",
+        firstAction: "下楼查看",
+        possibleChange: "愿意听邻居",
+      },
     }
     const html = buildModule1Lesson2SnapshotHtml(portfolio)
     expect(html).not.toContain("<script>")
@@ -81,7 +91,9 @@ describe("模块 1 课时 2 阶段快照", () => {
     expect(html).toContain("&amp;")
     expect(html).toContain("&quot;")
     expect(html).toContain("课时 2")
-    expect(html).toContain("弧光分析")
+    expect(html).toContain("文学参照")
+    expect(html).toContain("人物四格")
+    expect(html).not.toContain("体现个人成长与社会责任")
   })
 
   it("按课时 URL 切换快照类型并清洗课时 2 文件名", () => {

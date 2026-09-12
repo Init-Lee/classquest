@@ -7,13 +7,13 @@
 export const MODULE1_LESSON2_CONFIG = {
   id: 2,
   title: "风格与人物",
-  subtitle: "选择写作风格并完成人物四格",
+  subtitle: "从文学片段确定写法并完成人物设定",
   totalSteps: 4,
 } as const
 
 export const MODULE1_LESSON2_STEPS = [
   { id: 1, path: "step/1", title: "理解风格" },
-  { id: 2, path: "step/2", title: "选择风格" },
-  { id: 3, path: "step/3", title: "说明理由" },
-  { id: 4, path: "step/4", title: "确认人物弧光" },
+  { id: 2, path: "step/2", title: "寻找参照与确定写法" },
+  { id: 3, path: "step/3", title: "说明选择" },
+  { id: 4, path: "step/4", title: "设定人物" },
 ] as const

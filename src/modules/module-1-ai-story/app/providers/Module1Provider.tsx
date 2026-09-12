@@ -19,6 +19,7 @@ import {
   runModule1StudentArchiveMutation,
 } from "@/modules/module-1-ai-story/app/providers/module1-teacher-mode"
 import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
+import { applyModule1Lesson1UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
 
 interface Module1ContextValue {
   portfolio: Module1Portfolio | null
@@ -107,13 +108,14 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const updatePortfolio = useCallback((updater: (current: Module1Portfolio) => Module1Portfolio) => {
+    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson1UpstreamReview(current, updater(current))
     if (isTeacherMode) {
-      const next = getTeacherCoordinator().update(updater)
+      const next = getTeacherCoordinator().update(withUpstreamReview)
       setDemoPortfolio(next)
       return next
     }
     setSaveError(null)
-    const next = coordinator.update(updater)
+    const next = coordinator.update(withUpstreamReview)
     setPortfolio(next)
     return next
   }, [coordinator, getTeacherCoordinator, isTeacherMode])

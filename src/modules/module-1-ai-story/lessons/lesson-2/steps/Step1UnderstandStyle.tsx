@@ -1,29 +1,67 @@
 /**
- * 文件说明：模块 1 课时 2 第一关风格理解页。
- * 职责：说明风格选择的教学意图，展示 8 张预设卡供查阅，并可新窗口打开同主题不同风格支架资料。
- * 更新触发：第一关文案、预设卡预览、支架资料入口或完成动作变化时，需要同步更新本文件。
+ * 文件说明：模块 1 课时 2 第一关理解风格页。
+ * 职责：让学生阅读三则课堂文学片段，提交一处有依据的观察，并可复制外部 AI 辅助提示词。
+ * 更新触发：第一关文案、案例展示、观察字段或完成动作变化时，需要同步更新本文件。
  */
 
-import { ExternalLink } from "lucide-react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Textarea } from "@/shared/ui/textarea"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
+import { hasModule1Lesson2StudyFields } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import {
-  MODULE1_STYLE_CARDS,
-  MODULE1_STYLE_WRITING_TEMPLATES_HREF,
-} from "@/modules/module-1-ai-story/constants/story-options"
+  MODULE1_LESSON2_METHOD_DEFINITION,
+  MODULE1_LESSON2_OPENING,
+  MODULE1_LESSON2_PAGES,
+  MODULE1_LESSON2_SHARED_COPY,
+  MODULE1_LESSON2_STUDENT_PRINCIPLES,
+} from "@/modules/module-1-ai-story/constants/lesson2-copy"
+import { MODULE1_LITERARY_CASES } from "@/modules/module-1-ai-story/constants/literary-cases"
+import { CopyPromptControl } from "@/modules/module-1-ai-story/features/lesson2-support/CopyPromptControl"
+import { LiteraryCasePanel } from "@/modules/module-1-ai-story/lessons/lesson-2/components/LiteraryCasePanel"
+import { Lesson2LegacyNotice } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2LegacyNotice"
+import { Lesson2ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2ReviewBanner"
+import { clearModule1Lesson2Review, finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
+import { buildModule1Lesson2Prompt } from "@/modules/module-1-ai-story/lessons/lesson-2/utils/build-lesson2-prompts"
 
 export default function Step1UnderstandStyle() {
   const { portfolio, updatePortfolio, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
+  const [error, setError] = useState("")
   if (!portfolio) return null
 
+  const page = MODULE1_LESSON2_PAGES.step1
+  const state = portfolio.lesson2
+  const selectedCaseId = state.study.caseId
+  const valid = hasModule1Lesson2StudyFields(state)
+
+  const updateLesson2 = (updater: (current: typeof state) => typeof state) => {
+    updatePortfolio(current => ({
+      ...current,
+      lesson2: finalizeModule1Lesson2State(current.lesson2, updater(current.lesson2)),
+    }))
+  }
+
   const confirm = async () => {
+    if (!state.study.caseId.trim()) {
+      setError(page.validation[0])
+      return
+    }
+    if (!state.study.response.trim()) {
+      setError(page.validation[1])
+      return
+    }
+    setError("")
     updatePortfolio(current => ({
       ...current,
       progress: { lessonId: 2, stepId: 2 },
-      lesson2: { ...current.lesson2, step: 2, step1Completed: true },
+      lesson2: {
+        ...clearModule1Lesson2Review(current.lesson2, ["study"]),
+        step: 2,
+        step1Completed: true,
+      },
     }))
     await flushPortfolio()
     navigate("/module/1/lesson/2/step/2")
@@ -31,50 +69,84 @@ export default function Step1UnderstandStyle() {
 
   return (
     <div className="space-y-4">
+      <Lesson2LegacyNotice legacy={state.legacyLesson2} />
       <Card>
-        <CardHeader className="flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2 space-y-0">
-          <CardTitle className="min-w-0 basis-full leading-snug sm:basis-auto sm:flex-1">先看懂风格，再决定怎么写</CardTitle>
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="ml-auto h-8 shrink-0 gap-1.5 border-emerald-300 bg-emerald-50 text-xs text-emerald-800 hover:border-emerald-400 hover:bg-emerald-100 hover:text-emerald-900"
-          >
-            <a
-              href={MODULE1_STYLE_WRITING_TEMPLATES_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="课堂支架资料，会在新窗口打开，不影响本页填写"
-              aria-label="查看同主题不同风格写作模板（新窗口打开）"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              查看风格写作模板
-            </a>
-          </Button>
+        <CardHeader>
+          <CardTitle className="leading-snug">{page.title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm leading-relaxed">
-          <p>风格 = 语气与节奏：开头直给｜第一人称｜人物极致化｜每屏有冲突｜少写环境多写人。</p>
-          <p className="text-muted-foreground">
-            同一城市问题，用纪实、科幻或倡议写出来，读者感受到的力度会不一样。下面 8 张预设卡来自课程支架，下一关再正式选择或自定义。
-          </p>
-          <Button onClick={() => void confirm()}>我已查看预设风格，继续选择</Button>
+        <CardContent className="space-y-3 text-sm leading-relaxed">
+          <p>{MODULE1_LESSON2_OPENING}</p>
+          <p>{MODULE1_LESSON2_METHOD_DEFINITION}</p>
+          <p>{page.intro}</p>
+          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+            {MODULE1_LESSON2_STUDENT_PRINCIPLES.map(item => <li key={item}>{item}</li>)}
+          </ul>
         </CardContent>
       </Card>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {MODULE1_STYLE_CARDS.map(card => (
-          <Card key={card.id}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">{card.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-xs leading-relaxed">
-              <p className="text-muted-foreground">适配 SDG：{card.sdg.join("、")}</p>
-              <p>{card.hint}</p>
-              <p className="text-muted-foreground">① {card.examples[0]}</p>
-              <p className="text-muted-foreground">② {card.examples[1]}</p>
-            </CardContent>
-          </Card>
+
+      <section className="space-y-3">
+        {MODULE1_LITERARY_CASES.map(literaryCase => (
+          <LiteraryCasePanel
+            key={literaryCase.id}
+            literaryCase={literaryCase}
+            selected={selectedCaseId === literaryCase.id}
+            onSelect={() => updateLesson2(current => ({
+              ...current,
+              study: { ...current.study, caseId: literaryCase.id },
+            }))}
+          />
         ))}
-      </div>
+      </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{page.panels[1].title}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">{page.panels[0].body}</p>
+          <p className="text-sm text-muted-foreground">{page.panels[1].body}</p>
+          <Lesson2ReviewBanner
+            visible={state.reviewNeeded.study}
+            message={MODULE1_LESSON2_SHARED_COPY.studyCaseChanged}
+            confirmEnabled={valid}
+            onConfirm={() => updateLesson2(current => clearModule1Lesson2Review(current, ["study"]))}
+          />
+          <label className="space-y-1 text-sm font-medium">
+            <span>{page.fields[1].label}</span>
+            <Textarea
+              className="min-h-[120px]"
+              value={state.study.response}
+              onChange={event => updateLesson2(current => ({
+                ...current,
+                study: { ...current.study, response: event.target.value },
+              }))}
+              placeholder={page.fields[1].placeholder}
+            />
+          </label>
+          <label className="space-y-1 text-sm font-medium">
+            <span>{page.fields[2].label}</span>
+            <Textarea
+              className="min-h-[96px]"
+              value={state.study.aiReply}
+              onChange={event => updateLesson2(current => ({
+                ...current,
+                study: { ...current.study, aiReply: event.target.value },
+              }))}
+              placeholder={page.fields[2].placeholder}
+            />
+          </label>
+          <p className="text-xs text-muted-foreground">{page.hints[0]}</p>
+          <p className="text-xs text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.newContextNote}</p>
+          <CopyPromptControl
+            label={page.buttons[0]}
+            disabled={!selectedCaseId}
+            disabledReason={selectedCaseId ? undefined : page.validation[0]}
+            buildText={() => buildModule1Lesson2Prompt("P1", portfolio, { selectedCaseId })}
+          />
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          <Button onClick={() => void confirm()}>{page.buttons[3]}</Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
