@@ -12,18 +12,18 @@ export const MODULE1_LESSON2_COMMON_QUESTIONS = ["你读出了什么感受？","
 
 export const MODULE1_LESSON2_STUDENT_PRINCIPLES = ["可以请AI提供候选和草稿，也可以自己完成。提交前，请确认这些内容符合你的故事。","参考片段帮助我们学习写法。自己的故事保留自己的人物、事件和背景。","读过实际片段后再拆解。AI给出的情节概述不能当作原文。","人物可以误会、犹豫或失败。第二课的人物变化只是初步设想，后面可以调整。"] as const
 
-export const MODULE1_LESSON2_SHARED_COPY = {"contextTitle":"上节课的故事设定","summaryTitle":"我的写作设定","summaryIntro":"这里只整理你已经确认的内容，便于后续写作时继续使用。","notFilled":"尚未填写","saved":"已保存","saving":"正在保存","saveFailed":"保存失败，请重试；也可以先复制当前内容。","copied":"已复制，请粘贴到你使用的AI工具。","copyFailed":"复制失败，请在弹出的文本中全选并复制。","incompletePrompt":"请先补全提示词所需的内容。","excerptMissing":"请先选择或粘贴实际阅读的片段，再生成第二轮提示词。","upstreamChanged":"前面的设定已更新。你的答案已保留，请检查是否仍然适合当前故事。","confirmReview":"我已核对并保留当前答案","caseReplaceTitle":"更换参照片段","caseReplaceBody":"更换后将填入新片段的信息。已经写好的分析、写法、理由和人物会保留，并提示你重新核对。","caseReplaceConfirm":"更换片段并保留已有答案","cancel":"取消","legacyNotice":"这是旧版课时2的记录。原内容已保留，请补充参照片段，并确认当前写法和人物设定。","finishTitle":"课时2已完成","finishBody":"你已经确认参照片段、写法、选择理由和人物设定。请导出JSON进度，下节课导入后继续写开头。","exportReminder":"JSON用于下次继续学习。复制的写作设定用于和AI交流。","newContextNote":"提示词会带入本课需要的故事设定，不包含你的班级、姓名或学号。","sourceMismatch":"如果发现作者、篇目或片段不对应，请换用已核对的来源，或直接选择课堂片段。","studyCaseChanged":"课堂片段已更换。原来的观察已保留，请根据当前片段核对后再保存。","selectStudyCase":"选择这个片段","selectedStudyCase":"当前观察片段","viewStudyCaseHint":"点击卡片查看原文与讲解","currentStudyCasePrefix":"当前案例","closeStudyCase":"关闭"} as const
+export const MODULE1_LESSON2_SHARED_COPY = {"contextTitle":"上节课的故事设定","summaryTitle":"我的写作设定","summaryIntro":"这里只整理你已经确认的内容，便于后续写作时继续使用。","notFilled":"尚未填写","saved":"已保存","saving":"正在保存","saveFailed":"保存失败，请重试；也可以先复制当前内容。","copied":"已复制，请粘贴到你使用的AI工具。","copyFailed":"复制失败，请在弹出的文本中全选并复制。","incompletePrompt":"请先补全提示词所需的内容。","excerptMissing":"请先选择或粘贴实际阅读的片段，再生成第二轮提示词。","upstreamChanged":"前面的设定已更新。你的答案已保留，请检查是否仍然适合当前故事。","confirmReview":"我已核对并保留当前答案","caseReplaceTitle":"更换参照片段","caseReplaceBody":"更换后将填入新片段的信息。已经写好的分析、写法、理由和人物会保留，并提示你重新核对。","caseReplaceConfirm":"更换片段并保留已有答案","cancel":"取消","legacyNotice":"这是旧版课时2的记录。原内容已保留，请补充参照片段，并确认当前写法和人物设定。","finishTitle":"课时2已完成","finishBody":"你已经确认参照片段、写法、选择理由和人物设定。请导出JSON进度，下节课导入后继续写开头。","exportReminder":"JSON用于下次继续学习。复制的写作设定用于和AI交流。","newContextNote":"提示词会带入本课需要的故事设定，不包含你的班级、姓名或学号。","sourceMismatch":"如果发现作者、篇目或片段不对应，请换用已核对的来源，或直接选择课堂片段。","studyCaseChanged":"课堂片段已更换。原来的观察已保留，请根据当前片段核对后再保存。","selectStudyCase":"选择这个片段","selectedStudyCase":"当前观察片段","viewStudyCaseHint":"点击卡片查看原文与讲解","currentStudyCasePrefix":"当前案例","closeStudyCase":"关闭","observeMainBadge":"主任务","aiAssistOptionalNote":"只有点了「复制提示词」才算选用辅助。没点复制可以只交自己的观察。","aiReplyRequiredLabel":"外部 AI 的回复（必填）","aiAssistUsedNote":"使用了外部 AI 辅助"} as const
 
 export const MODULE1_LESSON2_PAGES = {
   step1: {
     nav: "理解风格",
     title: "文学作品怎样让人读出不同感受",
     intro: "先读一个片段，找出其中的具体写法，再想想它带来了什么感受。课堂会重点讨论两个案例，你也可以阅读第三个。",
-    panels: [{"title":"本课的三个观察问题","body":"你读出了什么感受？\n文中哪些具体地方让你产生这种感受？\n这种写法可以怎样用到另一个故事中？"},{"title":"我观察到的写法","body":"选择一个已读片段，写出一处具体依据及它带来的感受。可以自己写，也可以用AI提供的候选答案。"}],
-    fields: [{"key":"study.caseId","label":"我选择的课堂片段","placeholder":"请选择《社戏》《变色龙》或《最后一片叶子》中的一个课堂片段。","required":true},{"key":"study.response","label":"我的片段观察","placeholder":"片段写了……，这种写法让我感到……。","required":true},{"key":"study.aiReply","label":"AI辅助回答（选填）","placeholder":"如果使用了“读懂课堂片段”提示词，可以把AI回复粘贴在这里。","required":false}],
-    buttons: ["复制AI辅助提示词","查看讲解参考","收起讲解参考","保存观察并继续"],
+    panels: [{"title":"先自己观察","body":"选择一个已读片段，写出一处具体依据及它带来的感受。这个空必须自己写，可以参考提示句式。"},{"title":"需要时再用外部 AI","body":"提示词只复制到你常用的 AI 工具，本页不会替你调用模型。点了复制后，请把外部回复贴回本页。"}],
+    fields: [{"key":"study.caseId","label":"我选择的课堂片段","placeholder":"请选择《社戏》《变色龙》或《最后一片叶子》中的一个课堂片段。","required":true},{"key":"study.response","label":"我的片段观察","placeholder":"片段写了……，这种写法让我感到……。","required":true},{"key":"study.aiReply","label":"外部 AI 的回复（选填）","placeholder":"把你使用的 AI 工具给出的回复粘贴在这里。","required":false}],
+    buttons: ["复制提示词，粘贴到你使用的 AI 工具","查看讲解参考","收起讲解参考","保存观察并继续"],
     hints: ["先找具体依据，再描述感受。答案不要求和参考讲解完全相同。","配图为教学情境示意。判断写法时，请以文字片段为依据。"],
-    validation: ["请先选择一个课堂片段。","请写下你观察到的一处写法及其阅读感受。"],
+    validation: ["请先选择一个课堂片段。","请写下你观察到的一处写法及其阅读感受。","你已复制提示词。请把外部 AI 的回复粘贴回来后再继续。"],
   },
   step2: {
     nav: "寻找参照与确定写法",

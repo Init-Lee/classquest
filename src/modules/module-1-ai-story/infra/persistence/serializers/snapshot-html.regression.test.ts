@@ -64,7 +64,7 @@ describe("模块 1 课时 2 阶段快照", () => {
     portfolio.lesson2 = {
       ...portfolio.lesson2,
       completed: true,
-      study: { caseId: "shexi", response: "观察<script>", aiReply: "" },
+      study: { caseId: "shexi", response: "观察<script>", aiReply: "", aiAssistUsed: false },
       reference: {
         ...portfolio.lesson2.reference,
         workTitle: "社戏<script>",
@@ -94,6 +94,22 @@ describe("模块 1 课时 2 阶段快照", () => {
     expect(html).toContain("文学参照")
     expect(html).toContain("人物四格")
     expect(html).not.toContain("体现个人成长与社会责任")
+    expect(html).not.toContain("使用了外部 AI 辅助")
+  })
+
+  it("选用外部 AI 辅助时在观察旁标注", () => {
+    const portfolio = createSnapshotPortfolio()
+    portfolio.lesson2 = {
+      ...portfolio.lesson2,
+      study: {
+        caseId: "shexi",
+        response: "山向船尾跑",
+        aiReply: "候选一",
+        aiAssistUsed: true,
+      },
+    }
+    const html = buildModule1Lesson2SnapshotHtml(portfolio)
+    expect(html).toContain("使用了外部 AI 辅助")
   })
 
   it("按课时 URL 切换快照类型并清洗课时 2 文件名", () => {

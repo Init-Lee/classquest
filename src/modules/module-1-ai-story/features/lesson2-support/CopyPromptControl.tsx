@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 外部 AI 提示词复制控件。
  * 职责：生成提示词并复制；失败时弹出可全选纯文本，不暗示站内调用模型。
- * 更新触发：复制按钮文案、失败弹层或外部 AI 工作流说明变化时，需要同步更新本文件。
+ * 更新触发：复制按钮文案、失败弹层、复制成功回调或外部 AI 工作流说明变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -23,6 +23,7 @@ interface CopyPromptControlProps {
   disabled?: boolean
   disabledReason?: string
   buildText: () => { ok: boolean; text: string; error: string }
+  onCopied?: () => void
 }
 
 export function CopyPromptControl({
@@ -30,6 +31,7 @@ export function CopyPromptControl({
   disabled = false,
   disabledReason,
   buildText,
+  onCopied,
 }: CopyPromptControlProps) {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
   const [error, setError] = useState("")
@@ -47,6 +49,7 @@ export function CopyPromptControl({
     try {
       await copyModule1Lesson2Text(result.text)
       setStatus("success")
+      onCopied?.()
     } catch {
       setFallbackText(result.text)
       setStatus("error")

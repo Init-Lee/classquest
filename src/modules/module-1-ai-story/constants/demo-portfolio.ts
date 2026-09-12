@@ -54,6 +54,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
         caseId: MODULE1_LESSON2_EXAMPLE.referenceCase,
         response: MODULE1_LESSON2_EXAMPLE.observation,
         aiReply: "",
+        aiAssistUsed: false,
       },
       recommendationReply: "",
       reference: classroomReference

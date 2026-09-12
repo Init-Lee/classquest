@@ -176,6 +176,7 @@ export function buildModule1Lesson2SnapshotHtml(portfolio: Module1Portfolio, now
       <p class="item"><span class="label">准备采用的写法</span><span class="value">${snapshotValue(lesson2.writingPlan)}</span></p>
       <p class="item"><span class="label">选择理由</span><span class="value">${snapshotValue(lesson2.reason)}</span></p>
       <p class="item"><span class="label">课堂片段观察</span><span class="value">${snapshotValue(lesson2.study.response)}</span></p>
+      ${lesson2.study.aiAssistUsed ? '<p class="item"><span class="label">外部 AI 辅助</span><span class="value">使用了外部 AI 辅助</span></p>' : ""}
     </section>
     <section>
       <h2>人物四格</h2>

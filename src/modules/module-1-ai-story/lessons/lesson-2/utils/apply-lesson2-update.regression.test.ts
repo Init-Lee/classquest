@@ -1,14 +1,15 @@
 /**
  * 文件说明：模块 1 课时 2 复核与旧档映射回归测试。
- * 职责：锁定参照变更取消已读确认、旧风格卡归档、以及不把旧行动复制进两个新字段。
- * 更新触发：复核规则、旧档迁移或完成态重算变化时，需要同步更新本文件。
- * 被测实现位于 domains/portfolio/lesson2-update.ts。
+ * 职责：锁定参照变更取消已读确认、旧风格卡归档、第 1 关观察/AI 辅助完成判定，以及不把旧行动复制进两个新字段。
+ * 更新触发：复核规则、旧档迁移、第 1 关 AI 辅助必填口径或完成态重算变化时，需要同步更新本文件。
+ * 被测实现位于 domains/portfolio/lesson2-update.ts 与 domains/portfolio/types.ts。
  */
 
 import { describe, expect, it } from "vitest"
 import {
   createEmptyModule1Lesson2State,
   createNewModule1Portfolio,
+  hasModule1Lesson2StudyFields,
   normalizeModule1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
@@ -16,12 +17,14 @@ import { finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains
 describe("模块 1 课时 2 复核与旧档", () => {
   it("更换课堂观察片段时保留原观察并标记复核", () => {
     const previous = createEmptyModule1Lesson2State()
-    previous.study = { caseId: "shexi", response: "山向船尾跑", aiReply: "" }
+    previous.study = { caseId: "shexi", response: "山向船尾跑", aiReply: "候选一", aiAssistUsed: true }
     const next = finalizeModule1Lesson2State(previous, {
       ...previous,
       study: { ...previous.study, caseId: "chameleon" },
     })
     expect(next.study.response).toBe("山向船尾跑")
+    expect(next.study.aiReply).toBe("候选一")
+    expect(next.study.aiAssistUsed).toBe(true)
     expect(next.reviewNeeded.study).toBe(true)
   })
 
@@ -115,5 +118,54 @@ describe("模块 1 课时 2 复核与旧档", () => {
     const twice = normalizeModule1Portfolio(once)
     expect(twice.lesson2.legacyLesson2).toEqual(once.lesson2.legacyLesson2)
     expect(twice.lesson2.legacyLesson2).not.toHaveProperty("legacyLesson2")
+  })
+})
+
+describe("模块 1 课时 2 第 1 关观察与外部 AI 辅助", () => {
+  it("未点复制只填观察可通过第 1 关", () => {
+    const state = createEmptyModule1Lesson2State()
+    state.study = { caseId: "shexi", response: "山向船尾跑", aiReply: "", aiAssistUsed: false }
+    state.step1Completed = true
+    expect(hasModule1Lesson2StudyFields(state)).toBe(true)
+    const normalized = normalizeModule1Portfolio({ lesson2: state }).lesson2
+    expect(normalized.study.aiAssistUsed).toBe(false)
+    expect(normalized.step1Completed).toBe(true)
+  })
+
+  it("旧包缺少 aiAssistUsed 视为未选用辅助", () => {
+    const normalized = normalizeModule1Portfolio({
+      lesson2: {
+        step1Completed: true,
+        study: { caseId: "shexi", response: "山向船尾跑", aiReply: "" },
+      },
+    }).lesson2
+    expect(normalized.study.aiAssistUsed).toBe(false)
+    expect(normalized.step1Completed).toBe(true)
+  })
+
+  it("点了复制但 AI 框空则不能完成第 1 关", () => {
+    const state = createEmptyModule1Lesson2State()
+    state.study = { caseId: "shexi", response: "山向船尾跑", aiReply: "", aiAssistUsed: true }
+    state.step1Completed = true
+    state.completed = true
+    expect(hasModule1Lesson2StudyFields(state)).toBe(false)
+    const normalized = normalizeModule1Portfolio({ lesson2: state }).lesson2
+    expect(normalized.step1Completed).toBe(false)
+    expect(normalized.completed).toBe(false)
+  })
+
+  it("点了复制且观察与 AI 回复都填可通过第 1 关", () => {
+    const state = createEmptyModule1Lesson2State()
+    state.study = {
+      caseId: "shexi",
+      response: "山向船尾跑",
+      aiReply: "片段写山向船尾跑，让我感到急着赶到赵庄。",
+      aiAssistUsed: true,
+    }
+    state.step1Completed = true
+    expect(hasModule1Lesson2StudyFields(state)).toBe(true)
+    const normalized = normalizeModule1Portfolio({ lesson2: state }).lesson2
+    expect(normalized.study.aiAssistUsed).toBe(true)
+    expect(normalized.step1Completed).toBe(true)
   })
 })

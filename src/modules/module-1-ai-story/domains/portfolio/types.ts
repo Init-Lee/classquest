@@ -47,6 +47,7 @@ export interface Module1Lesson2Study {
   caseId: string
   response: string
   aiReply: string
+  aiAssistUsed: boolean
 }
 
 export interface Module1Lesson2Reference {
@@ -149,7 +150,7 @@ function createEmptyLesson(): Module1EmptyLessonState {
 }
 
 export function createEmptyModule1Lesson2Study(): Module1Lesson2Study {
-  return { caseId: "", response: "", aiReply: "" }
+  return { caseId: "", response: "", aiReply: "", aiAssistUsed: false }
 }
 
 export function createEmptyModule1Lesson2Reference(): Module1Lesson2Reference {
@@ -247,7 +248,10 @@ export function joinModule1WritingPlanItems(items: [string, string, string]): st
 }
 
 export function hasModule1Lesson2StudyFields(state: Module1Lesson2State): boolean {
-  return Boolean(state.study.caseId.trim() && state.study.response.trim())
+  const study = state.study
+  if (!study.caseId.trim() || !study.response.trim()) return false
+  if (study.aiAssistUsed && !study.aiReply.trim()) return false
+  return true
 }
 
 export function hasModule1Lesson2ReferenceFields(state: Module1Lesson2State): boolean {
@@ -354,6 +358,7 @@ function normalizeStudy(raw: unknown): Module1Lesson2Study {
     caseId: stringValue(source.caseId),
     response: stringValue(source.response),
     aiReply: stringValue(source.aiReply),
+    aiAssistUsed: booleanValue(source.aiAssistUsed),
   }
 }
 

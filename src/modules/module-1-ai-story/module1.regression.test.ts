@@ -77,6 +77,7 @@ function fillLesson2Content(portfolio: ReturnType<typeof createStudent>) {
       caseId: "shexi",
       response: MODULE1_LESSON2_EXAMPLE.observation,
       aiReply: "",
+      aiAssistUsed: false,
     },
     reference: reference
       ? { ...reference, sourceConfirmed: true }
@@ -165,7 +166,7 @@ describe("模块 1 档案与进度", () => {
       step3Completed: true,
       step4Completed: true,
       completed: true,
-      study: { caseId: "shexi", response: "", aiReply: "" },
+      study: { caseId: "shexi", response: "", aiReply: "", aiAssistUsed: false },
       reason: "",
       character: {
         who: "值日生",
@@ -187,6 +188,17 @@ describe("模块 1 档案与进度", () => {
     expect(complete.lesson2.protagonistIdentity).toBe(MODULE1_LESSON2_EXAMPLE.who)
     expect(resolveModule1PortfolioPointer(complete)).toEqual({ lessonId: 3, stepId: 1 })
     expect(canAccessModule1Lesson(complete, 3)).toBe(false)
+  })
+
+  it("点过复制但未贴回 AI 回复时不能完成课时 2", () => {
+    const portfolio = fillLesson2Content(completeLesson1(createStudent()))
+    portfolio.lesson2.study.aiAssistUsed = true
+    portfolio.lesson2.study.aiReply = ""
+    expect(hasMeaningfulModule1Lesson2Fields(portfolio.lesson2)).toBe(false)
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson2.step1Completed).toBe(false)
+    expect(normalized.lesson2.completed).toBe(false)
+    expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(1)
   })
 
   it("只填行动、变化为空时不能完成课时 2", () => {
@@ -246,6 +258,7 @@ describe("模块 1 继续学习包", () => {
     const portfolio = fillLesson2Content(completeLesson1(createStudent()))
     const parsed = deserializeModule1ContinuePackageText(JSON.stringify(buildModule1ContinuePackage(portfolio)))
     expect(parsed.portfolio.lesson2.study.caseId).toBe("shexi")
+    expect(parsed.portfolio.lesson2.study.aiAssistUsed).toBe(false)
     expect(parsed.portfolio.lesson2.reference.workTitle).toBe("社戏")
     expect(parsed.portfolio.lesson2.reference.excerpt).toContain("两岸的豆麦")
     expect(parsed.portfolio.lesson2.writingPlan).toBe(MODULE1_LESSON2_EXAMPLE.writingPlan)
