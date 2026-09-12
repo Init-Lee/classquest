@@ -14,6 +14,17 @@ import {
 import { finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
 
 describe("模块 1 课时 2 复核与旧档", () => {
+  it("更换课堂观察片段时保留原观察并标记复核", () => {
+    const previous = createEmptyModule1Lesson2State()
+    previous.study = { caseId: "shexi", response: "山向船尾跑", aiReply: "" }
+    const next = finalizeModule1Lesson2State(previous, {
+      ...previous,
+      study: { ...previous.study, caseId: "chameleon" },
+    })
+    expect(next.study.response).toBe("山向船尾跑")
+    expect(next.reviewNeeded.study).toBe(true)
+  })
+
   it("只改片段位置时取消已阅读确认并提示复核后续答案", () => {
     const previous = createEmptyModule1Lesson2State()
     previous.reference = {

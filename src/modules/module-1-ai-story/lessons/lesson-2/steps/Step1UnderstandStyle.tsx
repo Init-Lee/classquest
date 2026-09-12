@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第一关理解风格页。
- * 职责：让学生阅读三则课堂文学片段，提交一处有依据的观察，并可复制外部 AI 辅助提示词。
- * 更新触发：第一关文案、案例展示、观察字段或完成动作变化时，需要同步更新本文件。
+ * 职责：用三张预览卡选择并阅读课堂文学片段，提交一处有依据的观察，并可复制外部 AI 辅助提示词。
+ * 更新触发：第一关文案、预览/详情交互、观察字段或完成动作变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -18,9 +18,10 @@ import {
   MODULE1_LESSON2_SHARED_COPY,
   MODULE1_LESSON2_STUDENT_PRINCIPLES,
 } from "@/modules/module-1-ai-story/constants/lesson2-copy"
-import { MODULE1_LITERARY_CASES } from "@/modules/module-1-ai-story/constants/literary-cases"
+import { getModule1LiteraryCaseById, MODULE1_LITERARY_CASES } from "@/modules/module-1-ai-story/constants/literary-cases"
 import { CopyPromptControl } from "@/modules/module-1-ai-story/features/lesson2-support/CopyPromptControl"
-import { LiteraryCasePanel } from "@/modules/module-1-ai-story/lessons/lesson-2/components/LiteraryCasePanel"
+import { LiteraryCaseDetailDialog } from "@/modules/module-1-ai-story/lessons/lesson-2/components/LiteraryCaseDetailDialog"
+import { LiteraryCasePreviewCard } from "@/modules/module-1-ai-story/lessons/lesson-2/components/LiteraryCasePreviewCard"
 import { Lesson2LegacyNotice } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2LegacyNotice"
 import { Lesson2ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2ReviewBanner"
 import { clearModule1Lesson2Review, finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
@@ -30,17 +31,27 @@ export default function Step1UnderstandStyle() {
   const { portfolio, updatePortfolio, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
   const [error, setError] = useState("")
+  const [previewCaseId, setPreviewCaseId] = useState("")
   if (!portfolio) return null
 
   const page = MODULE1_LESSON2_PAGES.step1
   const state = portfolio.lesson2
   const selectedCaseId = state.study.caseId
+  const selectedCase = getModule1LiteraryCaseById(selectedCaseId)
+  const previewCase = getModule1LiteraryCaseById(previewCaseId)
   const valid = hasModule1Lesson2StudyFields(state)
 
   const updateLesson2 = (updater: (current: typeof state) => typeof state) => {
     updatePortfolio(current => ({
       ...current,
       lesson2: finalizeModule1Lesson2State(current.lesson2, updater(current.lesson2)),
+    }))
+  }
+
+  const selectCase = (caseId: string) => {
+    updateLesson2(current => ({
+      ...current,
+      study: { ...current.study, caseId },
     }))
   }
 
@@ -84,19 +95,26 @@ export default function Step1UnderstandStyle() {
         </CardContent>
       </Card>
 
-      <section className="space-y-3">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {MODULE1_LITERARY_CASES.map(literaryCase => (
-          <LiteraryCasePanel
+          <LiteraryCasePreviewCard
             key={literaryCase.id}
             literaryCase={literaryCase}
             selected={selectedCaseId === literaryCase.id}
-            onSelect={() => updateLesson2(current => ({
-              ...current,
-              study: { ...current.study, caseId: literaryCase.id },
-            }))}
+            onOpen={() => setPreviewCaseId(literaryCase.id)}
+            onSelect={() => selectCase(literaryCase.id)}
           />
         ))}
       </section>
+      <LiteraryCaseDetailDialog
+        literaryCase={previewCase}
+        selected={Boolean(previewCase && selectedCaseId === previewCase.id)}
+        open={Boolean(previewCase)}
+        onOpenChange={open => { if (!open) setPreviewCaseId("") }}
+        onSelect={() => {
+          if (previewCase) selectCase(previewCase.id)
+        }}
+      />
 
       <Card>
         <CardHeader>
@@ -104,6 +122,9 @@ export default function Step1UnderstandStyle() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{page.panels[0].body}</p>
+          <p className="text-sm font-medium">
+            {`${MODULE1_LESSON2_SHARED_COPY.currentStudyCasePrefix}：${selectedCase ? selectedCase.cardTitle : MODULE1_LESSON2_SHARED_COPY.notFilled}`}
+          </p>
           <p className="text-sm text-muted-foreground">{page.panels[1].body}</p>
           <Lesson2ReviewBanner
             visible={state.reviewNeeded.study}

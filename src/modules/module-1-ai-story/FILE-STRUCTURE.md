@@ -66,6 +66,12 @@ module-1-ai-story/
 │       └── build-lesson1-theme-outline.regression.test.ts
 ├── lessons/lesson-2/
 │   ├── components/
+│   │   ├── Lesson2LegacyNotice.tsx
+│   │   ├── Lesson2ReviewBanner.tsx
+│   │   ├── Lesson2WritingSummary.tsx
+│   │   ├── LiteraryCaseDetailDialog.tsx
+│   │   ├── LiteraryCasePanel.tsx
+│   │   └── LiteraryCasePreviewCard.tsx
 │   ├── config.ts
 │   ├── guards.ts
 │   ├── routes.tsx
@@ -99,4 +105,4 @@ module-1-ai-story/
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
 - `/module/1/story` 属于模块结果视图，不进入课时注册表。
 - 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时。
-- 课时 2 第 1 关在页面内阅读三则课堂文学案例；插图位于 `public/module-1/literary-cases/`（站点路径 `/module-1/literary-cases/*.png`），不 iframe 嵌进课时。旧风格写作模板页已删除。
+- 课时 2 第 1 关默认用三张预览卡展示课堂文学案例，点击卡片打开 Dialog 阅读全文；只有「选择这个片段」写入 `study.caseId`。插图位于 `public/module-1/literary-cases/`（站点路径 `/module-1/literary-cases/*.png`），不 iframe 嵌进课时。旧风格写作模板页已删除。
