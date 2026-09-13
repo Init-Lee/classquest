@@ -15,7 +15,7 @@ describe("模块 1 课时 2 课堂文学案例", () => {
     const shexi = MODULE1_LITERARY_CASES[0]
     expect(shexi.excerpt).toContain("沈静")
     expect(shexi.excerpt).toContain("濔散")
-    expect(shexi.illustrationSrc).toBe("/module-1/literary-cases/shexi.png")
+    expect(shexi.illustrationSrc).toBe("/module-1/literary-cases/shexi.jpg")
     expect(shexi.illustrationAlt).toBe("《社戏》教学情境插画")
   })
 
