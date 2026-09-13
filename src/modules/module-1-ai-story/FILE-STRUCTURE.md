@@ -105,7 +105,7 @@ module-1-ai-story/
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
 - 课时 2 的 `utils/build-lesson2-writing-summary.ts` 是已确认写作设定汇总的唯一派生入口；`utils/build-lesson2-prompts.ts` 拼装 P1—P4 外部提示词。汇总与提示词都不进入档案。
 - 课时 2 第 2 关路由仍是 `/module/1/lesson/2/step/2`，关内用 `?round=1|2` 分成两步：第一步选参照（课堂案例或自己的作品，选定后桌面左 1/3 为课堂选用或第一轮找参照、右 2/3 为填写框，课堂选用与第一轮找候选都留在第一步），第二步只做拆解写法与第二轮提示词。左右箭头贴主内容区两侧，只在本关两步间翻页；第一步左箭头禁用、右箭头进入第二轮，第二步不渲染右箭头，改用右下角「下一关」并按整关必填校验后进入课时 2 第 3 关。`utils/step2-round.ts` 负责子页解析、第一步门禁与整关缺项提示。未选定参照时直连 `?round=2` 拦回。`round1PromptCopied` / `round2PromptCopied` 与第 1 关 `study.aiAssistUsed` 分开，旧包缺字段视为 false。课堂案例与自选作品分槽存放（`classroomDraft` / `foundDraft`），切换来源只改 `origin`、不互相覆盖；完成判定、第二步摘要、阶段快照和写作设定抽屉只读当前 origin 槽。
-- 第 2 关右侧写作设定改为 `Lesson2WritingDrawer`：默认收起，点右侧标签滑出只读汇总，开合不落盘。第 3/4 关仍用原右侧卡片，不改文案。
+- 第 2 关右侧写作设定改为 `Lesson2WritingDrawer`：默认收起，点右侧标签滑出只读汇总，开合不落盘。第 3/4 关桌面左主区 2/3、右栏固定写作设定 1/3（不是抽屉），窄屏上下堆叠。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3，但课时 3 路由仍未开放。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
@@ -113,3 +113,4 @@ module-1-ai-story/
 - 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时。
 - 课时 2 第 1 关默认用三张预览卡展示课堂文学案例，点击卡片打开 Dialog 阅读全文；只有「选择这个片段」写入 `study.caseId`。详情 Dialog 为横向图文：左栏页签切换原文 / 讲解 / 出处，右栏窄配图，窄屏改为上下堆叠。插图位于 `public/module-1/literary-cases/`（站点路径 `/module-1/literary-cases/*.png`），不 iframe 嵌进课时。旧风格写作模板页已删除。`study.aiAssistUsed` 仅在成功复制第 1 关外部提示词后为 true，打开案例 Dialog 不算选用 AI；旧包缺字段视为 false。点过复制后 `study.aiReply` 才必填，未点复制仍可只交观察完成第 1 关与课时 2。
 - 课时 2 第 3 关拆成「先自己写选择理由」与「需要时再用外部 AI」两卡。`reasonAiAssistUsed` 仅在成功复制第 3 关提示词后为 true，与 `study.aiAssistUsed` / `round1PromptCopied` / `round2PromptCopied` 分开；旧包缺字段视为 false。点过复制后 `reasonAiReply` 才必填，未点复制仍可只交自己的理由完成第 3 关与课时 2。
+- 课时 2 第 4 关拆成「先自己写人物设定」与「需要时再用外部 AI」两卡，桌面右栏 1/3 固定写作设定。`characterAiAssistUsed` 仅在成功复制第 4 关提示词后为 true，与 `study.aiAssistUsed` / `round1PromptCopied` / `round2PromptCopied` / `reasonAiAssistUsed` 分开；旧包缺字段视为 false。点过复制后 `characterAiReply` 才必填，未点复制仍可只交人物五项完成第 4 关与课时 2。

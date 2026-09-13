@@ -9,6 +9,7 @@ import {
   createEmptyModule1Lesson2State,
   createNewModule1Portfolio,
   hasMeaningfulModule1Lesson2Fields,
+  hasModule1Lesson2CharacterFields,
   hasModule1Lesson2Reason,
   MODULE1_ID,
   normalizeModule1Portfolio,
@@ -213,6 +214,18 @@ describe("模块 1 档案与进度", () => {
     expect(normalized.lesson2.step3Completed).toBe(false)
     expect(normalized.lesson2.completed).toBe(false)
     expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(3)
+  })
+
+  it("点过第 4 关复制但未贴回人物 AI 回复时不能完成课时 2", () => {
+    const portfolio = fillLesson2Content(completeLesson1(createStudent()))
+    portfolio.lesson2.characterAiAssistUsed = true
+    portfolio.lesson2.characterAiReply = ""
+    expect(hasModule1Lesson2CharacterFields(portfolio.lesson2)).toBe(false)
+    expect(hasMeaningfulModule1Lesson2Fields(portfolio.lesson2)).toBe(false)
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson2.step4Completed).toBe(false)
+    expect(normalized.lesson2.completed).toBe(false)
+    expect(getCurrentModule1Lesson2Step(normalized.lesson2)).toBe(4)
   })
 
   it("只填行动、变化为空时不能完成课时 2", () => {

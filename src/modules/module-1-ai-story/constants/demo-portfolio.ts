@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 教师讲解演示档案。
  * 职责：生成课堂演示用的 Module1Portfolio，供教师模式初始化和重置讲解状态使用，只存在于内存。
- * 更新触发：课时 1/2 演示字段、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
+ * 更新触发：课时 1/2 演示字段、第 1/3/4 关 AI 辅助布尔、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
  */
 
 import {
@@ -75,6 +75,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
         possibleChange: MODULE1_LESSON2_EXAMPLE.possibleChange,
       },
       characterAiReply: "",
+      characterAiAssistUsed: false,
     },
   })
   return {

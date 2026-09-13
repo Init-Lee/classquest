@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 学习档案领域模型。
  * 职责：定义六课时聚合、身份、进度与安全归一化，是模块 1 持久化数据的唯一结构真相。
- * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽或归一化规则变化时，需要同步更新本文件。
+ * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽、第 1/3/4 关 AI 辅助布尔或归一化规则变化时，需要同步更新本文件。
  */
 
 export const MODULE1_ID = "module-1-ai-story" as const
@@ -117,6 +117,8 @@ export interface Module1Lesson2State extends Module1BaseLessonState {
   reason: string
   character: Module1Lesson2Character
   characterAiReply: string
+  /** 第 4 关提示词是否已成功复制；与 study.aiAssistUsed / 第 2 关 copied / reasonAiAssistUsed 分开，旧包缺省为 false */
+  characterAiAssistUsed: boolean
   reviewNeeded: Module1Lesson2ReviewNeeded
   legacyLesson2: Record<string, unknown> | null
   styleId: string
@@ -366,6 +368,7 @@ export function createEmptyModule1Lesson2State(): Module1Lesson2State {
     reason: "",
     character: createEmptyModule1Lesson2Character(),
     characterAiReply: "",
+    characterAiAssistUsed: false,
     reviewNeeded: createEmptyModule1Lesson2ReviewNeeded(),
     legacyLesson2: null,
     styleId: "",
@@ -462,8 +465,12 @@ export function hasModule1Lesson2Reason(state: Module1Lesson2State): boolean {
 
 export function hasModule1Lesson2CharacterFields(state: Module1Lesson2State): boolean {
   const character = state.character
-  return [character.who, character.want, character.blocked, character.firstAction, character.possibleChange]
-    .every(value => value.trim().length > 0)
+  if (![character.who, character.want, character.blocked, character.firstAction, character.possibleChange]
+    .every(value => value.trim().length > 0)) {
+    return false
+  }
+  if (state.characterAiAssistUsed && !state.characterAiReply.trim()) return false
+  return true
 }
 
 export function hasMeaningfulModule1Lesson2Fields(state: Module1Lesson2State): boolean {
@@ -748,6 +755,7 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
     reason,
     character,
     characterAiReply: stringValue(source.characterAiReply),
+    characterAiAssistUsed: booleanValue(source.characterAiAssistUsed),
     reviewNeeded,
     legacyLesson2,
     styleId,

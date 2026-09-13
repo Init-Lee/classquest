@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第四关人物设定页。
- * 职责：收集身份、愿望、阻碍、首次行动与可能变化五项，确认后完成课时 2。
- * 更新触发：人物四格字段、完成弹层或第四关完成条件变化时，需要同步更新本文件。
+ * 职责：自写区合成一张主任务卡（标题、提问、人物五项），再单独放「需要时再用外部 AI」；主任务必须自己写，只有成功复制提示词后才要求贴回外部 AI 回复，确认后完成课时 2。
+ * 更新触发：第四关文案、自写/AI 分区、提问条、人物五项、复制选用口径或完成动作变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -17,12 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog"
+import { cn } from "@/shared/utils/cn"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 import {
   hasMeaningfulModule1Lesson2Fields,
   hasModule1Lesson2CharacterFields,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
-import { MODULE1_LESSON2_PAGES, MODULE1_LESSON2_SHARED_COPY } from "@/modules/module-1-ai-story/constants/lesson2-copy"
+import {
+  MODULE1_LESSON2_CHARACTER_QUESTIONS,
+  MODULE1_LESSON2_PAGES,
+  MODULE1_LESSON2_SHARED_COPY,
+} from "@/modules/module-1-ai-story/constants/lesson2-copy"
 import { ClassroomExampleDialog } from "@/modules/module-1-ai-story/features/lesson2-support/ClassroomExampleDialog"
 import { CopyPromptControl } from "@/modules/module-1-ai-story/features/lesson2-support/CopyPromptControl"
 import { Lesson2ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2ReviewBanner"
@@ -42,6 +47,8 @@ export default function Step4CharacterArc() {
   const state = portfolio.lesson2
   const characterReady = hasModule1Lesson2CharacterFields(state)
   const valid = hasMeaningfulModule1Lesson2Fields(state)
+  const aiAssistUsed = state.characterAiAssistUsed
+  const aiReplyRequired = aiAssistUsed && !state.characterAiReply.trim()
 
   const updateLesson2 = (updater: (current: typeof state) => typeof state) => {
     updatePortfolio(current => ({
@@ -54,6 +61,13 @@ export default function Step4CharacterArc() {
     updateLesson2(current => ({
       ...current,
       character: { ...current.character, [key]: value },
+    }))
+  }
+
+  const markCharacterAiAssistUsed = () => {
+    updateLesson2(current => ({
+      ...current,
+      characterAiAssistUsed: true,
     }))
   }
 
@@ -78,6 +92,10 @@ export default function Step4CharacterArc() {
       setError(page.validation[4])
       return
     }
+    if (state.characterAiAssistUsed && !state.characterAiReply.trim()) {
+      setError(page.validation[5])
+      return
+    }
     if (!valid) {
       setError(MODULE1_LESSON2_SHARED_COPY.upstreamChanged)
       return
@@ -100,73 +118,136 @@ export default function Step4CharacterArc() {
   }
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="leading-snug">{page.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm leading-relaxed">{page.intro}</p>
-          <Lesson2ReviewBanner
-            visible={state.reviewNeeded.character}
-            confirmEnabled={characterReady}
-            onConfirm={() => updateLesson2(current => clearModule1Lesson2Review(current, ["character"]))}
-          />
-          <div className="grid gap-4">
-            <label className="space-y-1 text-sm font-medium">
-              <span>{page.panels[0].title} · {page.fields[0].label}</span>
-              <p className="text-xs font-normal text-muted-foreground">{page.panels[0].body}</p>
-              <Textarea className="min-h-[96px]" value={state.character.who} onChange={event => updateCharacter("who", event.target.value)} placeholder={page.fields[0].placeholder} />
-            </label>
-            <label className="space-y-1 text-sm font-medium">
-              <span>{page.panels[1].title} · {page.fields[1].label}</span>
-              <p className="text-xs font-normal text-muted-foreground">{page.panels[1].body}</p>
-              <Textarea className="min-h-[96px]" value={state.character.want} onChange={event => updateCharacter("want", event.target.value)} placeholder={page.fields[1].placeholder} />
-            </label>
-            <label className="space-y-1 text-sm font-medium">
-              <span>{page.panels[2].title} · {page.fields[2].label}</span>
-              <p className="text-xs font-normal text-muted-foreground">{page.panels[2].body}</p>
-              <Textarea className="min-h-[96px]" value={state.character.blocked} onChange={event => updateCharacter("blocked", event.target.value)} placeholder={page.fields[2].placeholder} />
-            </label>
-            <div className="space-y-3 rounded-lg border p-3">
-              <p className="text-sm font-medium">{page.panels[3].title}</p>
-              <p className="text-xs text-muted-foreground">{page.panels[3].body}</p>
-              <label className="space-y-1 text-sm font-medium">
-                <span>{page.fields[3].label}</span>
-                <Textarea className="min-h-[96px]" value={state.character.firstAction} onChange={event => updateCharacter("firstAction", event.target.value)} placeholder={page.fields[3].placeholder} />
-              </label>
-              <label className="space-y-1 text-sm font-medium">
-                <span>{page.fields[4].label}</span>
-                <Textarea className="min-h-[96px]" value={state.character.possibleChange} onChange={event => updateCharacter("possibleChange", event.target.value)} placeholder={page.fields[4].placeholder} />
-              </label>
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-4">
+        <Card>
+          <CardHeader className="space-y-2 pb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="leading-snug">{page.title}</CardTitle>
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {MODULE1_LESSON2_SHARED_COPY.observeMainBadge}
+              </span>
             </div>
-            <label className="space-y-1 text-sm font-medium">
-              <span>{page.fields[5].label}</span>
+            <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <ol className="space-y-1.5">
+              {MODULE1_LESSON2_CHARACTER_QUESTIONS.map((question, index) => (
+                <li
+                  key={question}
+                  className="rounded-md border-l-4 border-primary bg-primary/5 px-3 py-1.5 text-sm leading-snug"
+                >
+                  <span className="mr-2 font-semibold text-primary">{`${index + 1}.`}</span>
+                  <span className="font-medium">{question}</span>
+                </li>
+              ))}
+            </ol>
+            <Lesson2ReviewBanner
+              visible={state.reviewNeeded.character}
+              confirmEnabled={characterReady}
+              onConfirm={() => updateLesson2(current => clearModule1Lesson2Review(current, ["character"]))}
+            />
+            <div className="grid gap-3">
+              <label className="space-y-1 text-sm font-medium">
+                <span>{page.fields[0].label}</span>
+                <Textarea
+                  className="min-h-[72px]"
+                  value={state.character.who}
+                  onChange={event => updateCharacter("who", event.target.value)}
+                  placeholder={page.fields[0].placeholder}
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 text-sm font-medium">
+                  <span>{page.fields[1].label}</span>
+                  <Textarea
+                    className="min-h-[72px]"
+                    value={state.character.want}
+                    onChange={event => updateCharacter("want", event.target.value)}
+                    placeholder={page.fields[1].placeholder}
+                  />
+                </label>
+                <label className="space-y-1 text-sm font-medium">
+                  <span>{page.fields[2].label}</span>
+                  <Textarea
+                    className="min-h-[72px]"
+                    value={state.character.blocked}
+                    onChange={event => updateCharacter("blocked", event.target.value)}
+                    placeholder={page.fields[2].placeholder}
+                  />
+                </label>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 text-sm font-medium">
+                  <span>{page.fields[3].label}</span>
+                  <Textarea
+                    className="min-h-[72px]"
+                    value={state.character.firstAction}
+                    onChange={event => updateCharacter("firstAction", event.target.value)}
+                    placeholder={page.fields[3].placeholder}
+                  />
+                </label>
+                <label className="space-y-1 text-sm font-medium">
+                  <span>{page.fields[4].label}</span>
+                  <Textarea
+                    className="min-h-[72px]"
+                    value={state.character.possibleChange}
+                    onChange={event => updateCharacter("possibleChange", event.target.value)}
+                    placeholder={page.fields[4].placeholder}
+                  />
+                </label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className={cn(aiAssistUsed && "border-primary")}>
+          <CardHeader>
+            <CardTitle className="leading-snug">{page.panels[1].title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm leading-relaxed">{MODULE1_LESSON2_SHARED_COPY.characterAiAssistOptionalNote}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{page.panels[1].body}</p>
+            <CopyPromptControl
+              label={page.buttons[0]}
+              disabled={!state.writingPlan.trim() || !state.reason.trim()}
+              disabledReason={MODULE1_LESSON2_SHARED_COPY.incompletePrompt}
+              buildText={() => buildModule1Lesson2Prompt("P4", portfolio)}
+              onCopied={markCharacterAiAssistUsed}
+            />
+            <label className="space-y-1.5 text-sm font-medium">
+              <span>{aiAssistUsed ? MODULE1_LESSON2_SHARED_COPY.aiReplyRequiredLabel : page.fields[5].label}</span>
               <Textarea
-                className="min-h-[96px]"
+                aria-required={aiAssistUsed}
+                className={cn(
+                  aiAssistUsed ? "min-h-[120px] border-primary" : "min-h-[96px] bg-muted/30",
+                )}
                 value={state.characterAiReply}
-                onChange={event => updateLesson2(current => ({ ...current, characterAiReply: event.target.value }))}
+                onChange={event => updateLesson2(current => ({
+                  ...current,
+                  characterAiReply: event.target.value,
+                }))}
                 placeholder={page.fields[5].placeholder}
               />
             </label>
-          </div>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-            {page.hints.map(hint => <li key={hint}>{hint}</li>)}
-          </ul>
-          <CopyPromptControl
-            label={page.buttons[0]}
-            disabled={!state.writingPlan.trim() || !state.reason.trim()}
-            disabledReason={MODULE1_LESSON2_SHARED_COPY.incompletePrompt}
-            buildText={() => buildModule1Lesson2Prompt("P4", portfolio)}
-          />
+          </CardContent>
+        </Card>
+
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">{page.hints[0]}</p>
+          <p className="text-sm text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.newContextNote}</p>
+          {(error || aiReplyRequired) && (
+            <p role="alert" className="text-sm text-destructive">{error || page.validation[5]}</p>
+          )}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => setExampleOpen(true)}>{page.buttons[1]}</Button>
             <Button disabled={!valid} onClick={() => void complete()}>{page.buttons[3]}</Button>
           </div>
-          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        </CardContent>
-      </Card>
-      <Lesson2WritingSummary lesson1={portfolio.lesson1} lesson2={state} enableCopy />
+        </div>
+      </div>
+      <div className="min-w-0">
+        <Lesson2WritingSummary lesson1={portfolio.lesson1} lesson2={state} enableCopy />
+      </div>
       <ClassroomExampleDialog open={exampleOpen} onOpenChange={setExampleOpen} />
       <Dialog open={finished} onOpenChange={open => { if (!open) navigate("/module/1") }}>
         <DialogContent>

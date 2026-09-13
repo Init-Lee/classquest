@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时阶段快照 HTML 生成器。
  * 职责：按当前课时把身份与已完成字段渲染为不可导入的 HTML；下载前转义全部可控字段。
- * 更新触发：快照字段、文件名规则、转义策略、URL 映射或新增课时快照类型时，需要同步更新本文件。
+ * 更新触发：快照字段、第 1/3/4 关外部 AI 辅助标注、文件名规则、转义策略、URL 映射或新增课时快照类型时，需要同步更新本文件。
  */
 
 import { MODULE1_STORY_YEAR, type Module1Portfolio } from "@/modules/module-1-ai-story/domains/portfolio/types"
@@ -186,6 +186,7 @@ export function buildModule1Lesson2SnapshotHtml(portfolio: Module1Portfolio, now
       <p class="item"><span class="label">我卡在</span><span class="value">${snapshotValue(lesson2.character.blocked)}</span></p>
       <p class="item"><span class="label">准备先尝试的行动</span><span class="value">${snapshotValue(lesson2.character.firstAction)}</span></p>
       <p class="item"><span class="label">可能发生的变化</span><span class="value">${snapshotValue(lesson2.character.possibleChange)}</span></p>
+      ${lesson2.characterAiAssistUsed ? '<p class="item"><span class="label">人物设定外部 AI 辅助</span><span class="value">使用了外部 AI 辅助</span></p>' : ""}
       <p class="note">阶段快照不能恢复进度。需要继续学习时，请选择继续学习包。</p>
     </section>`,
   )

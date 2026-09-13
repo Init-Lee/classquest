@@ -39,6 +39,7 @@ describe("模块 1 讲解演示档案", () => {
     expect(portfolio.lesson2.reference.classroomDraft.workTitle).toBe("社戏")
     expect(portfolio.lesson2.reference.foundDraft.workTitle).toBe("")
     expect(portfolio.lesson2.reference.foundDraft.recommendationReply).toBe("")
+    expect(portfolio.lesson2.characterAiAssistUsed).toBe(false)
     expect(portfolio.lesson2.character.who).toContain("林禾")
     expect(portfolio.lesson2.character.firstAction).toBeTruthy()
     expect(portfolio.lesson2.character.possibleChange).toBeTruthy()

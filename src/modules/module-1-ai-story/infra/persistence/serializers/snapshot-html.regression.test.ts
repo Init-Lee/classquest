@@ -97,6 +97,18 @@ describe("模块 1 课时 2 阶段快照", () => {
     expect(html).not.toContain("使用了外部 AI 辅助")
   })
 
+  it("选用第 4 关外部 AI 辅助时在人物旁标注", () => {
+    const portfolio = createSnapshotPortfolio()
+    portfolio.lesson2 = {
+      ...portfolio.lesson2,
+      characterAiAssistUsed: true,
+      characterAiReply: "方案一",
+    }
+    const html = buildModule1Lesson2SnapshotHtml(portfolio)
+    expect(html).toContain("人物设定外部 AI 辅助")
+    expect(html).toContain("使用了外部 AI 辅助")
+  })
+
   it("选用第 3 关外部 AI 辅助时在理由旁标注", () => {
     const portfolio = createSnapshotPortfolio()
     portfolio.lesson2 = {
