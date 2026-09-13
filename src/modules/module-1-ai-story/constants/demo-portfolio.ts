@@ -48,6 +48,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
       contentVersion: 2,
       step1Completed: true,
       step2Completed: true,
+      step2Round1Passed: true,
       step3Completed: true,
       step4Completed: true,
       study: {

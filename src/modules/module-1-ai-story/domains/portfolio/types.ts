@@ -90,7 +90,7 @@ export interface Module1Lesson2State extends Module1BaseLessonState {
   round1PromptCopied: boolean
   /** 第 2 关第二轮提示词是否已成功复制；旧包缺省为 false */
   round2PromptCopied: boolean
-  /** 第 2 关第一页已通过（保存并继续或跳过）；用于关内第二页门禁，旧包缺省为 false */
+  /** 第 2 关第一步已选定参照且必填满足后记下；旧包缺省为 false */
   step2Round1Passed: boolean
   reference: Module1Lesson2Reference
   analysisReply: string
@@ -281,10 +281,17 @@ export function hasModule1Lesson2WritingPlan(state: Module1Lesson2State): boolea
   return Boolean(first && second)
 }
 
-/** 第 2 关第一页：未点复制可空着继续；点了复制则第一轮 AI 结果必填。跳过走独立短路径。 */
+/** 第 2 关第一步：已选定课堂或自己的案例，并满足该路径必填。点了第一轮复制则第一轮 AI 必填。 */
 export function canCompleteModule1Lesson2Step2Round1(state: Module1Lesson2State): boolean {
   if (state.round1PromptCopied && !state.recommendationReply.trim()) return false
-  return true
+  const reference = state.reference
+  if (reference.origin === "classroom") {
+    return Boolean(reference.caseId.trim() && reference.sourceConfirmed)
+  }
+  if (reference.origin === "external") {
+    return Boolean(reference.workTitle.trim() && reference.excerpt.trim() && reference.sourceNote.trim())
+  }
+  return false
 }
 
 /** 第 2 关第二页：完整参照 + 已阅读；若点了第二轮复制则拆解回复必填。写法仍在整关完成时检查。 */

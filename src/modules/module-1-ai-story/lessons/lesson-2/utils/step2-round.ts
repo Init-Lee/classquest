@@ -1,7 +1,7 @@
 /**
- * 文件说明：模块 1 课时 2 第 2 关关内分页（第一轮 / 选定片段）纯函数。
- * 职责：解析 `?round=1|2`、判断第一页是否可继续、第二页是否可进入，以及右侧设定栏是否显示已确认圆点。
- * 更新触发：第 2 关子页编号、第一页完成/跳过口径或设定栏圆点规则变化时，需要同步更新本文件。
+ * 文件说明：模块 1 课时 2 第 2 关关内分页（第一步选参照 / 第二步拆写法）纯函数。
+ * 职责：解析 `?round=1|2`、判断第一步是否可前进、第二步是否可进入，以及右侧设定栏是否显示已确认圆点。
+ * 更新触发：第 2 关子页编号、第一步选定口径或设定栏圆点规则变化时，需要同步更新本文件。
  */
 
 import {
@@ -20,23 +20,19 @@ export function buildModule1Lesson2Step2Path(round: Module1Lesson2Step2Round): s
   return `/module/1/lesson/2/step/2?round=${round}`
 }
 
-/** 第一页已通过（保存并继续或跳过）后才能进第二页；教师模式不拦。 */
+/** 第一步已选定参照且必填满足，或整关已完成，才能进第二步；教师模式不拦。 */
 export function canEnterModule1Lesson2Step2Round(
   state: Module1Lesson2State,
   round: Module1Lesson2Step2Round,
   isTeacherMode = false,
 ): boolean {
   if (round === 1 || isTeacherMode) return true
-  return state.step2Round1Passed || state.step2Completed
+  if (state.step2Completed) return true
+  return canCompleteModule1Lesson2Step2Round1(state)
 }
 
 export function canAdvanceModule1Lesson2Step2Round1(state: Module1Lesson2State): boolean {
   return canCompleteModule1Lesson2Step2Round1(state)
-}
-
-/** 跳过第一轮不要求第一轮回复，只打通第二页。 */
-export function canSkipModule1Lesson2Step2Round1(): boolean {
-  return true
 }
 
 export function hasModule1Lesson2ConfirmedSummary(

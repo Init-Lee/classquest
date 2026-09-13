@@ -29,6 +29,7 @@ describe("模块 1 讲解演示档案", () => {
     expect(portfolio.lesson2).toMatchObject({
       step1Completed: true,
       step2Completed: true,
+      step2Round1Passed: true,
       step3Completed: true,
       step4Completed: true,
       completed: true,
