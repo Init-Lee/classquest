@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第三关说明选择页。
- * 职责：拆成「先自己写选择理由」与「需要时再用外部 AI」两块；主任务必须自己写，只有成功复制提示词后才要求贴回外部 AI 回复。
- * 更新触发：第三关文案、提问条、理由字段、复制选用口径或完成动作变化时，需要同步更新本文件。
+ * 职责：自写区合成一张主任务卡（标题、一行总述、提问、设定与理由），再单独放「需要时再用外部 AI」；主任务必须自己写，只有成功复制提示词后才要求贴回外部 AI 回复。
+ * 更新触发：第三关文案、自写/AI 分区、提问条、理由字段、复制选用口径或完成动作变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -83,29 +83,21 @@ export default function Step3StyleWhy() {
     <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       <div className="min-w-0 space-y-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="leading-snug">{page.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed">{page.intro}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="space-y-2">
+          <CardHeader className="space-y-2 pb-3">
             <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="leading-snug">{page.panels[0].title}</CardTitle>
+              <CardTitle className="leading-snug">{page.title}</CardTitle>
               <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                 {MODULE1_LESSON2_SHARED_COPY.observeMainBadge}
               </span>
             </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <ol className="space-y-2">
+          <CardContent className="space-y-3">
+            <ol className="space-y-1.5">
               {MODULE1_LESSON2_REASON_QUESTIONS.map((question, index) => (
                 <li
                   key={question}
-                  className="rounded-md border-l-4 border-primary bg-primary/5 px-3 py-2.5 text-sm leading-relaxed"
+                  className="rounded-md border-l-4 border-primary bg-primary/5 px-3 py-1.5 text-sm leading-snug"
                 >
                   <span className="mr-2 font-semibold text-primary">{`${index + 1}.`}</span>
                   <span className="font-medium">{question}</span>
@@ -123,7 +115,6 @@ export default function Step3StyleWhy() {
                 <p className="whitespace-pre-wrap">已确认写法：{state.writingPlan || MODULE1_LESSON2_SHARED_COPY.notFilled}</p>
               </div>
             </details>
-            <p className="text-sm leading-relaxed">{page.panels[0].body}</p>
             <Lesson2ReviewBanner
               visible={state.reviewNeeded.reason}
               confirmEnabled={valid}
