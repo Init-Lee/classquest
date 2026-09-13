@@ -68,6 +68,7 @@ module-1-ai-story/
 │   ├── components/
 │   │   ├── Lesson2LegacyNotice.tsx
 │   │   ├── Lesson2ReviewBanner.tsx
+│   │   ├── Lesson2WritingDrawer.tsx
 │   │   ├── Lesson2WritingSummary.tsx
 │   │   ├── LiteraryCaseDetailDialog.tsx
 │   │   ├── LiteraryCasePanel.tsx
@@ -77,6 +78,9 @@ module-1-ai-story/
 │   ├── routes.tsx
 │   ├── steps/
 │   └── utils/
+│       ├── build-lesson2-prompts.ts
+│       ├── build-lesson2-writing-summary.ts
+│       └── step2-round.ts
 ├── pages/Module1HomePage.tsx
 ├── module.config.ts
 ├── routes.tsx
@@ -100,6 +104,8 @@ module-1-ai-story/
 - `infra/persistence/serializers/snapshot-html.ts` 生成不可导入的课时 1 主题设定或课时 2 风格与人物 HTML；导入器必须拒绝 HTML/非继续学习包。
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
 - 课时 2 的 `utils/build-lesson2-writing-summary.ts` 是已确认写作设定汇总的唯一派生入口；`utils/build-lesson2-prompts.ts` 拼装 P1—P4 外部提示词。汇总与提示词都不进入档案。
+- 课时 2 第 2 关路由仍是 `/module/1/lesson/2/step/2`，关内用 `?round=1|2` 分成寻找参照与选定片段两页；`utils/step2-round.ts` 负责子页解析与第一页门禁。未完成或未跳过第一页时直连 `?round=2` 拦回。`round1PromptCopied` / `round2PromptCopied` 与第 1 关 `study.aiAssistUsed` 分开，旧包缺字段视为 false。
+- 第 2 关右侧写作设定改为 `Lesson2WritingDrawer`：默认收起，点右侧标签滑出只读汇总，开合不落盘。第 3/4 关仍用原右侧卡片，不改文案。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3，但课时 3 路由仍未开放。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。

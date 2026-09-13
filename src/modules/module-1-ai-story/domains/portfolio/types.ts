@@ -86,6 +86,12 @@ export interface Module1Lesson2State extends Module1BaseLessonState {
   step4Completed: boolean
   study: Module1Lesson2Study
   recommendationReply: string
+  /** 第 2 关第一轮提示词是否已成功复制；与 study.aiAssistUsed 分开，旧包缺省为 false */
+  round1PromptCopied: boolean
+  /** 第 2 关第二轮提示词是否已成功复制；旧包缺省为 false */
+  round2PromptCopied: boolean
+  /** 第 2 关第一页已通过（保存并继续或跳过）；用于关内第二页门禁，旧包缺省为 false */
+  step2Round1Passed: boolean
   reference: Module1Lesson2Reference
   analysisReply: string
   writingPlan: string
@@ -199,6 +205,9 @@ export function createEmptyModule1Lesson2State(): Module1Lesson2State {
     step4Completed: false,
     study: createEmptyModule1Lesson2Study(),
     recommendationReply: "",
+    round1PromptCopied: false,
+    round2PromptCopied: false,
+    step2Round1Passed: false,
     reference: createEmptyModule1Lesson2Reference(),
     analysisReply: "",
     writingPlan: "",
@@ -270,6 +279,19 @@ export function hasModule1Lesson2ReferenceFields(state: Module1Lesson2State): bo
 export function hasModule1Lesson2WritingPlan(state: Module1Lesson2State): boolean {
   const [first, second] = parseModule1WritingPlanItems(state.writingPlan)
   return Boolean(first && second)
+}
+
+/** 第 2 关第一页：未点复制可空着继续；点了复制则第一轮 AI 结果必填。跳过走独立短路径。 */
+export function canCompleteModule1Lesson2Step2Round1(state: Module1Lesson2State): boolean {
+  if (state.round1PromptCopied && !state.recommendationReply.trim()) return false
+  return true
+}
+
+/** 第 2 关第二页：完整参照 + 已阅读；若点了第二轮复制则拆解回复必填。写法仍在整关完成时检查。 */
+export function canCompleteModule1Lesson2Step2Round2Fields(state: Module1Lesson2State): boolean {
+  if (!hasModule1Lesson2ReferenceFields(state)) return false
+  if (state.round2PromptCopied && !state.analysisReply.trim()) return false
+  return true
 }
 
 export function hasModule1Lesson2Reason(state: Module1Lesson2State): boolean {
@@ -479,6 +501,9 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
     ...empty,
     study,
     recommendationReply: stringValue(source.recommendationReply),
+    round1PromptCopied: booleanValue(source.round1PromptCopied),
+    round2PromptCopied: booleanValue(source.round2PromptCopied),
+    step2Round1Passed: booleanValue(source.step2Round1Passed),
     reference,
     analysisReply: stringValue(source.analysisReply),
     writingPlan,
@@ -500,7 +525,7 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
   })
 
   const studyReady = hasModule1Lesson2StudyFields(draft) && !draft.reviewNeeded.study
-  const referenceReady = hasModule1Lesson2ReferenceFields(draft)
+  const referenceReady = canCompleteModule1Lesson2Step2Round2Fields(draft)
     && hasModule1Lesson2WritingPlan(draft)
     && !draft.reviewNeeded.reference
     && !draft.reviewNeeded.writingPlan

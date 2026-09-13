@@ -154,6 +154,18 @@ describe("模块 1 课时 2 第 1 关观察与外部 AI 辅助", () => {
     expect(normalized.completed).toBe(false)
   })
 
+  it("旧包缺少第 2 关两轮复制标记视为未选用", () => {
+    const normalized = normalizeModule1Portfolio({
+      lesson2: {
+        recommendationReply: "候选一",
+        analysisReply: "拆解一",
+      },
+    }).lesson2
+    expect(normalized.round1PromptCopied).toBe(false)
+    expect(normalized.round2PromptCopied).toBe(false)
+    expect(normalized.step2Round1Passed).toBe(false)
+  })
+
   it("点了复制且观察与 AI 回复都填可通过第 1 关", () => {
     const state = createEmptyModule1Lesson2State()
     state.study = {
