@@ -104,7 +104,7 @@ module-1-ai-story/
 - `infra/persistence/serializers/snapshot-html.ts` 生成不可导入的课时 1 主题设定或课时 2 风格与人物 HTML；导入器必须拒绝 HTML/非继续学习包。
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
 - 课时 2 的 `utils/build-lesson2-writing-summary.ts` 是已确认写作设定汇总的唯一派生入口；`utils/build-lesson2-prompts.ts` 拼装 P1—P4 外部提示词。汇总与提示词都不进入档案。
-- 课时 2 第 2 关路由仍是 `/module/1/lesson/2/step/2`，关内用 `?round=1|2` 分成两步：第一步选参照（课堂案例或自己的作品，选定后桌面左 1/3 为课堂选用或第一轮找参照、右 2/3 为填写框，课堂选用与第一轮找候选都留在第一步），第二步只做拆解写法与第二轮提示词。左右箭头贴主内容区两侧，只在本关两步间翻页；第一步左箭头禁用，第二步右箭头走「保存并继续」去第 3 关。`utils/step2-round.ts` 负责子页解析与第一步门禁。未选定参照时直连 `?round=2` 拦回。`round1PromptCopied` / `round2PromptCopied` 与第 1 关 `study.aiAssistUsed` 分开，旧包缺字段视为 false。课堂案例与自选作品分槽存放（`classroomDraft` / `foundDraft`），切换来源只改 `origin`、不互相覆盖；完成判定、第二步摘要、阶段快照和写作设定抽屉只读当前 origin 槽。
+- 课时 2 第 2 关路由仍是 `/module/1/lesson/2/step/2`，关内用 `?round=1|2` 分成两步：第一步选参照（课堂案例或自己的作品，选定后桌面左 1/3 为课堂选用或第一轮找参照、右 2/3 为填写框，课堂选用与第一轮找候选都留在第一步），第二步只做拆解写法与第二轮提示词。左右箭头贴主内容区两侧，只在本关两步间翻页；第一步左箭头禁用、右箭头进入第二轮，第二步不渲染右箭头，改用右下角「下一关」并按整关必填校验后进入课时 2 第 3 关。`utils/step2-round.ts` 负责子页解析、第一步门禁与整关缺项提示。未选定参照时直连 `?round=2` 拦回。`round1PromptCopied` / `round2PromptCopied` 与第 1 关 `study.aiAssistUsed` 分开，旧包缺字段视为 false。课堂案例与自选作品分槽存放（`classroomDraft` / `foundDraft`），切换来源只改 `origin`、不互相覆盖；完成判定、第二步摘要、阶段快照和写作设定抽屉只读当前 origin 槽。
 - 第 2 关右侧写作设定改为 `Lesson2WritingDrawer`：默认收起，点右侧标签滑出只读汇总，开合不落盘。第 3/4 关仍用原右侧卡片，不改文案。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3，但课时 3 路由仍未开放。

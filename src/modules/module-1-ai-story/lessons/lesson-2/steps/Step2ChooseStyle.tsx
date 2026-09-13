@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第 2 关选择参照与确定写法页。
- * 职责：关内两步——第一步先选课堂/自己的案例，选定后桌面左 1/3 右 2/3 展开对应内容；第二步只做拆解写法与第二轮提示词。左右侧箭头只在本关两步间翻页，右侧写作设定保持抽屉。
- * 更新触发：第 2 关两步信息架构、左右侧翻页、第一步三分栏、参照分槽或写法完成条件变化时，需要同步更新本文件。
+ * 职责：关内两步——第一步先选课堂/自己的案例，选定后桌面左 1/3 右 2/3 展开对应内容；第二步只做拆解写法与第二轮提示词。第一步右侧箭头进入第二轮，第二步只留左侧箭头返回，完成本关用右下角「下一关」并做整关校验。右侧写作设定保持抽屉。
+ * 更新触发：第 2 关两步信息架构、左右侧翻页、第二轮下一关、第一步三分栏、参照分槽或写法完成条件变化时，需要同步更新本文件。
  */
 
 import { useEffect, useLayoutEffect, useState } from "react"
@@ -23,7 +23,6 @@ import { cn } from "@/shared/utils/cn"
 import { useModule1Portfolio } from "@/modules/module-1-ai-story/app/providers/Module1Provider"
 import {
   canCompleteModule1Lesson2Step2Round1,
-  canCompleteModule1Lesson2Step2Round2Fields,
   hasModule1Lesson1PromptContext,
   hasModule1Lesson2ReferenceFields,
   hasModule1Lesson2WritingPlan,
@@ -56,9 +55,13 @@ import { getModule1Lesson2Step2RoundRedirect } from "@/modules/module-1-ai-story
 import { clearModule1Lesson2Review, finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
 import { buildModule1Lesson2Prompt } from "@/modules/module-1-ai-story/lessons/lesson-2/utils/build-lesson2-prompts"
 import {
+  MODULE1_LESSON2_STEP3_PATH,
   buildModule1Lesson2Step2Path,
+  getModule1Lesson2Step2GateBlockReason,
   getModule1Lesson2Step2PrevRound,
   parseModule1Lesson2Step2Round,
+  shouldShowModule1Lesson2Step2NextArrow,
+  shouldShowModule1Lesson2Step2NextGateButton,
 } from "@/modules/module-1-ai-story/lessons/lesson-2/utils/step2-round"
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -118,37 +121,9 @@ async function goStep2Next(
     return
   }
 
-  const page = MODULE1_LESSON2_PAGES.step2
-  if (!state.reference.workTitle.trim() || !state.reference.author.trim()) {
-    setError(page.validation[0])
-    return
-  }
-  if (!state.reference.location.trim()) {
-    setError(page.validation[1])
-    return
-  }
-  if (!state.reference.excerpt.trim()) {
-    setError(page.validation[2])
-    return
-  }
-  if (!state.reference.sourceNote.trim()) {
-    setError(page.validation[3])
-    return
-  }
-  if (!state.reference.sourceConfirmed) {
-    setError(page.validation[4])
-    return
-  }
-  if (state.round2PromptCopied && !state.analysisReply.trim()) {
-    setError(MODULE1_LESSON2_SHARED_COPY.round2ReplyRequired)
-    return
-  }
-  if (!hasModule1Lesson2WritingPlan(state)) {
-    setError(page.validation[5])
-    return
-  }
-  if (!canCompleteModule1Lesson2Step2Round2Fields(state)) {
-    setError(MODULE1_LESSON2_SHARED_COPY.round2ReplyRequired)
+  const reason = getModule1Lesson2Step2GateBlockReason(state)
+  if (reason) {
+    setError(reason)
     return
   }
   setError("")
@@ -163,7 +138,7 @@ async function goStep2Next(
     },
   }))
   await flushPortfolio()
-  navigate("/module/1/lesson/2/step/3")
+  navigate(MODULE1_LESSON2_STEP3_PATH)
 }
 
 /** 贴主内容区左右边缘的关内翻页箭头，垂直居中，z-index 低于写作设定抽屉。 */
@@ -175,11 +150,13 @@ const step2SideArrowClass = cn(
 
 function Step2RoundNav({
   canPrev,
+  showNext,
   nextLabel,
   onPrev,
   onNext,
 }: {
   canPrev: boolean
+  showNext: boolean
   nextLabel: string
   onPrev: () => void
   onNext: () => void
@@ -195,14 +172,16 @@ function Step2RoundNav({
       >
         <ChevronLeft className="h-6 w-6" aria-hidden="true" />
       </button>
-      <button
-        type="button"
-        className={cn(step2SideArrowClass, "right-[max(0.5rem,calc(50vw-40rem+0.75rem))]")}
-        aria-label={nextLabel}
-        onClick={onNext}
-      >
-        <ChevronRight className="h-6 w-6" aria-hidden="true" />
-      </button>
+      {showNext ? (
+        <button
+          type="button"
+          className={cn(step2SideArrowClass, "right-[max(0.5rem,calc(50vw-40rem+0.75rem))]")}
+          aria-label={nextLabel}
+          onClick={onNext}
+        >
+          <ChevronRight className="h-6 w-6" aria-hidden="true" />
+        </button>
+      ) : null}
     </nav>
   )
 }
@@ -231,6 +210,7 @@ export default function Step2ChooseStyle() {
         goStep2Prev(round, navigate)
         return
       }
+      if (!shouldShowModule1Lesson2Step2NextArrow(round)) return
       void goStep2Next(round, state, isTeacherMode, updatePortfolio, flushPortfolio, navigate, setError)
     }
     window.addEventListener("keydown", onKeyDown)
@@ -405,7 +385,8 @@ export default function Step2ChooseStyle() {
       </div>
       <Step2RoundNav
         canPrev={round === 2}
-        nextLabel={round === 1 ? MODULE1_LESSON2_SHARED_COPY.nextStep : page.buttons[4]}
+        showNext={shouldShowModule1Lesson2Step2NextArrow(round)}
+        nextLabel={MODULE1_LESSON2_SHARED_COPY.nextStep}
         onPrev={goPrev}
         onNext={goNext}
       />
@@ -608,6 +589,15 @@ export default function Step2ChooseStyle() {
         <p role="alert" className="text-sm text-destructive">
           {error || (round === 1 ? MODULE1_LESSON2_SHARED_COPY.round1ReplyRequired : MODULE1_LESSON2_SHARED_COPY.round2ReplyRequired)}
         </p>
+      )}
+
+      {shouldShowModule1Lesson2Step2NextGateButton(round) && (
+        <div className="flex flex-col items-end gap-2">
+          <p className="text-sm text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.completeGateHint}</p>
+          <Button type="button" onClick={goNext}>
+            {MODULE1_LESSON2_SHARED_COPY.nextGate}
+          </Button>
+        </div>
       )}
 
       <Lesson2WritingDrawer lesson1={portfolio.lesson1} lesson2={state} />
