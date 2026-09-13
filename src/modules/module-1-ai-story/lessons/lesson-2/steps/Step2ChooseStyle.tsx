@@ -426,60 +426,39 @@ export default function Step2ChooseStyle() {
       {round === 1 ? (
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="leading-snug">{page.title}</CardTitle>
+            <CardHeader className="space-y-2 p-4 pb-2">
+              <CardTitle className="text-lg leading-snug">{page.title}</CardTitle>
+              <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-relaxed">
-              <p>{page.intro}</p>
+            <CardContent className="space-y-2 p-4 pt-0">
               {!lesson1Ready && (
-                <p className="rounded-lg bg-amber-50 p-3 text-amber-900">
+                <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
                   城市问题或写给谁缺失，请
                   <Link className="underline underline-offset-2" to="/module/1/lesson/1/step/4">返回补全第1课</Link>
                   。
                 </p>
               )}
-              <p className="text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.newContextNote}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{page.fields[1].label}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
+              <div className="flex flex-wrap gap-2" role="group" aria-label={page.fields[1].label}>
+                <Button
                   type="button"
-                  className={cn(
-                    "rounded-lg border p-4 text-left transition-colors",
-                    origin === "classroom" ? "border-primary bg-primary/5" : "hover:bg-accent",
-                  )}
+                  size="sm"
+                  variant={origin === "classroom" ? "default" : "outline"}
                   aria-pressed={origin === "classroom"}
                   onClick={() => selectOrigin("classroom")}
                 >
-                  <p className="text-sm font-medium">{page.fields[1].options[0]}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {MODULE1_LESSON2_SHARED_COPY.classroomOriginHint}
-                  </p>
-                </button>
-                <button
+                  {page.fields[1].options[0]}
+                </Button>
+                <Button
                   type="button"
-                  className={cn(
-                    "rounded-lg border p-4 text-left transition-colors",
-                    origin === "external" ? "border-primary bg-primary/5" : "hover:bg-accent",
-                  )}
+                  size="sm"
+                  variant={origin === "external" ? "default" : "outline"}
                   aria-pressed={origin === "external"}
                   onClick={() => selectOrigin("external")}
                 >
-                  <p className="text-sm font-medium">{page.fields[1].options[1]}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {MODULE1_LESSON2_SHARED_COPY.externalOriginHint}
-                  </p>
-                </button>
+                  {page.fields[1].options[1]}
+                </Button>
               </div>
-              {!origin && (
-                <p className="text-sm text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.chooseOriginFirst}</p>
-              )}
+              <p className="text-xs text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.newContextNote}</p>
             </CardContent>
           </Card>
 
