@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 学习档案领域模型。
  * 职责：定义六课时聚合、身份、进度与安全归一化，是模块 1 持久化数据的唯一结构真相。
- * 更新触发：模块 1 课时字段、完成状态、数据版本或归一化规则变化时，需要同步更新本文件。
+ * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽或归一化规则变化时，需要同步更新本文件。
  */
 
 export const MODULE1_ID = "module-1-ai-story" as const
@@ -50,8 +50,8 @@ export interface Module1Lesson2Study {
   aiAssistUsed: boolean
 }
 
-export interface Module1Lesson2Reference {
-  origin: Module1Lesson2ReferenceOrigin
+/** 课堂案例或自选作品共用的参照槽字段。 */
+export interface Module1Lesson2ReferenceSlot {
   caseId: string
   workTitle: string
   author: string
@@ -60,6 +60,22 @@ export interface Module1Lesson2Reference {
   excerpt: string
   sourceNote: string
   sourceConfirmed: boolean
+}
+
+/** 自选作品槽：在共用字段上另存第一轮 AI 回复与复制标记。 */
+export interface Module1Lesson2FoundDraft extends Module1Lesson2ReferenceSlot {
+  recommendationReply: string
+  round1PromptCopied: boolean
+}
+
+/**
+ * 参照存档：`classroomDraft` / `foundDraft` 分槽保存，扁平字段由当前 origin 派生。
+ * 切换来源只改 origin，两槽互不拷贝。
+ */
+export interface Module1Lesson2Reference extends Module1Lesson2ReferenceSlot {
+  origin: Module1Lesson2ReferenceOrigin
+  classroomDraft: Module1Lesson2ReferenceSlot
+  foundDraft: Module1Lesson2FoundDraft
 }
 
 export interface Module1Lesson2Character {
@@ -159,9 +175,20 @@ export function createEmptyModule1Lesson2Study(): Module1Lesson2Study {
   return { caseId: "", response: "", aiReply: "", aiAssistUsed: false }
 }
 
-export function createEmptyModule1Lesson2Reference(): Module1Lesson2Reference {
+type Module1Lesson2ReferenceSlotTextKey = Exclude<keyof Module1Lesson2ReferenceSlot, "sourceConfirmed">
+
+const REFERENCE_SLOT_TEXT_KEYS: Module1Lesson2ReferenceSlotTextKey[] = [
+  "caseId",
+  "workTitle",
+  "author",
+  "location",
+  "versionNote",
+  "excerpt",
+  "sourceNote",
+]
+
+export function createEmptyModule1Lesson2ReferenceSlot(): Module1Lesson2ReferenceSlot {
   return {
-    origin: "",
     caseId: "",
     workTitle: "",
     author: "",
@@ -171,6 +198,127 @@ export function createEmptyModule1Lesson2Reference(): Module1Lesson2Reference {
     sourceNote: "",
     sourceConfirmed: false,
   }
+}
+
+export function createEmptyModule1Lesson2FoundDraft(): Module1Lesson2FoundDraft {
+  return {
+    ...createEmptyModule1Lesson2ReferenceSlot(),
+    recommendationReply: "",
+    round1PromptCopied: false,
+  }
+}
+
+export function hasModule1Lesson2ReferenceSlotContent(slot: Module1Lesson2ReferenceSlot): boolean {
+  return REFERENCE_SLOT_TEXT_KEYS.some(key => slot[key].trim().length > 0)
+}
+
+function copyReferenceSlot(slot: Module1Lesson2ReferenceSlot): Module1Lesson2ReferenceSlot {
+  return {
+    caseId: slot.caseId,
+    workTitle: slot.workTitle,
+    author: slot.author,
+    location: slot.location,
+    versionNote: slot.versionNote,
+    excerpt: slot.excerpt,
+    sourceNote: slot.sourceNote,
+    sourceConfirmed: slot.sourceConfirmed,
+  }
+}
+
+function copyFoundDraft(slot: Module1Lesson2FoundDraft): Module1Lesson2FoundDraft {
+  return {
+    ...copyReferenceSlot(slot),
+    recommendationReply: slot.recommendationReply,
+    round1PromptCopied: slot.round1PromptCopied,
+  }
+}
+
+/** 按当前 origin 取出对应槽；未选来源时返回空槽，不把另一套内容露出来。 */
+export function getModule1Lesson2ActiveReferenceSlot(
+  reference: Module1Lesson2Reference,
+): Module1Lesson2ReferenceSlot {
+  if (reference.origin === "classroom") return copyReferenceSlot(reference.classroomDraft)
+  if (reference.origin === "external") return copyReferenceSlot(reference.foundDraft)
+  return createEmptyModule1Lesson2ReferenceSlot()
+}
+
+/** 用当前 origin 对应槽回写扁平字段，供完成判定、摘要、快照读取。 */
+export function projectModule1Lesson2Reference(reference: Module1Lesson2Reference): Module1Lesson2Reference {
+  const classroomDraft = copyReferenceSlot({
+    ...createEmptyModule1Lesson2ReferenceSlot(),
+    ...reference.classroomDraft,
+  })
+  const foundDraft = copyFoundDraft({
+    ...createEmptyModule1Lesson2FoundDraft(),
+    ...reference.foundDraft,
+  })
+  const projected: Module1Lesson2Reference = {
+    origin: reference.origin,
+    classroomDraft,
+    foundDraft,
+    ...createEmptyModule1Lesson2ReferenceSlot(),
+  }
+  return {
+    ...projected,
+    ...getModule1Lesson2ActiveReferenceSlot(projected),
+  }
+}
+
+export function withModule1Lesson2ReferenceOrigin(
+  reference: Module1Lesson2Reference,
+  origin: Module1Lesson2ReferenceOrigin,
+): Module1Lesson2Reference {
+  return projectModule1Lesson2Reference({ ...reference, origin })
+}
+
+export function patchModule1Lesson2ActiveReference(
+  reference: Module1Lesson2Reference,
+  patch: Partial<Module1Lesson2ReferenceSlot>,
+): Module1Lesson2Reference {
+  if (reference.origin === "classroom") {
+    return projectModule1Lesson2Reference({
+      ...reference,
+      classroomDraft: { ...reference.classroomDraft, ...patch },
+    })
+  }
+  if (reference.origin === "external") {
+    return projectModule1Lesson2Reference({
+      ...reference,
+      foundDraft: { ...reference.foundDraft, ...patch },
+    })
+  }
+  return projectModule1Lesson2Reference(reference)
+}
+
+export function patchModule1Lesson2FoundDraft(
+  reference: Module1Lesson2Reference,
+  patch: Partial<Pick<Module1Lesson2FoundDraft, "recommendationReply" | "round1PromptCopied">>,
+): Module1Lesson2Reference {
+  return projectModule1Lesson2Reference({
+    ...reference,
+    foundDraft: { ...reference.foundDraft, ...patch },
+  })
+}
+
+/** 扁平字段与第一轮 AI 字段按当前 origin 派生：课堂不露出自选槽的回复。 */
+export function syncModule1Lesson2DerivedReference(state: Module1Lesson2State): Module1Lesson2State {
+  const reference = projectModule1Lesson2Reference(state.reference)
+  const isFound = reference.origin === "external"
+  return {
+    ...state,
+    reference,
+    recommendationReply: isFound ? reference.foundDraft.recommendationReply : "",
+    round1PromptCopied: isFound ? reference.foundDraft.round1PromptCopied : false,
+  }
+}
+
+export function createEmptyModule1Lesson2Reference(): Module1Lesson2Reference {
+  return projectModule1Lesson2Reference({
+    origin: "",
+    classroomDraft: createEmptyModule1Lesson2ReferenceSlot(),
+    foundDraft: createEmptyModule1Lesson2FoundDraft(),
+    ...createEmptyModule1Lesson2ReferenceSlot(),
+  })
 }
 
 export function createEmptyModule1Lesson2Character(): Module1Lesson2Character {
@@ -264,15 +412,16 @@ export function hasModule1Lesson2StudyFields(state: Module1Lesson2State): boolea
 }
 
 export function hasModule1Lesson2ReferenceFields(state: Module1Lesson2State): boolean {
-  const reference = state.reference
+  const reference = projectModule1Lesson2Reference(state.reference)
+  const slot = getModule1Lesson2ActiveReferenceSlot(reference)
   return Boolean(
     (reference.origin === "classroom" || reference.origin === "external")
-    && reference.workTitle.trim()
-    && reference.author.trim()
-    && reference.location.trim()
-    && reference.excerpt.trim()
-    && reference.sourceNote.trim()
-    && reference.sourceConfirmed,
+    && slot.workTitle.trim()
+    && slot.author.trim()
+    && slot.location.trim()
+    && slot.excerpt.trim()
+    && slot.sourceNote.trim()
+    && slot.sourceConfirmed,
   )
 }
 
@@ -281,15 +430,16 @@ export function hasModule1Lesson2WritingPlan(state: Module1Lesson2State): boolea
   return Boolean(first && second)
 }
 
-/** 第 2 关第一步：已选定课堂或自己的案例，并满足该路径必填。点了第一轮复制则第一轮 AI 必填。 */
+/** 第 2 关第一步：只看当前 origin 对应槽。点了第一轮复制则仅自选槽的 AI 回复必填。 */
 export function canCompleteModule1Lesson2Step2Round1(state: Module1Lesson2State): boolean {
-  if (state.round1PromptCopied && !state.recommendationReply.trim()) return false
-  const reference = state.reference
+  const reference = projectModule1Lesson2Reference(state.reference)
   if (reference.origin === "classroom") {
-    return Boolean(reference.caseId.trim() && reference.sourceConfirmed)
+    return Boolean(reference.classroomDraft.caseId.trim() && reference.classroomDraft.sourceConfirmed)
   }
   if (reference.origin === "external") {
-    return Boolean(reference.workTitle.trim() && reference.excerpt.trim() && reference.sourceNote.trim())
+    const found = reference.foundDraft
+    if (found.round1PromptCopied && !found.recommendationReply.trim()) return false
+    return Boolean(found.workTitle.trim() && found.excerpt.trim() && found.sourceNote.trim())
   }
   return false
 }
@@ -395,10 +545,9 @@ function normalizeReferenceOrigin(value: unknown): Module1Lesson2ReferenceOrigin
   return value === "classroom" || value === "external" ? value : ""
 }
 
-function normalizeReference(raw: unknown): Module1Lesson2Reference {
+function normalizeReferenceSlot(raw: unknown): Module1Lesson2ReferenceSlot {
   const source = isRecord(raw) ? raw : {}
   return {
-    origin: normalizeReferenceOrigin(source.origin),
     caseId: stringValue(source.caseId),
     workTitle: stringValue(source.workTitle),
     author: stringValue(source.author),
@@ -408,6 +557,81 @@ function normalizeReference(raw: unknown): Module1Lesson2Reference {
     sourceNote: stringValue(source.sourceNote),
     sourceConfirmed: booleanValue(source.sourceConfirmed),
   }
+}
+
+function normalizeFoundDraft(
+  raw: unknown,
+  replyFallback: string,
+  copiedFallback: boolean,
+): Module1Lesson2FoundDraft {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    ...normalizeReferenceSlot(source),
+    recommendationReply: stringValue(source.recommendationReply, replyFallback),
+    round1PromptCopied: booleanValue(source.round1PromptCopied, copiedFallback),
+  }
+}
+
+/**
+ * 归一化参照：旧包只有扁平字段时按当时 origin 迁进对应槽，另一槽空。
+ * 第一轮 AI 回复属于自选槽，即使当时 origin 是课堂也迁进 foundDraft，避免丢掉。
+ */
+function normalizeReference(raw: unknown, lesson2Source: Record<string, unknown>): Module1Lesson2Reference {
+  const source = isRecord(raw) ? raw : {}
+  const origin = normalizeReferenceOrigin(source.origin)
+  const reply = stringValue(lesson2Source.recommendationReply)
+  const copied = booleanValue(lesson2Source.round1PromptCopied)
+  const flat = normalizeReferenceSlot(source)
+  const hasClassroom = isRecord(source.classroomDraft)
+  const hasFound = isRecord(source.foundDraft)
+
+  let classroomDraft = hasClassroom
+    ? normalizeReferenceSlot(source.classroomDraft)
+    : createEmptyModule1Lesson2ReferenceSlot()
+  let foundDraft = hasFound
+    ? normalizeFoundDraft(source.foundDraft, reply, copied)
+    : createEmptyModule1Lesson2FoundDraft()
+
+  if (!hasClassroom && !hasFound) {
+    if (origin === "classroom" || (!origin && flat.caseId.trim())) {
+      classroomDraft = flat
+      foundDraft = {
+        ...createEmptyModule1Lesson2FoundDraft(),
+        recommendationReply: reply,
+        round1PromptCopied: copied,
+      }
+    } else if (origin === "external" || hasModule1Lesson2ReferenceSlotContent(flat)) {
+      foundDraft = {
+        ...flat,
+        recommendationReply: reply,
+        round1PromptCopied: copied,
+      }
+    } else {
+      foundDraft = {
+        ...createEmptyModule1Lesson2FoundDraft(),
+        recommendationReply: reply,
+        round1PromptCopied: copied,
+      }
+    }
+  } else {
+    if (!hasClassroom && origin === "classroom") {
+      classroomDraft = flat
+    }
+    if (!hasFound && origin === "external") {
+      foundDraft = {
+        ...flat,
+        recommendationReply: reply,
+        round1PromptCopied: copied,
+      }
+    }
+  }
+
+  return projectModule1Lesson2Reference({
+    origin,
+    classroomDraft,
+    foundDraft,
+    ...createEmptyModule1Lesson2ReferenceSlot(),
+  })
 }
 
 function normalizeCharacter(raw: unknown, fallback: Module1Lesson2Character): Module1Lesson2Character {
@@ -491,7 +715,7 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
   const reason = stringValue(source.reason) || (isLegacyRecord ? styleWhy : "")
   const writingPlan = stringValue(source.writingPlan)
   const study = normalizeStudy(source.study)
-  const reference = normalizeReference(source.reference)
+  const reference = normalizeReference(source.reference, source)
 
   const reviewFallback: Module1Lesson2ReviewNeeded = isLegacyRecord
     ? {
@@ -504,7 +728,7 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
     : empty.reviewNeeded
   const reviewNeeded = normalizeReviewNeeded(source.reviewNeeded, reviewFallback)
 
-  const draft = syncModule1Lesson2MappedFields({
+  const draft = syncModule1Lesson2MappedFields(syncModule1Lesson2DerivedReference({
     ...empty,
     study,
     recommendationReply: stringValue(source.recommendationReply),
@@ -529,7 +753,7 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
     goal,
     obstacle,
     changeAction,
-  })
+  }))
 
   const studyReady = hasModule1Lesson2StudyFields(draft) && !draft.reviewNeeded.study
   const referenceReady = canCompleteModule1Lesson2Step2Round2Fields(draft)

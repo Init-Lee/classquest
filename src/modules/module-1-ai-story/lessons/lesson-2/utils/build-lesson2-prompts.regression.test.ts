@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest"
-import { createNewModule1Portfolio } from "@/modules/module-1-ai-story/domains/portfolio/types"
+import { createNewModule1Portfolio, patchModule1Lesson2ActiveReference } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 import {
@@ -29,7 +29,7 @@ function createReadyPortfolio() {
   }
   const reference = buildModule1ClassroomReference("shexi")
   if (reference) {
-    portfolio.lesson2.reference = { ...reference, sourceConfirmed: true }
+    portfolio.lesson2.reference = patchModule1Lesson2ActiveReference(reference, { sourceConfirmed: true })
   }
   portfolio.lesson2.writingPlan = MODULE1_LESSON2_EXAMPLE.writingPlan
   portfolio.lesson2.reason = MODULE1_LESSON2_EXAMPLE.reason

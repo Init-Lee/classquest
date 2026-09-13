@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第 2 关选择参照与确定写法页。
  * 职责：关内两步——第一步先选课堂/自己的案例，选定后桌面左 1/3 右 2/3 展开对应内容；第二步只做拆解写法与第二轮提示词。左右侧箭头只在本关两步间翻页，右侧写作设定保持抽屉。
- * 更新触发：第 2 关两步信息架构、左右侧翻页、第一步三分栏或写法完成条件变化时，需要同步更新本文件。
+ * 更新触发：第 2 关两步信息架构、左右侧翻页、第一步三分栏、参照分槽或写法完成条件变化时，需要同步更新本文件。
  */
 
 import { useEffect, useLayoutEffect, useState } from "react"
@@ -29,6 +29,9 @@ import {
   hasModule1Lesson2WritingPlan,
   joinModule1WritingPlanItems,
   parseModule1WritingPlanItems,
+  patchModule1Lesson2ActiveReference,
+  patchModule1Lesson2FoundDraft,
+  withModule1Lesson2ReferenceOrigin,
   type Module1Lesson2Reference,
   type Module1Lesson2ReferenceOrigin,
   type Module1Lesson2State,
@@ -40,6 +43,7 @@ import {
 } from "@/modules/module-1-ai-story/constants/lesson2-copy"
 import { MODULE1_LITERARY_CASES } from "@/modules/module-1-ai-story/constants/literary-cases"
 import {
+  applyModule1ClassroomReference,
   buildModule1ClassroomReference,
   hasExistingModule1Reference,
   isSameModule1ReferenceIdentity,
@@ -73,8 +77,11 @@ function formatSelectedReferenceSummary(reference: Module1Lesson2Reference): str
 }
 
 function getRound1BlockReason(current: Module1Lesson2State): string {
-  if (current.round1PromptCopied && !current.recommendationReply.trim()) {
-    return MODULE1_LESSON2_SHARED_COPY.round1ReplyRequired
+  if (current.reference.origin === "external") {
+    const found = current.reference.foundDraft
+    if (found.round1PromptCopied && !found.recommendationReply.trim()) {
+      return MODULE1_LESSON2_SHARED_COPY.round1ReplyRequired
+    }
   }
   if (!current.reference.origin) return MODULE1_LESSON2_SHARED_COPY.chooseOriginFirst
   return MODULE1_LESSON2_SHARED_COPY.round1NeedReference
@@ -236,12 +243,13 @@ export default function Step2ChooseStyle() {
   const [plan1, plan2, plan3] = parseModule1WritingPlanItems(state.writingPlan)
   const roundRedirect = getModule1Lesson2Step2RoundRedirect(state, round, isTeacherMode)
   const lesson1Ready = hasModule1Lesson1PromptContext(portfolio.lesson1)
-  const round1Copied = state.round1PromptCopied
-  const round2Copied = state.round2PromptCopied
-  const round1ReplyRequired = round1Copied && !state.recommendationReply.trim()
-  const round2ReplyRequired = round2Copied && !state.analysisReply.trim()
   const origin = state.reference.origin
-  const classroomSelected = Boolean(origin === "classroom" && state.reference.caseId.trim())
+  const foundDraft = state.reference.foundDraft
+  const round1Copied = origin === "external" && foundDraft.round1PromptCopied
+  const round2Copied = state.round2PromptCopied
+  const round1ReplyRequired = round1Copied && !foundDraft.recommendationReply.trim()
+  const round2ReplyRequired = round2Copied && !state.analysisReply.trim()
+  const classroomSelected = Boolean(origin === "classroom" && state.reference.classroomDraft.caseId.trim())
 
   const updateLesson2 = (updater: (current: Module1Lesson2State) => Module1Lesson2State) => {
     updatePortfolio(current => ({
@@ -250,8 +258,11 @@ export default function Step2ChooseStyle() {
     }))
   }
 
-  const applyReference = (reference: Module1Lesson2Reference) => {
-    updateLesson2(current => ({ ...current, reference }))
+  const applyClassroomCase = (caseId: string) => {
+    updateLesson2(current => {
+      const next = applyModule1ClassroomReference(current.reference, caseId)
+      return next ? { ...current, reference: next } : current
+    })
   }
 
   const requestClassroomCase = (caseId: string) => {
@@ -261,7 +272,7 @@ export default function Step2ChooseStyle() {
       setPendingCaseId(caseId)
       return
     }
-    applyReference(next)
+    applyClassroomCase(caseId)
   }
 
   const updateWritingPlan = (index: 0 | 1 | 2, value: string) => {
@@ -276,11 +287,14 @@ export default function Step2ChooseStyle() {
   const selectOrigin = (nextOrigin: Exclude<Module1Lesson2ReferenceOrigin, "">) => {
     updateLesson2(current => ({
       ...current,
-      reference: {
-        ...current.reference,
-        origin: nextOrigin,
-        caseId: nextOrigin === "external" ? "" : current.reference.caseId,
-      },
+      reference: withModule1Lesson2ReferenceOrigin(current.reference, nextOrigin),
+    }))
+  }
+
+  const updateActiveReference = (patch: Parameters<typeof patchModule1Lesson2ActiveReference>[1]) => {
+    updateLesson2(current => ({
+      ...current,
+      reference: patchModule1Lesson2ActiveReference(current.reference, patch),
     }))
   }
 
@@ -307,10 +321,7 @@ export default function Step2ChooseStyle() {
             readOnly={readOnly}
             className={cn(readOnly && "bg-muted/40")}
             value={state.reference.workTitle}
-            onChange={event => updateLesson2(current => ({
-              ...current,
-              reference: { ...current.reference, workTitle: event.target.value },
-            }))}
+            onChange={event => updateActiveReference({ workTitle: event.target.value })}
             placeholder={page.fields[2].placeholder}
           />
         </label>
@@ -320,10 +331,7 @@ export default function Step2ChooseStyle() {
             readOnly={readOnly}
             className={cn(readOnly && "bg-muted/40")}
             value={state.reference.author}
-            onChange={event => updateLesson2(current => ({
-              ...current,
-              reference: { ...current.reference, author: event.target.value },
-            }))}
+            onChange={event => updateActiveReference({ author: event.target.value })}
             placeholder={page.fields[3].placeholder}
           />
         </label>
@@ -334,10 +342,7 @@ export default function Step2ChooseStyle() {
           readOnly={readOnly}
           className={cn(readOnly && "bg-muted/40")}
           value={state.reference.location}
-          onChange={event => updateLesson2(current => ({
-            ...current,
-            reference: { ...current.reference, location: event.target.value },
-          }))}
+          onChange={event => updateActiveReference({ location: event.target.value })}
           placeholder={page.fields[4].placeholder}
         />
       </label>
@@ -347,10 +352,7 @@ export default function Step2ChooseStyle() {
           readOnly={readOnly}
           className={cn("min-h-[56px]", readOnly && "bg-muted/40")}
           value={state.reference.versionNote}
-          onChange={event => updateLesson2(current => ({
-            ...current,
-            reference: { ...current.reference, versionNote: event.target.value },
-          }))}
+          onChange={event => updateActiveReference({ versionNote: event.target.value })}
           placeholder={page.fields[5].placeholder}
         />
       </label>
@@ -360,10 +362,7 @@ export default function Step2ChooseStyle() {
           readOnly={readOnly}
           className={cn("min-h-[140px]", readOnly && "bg-muted/40")}
           value={state.reference.excerpt}
-          onChange={event => updateLesson2(current => ({
-            ...current,
-            reference: { ...current.reference, excerpt: event.target.value },
-          }))}
+          onChange={event => updateActiveReference({ excerpt: event.target.value })}
           placeholder={page.fields[6].placeholder}
         />
       </label>
@@ -373,10 +372,7 @@ export default function Step2ChooseStyle() {
           readOnly={readOnly}
           className={cn("min-h-[72px]", readOnly && "bg-muted/40")}
           value={state.reference.sourceNote}
-          onChange={event => updateLesson2(current => ({
-            ...current,
-            reference: { ...current.reference, sourceNote: event.target.value },
-          }))}
+          onChange={event => updateActiveReference({ sourceNote: event.target.value })}
           placeholder={page.fields[7].placeholder}
         />
       </label>
@@ -385,16 +381,7 @@ export default function Step2ChooseStyle() {
           type="checkbox"
           className="mt-1"
           checked={state.reference.sourceConfirmed}
-          onChange={event => updatePortfolio(current => ({
-            ...current,
-            lesson2: {
-              ...current.lesson2,
-              reference: {
-                ...current.lesson2.reference,
-                sourceConfirmed: event.target.checked,
-              },
-            },
-          }))}
+          onChange={event => updateActiveReference({ sourceConfirmed: event.target.checked })}
         />
         <span>{page.fields[8].label}</span>
       </label>
@@ -477,7 +464,7 @@ export default function Step2ChooseStyle() {
                         key={literaryCase.id}
                         className={cn(
                           "space-y-2 rounded-lg border p-3 text-sm",
-                          state.reference.caseId === literaryCase.id && "border-primary bg-primary/5",
+                          state.reference.classroomDraft.caseId === literaryCase.id && "border-primary bg-primary/5",
                         )}
                       >
                         <p>{literaryCase.cardTitle}</p>
@@ -510,24 +497,32 @@ export default function Step2ChooseStyle() {
                 <CardHeader>
                   <CardTitle>{page.panels[0].title}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-1 flex-col space-y-4">
+                <CardContent className="flex min-h-0 flex-1 flex-col space-y-4">
                   <p className="text-sm text-muted-foreground">{page.panels[0].body}</p>
                   <CopyPromptControl
                     label={page.buttons[0]}
                     disabled={!lesson1Ready}
                     disabledReason={lesson1Ready ? undefined : MODULE1_LESSON2_SHARED_COPY.incompletePrompt}
                     buildText={() => buildModule1Lesson2Prompt("P2A", portfolio)}
-                    onCopied={() => updateLesson2(current => ({ ...current, round1PromptCopied: true }))}
+                    onCopied={() => updateLesson2(current => ({
+                      ...current,
+                      reference: patchModule1Lesson2FoundDraft(current.reference, { round1PromptCopied: true }),
+                    }))}
                   />
-                  <label className="flex-1 space-y-1 text-sm font-medium">
+                  <label className="flex min-h-0 flex-1 flex-col space-y-1 text-sm font-medium">
                     <span>{round1Copied ? MODULE1_LESSON2_SHARED_COPY.aiReplyRequiredLabel : page.fields[0].label}</span>
                     <Textarea
                       aria-required={round1Copied}
-                      className={cn(round1Copied ? "min-h-[96px] border-primary" : "min-h-[96px] bg-muted/30")}
-                      value={state.recommendationReply}
+                      className={cn(
+                        "min-h-[12rem] flex-1 lg:h-full",
+                        round1Copied ? "border-primary" : "bg-muted/30",
+                      )}
+                      value={foundDraft.recommendationReply}
                       onChange={event => updateLesson2(current => ({
                         ...current,
-                        recommendationReply: event.target.value,
+                        reference: patchModule1Lesson2FoundDraft(current.reference, {
+                          recommendationReply: event.target.value,
+                        }),
                       }))}
                       placeholder={page.fields[0].placeholder}
                     />
@@ -630,8 +625,7 @@ export default function Step2ChooseStyle() {
             <Button
               type="button"
               onClick={() => {
-                const next = buildModule1ClassroomReference(pendingCaseId)
-                if (next) applyReference(next)
+                applyClassroomCase(pendingCaseId)
                 setPendingCaseId("")
               }}
             >

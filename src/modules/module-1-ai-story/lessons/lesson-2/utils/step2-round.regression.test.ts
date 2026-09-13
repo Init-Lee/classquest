@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第 2 关关内分页门禁回归测试。
  * 职责：锁定课堂/自己的案例都在第一步完成、第二步不再承担选用、左右翻页门禁，以及旧包缺字段视为 false。
- * 更新触发：第 2 关两步信息架构、第一步选定口径或直连第二步回跳规则变化时，需要同步更新本文件。
+ * 更新触发：第 2 关两步信息架构、第一步选定口径、参照分槽或直连第二步回跳规则变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -9,10 +9,15 @@ import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-stor
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 import {
   canCompleteModule1Lesson2Step2Round1,
+  createEmptyModule1Lesson2FoundDraft,
+  createEmptyModule1Lesson2Reference,
   createEmptyModule1Lesson2State,
   createNewModule1Portfolio,
   normalizeModule1Portfolio,
-  type Module1Lesson2Reference,
+  patchModule1Lesson2ActiveReference,
+  patchModule1Lesson2FoundDraft,
+  projectModule1Lesson2Reference,
+  type Module1Lesson2FoundDraft,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import {
   canAdvanceModule1Lesson2Step2Round1,
@@ -26,24 +31,27 @@ function withClassroomSelected(confirmed = true) {
   const classroom = buildModule1ClassroomReference("shexi")
   if (!classroom) throw new Error("课堂案例 shexi 必须存在")
   const state = createEmptyModule1Lesson2State()
-  state.reference = { ...classroom, sourceConfirmed: confirmed }
+  state.reference = patchModule1Lesson2ActiveReference(classroom, { sourceConfirmed: confirmed })
   return state
 }
 
-function withExternalReference(overrides: Partial<Module1Lesson2Reference> = {}) {
+function withExternalReference(overrides: Partial<Module1Lesson2FoundDraft> = {}) {
   const state = createEmptyModule1Lesson2State()
-  state.reference = {
+  state.reference = projectModule1Lesson2Reference({
+    ...createEmptyModule1Lesson2Reference(),
     origin: "external",
-    caseId: "",
-    workTitle: "社戏",
-    author: "鲁迅",
-    location: "夜航",
-    versionNote: "",
-    excerpt: "两岸的豆麦和河底的水草",
-    sourceNote: "课本第 3 页",
-    sourceConfirmed: false,
-    ...overrides,
-  }
+    foundDraft: {
+      ...createEmptyModule1Lesson2FoundDraft(),
+      workTitle: "社戏",
+      author: "鲁迅",
+      location: "夜航",
+      versionNote: "",
+      excerpt: "两岸的豆麦和河底的水草",
+      sourceNote: "课本第 3 页",
+      sourceConfirmed: false,
+      ...overrides,
+    },
+  })
   return state
 }
 
@@ -98,8 +106,10 @@ describe("模块 1 课时 2 第 2 关关内分页", () => {
 
   it("点第一轮复制后空回复不能进第二步", () => {
     const state = withExternalReference()
-    state.round1PromptCopied = true
-    state.recommendationReply = ""
+    state.reference = patchModule1Lesson2FoundDraft(state.reference, {
+      round1PromptCopied: true,
+      recommendationReply: "",
+    })
     expect(canAdvanceModule1Lesson2Step2Round1(state)).toBe(false)
     expect(canEnterModule1Lesson2Step2Round(state, 2)).toBe(false)
     expect(getModule1Lesson2Step2RoundRedirect(state, 2)).toBe("/module/1/lesson/2/step/2?round=1")
@@ -107,8 +117,10 @@ describe("模块 1 课时 2 第 2 关关内分页", () => {
 
   it("点第一轮复制并贴回结果后可以进入第二步", () => {
     const state = withExternalReference()
-    state.round1PromptCopied = true
-    state.recommendationReply = "候选一：社戏夜航"
+    state.reference = patchModule1Lesson2FoundDraft(state.reference, {
+      round1PromptCopied: true,
+      recommendationReply: "候选一：社戏夜航",
+    })
     expect(canAdvanceModule1Lesson2Step2Round1(state)).toBe(true)
     expect(canEnterModule1Lesson2Step2Round(state, 2)).toBe(true)
   })

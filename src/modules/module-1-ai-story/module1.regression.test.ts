@@ -11,6 +11,7 @@ import {
   hasMeaningfulModule1Lesson2Fields,
   MODULE1_ID,
   normalizeModule1Portfolio,
+  patchModule1Lesson2ActiveReference,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import {
   canAccessModule1Lesson,
@@ -80,7 +81,7 @@ function fillLesson2Content(portfolio: ReturnType<typeof createStudent>) {
       aiAssistUsed: false,
     },
     reference: reference
-      ? { ...reference, sourceConfirmed: true }
+      ? patchModule1Lesson2ActiveReference(reference, { sourceConfirmed: true })
       : createEmptyModule1Lesson2State().reference,
     writingPlan: MODULE1_LESSON2_EXAMPLE.writingPlan,
     reason: MODULE1_LESSON2_EXAMPLE.reason,
@@ -260,6 +261,8 @@ describe("模块 1 继续学习包", () => {
     expect(parsed.portfolio.lesson2.study.caseId).toBe("shexi")
     expect(parsed.portfolio.lesson2.study.aiAssistUsed).toBe(false)
     expect(parsed.portfolio.lesson2.reference.workTitle).toBe("社戏")
+    expect(parsed.portfolio.lesson2.reference.classroomDraft.workTitle).toBe("社戏")
+    expect(parsed.portfolio.lesson2.reference.foundDraft.workTitle).toBe("")
     expect(parsed.portfolio.lesson2.reference.excerpt).toContain("两岸的豆麦")
     expect(parsed.portfolio.lesson2.writingPlan).toBe(MODULE1_LESSON2_EXAMPLE.writingPlan)
     expect(parsed.portfolio.lesson2.character.who).toBe(MODULE1_LESSON2_EXAMPLE.who)

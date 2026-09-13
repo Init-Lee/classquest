@@ -1,10 +1,16 @@
 /**
  * 文件说明：模块 1 课时 2 参照填入辅助。
  * 职责：把课堂文学案例转成可写入档案的参照字段；旧 8 张风格卡不再进入主流程。
- * 更新触发：课堂案例自动填入字段、来源口径或案例清单变化时，需要同步更新本文件。
+ * 更新触发：课堂案例自动填入字段、来源分槽、来源口径或案例清单变化时，需要同步更新本文件。
  */
 
-import type { Module1Lesson2Reference } from "@/modules/module-1-ai-story/domains/portfolio/types"
+import {
+  createEmptyModule1Lesson2FoundDraft,
+  hasModule1Lesson2ReferenceSlotContent,
+  projectModule1Lesson2Reference,
+  type Module1Lesson2Reference,
+  type Module1Lesson2ReferenceSlot,
+} from "@/modules/module-1-ai-story/domains/portfolio/types"
 import {
   buildModule1ClassroomSourceNote,
   buildModule1ClassroomVersionNote,
@@ -24,8 +30,7 @@ export function buildModule1ClassroomReference(caseId: string): Module1Lesson2Re
 export function buildModule1ClassroomReferenceFromCase(
   literaryCase: Module1LiteraryCase,
 ): Module1Lesson2Reference {
-  return {
-    origin: "classroom",
+  const classroomDraft: Module1Lesson2ReferenceSlot = {
     caseId: literaryCase.id,
     workTitle: literaryCase.workTitle,
     author: literaryCase.author,
@@ -35,16 +40,36 @@ export function buildModule1ClassroomReferenceFromCase(
     sourceNote: buildModule1ClassroomSourceNote(literaryCase),
     sourceConfirmed: false,
   }
+  return projectModule1Lesson2Reference({
+    origin: "classroom",
+    classroomDraft,
+    foundDraft: createEmptyModule1Lesson2FoundDraft(),
+    ...classroomDraft,
+  })
+}
+
+/** 把选定的课堂案例写入课堂槽，保留自选槽原样。 */
+export function applyModule1ClassroomReference(
+  current: Module1Lesson2Reference,
+  caseId: string,
+): Module1Lesson2Reference | null {
+  const built = buildModule1ClassroomReference(caseId)
+  if (!built) return null
+  return projectModule1Lesson2Reference({
+    ...current,
+    origin: "classroom",
+    classroomDraft: built.classroomDraft,
+  })
 }
 
 export function hasExistingModule1Reference(reference: Module1Lesson2Reference): boolean {
-  return Boolean(
-    reference.workTitle.trim()
-    || reference.author.trim()
-    || reference.excerpt.trim()
-    || reference.sourceNote.trim()
-    || reference.location.trim(),
-  )
+  const projected = projectModule1Lesson2Reference(reference)
+  const slot = projected.origin === "classroom"
+    ? projected.classroomDraft
+    : projected.origin === "external"
+      ? projected.foundDraft
+      : projected
+  return hasModule1Lesson2ReferenceSlotContent(slot)
 }
 
 export function isSameModule1ReferenceIdentity(

@@ -37,5 +37,7 @@ describe("模块 1 课时 2 课堂文学案例", () => {
     expect(reference?.excerpt).toContain("两岸的豆麦")
     expect(reference?.sourceNote).toContain("课堂材料：shexi")
     expect(reference?.sourceConfirmed).toBe(false)
+    expect(reference?.classroomDraft.workTitle).toBe("社戏")
+    expect(reference?.foundDraft.workTitle).toBe("")
   })
 })

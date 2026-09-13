@@ -7,6 +7,7 @@
 import {
   createNewModule1Portfolio,
   normalizeModule1Portfolio,
+  patchModule1Lesson2ActiveReference,
   type Module1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
@@ -59,7 +60,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
       },
       recommendationReply: "",
       reference: classroomReference
-        ? { ...classroomReference, sourceConfirmed: true }
+        ? patchModule1Lesson2ActiveReference(classroomReference, { sourceConfirmed: true })
         : undefined,
       analysisReply: "",
       writingPlan: MODULE1_LESSON2_EXAMPLE.writingPlan,

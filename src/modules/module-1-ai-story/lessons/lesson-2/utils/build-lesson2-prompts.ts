@@ -23,11 +23,10 @@ import {
   MODULE1_LESSON2_UNFILLED_VERSION_NOTE,
 } from "@/modules/module-1-ai-story/constants/lesson2-copy"
 import {
-  buildModule1ClassroomSourceNote,
-  buildModule1ClassroomVersionNote,
   getModule1LiteraryCaseById,
   type Module1LiteraryCase,
 } from "@/modules/module-1-ai-story/constants/literary-cases"
+import { buildModule1ClassroomReferenceFromCase } from "@/modules/module-1-ai-story/constants/story-options"
 
 export type Module1Lesson2PromptId = "P1" | "P2A" | "P2B" | "P3" | "P4"
 
@@ -71,17 +70,7 @@ function referenceVersionNote(reference: Pick<Module1Lesson2Reference, "versionN
 }
 
 export function buildModule1ReferenceFromLiteraryCase(literaryCase: Module1LiteraryCase): Module1Lesson2Reference {
-  return {
-    origin: "classroom",
-    caseId: literaryCase.id,
-    workTitle: literaryCase.workTitle,
-    author: literaryCase.author,
-    location: literaryCase.classroomLocation,
-    versionNote: buildModule1ClassroomVersionNote(literaryCase),
-    excerpt: literaryCase.excerpt,
-    sourceNote: buildModule1ClassroomSourceNote(literaryCase),
-    sourceConfirmed: false,
-  }
+  return buildModule1ClassroomReferenceFromCase(literaryCase)
 }
 
 function replaceTemplateOnce(template: string, variables: Record<string, string>): string {
