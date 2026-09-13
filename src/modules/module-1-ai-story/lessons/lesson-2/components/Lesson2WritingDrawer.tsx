@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第 2 关右侧写作设定滑动抽屉。
- * 职责：用右侧窄标签展开/收起只读写作设定汇总，默认收起，开合不落盘。
- * 更新触发：抽屉交互、默认开合、把手文案、宽度或挂载范围变化时，需要同步更新本文件。
+ * 职责：用右侧窄标签展开/收起只读写作设定汇总，默认收起，开合不落盘。把手靠上并高于左右翻页箭头，避免抢位置。
+ * 更新触发：抽屉交互、默认开合、把手文案、宽度、与翻页箭头分层或挂载范围变化时，需要同步更新本文件。
  */
 
 import { useEffect, useId, useState } from "react"
@@ -45,7 +45,7 @@ export function Lesson2WritingDrawer({
         onClick={() => setOpen(current => !current)}
         className={cn(
           "fixed z-20 flex items-center justify-center gap-1.5 border bg-background shadow-md transition-colors hover:bg-accent",
-          "right-0 top-[calc(var(--module1-sticky-stack-height,4rem)+var(--module1-lesson-chrome-height,5rem)+4.5rem)] h-28 w-8 rounded-l-md border-r-0",
+          "right-0 top-[calc(var(--module1-sticky-stack-height,4rem)+var(--module1-lesson-chrome-height,5rem)+1.5rem)] h-28 w-8 rounded-l-md border-r-0",
           "md:h-32",
           "max-md:bottom-4 max-md:right-4 max-md:top-auto max-md:h-10 max-md:w-auto max-md:rounded-full max-md:border max-md:px-3",
         )}

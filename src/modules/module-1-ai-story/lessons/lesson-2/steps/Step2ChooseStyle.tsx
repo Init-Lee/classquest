@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第 2 关选择参照与确定写法页。
- * 职责：关内两步——第一步先选课堂/自己的案例并在本页展开对应表单；第二步只做拆解写法与第二轮提示词。左右箭头翻页，右侧写作设定保持抽屉。
- * 更新触发：第 2 关两步信息架构、左右翻页、第一步门禁或写法完成条件变化时，需要同步更新本文件。
+ * 职责：关内两步——第一步先选课堂/自己的案例，选定后桌面左 1/3 右 2/3 展开对应内容；第二步只做拆解写法与第二轮提示词。左右侧箭头只在本关两步间翻页，右侧写作设定保持抽屉。
+ * 更新触发：第 2 关两步信息架构、左右侧翻页、第一步三分栏或写法完成条件变化时，需要同步更新本文件。
  */
 
 import { useEffect, useLayoutEffect, useState } from "react"
@@ -53,6 +53,7 @@ import { clearModule1Lesson2Review, finalizeModule1Lesson2State } from "@/module
 import { buildModule1Lesson2Prompt } from "@/modules/module-1-ai-story/lessons/lesson-2/utils/build-lesson2-prompts"
 import {
   buildModule1Lesson2Step2Path,
+  getModule1Lesson2Step2PrevRound,
   parseModule1Lesson2Step2Round,
 } from "@/modules/module-1-ai-story/lessons/lesson-2/utils/step2-round"
 
@@ -79,17 +80,10 @@ function getRound1BlockReason(current: Module1Lesson2State): string {
   return MODULE1_LESSON2_SHARED_COPY.round1NeedReference
 }
 
-async function goStep2Prev(
-  round: 1 | 2,
-  flushPortfolio: () => Promise<unknown>,
-  navigate: NavigateFunction,
-) {
-  if (round === 1) {
-    await flushPortfolio()
-    navigate("/module/1/lesson/2/step/1")
-    return
-  }
-  navigate(buildModule1Lesson2Step2Path(1))
+function goStep2Prev(round: 1 | 2, navigate: NavigateFunction) {
+  const prevRound = getModule1Lesson2Step2PrevRound(round)
+  if (!prevRound) return
+  navigate(buildModule1Lesson2Step2Path(prevRound))
 }
 
 async function goStep2Next(
@@ -165,32 +159,43 @@ async function goStep2Next(
   navigate("/module/1/lesson/2/step/3")
 }
 
+/** 贴主内容区左右边缘的关内翻页箭头，垂直居中，z-index 低于写作设定抽屉。 */
+const step2SideArrowClass = cn(
+  "fixed z-10 flex h-11 w-11 items-center justify-center rounded-full border bg-background/95 shadow-md",
+  "top-[calc((var(--module1-sticky-stack-height,4rem)+var(--module1-lesson-chrome-height,5rem)+100dvh)/2)] -translate-y-1/2",
+  "disabled:pointer-events-none disabled:opacity-25",
+)
+
 function Step2RoundNav({
-  round,
-  prevLabel,
+  canPrev,
   nextLabel,
   onPrev,
   onNext,
 }: {
-  round: 1 | 2
-  prevLabel: string
+  canPrev: boolean
   nextLabel: string
   onPrev: () => void
   onNext: () => void
 }) {
   return (
-    <nav aria-label="本关步骤翻页" className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2">
-      <Button type="button" variant="outline" onClick={onPrev}>
-        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-        {prevLabel}
-      </Button>
-      <p className="text-xs font-medium text-muted-foreground tabular-nums">
-        {MODULE1_LESSON2_SHARED_COPY.step2RoundPosition.replace("{round}", String(round))}
-      </p>
-      <Button type="button" onClick={onNext}>
-        {nextLabel}
-        <ChevronRight className="h-5 w-5" aria-hidden="true" />
-      </Button>
+    <nav aria-label="本关步骤翻页">
+      <button
+        type="button"
+        className={cn(step2SideArrowClass, "left-[max(0.5rem,calc(50vw-40rem+0.75rem))]")}
+        aria-label={MODULE1_LESSON2_SHARED_COPY.prevStep}
+        disabled={!canPrev}
+        onClick={onPrev}
+      >
+        <ChevronLeft className="h-6 w-6" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className={cn(step2SideArrowClass, "right-[max(0.5rem,calc(50vw-40rem+0.75rem))]")}
+        aria-label={nextLabel}
+        onClick={onNext}
+      >
+        <ChevronRight className="h-6 w-6" aria-hidden="true" />
+      </button>
     </nav>
   )
 }
@@ -216,7 +221,7 @@ export default function Step2ChooseStyle() {
       event.preventDefault()
       if (event.key === "ArrowLeft") {
         setError("")
-        void goStep2Prev(round, flushPortfolio, navigate)
+        goStep2Prev(round, navigate)
         return
       }
       void goStep2Next(round, state, isTeacherMode, updatePortfolio, flushPortfolio, navigate, setError)
@@ -281,45 +286,53 @@ export default function Step2ChooseStyle() {
 
   const goPrev = () => {
     setError("")
-    void goStep2Prev(round, flushPortfolio, navigate)
+    goStep2Prev(round, navigate)
   }
 
   const goNext = () => {
     void goStep2Next(round, state, isTeacherMode, updatePortfolio, flushPortfolio, navigate, setError)
   }
 
-  const renderReferenceFields = () => (
+  const renderReferenceFields = (readOnly = false) => (
     <>
       <Lesson2ReviewBanner
         visible={state.reviewNeeded.reference}
         confirmEnabled={hasModule1Lesson2ReferenceFields(state)}
         onConfirm={() => updateLesson2(current => clearModule1Lesson2Review(current, ["reference"]))}
       />
-      <label className="space-y-1 text-sm font-medium">
-        <span>{page.fields[2].label}</span>
-        <Input
-          value={state.reference.workTitle}
-          onChange={event => updateLesson2(current => ({
-            ...current,
-            reference: { ...current.reference, workTitle: event.target.value },
-          }))}
-          placeholder={page.fields[2].placeholder}
-        />
-      </label>
-      <label className="space-y-1 text-sm font-medium">
-        <span>{page.fields[3].label}</span>
-        <Input
-          value={state.reference.author}
-          onChange={event => updateLesson2(current => ({
-            ...current,
-            reference: { ...current.reference, author: event.target.value },
-          }))}
-          placeholder={page.fields[3].placeholder}
-        />
-      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1 text-sm font-medium">
+          <span>{page.fields[2].label}</span>
+          <Input
+            readOnly={readOnly}
+            className={cn(readOnly && "bg-muted/40")}
+            value={state.reference.workTitle}
+            onChange={event => updateLesson2(current => ({
+              ...current,
+              reference: { ...current.reference, workTitle: event.target.value },
+            }))}
+            placeholder={page.fields[2].placeholder}
+          />
+        </label>
+        <label className="space-y-1 text-sm font-medium">
+          <span>{page.fields[3].label}</span>
+          <Input
+            readOnly={readOnly}
+            className={cn(readOnly && "bg-muted/40")}
+            value={state.reference.author}
+            onChange={event => updateLesson2(current => ({
+              ...current,
+              reference: { ...current.reference, author: event.target.value },
+            }))}
+            placeholder={page.fields[3].placeholder}
+          />
+        </label>
+      </div>
       <label className="space-y-1 text-sm font-medium">
         <span>{page.fields[4].label}</span>
         <Input
+          readOnly={readOnly}
+          className={cn(readOnly && "bg-muted/40")}
           value={state.reference.location}
           onChange={event => updateLesson2(current => ({
             ...current,
@@ -331,7 +344,8 @@ export default function Step2ChooseStyle() {
       <label className="space-y-1 text-sm font-medium">
         <span>{page.fields[5].label}</span>
         <Textarea
-          className="min-h-[72px]"
+          readOnly={readOnly}
+          className={cn("min-h-[56px]", readOnly && "bg-muted/40")}
           value={state.reference.versionNote}
           onChange={event => updateLesson2(current => ({
             ...current,
@@ -343,7 +357,8 @@ export default function Step2ChooseStyle() {
       <label className="space-y-1 text-sm font-medium">
         <span>{page.fields[6].label}</span>
         <Textarea
-          className="min-h-[140px]"
+          readOnly={readOnly}
+          className={cn("min-h-[140px]", readOnly && "bg-muted/40")}
           value={state.reference.excerpt}
           onChange={event => updateLesson2(current => ({
             ...current,
@@ -355,7 +370,8 @@ export default function Step2ChooseStyle() {
       <label className="space-y-1 text-sm font-medium">
         <span>{page.fields[7].label}</span>
         <Textarea
-          className="min-h-[72px]"
+          readOnly={readOnly}
+          className={cn("min-h-[72px]", readOnly && "bg-muted/40")}
           value={state.reference.sourceNote}
           onChange={event => updateLesson2(current => ({
             ...current,
@@ -386,26 +402,26 @@ export default function Step2ChooseStyle() {
     </>
   )
 
-  const nav = (
-    <Step2RoundNav
-      round={round}
-      prevLabel={round === 1 ? MODULE1_LESSON2_SHARED_COPY.backToLesson2Step1 : MODULE1_LESSON2_SHARED_COPY.prevStep}
-      nextLabel={round === 1 ? MODULE1_LESSON2_SHARED_COPY.nextStep : page.buttons[4]}
-      onPrev={goPrev}
-      onNext={goNext}
-    />
-  )
-
   if (roundRedirect) {
     return <Navigate to={roundRedirect} replace />
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs font-medium text-muted-foreground">
-        {round === 1 ? MODULE1_LESSON2_SHARED_COPY.step2Round1Label : MODULE1_LESSON2_SHARED_COPY.step2Round2Label}
-      </p>
-      {nav}
+    <div className="space-y-4 px-8 sm:px-12">
+      <div className="space-y-1">
+        <p className="text-xs font-medium text-muted-foreground">
+          {round === 1 ? MODULE1_LESSON2_SHARED_COPY.step2Round1Label : MODULE1_LESSON2_SHARED_COPY.step2Round2Label}
+        </p>
+        <p className="text-center text-xs text-muted-foreground/80 tabular-nums">
+          {MODULE1_LESSON2_SHARED_COPY.step2RoundPosition.replace("{round}", String(round))}
+        </p>
+      </div>
+      <Step2RoundNav
+        canPrev={round === 2}
+        nextLabel={round === 1 ? MODULE1_LESSON2_SHARED_COPY.nextStep : page.buttons[4]}
+        onPrev={goPrev}
+        onNext={goNext}
+      />
 
       {round === 1 ? (
         <div className="space-y-4">
@@ -468,39 +484,47 @@ export default function Step2ChooseStyle() {
           </Card>
 
           {origin === "classroom" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{page.panels[1].title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">{page.panels[1].body}</p>
-                <div className="space-y-2">
-                  {MODULE1_LITERARY_CASES.map(literaryCase => (
-                    <div key={literaryCase.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
-                      <p>{literaryCase.cardTitle}</p>
-                      <Button type="button" size="sm" variant="outline" onClick={() => requestClassroomCase(literaryCase.id)}>
-                        {page.buttons[1]}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                {classroomSelected && renderReferenceFields()}
-              </CardContent>
-            </Card>
-          )}
-
-          {origin === "external" && (
-            <>
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{page.fields[1].options[0]}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.classroomOriginHint}</p>
+                  <div className="space-y-2">
+                    {MODULE1_LITERARY_CASES.map(literaryCase => (
+                      <div
+                        key={literaryCase.id}
+                        className={cn(
+                          "space-y-2 rounded-lg border p-3 text-sm",
+                          state.reference.caseId === literaryCase.id && "border-primary bg-primary/5",
+                        )}
+                      >
+                        <p>{literaryCase.cardTitle}</p>
+                        <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => requestClassroomCase(literaryCase.id)}>
+                          {page.buttons[1]}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
               <Card>
                 <CardHeader>
                   <CardTitle>{page.panels[1].title}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{page.panels[1].body}</p>
-                  {renderReferenceFields()}
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {classroomSelected ? page.panels[1].body : MODULE1_LESSON2_SHARED_COPY.classroomPickFirst}
+                  </p>
+                  {renderReferenceFields(true)}
                 </CardContent>
               </Card>
+            </div>
+          )}
 
+          {origin === "external" && (
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
               <Card className={cn(round1Copied && "border-primary")}>
                 <CardHeader>
                   <CardTitle>{page.panels[0].title}</CardTitle>
@@ -529,7 +553,16 @@ export default function Step2ChooseStyle() {
                   </label>
                 </CardContent>
               </Card>
-            </>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{page.panels[1].title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">{page.panels[1].body}</p>
+                  {renderReferenceFields(false)}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       ) : (
@@ -600,7 +633,6 @@ export default function Step2ChooseStyle() {
           {error || (round === 1 ? MODULE1_LESSON2_SHARED_COPY.round1ReplyRequired : MODULE1_LESSON2_SHARED_COPY.round2ReplyRequired)}
         </p>
       )}
-      {nav}
 
       <Lesson2WritingDrawer lesson1={portfolio.lesson1} lesson2={state} />
       <ClassroomExampleDialog open={exampleOpen} onOpenChange={setExampleOpen} />

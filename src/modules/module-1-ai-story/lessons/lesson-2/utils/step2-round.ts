@@ -20,6 +20,11 @@ export function buildModule1Lesson2Step2Path(round: Module1Lesson2Step2Round): s
   return `/module/1/lesson/2/step/2?round=${round}`
 }
 
+/** 关内上一页：第一步没有上一页，第二步回到第一步。左箭头不再回第 1 关。 */
+export function getModule1Lesson2Step2PrevRound(round: Module1Lesson2Step2Round): Module1Lesson2Step2Round | null {
+  return round === 2 ? 1 : null
+}
+
 /** 第一步已选定参照且必填满足，或整关已完成，才能进第二步；教师模式不拦。 */
 export function canEnterModule1Lesson2Step2Round(
   state: Module1Lesson2State,

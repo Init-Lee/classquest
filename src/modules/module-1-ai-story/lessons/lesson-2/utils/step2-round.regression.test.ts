@@ -17,6 +17,7 @@ import {
 import {
   canAdvanceModule1Lesson2Step2Round1,
   canEnterModule1Lesson2Step2Round,
+  getModule1Lesson2Step2PrevRound,
   parseModule1Lesson2Step2Round,
 } from "@/modules/module-1-ai-story/lessons/lesson-2/utils/step2-round"
 import { getModule1Lesson2Step2RoundRedirect } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
@@ -47,6 +48,11 @@ function withExternalReference(overrides: Partial<Module1Lesson2Reference> = {})
 }
 
 describe("模块 1 课时 2 第 2 关关内分页", () => {
+  it("左箭头只在本关两步间返回，第一步没有上一页", () => {
+    expect(getModule1Lesson2Step2PrevRound(1)).toBeNull()
+    expect(getModule1Lesson2Step2PrevRound(2)).toBe(1)
+  })
+
   it("未选定参照不能进第二步", () => {
     const state = createEmptyModule1Lesson2State()
     expect(canCompleteModule1Lesson2Step2Round1(state)).toBe(false)
