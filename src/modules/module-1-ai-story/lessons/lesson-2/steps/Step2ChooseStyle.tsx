@@ -463,14 +463,15 @@ export default function Step2ChooseStyle() {
           </Card>
 
           {origin === "classroom" && (
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-              <Card>
+            /* 桌面左右分栏等高：stretch + 左卡 flex 留白，窄屏单列不额外撑高 */
+            <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <Card className="flex h-full flex-col">
                 <CardHeader>
                   <CardTitle>{page.fields[1].options[0]}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="flex flex-1 flex-col space-y-3">
                   <p className="text-sm text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.classroomOriginHint}</p>
-                  <div className="space-y-2">
+                  <div className="flex-1 space-y-2">
                     {MODULE1_LITERARY_CASES.map(literaryCase => (
                       <div
                         key={literaryCase.id}
@@ -488,7 +489,7 @@ export default function Step2ChooseStyle() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle>{page.panels[1].title}</CardTitle>
                 </CardHeader>
@@ -503,12 +504,13 @@ export default function Step2ChooseStyle() {
           )}
 
           {origin === "external" && (
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-              <Card className={cn(round1Copied && "border-primary")}>
+            /* 桌面左右分栏等高：与课堂案例同一套 stretch + 左卡 flex 留白 */
+            <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <Card className={cn("flex h-full flex-col", round1Copied && "border-primary")}>
                 <CardHeader>
                   <CardTitle>{page.panels[0].title}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="flex flex-1 flex-col space-y-4">
                   <p className="text-sm text-muted-foreground">{page.panels[0].body}</p>
                   <CopyPromptControl
                     label={page.buttons[0]}
@@ -517,7 +519,7 @@ export default function Step2ChooseStyle() {
                     buildText={() => buildModule1Lesson2Prompt("P2A", portfolio)}
                     onCopied={() => updateLesson2(current => ({ ...current, round1PromptCopied: true }))}
                   />
-                  <label className="space-y-1 text-sm font-medium">
+                  <label className="flex-1 space-y-1 text-sm font-medium">
                     <span>{round1Copied ? MODULE1_LESSON2_SHARED_COPY.aiReplyRequiredLabel : page.fields[0].label}</span>
                     <Textarea
                       aria-required={round1Copied}
@@ -532,7 +534,7 @@ export default function Step2ChooseStyle() {
                   </label>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle>{page.panels[1].title}</CardTitle>
                 </CardHeader>
