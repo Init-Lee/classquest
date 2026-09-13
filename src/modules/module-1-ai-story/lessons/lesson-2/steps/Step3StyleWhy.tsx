@@ -80,8 +80,8 @@ export default function Step3StyleWhy() {
   }
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-2">
-      <div className="space-y-4">
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="leading-snug">{page.title}</CardTitle>
@@ -185,7 +185,9 @@ export default function Step3StyleWhy() {
           </div>
         </div>
       </div>
-      <Lesson2WritingSummary lesson1={portfolio.lesson1} lesson2={state} />
+      <div className="min-w-0">
+        <Lesson2WritingSummary lesson1={portfolio.lesson1} lesson2={state} />
+      </div>
       <ClassroomExampleDialog open={exampleOpen} onOpenChange={setExampleOpen} />
     </div>
   )
