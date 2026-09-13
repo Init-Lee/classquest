@@ -65,6 +65,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
       analysisReply: "",
       writingPlan: MODULE1_LESSON2_EXAMPLE.writingPlan,
       reasonAiReply: "",
+      reasonAiAssistUsed: false,
       reason: MODULE1_LESSON2_EXAMPLE.reason,
       character: {
         who: MODULE1_LESSON2_EXAMPLE.who,

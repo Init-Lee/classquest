@@ -46,7 +46,7 @@ export function getCurrentModule1Lesson2Step(state: Module1Lesson2State): number
 export function getModule1Lesson2GuardReason(stepId: number): string {
   if (stepId === 2) return "请先写下自己的片段观察；若已复制提示词，还须把外部 AI 回复贴回来。"
   if (stepId === 3) return "请先记录文学参照，并确认准备采用的 2—3 条写法。"
-  if (stepId === 4) return "请先写下与主题和写法有关的选择理由。"
+  if (stepId === 4) return "请先写下与主题和写法有关的选择理由；若已复制提示词，还须把外部 AI 回复贴回来。"
   return "请先完成前一关。"
 }
 

@@ -10,9 +10,11 @@ export const MODULE1_LESSON2_METHOD_DEFINITION = "本课所说的写法，是作
 
 export const MODULE1_LESSON2_COMMON_QUESTIONS = ["你读出了什么感受？","文中哪些具体地方让你产生这种感受？","这种写法可以怎样用到另一个故事中？"] as const
 
+export const MODULE1_LESSON2_REASON_QUESTIONS = ["你希望读者读完后感受到什么？","为什么准备用这些写法？","这些写法和你已经确定的城市问题、写给谁怎样连起来？"] as const
+
 export const MODULE1_LESSON2_STUDENT_PRINCIPLES = ["可以请AI提供候选和草稿，也可以自己完成。提交前，请确认这些内容符合你的故事。","参考片段帮助我们学习写法。自己的故事保留自己的人物、事件和背景。","读过实际片段后再拆解。AI给出的情节概述不能当作原文。","人物可以误会、犹豫或失败。第二课的人物变化只是初步设想，后面可以调整。"] as const
 
-export const MODULE1_LESSON2_SHARED_COPY = {"contextTitle":"上节课的故事设定","summaryTitle":"我的写作设定","summaryIntro":"这里只整理你已经确认的内容，便于后续写作时继续使用。","notFilled":"尚未填写","saved":"已保存","saving":"正在保存","saveFailed":"保存失败，请重试；也可以先复制当前内容。","copied":"已复制，请粘贴到你使用的AI工具。","copyFailed":"复制失败，请在弹出的文本中全选并复制。","incompletePrompt":"请先补全提示词所需的内容。","excerptMissing":"请先选择或粘贴实际阅读的片段，再生成第二轮提示词。","upstreamChanged":"前面的设定已更新。你的答案已保留，请检查是否仍然适合当前故事。","confirmReview":"我已核对并保留当前答案","caseReplaceTitle":"更换参照片段","caseReplaceBody":"更换后将填入新片段的信息。已经写好的分析、写法、理由和人物会保留，并提示你重新核对。","caseReplaceConfirm":"更换片段并保留已有答案","cancel":"取消","legacyNotice":"这是旧版课时2的记录。原内容已保留，请补充参照片段，并确认当前写法和人物设定。","finishTitle":"课时2已完成","finishBody":"你已经确认参照片段、写法、选择理由和人物设定。请导出JSON进度，下节课导入后继续写开头。","exportReminder":"JSON用于下次继续学习。复制的写作设定用于和AI交流。","newContextNote":"提示词会带入本课需要的故事设定，不包含你的班级、姓名或学号。","sourceMismatch":"如果发现作者、篇目或片段不对应，请换用已核对的来源，或直接选择课堂片段。","studyCaseChanged":"课堂片段已更换。原来的观察已保留，请根据当前片段核对后再保存。","selectStudyCase":"选择这个片段","selectedStudyCase":"当前观察片段","viewStudyCaseHint":"点击卡片查看原文与讲解","currentStudyCasePrefix":"当前案例","closeStudyCase":"关闭","observeMainBadge":"主任务","aiAssistOptionalNote":"只有点了「复制提示词」才算选用辅助。没点复制可以只交自己的观察。","aiReplyRequiredLabel":"外部 AI 的回复（必填）","aiAssistUsedNote":"使用了外部 AI 辅助","skipToClassroom":"跳过，直接选用课堂片段","saveAndContinue":"保存并继续","backToRound1":"返回选择参照","writingDrawerHandle":"写作设定","closeWritingDrawer":"收起写作设定","openWritingDrawer":"打开写作设定","step2Round1Label":"本关第 1 步 · 选择参照","step2Round2Label":"本关第 2 步 · 拆解写法","round1ReplyRequired":"你已复制第一轮提示词。请把外部 AI 的推荐结果粘贴回来后再继续。","round2ReplyRequired":"你已复制第二轮提示词。请把外部 AI 的拆解结果粘贴回来后再继续。","classroomOriginHint":"从课文三则案例中选用一则。","externalOriginHint":"填写自己找到的作品名称、作者与片段。","chooseOriginFirst":"请先选择课堂案例或自己的作品片段。","classroomPickFirst":"请先在左侧选用一则课堂片段，右侧会自动填入作品、片段和出处。","round1NeedReference":"请先在第一步选好参照：课堂案例须选用并确认已阅读；自己的案例须填写作品、实际片段和出处。","step2ReferenceSummary":"已选参照","prevStep":"上一步","nextStep":"下一步","nextGate":"下一关","completeGateHint":"请完成本关全部填写","step2NeedReference":"参照未选完：请先选好当前来源的作品、片段和出处。","step2NeedSourceConfirmed":"未确认已阅读：请勾选已读过这个片段并核对本关出处。","step2NeedWritingPlan":"写法不足：请至少写 2 条准备采用的写法。","backToLesson2Step1":"返回第 1 关","step2RoundPosition":"{round}/2"} as const
+export const MODULE1_LESSON2_SHARED_COPY = {"contextTitle":"上节课的故事设定","summaryTitle":"我的写作设定","summaryIntro":"这里只整理你已经确认的内容，便于后续写作时继续使用。","notFilled":"尚未填写","saved":"已保存","saving":"正在保存","saveFailed":"保存失败，请重试；也可以先复制当前内容。","copied":"已复制，请粘贴到你使用的AI工具。","copyFailed":"复制失败，请在弹出的文本中全选并复制。","incompletePrompt":"请先补全提示词所需的内容。","excerptMissing":"请先选择或粘贴实际阅读的片段，再生成第二轮提示词。","upstreamChanged":"前面的设定已更新。你的答案已保留，请检查是否仍然适合当前故事。","confirmReview":"我已核对并保留当前答案","caseReplaceTitle":"更换参照片段","caseReplaceBody":"更换后将填入新片段的信息。已经写好的分析、写法、理由和人物会保留，并提示你重新核对。","caseReplaceConfirm":"更换片段并保留已有答案","cancel":"取消","legacyNotice":"这是旧版课时2的记录。原内容已保留，请补充参照片段，并确认当前写法和人物设定。","finishTitle":"课时2已完成","finishBody":"你已经确认参照片段、写法、选择理由和人物设定。请导出JSON进度，下节课导入后继续写开头。","exportReminder":"JSON用于下次继续学习。复制的写作设定用于和AI交流。","newContextNote":"提示词会带入本课需要的故事设定，不包含你的班级、姓名或学号。","sourceMismatch":"如果发现作者、篇目或片段不对应，请换用已核对的来源，或直接选择课堂片段。","studyCaseChanged":"课堂片段已更换。原来的观察已保留，请根据当前片段核对后再保存。","selectStudyCase":"选择这个片段","selectedStudyCase":"当前观察片段","viewStudyCaseHint":"点击卡片查看原文与讲解","currentStudyCasePrefix":"当前案例","closeStudyCase":"关闭","observeMainBadge":"主任务","aiAssistOptionalNote":"只有点了「复制提示词」才算选用辅助。没点复制可以只交自己的观察。","reasonAiAssistOptionalNote":"只有点了「复制提示词」才算选用辅助。没点复制可以只交自己的理由。","aiReplyRequiredLabel":"外部 AI 的回复（必填）","aiAssistUsedNote":"使用了外部 AI 辅助","skipToClassroom":"跳过，直接选用课堂片段","saveAndContinue":"保存并继续","backToRound1":"返回选择参照","writingDrawerHandle":"写作设定","closeWritingDrawer":"收起写作设定","openWritingDrawer":"打开写作设定","step2Round1Label":"本关第 1 步 · 选择参照","step2Round2Label":"本关第 2 步 · 拆解写法","round1ReplyRequired":"你已复制第一轮提示词。请把外部 AI 的推荐结果粘贴回来后再继续。","round2ReplyRequired":"你已复制第二轮提示词。请把外部 AI 的拆解结果粘贴回来后再继续。","classroomOriginHint":"从课文三则案例中选用一则。","externalOriginHint":"填写自己找到的作品名称、作者与片段。","chooseOriginFirst":"请先选择课堂案例或自己的作品片段。","classroomPickFirst":"请先在左侧选用一则课堂片段，右侧会自动填入作品、片段和出处。","round1NeedReference":"请先在第一步选好参照：课堂案例须选用并确认已阅读；自己的案例须填写作品、实际片段和出处。","step2ReferenceSummary":"已选参照","prevStep":"上一步","nextStep":"下一步","nextGate":"下一关","completeGateHint":"请完成本关全部填写","step2NeedReference":"参照未选完：请先选好当前来源的作品、片段和出处。","step2NeedSourceConfirmed":"未确认已阅读：请勾选已读过这个片段并核对本关出处。","step2NeedWritingPlan":"写法不足：请至少写 2 条准备采用的写法。","backToLesson2Step1":"返回第 1 关","step2RoundPosition":"{round}/2"} as const
 
 export const MODULE1_LESSON2_PAGES = {
   step1: {
@@ -38,12 +40,12 @@ export const MODULE1_LESSON2_PAGES = {
   step3: {
     nav: "说明选择",
     title: "我为什么采用这些写法",
-    intro: "把写法和自己的故事联系起来，说明你希望读者感受到什么。写1—2句话即可。",
-    panels: [{"title":"我的写作决定","body":"我希望读者感受到……，所以准备通过……来写。\n提示：联系你已经确定的城市问题、写给谁和采用的写法。"}],
-    fields: [{"key":"reasonAiReply","label":"AI理由建议（选填）","placeholder":"如果使用了辅助提示词，可以保留两个候选理由。","required":false},{"key":"reason","label":"我的选择理由","placeholder":"我希望读者感受到……，所以准备通过……来写。","required":true}],
-    buttons: ["复制AI辅助提示词","查看本课虚构示例","保存理由并继续"],
-    hints: ["理由应当符合你自己的写作意图。可以采用AI的合适表达，也可以修改。"],
-    validation: ["请填写与你的故事和已选写法有关的选择理由。"],
+    intro: "把写法和自己的故事联系起来，说明你希望读者感受到什么。先自己写 1—2 句话。",
+    panels: [{"title":"先自己写选择理由","body":"这个空必须自己写。可以参考提示句式：我希望读者感受到……，所以准备通过……来写。"},{"title":"需要时再用外部 AI","body":"提示词只复制到你常用的 AI 工具，本页不会替你调用模型。点了复制后，请把外部回复贴回本页。"}],
+    fields: [{"key":"reasonAiReply","label":"外部 AI 的回复（选填）","placeholder":"把你使用的 AI 工具给出的回复粘贴在这里。","required":false},{"key":"reason","label":"我的选择理由","placeholder":"我希望读者感受到……，所以准备通过……来写。","required":true}],
+    buttons: ["复制提示词，粘贴到你使用的 AI 工具","查看本课虚构示例","保存理由并继续"],
+    hints: ["理由应当符合你自己的写作意图。可以采用外部 AI 的合适表达，也可以修改。"],
+    validation: ["请填写与你的故事和已选写法有关的选择理由。","你已复制提示词。请把外部 AI 的回复粘贴回来后再继续。"],
   },
   step4: {
     nav: "设定人物",

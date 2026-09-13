@@ -112,6 +112,8 @@ export interface Module1Lesson2State extends Module1BaseLessonState {
   analysisReply: string
   writingPlan: string
   reasonAiReply: string
+  /** 第 3 关提示词是否已成功复制；与 study.aiAssistUsed / 第 2 关 copied 分开，旧包缺省为 false */
+  reasonAiAssistUsed: boolean
   reason: string
   character: Module1Lesson2Character
   characterAiReply: string
@@ -360,6 +362,7 @@ export function createEmptyModule1Lesson2State(): Module1Lesson2State {
     analysisReply: "",
     writingPlan: "",
     reasonAiReply: "",
+    reasonAiAssistUsed: false,
     reason: "",
     character: createEmptyModule1Lesson2Character(),
     characterAiReply: "",
@@ -452,7 +455,9 @@ export function canCompleteModule1Lesson2Step2Round2Fields(state: Module1Lesson2
 }
 
 export function hasModule1Lesson2Reason(state: Module1Lesson2State): boolean {
-  return Boolean(state.reason.trim())
+  if (!state.reason.trim()) return false
+  if (state.reasonAiAssistUsed && !state.reasonAiReply.trim()) return false
+  return true
 }
 
 export function hasModule1Lesson2CharacterFields(state: Module1Lesson2State): boolean {
@@ -739,6 +744,7 @@ function normalizeLesson2State(raw: unknown): Module1Lesson2State {
     analysisReply: stringValue(source.analysisReply),
     writingPlan,
     reasonAiReply: stringValue(source.reasonAiReply),
+    reasonAiAssistUsed: booleanValue(source.reasonAiAssistUsed),
     reason,
     character,
     characterAiReply: stringValue(source.characterAiReply),

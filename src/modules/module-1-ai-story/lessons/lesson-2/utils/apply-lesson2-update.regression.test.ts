@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 复核与旧档映射回归测试。
- * 职责：锁定参照变更取消已读确认、旧风格卡归档、第 1 关观察/AI 辅助完成判定，以及不把旧行动复制进两个新字段。
- * 更新触发：复核规则、旧档迁移、参照分槽、第 1 关 AI 辅助必填口径或完成态重算变化时，需要同步更新本文件。
+ * 职责：锁定参照变更取消已读确认、旧风格卡归档、第 1/3 关观察或理由与 AI 辅助完成判定，以及不把旧行动复制进两个新字段。
+ * 更新触发：复核规则、旧档迁移、参照分槽、第 1/3 关 AI 辅助必填口径或完成态重算变化时，需要同步更新本文件。
  * 被测实现位于 domains/portfolio/lesson2-update.ts 与 domains/portfolio/types.ts。
  */
 
@@ -12,6 +12,7 @@ import {
   createEmptyModule1Lesson2Reference,
   createEmptyModule1Lesson2State,
   createNewModule1Portfolio,
+  hasModule1Lesson2Reason,
   hasModule1Lesson2StudyFields,
   normalizeModule1Portfolio,
   patchModule1Lesson2ActiveReference,
@@ -416,5 +417,82 @@ describe("模块 1 课时 2 第 2 关课堂与自选作品分槽", () => {
     expect(normalized.completed).toBe(false)
     expect(normalized.reference.workTitle).toBe("")
     expect(normalized.reference.classroomDraft.workTitle).toBe("社戏")
+  })
+})
+
+describe("模块 1 课时 2 第 3 关选择理由与外部 AI 辅助", () => {
+  function withReasonGateReady(
+    overrides: Partial<ReturnType<typeof createEmptyModule1Lesson2State>> = {},
+  ) {
+    const classroom = buildModule1ClassroomReference("shexi")
+    if (!classroom) throw new Error("课堂案例 shexi 必须存在")
+    const state = createEmptyModule1Lesson2State()
+    state.study = { caseId: "shexi", response: "山向船尾跑", aiReply: "", aiAssistUsed: false }
+    state.reference = patchModule1Lesson2ActiveReference(classroom, { sourceConfirmed: true })
+    state.writingPlan = "1. 细节\n2. 顺序"
+    state.reason = "希望读者先感到现场"
+    state.step1Completed = true
+    state.step2Completed = true
+    state.step3Completed = true
+    return { ...state, ...overrides }
+  }
+
+  it("未点复制只填理由可通过第 3 关", () => {
+    const state = withReasonGateReady({ reasonAiAssistUsed: false, reasonAiReply: "" })
+    expect(hasModule1Lesson2Reason(state)).toBe(true)
+    const normalized = normalizeModule1Portfolio({ lesson2: state }).lesson2
+    expect(normalized.reasonAiAssistUsed).toBe(false)
+    expect(normalized.step3Completed).toBe(true)
+  })
+
+  it("点了复制但 AI 框空则不能完成第 3 关", () => {
+    const state = withReasonGateReady({
+      reasonAiAssistUsed: true,
+      reasonAiReply: "",
+      completed: true,
+    })
+    expect(hasModule1Lesson2Reason(state)).toBe(false)
+    const normalized = normalizeModule1Portfolio({ lesson2: state }).lesson2
+    expect(normalized.step3Completed).toBe(false)
+    expect(normalized.completed).toBe(false)
+  })
+
+  it("点了复制且理由与 AI 回复都填可通过第 3 关", () => {
+    const state = withReasonGateReady({
+      reasonAiAssistUsed: true,
+      reasonAiReply: "候选一：希望读者感到灯光不便。",
+    })
+    expect(hasModule1Lesson2Reason(state)).toBe(true)
+    const normalized = normalizeModule1Portfolio({ lesson2: state }).lesson2
+    expect(normalized.reasonAiAssistUsed).toBe(true)
+    expect(normalized.step3Completed).toBe(true)
+  })
+
+  it("旧包缺少 reasonAiAssistUsed 视为未选用辅助", () => {
+    const classroom = buildModule1ClassroomReference("shexi")
+    if (!classroom) throw new Error("课堂案例 shexi 必须存在")
+    const normalized = normalizeModule1Portfolio({
+      lesson2: {
+        step1Completed: true,
+        step2Completed: true,
+        step3Completed: true,
+        study: { caseId: "shexi", response: "山向船尾跑", aiReply: "" },
+        writingPlan: "1. 细节\n2. 顺序",
+        reason: "希望读者先感到现场",
+        reference: {
+          origin: "classroom",
+          caseId: "shexi",
+          workTitle: classroom.workTitle,
+          author: classroom.author,
+          location: classroom.location,
+          versionNote: classroom.versionNote,
+          excerpt: classroom.excerpt,
+          sourceNote: classroom.sourceNote,
+          sourceConfirmed: true,
+        },
+      },
+    }).lesson2
+    expect(normalized.reasonAiAssistUsed).toBe(false)
+    expect(normalized.step3Completed).toBe(true)
   })
 })

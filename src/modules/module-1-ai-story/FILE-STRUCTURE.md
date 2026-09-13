@@ -112,3 +112,4 @@ module-1-ai-story/
 - `/module/1/story` 属于模块结果视图，不进入课时注册表。
 - 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时。
 - 课时 2 第 1 关默认用三张预览卡展示课堂文学案例，点击卡片打开 Dialog 阅读全文；只有「选择这个片段」写入 `study.caseId`。详情 Dialog 为横向图文：左栏页签切换原文 / 讲解 / 出处，右栏窄配图，窄屏改为上下堆叠。插图位于 `public/module-1/literary-cases/`（站点路径 `/module-1/literary-cases/*.png`），不 iframe 嵌进课时。旧风格写作模板页已删除。`study.aiAssistUsed` 仅在成功复制第 1 关外部提示词后为 true，打开案例 Dialog 不算选用 AI；旧包缺字段视为 false。点过复制后 `study.aiReply` 才必填，未点复制仍可只交观察完成第 1 关与课时 2。
+- 课时 2 第 3 关拆成「先自己写选择理由」与「需要时再用外部 AI」两卡。`reasonAiAssistUsed` 仅在成功复制第 3 关提示词后为 true，与 `study.aiAssistUsed` / `round1PromptCopied` / `round2PromptCopied` 分开；旧包缺字段视为 false。点过复制后 `reasonAiReply` 才必填，未点复制仍可只交自己的理由完成第 3 关与课时 2。
