@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 第四关人物设定页。
- * 职责：自写区合成一张主任务卡（标题、提问、人物五项），再单独放「需要时再用外部 AI」；主任务必须自己写，只有成功复制提示词后才要求贴回外部 AI 回复，确认后完成课时 2。
- * 更新触发：第四关文案、自写/AI 分区、提问条、人物五项、复制选用口径或完成动作变化时，需要同步更新本文件。
+ * 职责：自写区合成一张主任务卡（标题、提问、人物五项），再单独放「需要时再用外部 AI」；主任务必须自己写，只有成功复制提示词后才要求贴回外部 AI 回复，确认后完成课时 2，完成弹窗提供本课阶段快照。
+ * 更新触发：第四关文案、自写/AI 分区、提问条、人物五项、复制选用口径、完成弹窗或完成动作变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -30,6 +30,7 @@ import {
 } from "@/modules/module-1-ai-story/constants/lesson2-copy"
 import { ClassroomExampleDialog } from "@/modules/module-1-ai-story/features/lesson2-support/ClassroomExampleDialog"
 import { CopyPromptControl } from "@/modules/module-1-ai-story/features/lesson2-support/CopyPromptControl"
+import { Module1LessonSnapshotDownloadButton } from "@/modules/module-1-ai-story/features/global-actions/Module1LessonSnapshotDownloadButton"
 import { Lesson2ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2ReviewBanner"
 import { Lesson2WritingSummary } from "@/modules/module-1-ai-story/lessons/lesson-2/components/Lesson2WritingSummary"
 import { clearModule1Lesson2Review, finalizeModule1Lesson2State } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
@@ -256,7 +257,12 @@ export default function Step4CharacterArc() {
             <DialogDescription>{MODULE1_LESSON2_SHARED_COPY.finishBody}</DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">{MODULE1_LESSON2_SHARED_COPY.exportReminder}</p>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Module1LessonSnapshotDownloadButton
+              portfolio={portfolio}
+              lessonId={2}
+              enabled
+            />
             <Button type="button" onClick={() => navigate("/module/1")}>回到模块首页</Button>
           </DialogFooter>
         </DialogContent>

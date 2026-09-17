@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 顶栏按钮可用性回归测试。
- * 职责：锁定无档案、有档案、忙碌态和教师模式下的保存、导入、重置与阶段快照规则。
- * 更新触发：顶栏按钮策略、教师模式禁用或阶段快照可见条件变化时，需要同步更新本文件。
+ * 职责：锁定无档案、有档案、忙碌态和教师模式下的保存、导入、重置与教师顶栏阶段快照规则。
+ * 更新触发：顶栏按钮策略、教师模式禁用或教师顶栏阶段快照可见条件变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -52,5 +52,17 @@ describe("模块 1 顶栏三按钮可用性", () => {
     })
     expect(getModule1SnapshotDisabledReason(true, false, "lesson1")).toContain("完成课时 1")
     expect(getModule1SnapshotDisabledReason(true, false, "lesson2")).toContain("完成课时 2")
+  })
+
+  it("学生模式即使当前课时已完成也不在顶栏开放阶段快照", () => {
+    expect(getModule1GlobalActionAvailability(true, false, {
+      snapshotReady: true,
+      showSnapshot: true,
+    })).toEqual({
+      canSave: true,
+      canImport: true,
+      canReset: true,
+      canSnapshot: false,
+    })
   })
 })

@@ -38,8 +38,11 @@ module-1-ai-story/
 ├── features/
 │   ├── global-actions/
 │   │   ├── Module1GlobalActions.tsx
+│   │   ├── Module1LessonSnapshotDownloadButton.tsx
 │   │   ├── module1-global-actions-state.ts
-│   │   └── module1-global-actions-state.regression.test.ts
+│   │   ├── module1-global-actions-state.regression.test.ts
+│   │   ├── module1-lesson-snapshot-entry.ts
+│   │   └── module1-lesson-snapshot-entry.regression.test.ts
 │   ├── progress-ui/
 │   │   ├── InnerStepProgress.tsx
 │   │   ├── inner-step-progress-state.ts
@@ -100,8 +103,8 @@ module-1-ai-story/
 - `Module1TopProgress` 负责六课时模块级导航；无档案时课时 1 只回模块首页，状态计算留在纯函数文件中。课时 1 完成后课时 2 可点，课时 3—6 仍锁定。
 - `features/progress-ui` 是模块 1 内部可复用的课时 Step 进度能力；各课时传入 Guard 派生的完成、可访问与锁定集合，不得跨模块引用。
 - `features/lesson2-support` 提供课堂虚构示例弹层与外部 AI 提示词复制控件；只生成并复制提示词，不得暗示站内调用模型。
-- `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏视觉与文案；学生模式为保存进度 / 导入进度 / 重置，当前课时页按 URL 切换阶段快照；教师模式只保留阶段快照。可用性规则放在纯函数中。
-- `infra/persistence/serializers/snapshot-html.ts` 生成不可导入的课时 1 主题设定或课时 2 风格与人物 HTML；导入器必须拒绝 HTML/非继续学习包。
+- `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏视觉与文案；学生模式为保存进度 / 导入进度 / 重置，顶栏不再提供阶段快照。教师模式仅在课时 1/2 页保留当前课快照，供投影使用。首页已开放课卡提供「下载本课阶段快照（交作业用）」；该课 `completed` 才可点，未完成已解锁则禁用并旁注「完成本课后可下载」，待开发/未解锁不出现按钮。身份卡不再提供「只下最新已完成课」的快照。课时 1/2 完成弹窗再提供一次本课快照。可用性规则放在纯函数中，导出统一走 `downloadModule1SnapshotByLessonId`。
+- `infra/persistence/serializers/snapshot-html.ts` 按课时号生成不可导入的课时 1 主题设定或课时 2 风格与人物 HTML；首页课卡、完成弹窗和教师顶栏共用 `downloadModule1SnapshotByLessonId`。导入器必须拒绝 HTML/非继续学习包。
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
 - 课时 2 的 `utils/build-lesson2-writing-summary.ts` 是已确认写作设定汇总的唯一派生入口；`utils/build-lesson2-prompts.ts` 拼装 P1—P4 外部提示词。汇总与提示词都不进入档案。
 - 课时 2 第 2 关路由仍是 `/module/1/lesson/2/step/2`，关内用 `?round=1|2` 分成两步：第一步选参照（课堂案例或自己的作品，选定后桌面左 1/3 为课堂选用或第一轮找参照、右 2/3 为填写框，课堂选用与第一轮找候选都留在第一步），第二步只做拆解写法与第二轮提示词。左右箭头贴主内容区两侧，只在本关两步间翻页；第一步左箭头禁用、右箭头进入第二轮，第二步不渲染右箭头，改用右下角「下一关」并按整关必填校验后进入课时 2 第 3 关。`utils/step2-round.ts` 负责子页解析、第一步门禁与整关缺项提示。未选定参照时直连 `?round=2` 拦回。`round1PromptCopied` / `round2PromptCopied` 与第 1 关 `study.aiAssistUsed` 分开，旧包缺字段视为 false。课堂案例与自选作品分槽存放（`classroomDraft` / `foundDraft`），切换来源只改 `origin`、不互相覆盖；完成判定、第二步摘要、阶段快照和写作设定抽屉只读当前 origin 槽。

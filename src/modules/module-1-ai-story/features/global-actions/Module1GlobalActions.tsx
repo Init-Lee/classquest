@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 全局档案操作区。
- * 职责：学生模式提供保存进度、导入进度与重置；当前课时页提供对应阶段快照；教师模式只保留阶段快照。
- * 更新触发：模块 1 学习包交互、阶段快照入口、教师模式按钮策略或顶栏口径变化时，需要同步更新本文件。
+ * 职责：学生模式提供保存进度、导入进度与重置；教师模式仅在课时 1/2 页保留当前课阶段快照，方便投影。
+ * 更新触发：模块 1 学习包交互、教师顶栏阶段快照入口、教师模式按钮策略或顶栏口径变化时，需要同步更新本文件。
  */
 
 import { useRef, useState, type ChangeEvent } from "react"
@@ -22,15 +22,12 @@ import {
   downloadModule1ContinuePackage,
   type ParsedModule1ContinuePackage,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
-import {
-  downloadModule1Snapshot,
-  isModule1SnapshotReady,
-  resolveModule1SnapshotKind,
-} from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
+import { downloadModule1SnapshotByLessonId } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
 import {
   getModule1GlobalActionAvailability,
   getModule1SnapshotDisabledReason,
 } from "@/modules/module-1-ai-story/features/global-actions/module1-global-actions-state"
+import { getModule1TeacherTopBarSnapshotState } from "@/modules/module-1-ai-story/features/global-actions/module1-lesson-snapshot-entry"
 
 function SnapshotButton({
   enabled,
@@ -46,7 +43,7 @@ function SnapshotButton({
       size="sm"
       onClick={onClick}
       disabled={!enabled}
-      title={enabled ? "下载阶段快照，不能用来恢复进度" : reason}
+      title={enabled ? "下载当前课阶段快照，供课堂投影；不能用来恢复进度" : reason}
       className="gap-1.5 border-green-600 bg-green-600 px-2 text-xs text-white hover:bg-green-700 sm:px-3"
     >
       <Camera className="h-3.5 w-3.5" />
@@ -68,9 +65,11 @@ export function Module1GlobalActions() {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [pendingImport, setPendingImport] = useState<ParsedModule1ContinuePackage | null>(null)
   const [importError, setImportError] = useState("")
-  const snapshotKind = resolveModule1SnapshotKind(location.pathname)
-  const showSnapshot = Boolean(snapshotKind)
-  const snapshotReady = Boolean(portfolio && snapshotKind && isModule1SnapshotReady(portfolio, snapshotKind))
+  const teacherSnapshot = getModule1TeacherTopBarSnapshotState(location.pathname, portfolio)
+  const showSnapshot = isTeacherMode && teacherSnapshot.visible
+  const snapshotReady = teacherSnapshot.enabled
+  const snapshotKind = teacherSnapshot.kind
+  const snapshotLessonId = snapshotKind === "lesson2" ? 2 : snapshotKind === "lesson1" ? 1 : null
   const actions = getModule1GlobalActionAvailability(Boolean(portfolio), busy, {
     isTeacherMode,
     snapshotReady,
@@ -106,8 +105,8 @@ export function Module1GlobalActions() {
   }
 
   const handleSnapshot = () => {
-    if (!portfolio || !snapshotKind || !snapshotReady) return
-    downloadModule1Snapshot(portfolio, snapshotKind)
+    if (!portfolio || snapshotLessonId == null || !snapshotReady) return
+    downloadModule1SnapshotByLessonId(portfolio, snapshotLessonId)
   }
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -189,9 +188,6 @@ export function Module1GlobalActions() {
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
           导入进度
         </Button>
-        {showSnapshot && (
-          <SnapshotButton enabled={actions.canSnapshot} reason={snapshotReason} onClick={handleSnapshot} />
-        )}
         <Button
           size="sm"
           variant="outline"

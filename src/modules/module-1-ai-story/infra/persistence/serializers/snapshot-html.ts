@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时阶段快照 HTML 生成器。
- * 职责：按当前课时把身份与已完成字段渲染为不可导入的 HTML；下载前转义全部可控字段。
- * 更新触发：快照字段、第 1/3/4 关外部 AI 辅助标注、文件名规则、转义策略、URL 映射或新增课时快照类型时，需要同步更新本文件。
+ * 职责：按指定课时号把身份与已完成字段渲染为不可导入的 HTML；首页课卡、完成弹窗和教师顶栏共用同一套导出，下载前转义全部可控字段。
+ * 更新触发：快照字段、第 1/3/4 关外部 AI 辅助标注、文件名规则、转义策略、课时号映射、URL 映射或新增课时快照类型时，需要同步更新本文件。
  */
 
 import { MODULE1_STORY_YEAR, type Module1Portfolio } from "@/modules/module-1-ai-story/domains/portfolio/types"
@@ -28,6 +28,12 @@ export function safeModule1SnapshotFilenamePart(value: string): string {
 export function resolveModule1SnapshotKind(pathname: string): Module1SnapshotKind | null {
   if (/\/module\/1\/lesson\/2/.test(pathname)) return "lesson2"
   if (/\/module\/1\/lesson\/1/.test(pathname)) return "lesson1"
+  return null
+}
+
+export function resolveModule1SnapshotKindFromLessonId(lessonId: number): Module1SnapshotKind | null {
+  if (lessonId === 1) return "lesson1"
+  if (lessonId === 2) return "lesson2"
   return null
 }
 
@@ -229,4 +235,10 @@ export function downloadModule1Snapshot(portfolio: Module1Portfolio, kind: Modul
     return
   }
   downloadModule1Lesson1Snapshot(portfolio)
+}
+
+export function downloadModule1SnapshotByLessonId(portfolio: Module1Portfolio, lessonId: number): void {
+  const kind = resolveModule1SnapshotKindFromLessonId(lessonId)
+  if (!kind || !isModule1SnapshotReady(portfolio, kind)) return
+  downloadModule1Snapshot(portfolio, kind)
 }

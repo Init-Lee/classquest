@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时阶段快照回归测试。
- * 职责：锁定 HTML 转义、文件名清洗、URL 映射，以及课时 1/2 快照正文包含必要字段。
- * 更新触发：快照字段、转义策略、文件命名规则或课时映射变化时，需要同步更新本文件。
+ * 职责：锁定 HTML 转义、文件名清洗、课时号/URL 映射，以及课时 1/2 快照正文包含必要字段。
+ * 更新触发：快照字段、转义策略、文件命名规则、课时号导出或课时映射变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -12,6 +12,7 @@ import {
   buildModule1Lesson2SnapshotFilename,
   buildModule1Lesson2SnapshotHtml,
   resolveModule1SnapshotKind,
+  resolveModule1SnapshotKindFromLessonId,
   safeModule1SnapshotFilenamePart,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
 
@@ -137,10 +138,13 @@ describe("模块 1 课时 2 阶段快照", () => {
     expect(html).toContain("使用了外部 AI 辅助")
   })
 
-  it("按课时 URL 切换快照类型并清洗课时 2 文件名", () => {
+  it("按课时 URL 或课时号切换快照类型并清洗课时 2 文件名", () => {
     expect(resolveModule1SnapshotKind("/module/1/lesson/1/step/4")).toBe("lesson1")
     expect(resolveModule1SnapshotKind("/module/1/lesson/2/step/4")).toBe("lesson2")
     expect(resolveModule1SnapshotKind("/module/1")).toBeNull()
+    expect(resolveModule1SnapshotKindFromLessonId(1)).toBe("lesson1")
+    expect(resolveModule1SnapshotKindFromLessonId(2)).toBe("lesson2")
+    expect(resolveModule1SnapshotKindFromLessonId(3)).toBeNull()
     expect(buildModule1Lesson2SnapshotFilename("李:四", new Date("2026-09-05T00:00:00.000Z")))
       .toBe("模块1_李-四_课时2风格与人物快照_2026-09-05.html")
   })

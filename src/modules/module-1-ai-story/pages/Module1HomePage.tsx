@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 1 首页。
- * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及已完成课时的阶段快照。
- * 更新触发：身份字段、课时开放状态、教师入口、阶段快照入口或课程状态文案变化时，需要同步更新本文件。
+ * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及已开放课卡上的本课阶段快照。
+ * 更新触发：身份字段、课时开放状态、教师入口、课卡阶段快照入口或课程状态文案变化时，需要同步更新本文件。
  */
 
 import { useState, type FormEvent } from "react"
-import { ArrowRight, BookOpen, Camera, CheckCircle2, Eye, GraduationCap, Lock, User } from "lucide-react"
+import { ArrowRight, BookOpen, CheckCircle2, Eye, GraduationCap, Lock, User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
@@ -20,10 +20,8 @@ import {
   validateModule1SeatOnly,
 } from "@/modules/module-1-ai-story/constants/class-options"
 import { verifyModule1TeacherPassphrase } from "@/modules/module-1-ai-story/constants/teacher-passphrase"
-import {
-  downloadModule1Lesson1Snapshot,
-  downloadModule1Lesson2Snapshot,
-} from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
+import { Module1LessonSnapshotDownloadButton } from "@/modules/module-1-ai-story/features/global-actions/Module1LessonSnapshotDownloadButton"
+import { getModule1LessonCardSnapshotButton } from "@/modules/module-1-ai-story/features/global-actions/module1-lesson-snapshot-entry"
 
 function TeacherModeEntry() {
   const { enterTeacherMode } = useModule1Portfolio()
@@ -191,7 +189,7 @@ export default function Module1HomePage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />首次开始需登记班级、姓名与四位班学号。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请点击「保存进度」下载最新学习包。</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成对应课时后可下载「阶段快照」提交作业；阶段快照不能恢复进度。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成对应课时后，可在首页该课时卡下载「阶段快照」交作业；阶段快照不能恢复进度。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关，可从进度条回看已完成内容。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段开放课时 1 和课时 2，其余课时会清楚标记为待开发。</li>
             </ul>
@@ -241,7 +239,6 @@ export default function Module1HomePage() {
   if (!portfolio) return null
 
   const pointer = resolveModule1PortfolioPointer(portfolio)
-  const lesson1Done = portfolio.lesson1.completed
   const lesson2Done = portfolio.lesson2.completed
   const canContinue = canAccessModule1Lesson(portfolio, pointer.lessonId, isTeacherMode)
   const continuePath = canContinue
@@ -281,25 +278,6 @@ export default function Module1HomePage() {
               {continueLabel}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
-            {lesson2Done ? (
-              <Button
-                variant="outline"
-                className="border-green-600 text-green-800 hover:bg-green-50"
-                onClick={() => downloadModule1Lesson2Snapshot(portfolio)}
-              >
-                <Camera className="mr-1 h-4 w-4" />
-                阶段快照
-              </Button>
-            ) : lesson1Done ? (
-              <Button
-                variant="outline"
-                className="border-green-600 text-green-800 hover:bg-green-50"
-                onClick={() => downloadModule1Lesson1Snapshot(portfolio)}
-              >
-                <Camera className="mr-1 h-4 w-4" />
-                阶段快照
-              </Button>
-            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -308,6 +286,11 @@ export default function Module1HomePage() {
           const complete = lesson.isComplete(portfolio)
           const accessible = canAccessModule1Lesson(portfolio, lesson.id, isTeacherMode)
           const active = accessible && !complete
+          const snapshotButton = getModule1LessonCardSnapshotButton(lesson.id, {
+            available: lesson.available,
+            accessible,
+            completed: complete,
+          })
           return (
             <Card key={lesson.id} className={!lesson.available ? "opacity-65" : ""}>
               <CardHeader>
@@ -321,7 +304,7 @@ export default function Module1HomePage() {
                 <CardDescription>{lesson.subtitle}</CardDescription>
               </CardHeader>
               {accessible && (
-                <CardContent>
+                <CardContent className="space-y-2">
                   <Button
                     variant="outline"
                     className="w-full"
@@ -329,6 +312,20 @@ export default function Module1HomePage() {
                   >
                     {isTeacherMode ? "浏览本课" : complete ? "查看本课" : "进入课时"}
                   </Button>
+                  {snapshotButton.visible && (
+                    <div>
+                      <Module1LessonSnapshotDownloadButton
+                        portfolio={portfolio}
+                        lessonId={lesson.id}
+                        enabled={snapshotButton.enabled}
+                        disabledHint={snapshotButton.hint}
+                        className="w-full"
+                      />
+                      {!snapshotButton.enabled && (
+                        <p className="mt-1 text-xs text-muted-foreground">{snapshotButton.hint}</p>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               )}
             </Card>
