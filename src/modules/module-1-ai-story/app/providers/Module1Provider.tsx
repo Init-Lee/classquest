@@ -20,6 +20,7 @@ import {
 } from "@/modules/module-1-ai-story/app/providers/module1-teacher-mode"
 import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
 import { applyModule1Lesson1UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
+import { applyModule1Lesson3UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson3-update"
 
 interface Module1ContextValue {
   portfolio: Module1Portfolio | null
@@ -108,7 +109,10 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const updatePortfolio = useCallback((updater: (current: Module1Portfolio) => Module1Portfolio) => {
-    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson1UpstreamReview(current, updater(current))
+    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson3UpstreamReview(
+      current,
+      applyModule1Lesson1UpstreamReview(current, updater(current)),
+    )
     if (isTeacherMode) {
       const next = getTeacherCoordinator().update(withUpstreamReview)
       setDemoPortfolio(next)

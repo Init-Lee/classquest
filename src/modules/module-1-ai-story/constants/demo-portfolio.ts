@@ -1,16 +1,18 @@
 /**
  * 文件说明：模块 1 教师讲解演示档案。
  * 职责：生成课堂演示用的 Module1Portfolio，供教师模式初始化和重置讲解状态使用，只存在于内存。
- * 更新触发：课时 1/2 演示字段、第 1/3/4 关 AI 辅助布尔、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
+ * 更新触发：课时 1/2/3 演示字段、第 1/3/4 关 AI 辅助布尔、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
  */
 
 import {
+  createEmptyModule1Lesson3State,
   createNewModule1Portfolio,
   normalizeModule1Portfolio,
   patchModule1Lesson2ActiveReference,
   type Module1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
+import { MODULE1_LESSON3_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson3-copy"
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 
 const DEMO_COMPLETED_AT = "2026-09-05T02:00:00.000Z"
@@ -27,7 +29,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
     id: "module1-teacher-demo-portfolio",
     createdAt: DEMO_COMPLETED_AT,
     updatedAt: DEMO_COMPLETED_AT,
-    progress: { lessonId: 2, stepId: 4 },
+    progress: { lessonId: 3, stepId: 4 },
     lesson1: {
       step: 4,
       completed: true,
@@ -77,9 +79,27 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
       characterAiReply: "",
       characterAiAssistUsed: false,
     },
+    lesson3: {
+      ...createEmptyModule1Lesson3State(),
+      step: 4,
+      completed: true,
+      completedAt: DEMO_COMPLETED_AT,
+      step1Completed: true,
+      step2Completed: true,
+      step3Completed: true,
+      step4Completed: true,
+      observation: MODULE1_LESSON3_EXAMPLE.observation,
+      openingPlan: MODULE1_LESSON3_EXAMPLE.openingPlan,
+      focusTechnique: MODULE1_LESSON3_EXAMPLE.focusTechnique,
+      storyTitle: MODULE1_LESSON3_EXAMPLE.storyTitle,
+      draftText: MODULE1_LESSON3_EXAMPLE.draftText,
+      draftFrozenText: MODULE1_LESSON3_EXAMPLE.draftText,
+      finalText: MODULE1_LESSON3_EXAMPLE.finalText,
+      decisionNote: MODULE1_LESSON3_EXAMPLE.decisionNote,
+    },
   })
   return {
     ...normalized,
-    progress: { lessonId: 2, stepId: 4 },
+    progress: { lessonId: 3, stepId: 4 },
   }
 }

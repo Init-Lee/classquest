@@ -7,8 +7,10 @@
 import { describe, expect, it } from "vitest"
 import {
   createEmptyModule1Lesson2State,
+  createEmptyModule1Lesson3State,
   createNewModule1Portfolio,
   hasMeaningfulModule1Lesson2Fields,
+  hasMeaningfulModule1Lesson3Fields,
   hasModule1Lesson2CharacterFields,
   hasModule1Lesson2Reason,
   MODULE1_ID,
@@ -29,8 +31,13 @@ import {
   getCurrentModule1Lesson2Step,
   getModule1Lesson2RouteRedirect,
 } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
+import {
+  canEnterModule1Lesson3Step,
+  getModule1Lesson3RouteRedirect,
+} from "@/modules/module-1-ai-story/lessons/lesson-3/guards"
 import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-story/constants/demo-portfolio"
 import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
+import { MODULE1_LESSON3_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson3-copy"
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 import {
   buildModule1ContinuePackage,
@@ -106,6 +113,7 @@ describe("模块 1 档案与进度", () => {
       "lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6",
     ])
     expect(portfolio.lesson2).toMatchObject(createEmptyModule1Lesson2State())
+    expect(portfolio.lesson3).toMatchObject(createEmptyModule1Lesson3State())
     expect(portfolio).not.toHaveProperty("fullStory")
   })
 
@@ -144,7 +152,8 @@ describe("模块 1 档案与进度", () => {
     expect(canAccessModule1Lesson(portfolio, 2)).toBe(false)
     expect(canAccessModule1Lesson(portfolio, 1, true)).toBe(true)
     expect(canAccessModule1Lesson(portfolio, 2, true)).toBe(true)
-    expect(canAccessModule1Lesson(portfolio, 3, true)).toBe(false)
+    expect(canAccessModule1Lesson(portfolio, 3, true)).toBe(true)
+    expect(canAccessModule1Lesson(portfolio, 4, true)).toBe(false)
     const demo = createModule1TeacherLecturePortfolio()
     expect(getModule1Lesson1RouteRedirect(demo, 1, true)).toBeNull()
     expect(getModule1Lesson1RouteRedirect(demo, 4, true)).toBeNull()
@@ -190,7 +199,8 @@ describe("模块 1 档案与进度", () => {
     expect(complete.lesson2.character.who).toBe(MODULE1_LESSON2_EXAMPLE.who)
     expect(complete.lesson2.protagonistIdentity).toBe(MODULE1_LESSON2_EXAMPLE.who)
     expect(resolveModule1PortfolioPointer(complete)).toEqual({ lessonId: 3, stepId: 1 })
-    expect(canAccessModule1Lesson(complete, 3)).toBe(false)
+    expect(canAccessModule1Lesson(complete, 3)).toBe(true)
+    expect(canAccessModule1Lesson(complete, 4)).toBe(false)
   })
 
   it("点过复制但未贴回 AI 回复时不能完成课时 2", () => {
@@ -268,6 +278,57 @@ describe("模块 1 档案与进度", () => {
     const normalized = normalizeModule1Portfolio(portfolio)
     expect(normalized.lesson1.completed).toBe(true)
     expect(normalized.lesson1.completedAt).toBe(portfolio.lesson1.completedAt)
+  })
+
+  it("课时 3 完成要求题目、四关产出齐全，完成后指针指向课时 4 且课时 4 仍锁", () => {
+    const portfolio = fillLesson2Content(completeLesson1(createStudent()))
+    expect(canEnterModule1Lesson3Step(portfolio.lesson3, 1)).toBe(true)
+    expect(getModule1Lesson3RouteRedirect(portfolio, 3)).toBe("/module/1/lesson/3/step/1")
+    portfolio.lesson3 = {
+      ...createEmptyModule1Lesson3State(),
+      step1Completed: true,
+      step2Completed: true,
+      step3Completed: true,
+      step4Completed: true,
+      completed: true,
+      completedAt: "2026-09-18T00:00:00.000Z",
+      observation: MODULE1_LESSON3_EXAMPLE.observation,
+      openingPlan: MODULE1_LESSON3_EXAMPLE.openingPlan,
+      focusTechnique: MODULE1_LESSON3_EXAMPLE.focusTechnique,
+      storyTitle: MODULE1_LESSON3_EXAMPLE.storyTitle,
+      draftText: MODULE1_LESSON3_EXAMPLE.draftText,
+      draftFrozenText: MODULE1_LESSON3_EXAMPLE.draftText,
+      finalText: MODULE1_LESSON3_EXAMPLE.finalText,
+      decisionNote: MODULE1_LESSON3_EXAMPLE.decisionNote,
+    }
+    expect(hasMeaningfulModule1Lesson3Fields(portfolio.lesson3)).toBe(true)
+    const complete = normalizeModule1Portfolio(portfolio)
+    expect(complete.lesson3.completed).toBe(true)
+    expect(resolveModule1PortfolioPointer(complete)).toEqual({ lessonId: 4, stepId: 1 })
+    expect(canAccessModule1Lesson(complete, 3)).toBe(true)
+    expect(canAccessModule1Lesson(complete, 4)).toBe(false)
+  })
+
+  it("课时 3 点过复制但未贴回回复时不能完成", () => {
+    const portfolio = fillLesson2Content(completeLesson1(createStudent()))
+    portfolio.lesson3 = {
+      ...createEmptyModule1Lesson3State(),
+      step1Completed: true,
+      observation: MODULE1_LESSON3_EXAMPLE.observation,
+      aiProcess: {
+        ...createEmptyModule1Lesson3State().aiProcess,
+        p1: {
+          ...createEmptyModule1Lesson3State().aiProcess.p1,
+          copySucceeded: true,
+          copiedPrompt: "请帮助读懂开头",
+          copyCount: 1,
+        },
+      },
+    }
+    expect(hasMeaningfulModule1Lesson3Fields(portfolio.lesson3)).toBe(false)
+    const normalized = normalizeModule1Portfolio(portfolio)
+    expect(normalized.lesson3.step1Completed).toBe(false)
+    expect(normalized.lesson3.completed).toBe(false)
   })
 })
 

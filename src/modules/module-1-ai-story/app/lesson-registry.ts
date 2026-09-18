@@ -11,6 +11,7 @@ import type {
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { getCurrentModule1Lesson1Step } from "@/modules/module-1-ai-story/lessons/lesson-1/guards"
 import { getCurrentModule1Lesson2Step } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
+import { getCurrentModule1Lesson3Step } from "@/modules/module-1-ai-story/lessons/lesson-3/guards"
 
 export interface Module1LessonEntry {
   id: Module1LessonId
@@ -24,7 +25,7 @@ export interface Module1LessonEntry {
 export const MODULE1_LESSON_REGISTRY: Module1LessonEntry[] = [
   { id: 1, title: "故事主题", subtitle: "确定 SDG、城市问题与受众", path: "/module/1/lesson/1/step/1", available: true, isComplete: p => Boolean(p?.lesson1.completed) },
   { id: 2, title: "风格与人物", subtitle: "从文学片段确定写法并完成人物设定", path: "/module/1/lesson/2/step/1", available: true, isComplete: p => Boolean(p?.lesson2.completed) },
-  { id: 3, title: "起：开头暴击", subtitle: "后续阶段开放", path: "/module/1/lesson/3/step/1", available: false, isComplete: p => Boolean(p?.lesson3.completed) },
+  { id: 3, title: "起：写一个吸引人的开头", subtitle: "选定开场，写出初稿并确认开头", path: "/module/1/lesson/3/step/1", available: true, isComplete: p => Boolean(p?.lesson3.completed) },
   { id: 4, title: "承：主要推进", subtitle: "后续阶段开放", path: "/module/1/lesson/4/step/1", available: false, isComplete: p => Boolean(p?.lesson4.completed) },
   { id: 5, title: "转：冲突与反转", subtitle: "后续阶段开放", path: "/module/1/lesson/5/step/1", available: false, isComplete: p => Boolean(p?.lesson5.completed) },
   { id: 6, title: "合：落点回响", subtitle: "后续阶段开放", path: "/module/1/lesson/6/step/1", available: false, isComplete: p => Boolean(p?.lesson6.completed) },
@@ -69,6 +70,9 @@ export function getModule1LessonResumePath(
   }
   if (lessonId === 2) {
     return `/module/1/lesson/2/step/${portfolio.lesson2.completed ? 4 : getCurrentModule1Lesson2Step(portfolio.lesson2)}`
+  }
+  if (lessonId === 3) {
+    return `/module/1/lesson/3/step/${portfolio.lesson3.completed ? 4 : getCurrentModule1Lesson3Step(portfolio.lesson3)}`
   }
   return entry.path
 }

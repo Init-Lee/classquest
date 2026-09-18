@@ -52,6 +52,7 @@ describe("模块 1 顶栏三按钮可用性", () => {
     })
     expect(getModule1SnapshotDisabledReason(true, false, "lesson1")).toContain("完成课时 1")
     expect(getModule1SnapshotDisabledReason(true, false, "lesson2")).toContain("完成课时 2")
+    expect(getModule1SnapshotDisabledReason(true, false, "lesson3")).toContain("完成课时 3")
   })
 
   it("学生模式即使当前课时已完成也不在顶栏开放阶段快照", () => {
