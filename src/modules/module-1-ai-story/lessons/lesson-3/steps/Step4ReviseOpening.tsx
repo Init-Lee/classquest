@@ -37,7 +37,6 @@ import {
 import { Module1LessonSnapshotDownloadButton } from "@/modules/module-1-ai-story/features/global-actions/Module1LessonSnapshotDownloadButton"
 import { EditableCopyPromptControl } from "@/modules/module-1-ai-story/features/lesson3-support/EditableCopyPromptControl"
 import { Lesson3AiReplyField } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3AiReplyField"
-import { Lesson3OptionalImage } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3OptionalImage"
 import { Lesson3ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3ReviewBanner"
 import { Lesson3StepSplit } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3StepSplit"
 import { Lesson3WritingDrawer } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingDrawer"
@@ -146,7 +145,6 @@ export default function Step4ReviseOpening() {
               <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Lesson3OptionalImage src="/module-1/lesson-3/revision_desk.png" alt="检查与修改配图：书桌" />
               <ol className="list-decimal space-y-1 pl-5 text-sm">{page.steps.map(item => <li key={item}>{item}</li>)}</ol>
               <p className="text-sm">{page.deliver}</p>
               <div className="grid gap-2 sm:grid-cols-2">

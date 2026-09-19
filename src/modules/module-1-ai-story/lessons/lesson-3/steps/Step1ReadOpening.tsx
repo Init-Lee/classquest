@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 3 第一关读懂一个开头。
  * 职责：页内展示三则课堂自编开头，学生自写阅读判断；需要时复制 P1 并记录外部 AI 过程。
- * 更新触发：第 1 关文案、案例卡、配图或 P1 过程入档规则变化时，需要同步更新本文件。
+ * 更新触发：第 1 关文案、案例卡或 P1 过程入档规则变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -26,7 +26,6 @@ import {
 } from "@/modules/module-1-ai-story/domains/portfolio/lesson3-update"
 import { EditableCopyPromptControl } from "@/modules/module-1-ai-story/features/lesson3-support/EditableCopyPromptControl"
 import { Lesson3AiReplyField } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3AiReplyField"
-import { Lesson3OptionalImage } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3OptionalImage"
 import { Lesson3ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3ReviewBanner"
 import { Lesson3StepSplit } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3StepSplit"
 import { Lesson3WritingDrawer } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingDrawer"
@@ -96,7 +95,6 @@ export default function Step1ReadOpening() {
                 {MODULE1_LESSON3_CASES.map(item => (
                   <article key={item.id} className="space-y-2 rounded-lg border p-3 text-sm">
                     <h3 className="font-semibold">{item.title}</h3>
-                    {item.showImage && <Lesson3OptionalImage src={item.imageSrc} alt={item.imageAlt} />}
                     <p className="whitespace-pre-wrap leading-relaxed">{item.text}</p>
                     <p className="text-xs text-muted-foreground">可引导：{item.guide}</p>
                   </article>
