@@ -284,8 +284,9 @@ describe("模块 1 档案与进度", () => {
     const portfolio = fillLesson2Content(completeLesson1(createStudent()))
     expect(canEnterModule1Lesson3Step(portfolio.lesson3, 1)).toBe(true)
     expect(getModule1Lesson3RouteRedirect(portfolio, 3)).toBe("/module/1/lesson/3/step/1")
+    const emptyLesson3 = createEmptyModule1Lesson3State()
     portfolio.lesson3 = {
-      ...createEmptyModule1Lesson3State(),
+      ...emptyLesson3,
       step1Completed: true,
       step2Completed: true,
       step3Completed: true,
@@ -300,6 +301,23 @@ describe("模块 1 档案与进度", () => {
       draftFrozenText: MODULE1_LESSON3_EXAMPLE.draftText,
       finalText: MODULE1_LESSON3_EXAMPLE.finalText,
       decisionNote: MODULE1_LESSON3_EXAMPLE.decisionNote,
+      aiProcess: {
+        ...emptyLesson3.aiProcess,
+        p3: {
+          ...emptyLesson3.aiProcess.p3,
+          copySucceeded: true,
+          copiedPrompt: "请写开头",
+          copyCount: 1,
+          aiReply: "一版草稿",
+        },
+        p4: {
+          ...emptyLesson3.aiProcess.p4,
+          copySucceeded: true,
+          copiedPrompt: "请检查开头",
+          copyCount: 1,
+          aiReply: "检查意见",
+        },
+      },
     }
     expect(hasMeaningfulModule1Lesson3Fields(portfolio.lesson3)).toBe(true)
     const complete = normalizeModule1Portfolio(portfolio)

@@ -52,6 +52,10 @@ describe("模块 1 讲解演示档案", () => {
       step1Completed: true,
       step4Completed: true,
     })
+    expect(portfolio.lesson3.aiProcess.p3.copySucceeded).toBe(true)
+    expect(portfolio.lesson3.aiProcess.p3.aiReply).toBeTruthy()
+    expect(portfolio.lesson3.aiProcess.p4.copySucceeded).toBe(true)
+    expect(portfolio.lesson3.aiProcess.p4.aiReply).toBeTruthy()
     expect(portfolio.lesson6).toEqual({ step: 1, completed: false, completedAt: null })
     expect(Object.keys(portfolio).filter(key => /^lesson\d+$/.test(key))).toEqual([
       "lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6",

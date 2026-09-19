@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 3 第三关完成初稿。
- * 职责：必填题目与初稿，展示 200—300 字引导；首次确认冻结初稿，需要时复制 P3 并记录过程。
- * 更新触发：第 3 关题目必填、字数展示、初稿冻结或 P3 过程入档规则变化时，需要同步更新本文件。
+ * 职责：必填题目与初稿，展示 200—300 字引导；首次确认冻结初稿；本关必须复制 P3 并贴回回复，过程入档。
+ * 更新触发：第 3 关题目必填、字数展示、初稿冻结、必用外部 AI 或 P3 过程入档规则变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -60,7 +60,7 @@ export default function Step3WriteDraft() {
       setError(page.validation[1])
       return
     }
-    if (process.copySucceeded && !process.aiReply.trim()) {
+    if (!process.copySucceeded || !process.aiReply.trim()) {
       setError(page.validation[2])
       return
     }
@@ -81,6 +81,7 @@ export default function Step3WriteDraft() {
   return (
     <div className="space-y-4">
       <Lesson3StepSplit
+        aiPlacement="start"
         main={(
           <Card className="flex h-full flex-col">
             <CardHeader className="space-y-2 pb-3">
@@ -128,10 +129,10 @@ export default function Step3WriteDraft() {
         ai={(
           <Card className={cn("flex h-full min-w-0 flex-col overflow-hidden", process.copySucceeded && "border-primary")}>
             <CardHeader>
-              <CardTitle className="leading-snug">需要时再用外部 AI</CardTitle>
+              <CardTitle className="leading-snug">{MODULE1_LESSON3_SHARED_COPY.aiAssistRequiredTitleDraft}</CardTitle>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistNote}</p>
+              <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistRequiredNote}</p>
               <EditableCopyPromptControl
                 label={page.buttons[0]}
                 disabled={!promptReady}
@@ -151,6 +152,7 @@ export default function Step3WriteDraft() {
               <Lesson3AiReplyField
                 copySucceeded={process.copySucceeded}
                 value={process.aiReply}
+                optionalLabel={MODULE1_LESSON3_SHARED_COPY.aiReplyRequiredLabel}
                 onChange={value => updateLesson3(current => patchModule1Lesson3AiProcess(current, "p3", { aiReply: value }))}
               />
             </CardContent>

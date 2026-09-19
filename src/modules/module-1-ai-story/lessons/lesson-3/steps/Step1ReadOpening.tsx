@@ -76,6 +76,7 @@ export default function Step1ReadOpening() {
   return (
     <div className="space-y-4">
       <Lesson3StepSplit
+        aiPlacement="end"
         main={(
           <Card className="flex h-full flex-col">
             <CardHeader className="space-y-2 pb-3">

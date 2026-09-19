@@ -501,6 +501,10 @@ export function hasModule1Lesson3AiReplyIfUsed(process: Module1Lesson3AiProcess)
   return !process.copySucceeded || Boolean(process.aiReply.trim())
 }
 
+export function hasModule1Lesson3RequiredAi(process: Module1Lesson3AiProcess): boolean {
+  return process.copySucceeded && Boolean(process.aiReply.trim())
+}
+
 export function hasModule1Lesson3Observation(state: Module1Lesson3State): boolean {
   return Boolean(state.observation.trim()) && hasModule1Lesson3AiReplyIfUsed(state.aiProcess.p1)
 }
@@ -512,12 +516,12 @@ export function hasModule1Lesson3Opening(state: Module1Lesson3State): boolean {
 
 export function hasModule1Lesson3Draft(state: Module1Lesson3State): boolean {
   return Boolean(state.storyTitle.trim() && state.draftText.trim())
-    && hasModule1Lesson3AiReplyIfUsed(state.aiProcess.p3)
+    && hasModule1Lesson3RequiredAi(state.aiProcess.p3)
 }
 
 export function hasModule1Lesson3Final(state: Module1Lesson3State): boolean {
   return Boolean(state.finalText.trim() && state.decisionNote.trim())
-    && hasModule1Lesson3AiReplyIfUsed(state.aiProcess.p4)
+    && hasModule1Lesson3RequiredAi(state.aiProcess.p4)
     && hasModule1Lesson3AiReplyIfUsed(state.aiProcess.p5)
 }
 

@@ -139,7 +139,7 @@ module-1-ai-story/
 - 第 2 关右侧写作设定改为 `Lesson2WritingDrawer`（共用 `features/writing-drawer/Module1WritingDrawer`）：默认收起，点右侧标签滑出只读汇总，开合不落盘。第 3/4 关桌面左主区 2/3、右栏固定写作设定 1/3（不是抽屉），窄屏上下堆叠。
 - 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。课时 3 使用 `Module1Lesson3State`：初稿与确认稿分存，`draftFrozenText` 冻结首次确认初稿；`aiProcess` 记录各条提示词的基础过程，不复用课时 2 的 `reasonAiAssistUsed` 等字段。旧包缺课时 3 新字段时补空，不丢课时 1/2。
 - 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3；课时 3 完成后指针指向课时 4，但课时 4 路由仍未开放。
-- 课时 3 的 `utils/build-lesson3-prompts.ts` 拼装 P1—P5；`utils/build-lesson3-writing-summary.ts` 派生抽屉摘要，必须列出 SDG 主题（编号+名称）。四关经 `Lesson3StepSplit` 统一栅格：桌面左主任务 2/3、右「需要时再用外部 AI」页内卡 1/3，窄屏上下堆叠且 AI 在下；右侧写作设定仍用与课时 2 相同的 `Module1WritingDrawer` 抽屉（`Lesson3WritingDrawer` 薄封装），默认收起，开合不落盘，不是固定右栏。提示词可编辑后复制；无 AI 可通关，一旦复制成功则须贴回回复。题目必填；字数 200—300 只作引导。案例配图若存在则挂 `public/module-1/lesson-3/`，缺图不阻塞通关。
+- 课时 3 的 `utils/build-lesson3-prompts.ts` 拼装 P1—P5；`utils/build-lesson3-writing-summary.ts` 派生抽屉摘要，必须列出 SDG 主题（编号+名称）。四关经 `Lesson3StepSplit` 统一栅格：第 1/2 关 `aiPlacement: 'end'`，桌面左主任务 2/3、右可选外部 AI 1/3，窄屏 AI 在下；第 3/4 关必用外部 AI、`aiPlacement: 'start'`，桌面左 1/3、主任务右 2/3，窄屏 AI 在上。右侧写作设定仍用与课时 2 相同的 `Module1WritingDrawer` 抽屉（`Lesson3WritingDrawer` 薄封装），默认收起，开合不落盘，不是固定右栏。提示词可编辑后复制；第 1/2 关无 AI 可通关，第 3/4 关必须复制成功并贴回回复（`aiProcess.p3` / `p4`，`p5` 仍为选用后必贴）。题目必填；字数 200—300 只作引导。案例配图若存在则挂 `public/module-1/lesson-3/`，缺图不阻塞通关。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
 - `/module/1/story` 属于模块结果视图，不进入课时注册表。
 - 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时。

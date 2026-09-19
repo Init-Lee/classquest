@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 3 关卡门禁。
- * 职责：根据阅读判断、开场、题目初稿和确认稿判断关卡完成与可进入状态，并在无档案或未完成课时 2 时给出安全回跳。
+ * 职责：根据阅读判断、开场、题目初稿、确认稿和第 3/4 关必用外部 AI 过程判断关卡完成与可进入状态，并在无档案或未完成课时 2 时给出安全回跳。
  * 更新触发：课时 3 字段、题目必填、外部 AI 过程必填或关卡先后关系变化时，需要同步更新本文件。
  */
 
@@ -38,7 +38,7 @@ export function getCurrentModule1Lesson3Step(state: Module1Lesson3State): number
 export function getModule1Lesson3GuardReason(stepId: number): string {
   if (stepId === 2) return "请先写下有具体词句依据的阅读判断；若已复制提示词，还须把外部 AI 回复贴回来。"
   if (stepId === 3) return "请先确认开场时刻和本段写法；若已复制提示词，还须把外部 AI 回复贴回来。"
-  if (stepId === 4) return "请先写下题目和初稿；若已复制提示词，还须把外部 AI 回复贴回来。"
+  if (stepId === 4) return "请先写下题目和初稿，并复制提示词把外部 AI 回复贴回来。"
   return "请先完成前一关。"
 }
 

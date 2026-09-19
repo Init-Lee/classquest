@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 3 第四关检查与修改。
- * 职责：独立确认稿、四个阅读问题、保留初稿防丢、P4/P5 过程入档，完成后指向课时 4。
- * 更新触发：第 4 关完成条件、保留初稿确认框或完成弹窗快照入口变化时，需要同步更新本文件。
+ * 职责：独立确认稿、四个阅读问题、保留初稿防丢；本关必须复制 P4 并贴回回复，P5 仍可选；完成后指向课时 4。
+ * 更新触发：第 4 关完成条件、必用外部 AI、保留初稿确认框或完成弹窗快照入口变化时，需要同步更新本文件。
  */
 
 import { useEffect, useState } from "react"
@@ -105,7 +105,7 @@ export default function Step4ReviseOpening() {
       setError(page.validation[0])
       return
     }
-    if (p4.copySucceeded && !p4.aiReply.trim()) {
+    if (!p4.copySucceeded || !p4.aiReply.trim()) {
       setError(page.validation[1])
       return
     }
@@ -133,6 +133,7 @@ export default function Step4ReviseOpening() {
   return (
     <div className="space-y-4">
       <Lesson3StepSplit
+        aiPlacement="start"
         main={(
           <Card className="flex h-full flex-col">
             <CardHeader className="space-y-2 pb-3">
@@ -205,10 +206,10 @@ export default function Step4ReviseOpening() {
         ai={(
           <Card className={cn("flex h-full min-w-0 flex-col overflow-hidden", (p4.copySucceeded || p5.copySucceeded) && "border-primary")}>
             <CardHeader>
-              <CardTitle className="leading-snug">需要时再用外部 AI</CardTitle>
+              <CardTitle className="leading-snug">{MODULE1_LESSON3_SHARED_COPY.aiAssistRequiredTitleRevise}</CardTitle>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-              <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistNote}</p>
+              <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistRequiredNote}</p>
               <EditableCopyPromptControl
                 label={page.buttons[0]}
                 disabled={!inspectReady}
@@ -228,7 +229,7 @@ export default function Step4ReviseOpening() {
               <Lesson3AiReplyField
                 copySucceeded={p4.copySucceeded}
                 value={p4.aiReply}
-                optionalLabel={page.fields[0].label}
+                optionalLabel={MODULE1_LESSON3_SHARED_COPY.aiReplyRequiredLabel}
                 onChange={value => updateLesson3(current => ({
                   ...patchModule1Lesson3AiProcess(current, "p4", { aiReply: value }),
                   feedbackRaw: value,

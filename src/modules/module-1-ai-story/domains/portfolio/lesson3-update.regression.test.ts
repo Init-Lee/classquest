@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 3 复核、初稿冻结与 AI 过程回归测试。
- * 职责：锁定题目必填、无 AI 可完成、复制成功后须贴回、改初稿不冲确认稿、保留初稿可恢复。
+ * 职责：锁定题目必填、第 1/2 关无 AI 可过、第 3/4 关必须复制并贴回、改初稿不冲确认稿、保留初稿可恢复。
  * 更新触发：课时 3 完成判定、冻结字段、复核或 AI 过程口径变化时，需要同步更新本文件。
  */
 
@@ -11,6 +11,8 @@ import {
   hasMeaningfulModule1Lesson3Fields,
   hasModule1Lesson3Draft,
   hasModule1Lesson3Final,
+  hasModule1Lesson3Observation,
+  hasModule1Lesson3Opening,
   normalizeModule1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { MODULE1_LESSON3_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson3-copy"
@@ -21,9 +23,21 @@ import {
   recordModule1Lesson3AiCopy,
 } from "@/modules/module-1-ai-story/domains/portfolio/lesson3-update"
 
-function filledLesson3() {
+function usedAiProcess(reply: string) {
   return {
-    ...createEmptyModule1Lesson3State(),
+    ...recordModule1Lesson3AiCopy(
+      createEmptyModule1Lesson3State().aiProcess.p3,
+      "原始提示词",
+      "复制的提示词",
+    ),
+    aiReply: reply,
+  }
+}
+
+function filledLesson3() {
+  const empty = createEmptyModule1Lesson3State()
+  return {
+    ...empty,
     observation: MODULE1_LESSON3_EXAMPLE.observation,
     openingPlan: MODULE1_LESSON3_EXAMPLE.openingPlan,
     focusTechnique: MODULE1_LESSON3_EXAMPLE.focusTechnique,
@@ -32,11 +46,72 @@ function filledLesson3() {
     draftFrozenText: MODULE1_LESSON3_EXAMPLE.draftText,
     finalText: MODULE1_LESSON3_EXAMPLE.finalText,
     decisionNote: MODULE1_LESSON3_EXAMPLE.decisionNote,
+    aiProcess: {
+      ...empty.aiProcess,
+      p3: usedAiProcess("一版草稿"),
+      p4: usedAiProcess("检查意见"),
+    },
   }
 }
 
 describe("模块 1 课时 3 完成与防丢", () => {
-  it("无 AI 时题目、初稿、确认稿和处理说明齐全即可完成", () => {
+  it("第 1/2 关无 AI 仍可过关", () => {
+    const state = {
+      ...createEmptyModule1Lesson3State(),
+      observation: MODULE1_LESSON3_EXAMPLE.observation,
+      openingPlan: MODULE1_LESSON3_EXAMPLE.openingPlan,
+      focusTechnique: MODULE1_LESSON3_EXAMPLE.focusTechnique,
+    }
+    expect(hasModule1Lesson3Observation(state)).toBe(true)
+    expect(hasModule1Lesson3Opening(state)).toBe(true)
+  })
+
+  it("第 3 关无题目或无 AI 过程不能过", () => {
+    const noTitle = { ...filledLesson3(), storyTitle: "" }
+    expect(hasModule1Lesson3Draft(noTitle)).toBe(false)
+    const noAi = {
+      ...filledLesson3(),
+      aiProcess: createEmptyModule1Lesson3State().aiProcess,
+    }
+    expect(hasModule1Lesson3Draft(noAi)).toBe(false)
+    expect(hasMeaningfulModule1Lesson3Fields(noAi)).toBe(false)
+  })
+
+  it("第 3 关有题目和初稿但没复制或没回复不能过", () => {
+    const empty = createEmptyModule1Lesson3State()
+    const noCopy = {
+      ...filledLesson3(),
+      aiProcess: empty.aiProcess,
+    }
+    expect(hasModule1Lesson3Draft(noCopy)).toBe(false)
+    const copiedOnly = {
+      ...filledLesson3(),
+      aiProcess: {
+        ...empty.aiProcess,
+        p3: recordModule1Lesson3AiCopy(empty.aiProcess.p3, "原始提示词", "编辑后的提示词"),
+      },
+    }
+    expect(hasModule1Lesson3Draft(copiedOnly)).toBe(false)
+  })
+
+  it("第 3 关复制、回复、题目和初稿齐全可通过", () => {
+    expect(hasModule1Lesson3Draft(filledLesson3())).toBe(true)
+  })
+
+  it("第 4 关未走 AI 不能完成课时 3", () => {
+    const empty = createEmptyModule1Lesson3State()
+    const noP4 = {
+      ...filledLesson3(),
+      aiProcess: {
+        ...empty.aiProcess,
+        p3: usedAiProcess("一版草稿"),
+      },
+    }
+    expect(hasModule1Lesson3Final(noP4)).toBe(false)
+    expect(hasMeaningfulModule1Lesson3Fields(noP4)).toBe(false)
+  })
+
+  it("第 3/4 关复制并贴回后，题目、初稿、确认稿和处理说明齐全即可完成", () => {
     expect(hasMeaningfulModule1Lesson3Fields(filledLesson3())).toBe(true)
   })
 
@@ -47,15 +122,13 @@ describe("模块 1 课时 3 完成与防丢", () => {
   })
 
   it("复制成功但未贴回回复不能完成对应关", () => {
+    const empty = createEmptyModule1Lesson3State()
     const state = {
       ...filledLesson3(),
       aiProcess: {
-        ...createEmptyModule1Lesson3State().aiProcess,
-        p3: recordModule1Lesson3AiCopy(
-          createEmptyModule1Lesson3State().aiProcess.p3,
-          "原始提示词",
-          "编辑后的提示词",
-        ),
+        ...empty.aiProcess,
+        p3: recordModule1Lesson3AiCopy(empty.aiProcess.p3, "原始提示词", "编辑后的提示词"),
+        p4: usedAiProcess("检查意见"),
       },
     }
     expect(hasModule1Lesson3Draft(state)).toBe(false)

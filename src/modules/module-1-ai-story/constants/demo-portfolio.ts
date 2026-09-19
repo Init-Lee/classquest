@@ -1,14 +1,16 @@
 /**
  * 文件说明：模块 1 教师讲解演示档案。
  * 职责：生成课堂演示用的 Module1Portfolio，供教师模式初始化和重置讲解状态使用，只存在于内存。
- * 更新触发：课时 1/2/3 演示字段、第 1/3/4 关 AI 辅助布尔、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
+ * 更新触发：课时 1/2/3 演示字段、第 1/3/4 关 AI 辅助布尔、课时 3 第 3/4 关必用外部 AI 过程、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
  */
 
 import {
+  createEmptyModule1Lesson3AiProcess,
   createEmptyModule1Lesson3State,
   createNewModule1Portfolio,
   normalizeModule1Portfolio,
   patchModule1Lesson2ActiveReference,
+  type Module1Lesson3AiProcess,
   type Module1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson2-copy"
@@ -16,6 +18,18 @@ import { MODULE1_LESSON3_EXAMPLE } from "@/modules/module-1-ai-story/constants/l
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 
 const DEMO_COMPLETED_AT = "2026-09-05T02:00:00.000Z"
+
+function createDemoRequiredAiProcess(aiReply: string): Module1Lesson3AiProcess {
+  return {
+    ...createEmptyModule1Lesson3AiProcess(),
+    generatedPromptSnapshot: "课堂演示提示词",
+    copiedPrompt: "课堂演示提示词",
+    aiReply,
+    copySucceeded: true,
+    copiedAt: DEMO_COMPLETED_AT,
+    copyCount: 1,
+  }
+}
 
 export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
   const base = createNewModule1Portfolio({
@@ -96,6 +110,11 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
       draftFrozenText: MODULE1_LESSON3_EXAMPLE.draftText,
       finalText: MODULE1_LESSON3_EXAMPLE.finalText,
       decisionNote: MODULE1_LESSON3_EXAMPLE.decisionNote,
+      aiProcess: {
+        ...createEmptyModule1Lesson3State().aiProcess,
+        p3: createDemoRequiredAiProcess("演示用的开头初稿回复。"),
+        p4: createDemoRequiredAiProcess("演示用的检查意见回复。"),
+      },
     },
   })
   return {
