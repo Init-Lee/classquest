@@ -106,7 +106,7 @@ export function EditableCopyPromptControl({
       <label className="space-y-1.5 text-sm font-medium">
         <span>{MODULE1_LESSON3_SHARED_COPY.promptPreview}</span>
         <Textarea
-          className="min-h-[160px] font-mono text-xs"
+          className="max-h-56 min-h-[120px] overflow-y-auto font-mono text-xs"
           readOnly={!editing}
           value={preview}
           onChange={event => onCustomTextChange(event.target.value)}

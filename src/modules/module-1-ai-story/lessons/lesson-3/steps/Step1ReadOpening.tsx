@@ -28,6 +28,7 @@ import { EditableCopyPromptControl } from "@/modules/module-1-ai-story/features/
 import { Lesson3AiReplyField } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3AiReplyField"
 import { Lesson3OptionalImage } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3OptionalImage"
 import { Lesson3ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3ReviewBanner"
+import { Lesson3StepSplit } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3StepSplit"
 import { Lesson3WritingDrawer } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingDrawer"
 import { buildModule1Lesson3Prompt } from "@/modules/module-1-ai-story/lessons/lesson-3/utils/build-lesson3-prompts"
 
@@ -74,89 +75,93 @@ export default function Step1ReadOpening() {
 
   return (
     <div className="space-y-4">
-      <div className="min-w-0 space-y-4">
-        <Card>
-          <CardHeader className="space-y-2 pb-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="leading-snug">{page.question}</CardTitle>
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                {MODULE1_LESSON3_SHARED_COPY.observeMainBadge}
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <ol className="list-decimal space-y-1 pl-5 text-sm">{page.steps.map(item => <li key={item}>{item}</li>)}</ol>
-            <p className="text-sm">{page.deliver}</p>
-            <p className="text-xs text-muted-foreground">{MODULE1_LESSON3_SHARED_COPY.caseNote}</p>
-            <div className="grid gap-3 md:grid-cols-3">
-              {MODULE1_LESSON3_CASES.map(item => (
-                <article key={item.id} className="space-y-2 rounded-lg border p-3 text-sm">
-                  <h3 className="font-semibold">{item.title}</h3>
-                  {item.showImage && <Lesson3OptionalImage src={item.imageSrc} alt={item.imageAlt} />}
-                  <p className="whitespace-pre-wrap leading-relaxed">{item.text}</p>
-                  <p className="text-xs text-muted-foreground">可引导：{item.guide}</p>
-                </article>
-              ))}
-            </div>
-            <details className="rounded-lg border bg-muted/30 text-sm">
-              <summary className="cursor-pointer px-3 py-2 font-medium">{MODULE1_LESSON3_SHARED_COPY.caseHelpTitle}</summary>
-              <p className="border-t px-3 py-2 text-muted-foreground">{MODULE1_LESSON3_CASE_HELP}</p>
-            </details>
-            <Lesson3ReviewBanner
-              visible={state.reviewNeeded.opening && !state.openingPlan.trim()}
-              confirmEnabled={valid}
-              onConfirm={() => updateLesson3(current => clearModule1Lesson3Review(current, ["opening"]))}
-            />
-            <label className="space-y-1.5 text-sm font-medium">
-              <span>{page.fields[0].label}</span>
-              <Textarea
-                className="min-h-[140px] border-2"
-                value={state.observation}
-                onChange={event => updateLesson3(current => ({ ...current, observation: event.target.value }))}
-                placeholder={page.fields[0].placeholder}
+      <Lesson3StepSplit
+        main={(
+          <Card className="flex h-full flex-col">
+            <CardHeader className="space-y-2 pb-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="leading-snug">{page.question}</CardTitle>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                  {MODULE1_LESSON3_SHARED_COPY.observeMainBadge}
+                </span>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <ol className="list-decimal space-y-1 pl-5 text-sm">{page.steps.map(item => <li key={item}>{item}</li>)}</ol>
+              <p className="text-sm">{page.deliver}</p>
+              <p className="text-xs text-muted-foreground">{MODULE1_LESSON3_SHARED_COPY.caseNote}</p>
+              <div className="grid gap-3 md:grid-cols-3">
+                {MODULE1_LESSON3_CASES.map(item => (
+                  <article key={item.id} className="space-y-2 rounded-lg border p-3 text-sm">
+                    <h3 className="font-semibold">{item.title}</h3>
+                    {item.showImage && <Lesson3OptionalImage src={item.imageSrc} alt={item.imageAlt} />}
+                    <p className="whitespace-pre-wrap leading-relaxed">{item.text}</p>
+                    <p className="text-xs text-muted-foreground">可引导：{item.guide}</p>
+                  </article>
+                ))}
+              </div>
+              <details className="rounded-lg border bg-muted/30 text-sm">
+                <summary className="cursor-pointer px-3 py-2 font-medium">{MODULE1_LESSON3_SHARED_COPY.caseHelpTitle}</summary>
+                <p className="border-t px-3 py-2 text-muted-foreground">{MODULE1_LESSON3_CASE_HELP}</p>
+              </details>
+              <Lesson3ReviewBanner
+                visible={state.reviewNeeded.opening && !state.openingPlan.trim()}
+                confirmEnabled={valid}
+                onConfirm={() => updateLesson3(current => clearModule1Lesson3Review(current, ["opening"]))}
               />
-            </label>
-          </CardContent>
-        </Card>
-
-        <Card className={cn(process.copySucceeded && "border-primary")}>
-          <CardHeader>
-            <CardTitle className="leading-snug">需要时再用外部 AI</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistNote}</p>
-            <p className="text-sm text-muted-foreground">{MODULE1_LESSON3_SHARED_COPY.aiAssistOptionalNote}</p>
-            <EditableCopyPromptControl
-              label={page.buttons[0]}
-              customText={state.customPrompts.p1}
-              onCustomTextChange={value => updateLesson3(current => ({
-                ...current,
-                customPrompts: { ...current.customPrompts, p1: value },
-              }))}
-              buildText={() => buildModule1Lesson3Prompt("P1", portfolio)}
-              onCopied={detail => updateLesson3(current => patchModule1Lesson3AiProcess(
-                current,
-                "p1",
-                recordModule1Lesson3AiCopy(current.aiProcess.p1, detail.generatedPrompt, detail.copiedPrompt),
-              ))}
-            />
-            <Lesson3AiReplyField
-              copySucceeded={process.copySucceeded}
-              value={process.aiReply}
-              onChange={value => updateLesson3(current => patchModule1Lesson3AiProcess(current, "p1", { aiReply: value }))}
-            />
-          </CardContent>
-        </Card>
-
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">{page.teacher}</p>
-          {(error || (process.copySucceeded && !process.aiReply.trim())) && (
-            <p role="alert" className="text-sm text-destructive">{error || page.validation[1]}</p>
-          )}
-          <Button disabled={!valid} onClick={() => void continueNext()}>{page.buttons[1]}</Button>
-        </div>
-      </div>
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>{page.fields[0].label}</span>
+                <Textarea
+                  className="min-h-[140px] border-2"
+                  value={state.observation}
+                  onChange={event => updateLesson3(current => ({ ...current, observation: event.target.value }))}
+                  placeholder={page.fields[0].placeholder}
+                />
+              </label>
+            </CardContent>
+          </Card>
+        )}
+        ai={(
+          <Card className={cn("flex h-full min-w-0 flex-col overflow-hidden", process.copySucceeded && "border-primary")}>
+            <CardHeader>
+              <CardTitle className="leading-snug">需要时再用外部 AI</CardTitle>
+            </CardHeader>
+            <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+              <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistNote}</p>
+              <p className="text-sm text-muted-foreground">{MODULE1_LESSON3_SHARED_COPY.aiAssistOptionalNote}</p>
+              <EditableCopyPromptControl
+                label={page.buttons[0]}
+                customText={state.customPrompts.p1}
+                onCustomTextChange={value => updateLesson3(current => ({
+                  ...current,
+                  customPrompts: { ...current.customPrompts, p1: value },
+                }))}
+                buildText={() => buildModule1Lesson3Prompt("P1", portfolio)}
+                onCopied={detail => updateLesson3(current => patchModule1Lesson3AiProcess(
+                  current,
+                  "p1",
+                  recordModule1Lesson3AiCopy(current.aiProcess.p1, detail.generatedPrompt, detail.copiedPrompt),
+                ))}
+              />
+              <Lesson3AiReplyField
+                copySucceeded={process.copySucceeded}
+                value={process.aiReply}
+                onChange={value => updateLesson3(current => patchModule1Lesson3AiProcess(current, "p1", { aiReply: value }))}
+              />
+            </CardContent>
+          </Card>
+        )}
+        footer={(
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{page.teacher}</p>
+            {(error || (process.copySucceeded && !process.aiReply.trim())) && (
+              <p role="alert" className="text-sm text-destructive">{error || page.validation[1]}</p>
+            )}
+            <Button disabled={!valid} onClick={() => void continueNext()}>{page.buttons[1]}</Button>
+          </div>
+        )}
+      />
       <Lesson3WritingDrawer lesson1={portfolio.lesson1} lesson2={portfolio.lesson2} lesson3={state} />
     </div>
   )

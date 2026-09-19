@@ -39,6 +39,7 @@ import { EditableCopyPromptControl } from "@/modules/module-1-ai-story/features/
 import { Lesson3AiReplyField } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3AiReplyField"
 import { Lesson3OptionalImage } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3OptionalImage"
 import { Lesson3ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3ReviewBanner"
+import { Lesson3StepSplit } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3StepSplit"
 import { Lesson3WritingDrawer } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingDrawer"
 import { buildModule1Lesson3Prompt } from "@/modules/module-1-ai-story/lessons/lesson-3/utils/build-lesson3-prompts"
 
@@ -131,162 +132,166 @@ export default function Step4ReviseOpening() {
 
   return (
     <div className="space-y-4">
-      <div className="min-w-0 space-y-4">
-        <Card>
-          <CardHeader className="space-y-2 pb-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="leading-snug">{page.question}</CardTitle>
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                {MODULE1_LESSON3_SHARED_COPY.observeMainBadge}
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Lesson3OptionalImage src="/module-1/lesson-3/revision_desk.png" alt="检查与修改配图：书桌" />
-            <ol className="list-decimal space-y-1 pl-5 text-sm">{page.steps.map(item => <li key={item}>{item}</li>)}</ol>
-            <p className="text-sm">{page.deliver}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {MODULE1_LESSON3_CHECK_QUESTIONS.map(item => (
-                <p key={item.question} className="rounded-md border-l-4 border-primary bg-primary/5 px-3 py-2 text-sm">
-                  <span className="font-medium">{item.question}</span>
-                  <span className="mt-1 block text-muted-foreground">{item.meaning}</span>
-                </p>
-              ))}
-            </div>
-            <Lesson3ReviewBanner
-              visible={state.reviewNeeded.final}
-              message={state.reviewNeeded.draft ? MODULE1_LESSON3_SHARED_COPY.draftChanged : MODULE1_LESSON3_SHARED_COPY.openingChanged}
-              confirmEnabled={Boolean(state.finalText.trim() && state.decisionNote.trim())}
-              onConfirm={() => updateLesson3(current => clearModule1Lesson3Review(current, ["final", "draft"]))}
-            />
-            <label className="space-y-1.5 text-sm font-medium">
-              <span>{page.fields[1].label}</span>
-              <Textarea
-                className="min-h-[220px] border-2"
-                value={state.finalText}
-                onChange={event => updateLesson3(current => ({ ...current, finalText: event.target.value }))}
-                placeholder={page.fields[1].placeholder}
+      <Lesson3StepSplit
+        main={(
+          <Card className="flex h-full flex-col">
+            <CardHeader className="space-y-2 pb-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="leading-snug">{page.question}</CardTitle>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                  {MODULE1_LESSON3_SHARED_COPY.observeMainBadge}
+                </span>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">{page.intro}</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Lesson3OptionalImage src="/module-1/lesson-3/revision_desk.png" alt="检查与修改配图：书桌" />
+              <ol className="list-decimal space-y-1 pl-5 text-sm">{page.steps.map(item => <li key={item}>{item}</li>)}</ol>
+              <p className="text-sm">{page.deliver}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {MODULE1_LESSON3_CHECK_QUESTIONS.map(item => (
+                  <p key={item.question} className="rounded-md border-l-4 border-primary bg-primary/5 px-3 py-2 text-sm">
+                    <span className="font-medium">{item.question}</span>
+                    <span className="mt-1 block text-muted-foreground">{item.meaning}</span>
+                  </p>
+                ))}
+              </div>
+              <Lesson3ReviewBanner
+                visible={state.reviewNeeded.final}
+                message={state.reviewNeeded.draft ? MODULE1_LESSON3_SHARED_COPY.draftChanged : MODULE1_LESSON3_SHARED_COPY.openingChanged}
+                confirmEnabled={Boolean(state.finalText.trim() && state.decisionNote.trim())}
+                onConfirm={() => updateLesson3(current => clearModule1Lesson3Review(current, ["final", "draft"]))}
               />
-            </label>
-            <p className="text-sm text-muted-foreground">
-              {MODULE1_LESSON3_SHARED_COPY.wordCountLabel}：{countModule1MeaningfulChars(state.finalText)}。{MODULE1_LESSON3_SHARED_COPY.wordCountHint}
-            </p>
-            <label className="space-y-1.5 text-sm font-medium">
-              <span>{page.fields[2].label}</span>
-              <Textarea
-                className="min-h-[96px] border-2"
-                value={state.decisionNote}
-                onChange={event => updateLesson3(current => ({ ...current, decisionNote: event.target.value }))}
-                placeholder={page.fields[2].placeholder}
-              />
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={keepDraft}>{page.buttons[2]}</Button>
-              {state.previousFinalText.trim() && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => updateLesson3(current => ({
-                    ...current,
-                    finalText: current.previousFinalText,
-                    previousFinalText: "",
-                  }))}
-                >
-                  {MODULE1_LESSON3_SHARED_COPY.restoreFinal}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn((p4.copySucceeded || p5.copySucceeded) && "border-primary")}>
-          <CardHeader>
-            <CardTitle className="leading-snug">需要时再用外部 AI</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistNote}</p>
-            <EditableCopyPromptControl
-              label={page.buttons[0]}
-              disabled={!inspectReady}
-              disabledReason={inspectReady ? undefined : "请先写下或粘贴一版开头，再生成检查提示词。"}
-              customText={state.customPrompts.p4}
-              onCustomTextChange={value => updateLesson3(current => ({
-                ...current,
-                customPrompts: { ...current.customPrompts, p4: value },
-              }))}
-              buildText={() => buildModule1Lesson3Prompt("P4", portfolio)}
-              onCopied={detail => updateLesson3(current => patchModule1Lesson3AiProcess(
-                current,
-                "p4",
-                recordModule1Lesson3AiCopy(current.aiProcess.p4, detail.generatedPrompt, detail.copiedPrompt),
-              ))}
-            />
-            <Lesson3AiReplyField
-              copySucceeded={p4.copySucceeded}
-              value={p4.aiReply}
-              optionalLabel={page.fields[0].label}
-              onChange={value => updateLesson3(current => ({
-                ...patchModule1Lesson3AiProcess(current, "p4", { aiReply: value }),
-                feedbackRaw: value,
-              }))}
-            />
-            <details className="space-y-3 rounded-lg border p-3">
-              <summary className="cursor-pointer text-sm font-medium">按我选定的意见局部修改（可选）</summary>
               <label className="space-y-1.5 text-sm font-medium">
-                <span>{page.fields[3].label}</span>
+                <span>{page.fields[1].label}</span>
                 <Textarea
-                  className="min-h-[80px]"
-                  value={state.revisionInstruction}
-                  onChange={event => updateLesson3(current => ({ ...current, revisionInstruction: event.target.value }))}
-                  placeholder={page.fields[3].placeholder}
+                  className="min-h-[220px] border-2"
+                  value={state.finalText}
+                  onChange={event => updateLesson3(current => ({ ...current, finalText: event.target.value }))}
+                  placeholder={page.fields[1].placeholder}
                 />
               </label>
+              <p className="text-sm text-muted-foreground">
+                {MODULE1_LESSON3_SHARED_COPY.wordCountLabel}：{countModule1MeaningfulChars(state.finalText)}。{MODULE1_LESSON3_SHARED_COPY.wordCountHint}
+              </p>
               <label className="space-y-1.5 text-sm font-medium">
-                <span>{page.fields[4].label}</span>
+                <span>{page.fields[2].label}</span>
                 <Textarea
-                  className="min-h-[72px]"
-                  value={state.preserveText}
-                  onChange={event => updateLesson3(current => ({ ...current, preserveText: event.target.value }))}
-                  placeholder={page.fields[4].placeholder}
+                  className="min-h-[96px] border-2"
+                  value={state.decisionNote}
+                  onChange={event => updateLesson3(current => ({ ...current, decisionNote: event.target.value }))}
+                  placeholder={page.fields[2].placeholder}
                 />
               </label>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={keepDraft}>{page.buttons[2]}</Button>
+                {state.previousFinalText.trim() && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => updateLesson3(current => ({
+                      ...current,
+                      finalText: current.previousFinalText,
+                      previousFinalText: "",
+                    }))}
+                  >
+                    {MODULE1_LESSON3_SHARED_COPY.restoreFinal}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        ai={(
+          <Card className={cn("flex h-full min-w-0 flex-col overflow-hidden", (p4.copySucceeded || p5.copySucceeded) && "border-primary")}>
+            <CardHeader>
+              <CardTitle className="leading-snug">需要时再用外部 AI</CardTitle>
+            </CardHeader>
+            <CardContent className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+              <p className="text-sm leading-relaxed">{MODULE1_LESSON3_SHARED_COPY.aiAssistNote}</p>
               <EditableCopyPromptControl
-                label={page.buttons[1]}
-                disabled={!state.revisionInstruction.trim() || !inspectReady}
-                disabledReason={!state.revisionInstruction.trim() ? MODULE1_LESSON3_SHARED_COPY.missingRevision : undefined}
-                customText={state.customPrompts.p5}
+                label={page.buttons[0]}
+                disabled={!inspectReady}
+                disabledReason={inspectReady ? undefined : "请先写下或粘贴一版开头，再生成检查提示词。"}
+                customText={state.customPrompts.p4}
                 onCustomTextChange={value => updateLesson3(current => ({
                   ...current,
-                  customPrompts: { ...current.customPrompts, p5: value },
+                  customPrompts: { ...current.customPrompts, p4: value },
                 }))}
-                buildText={() => buildModule1Lesson3Prompt("P5", portfolio)}
+                buildText={() => buildModule1Lesson3Prompt("P4", portfolio)}
                 onCopied={detail => updateLesson3(current => patchModule1Lesson3AiProcess(
                   current,
-                  "p5",
-                  recordModule1Lesson3AiCopy(current.aiProcess.p5, detail.generatedPrompt, detail.copiedPrompt),
+                  "p4",
+                  recordModule1Lesson3AiCopy(current.aiProcess.p4, detail.generatedPrompt, detail.copiedPrompt),
                 ))}
               />
               <Lesson3AiReplyField
-                copySucceeded={p5.copySucceeded}
-                value={p5.aiReply}
-                onChange={value => updateLesson3(current => patchModule1Lesson3AiProcess(current, "p5", { aiReply: value }))}
+                copySucceeded={p4.copySucceeded}
+                value={p4.aiReply}
+                optionalLabel={page.fields[0].label}
+                onChange={value => updateLesson3(current => ({
+                  ...patchModule1Lesson3AiProcess(current, "p4", { aiReply: value }),
+                  feedbackRaw: value,
+                }))}
               />
-              <p className="text-xs text-muted-foreground">请把 AI 返回的开头正文贴进确认稿，改动说明不要混进小说。</p>
-            </details>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">{page.hint}</p>
-          {(error || (p4.copySucceeded && !p4.aiReply.trim()) || (p5.copySucceeded && !p5.aiReply.trim())) && (
-            <p role="alert" className="text-sm text-destructive">
-              {error || (p4.copySucceeded && !p4.aiReply.trim() ? page.validation[1] : page.validation[2])}
-            </p>
-          )}
-          <Button disabled={!valid} onClick={() => void complete()}>{page.buttons[3]}</Button>
-        </div>
-      </div>
+              <details className="space-y-3 rounded-lg border p-3">
+                <summary className="cursor-pointer text-sm font-medium">按我选定的意见局部修改（可选）</summary>
+                <label className="space-y-1.5 text-sm font-medium">
+                  <span>{page.fields[3].label}</span>
+                  <Textarea
+                    className="min-h-[80px]"
+                    value={state.revisionInstruction}
+                    onChange={event => updateLesson3(current => ({ ...current, revisionInstruction: event.target.value }))}
+                    placeholder={page.fields[3].placeholder}
+                  />
+                </label>
+                <label className="space-y-1.5 text-sm font-medium">
+                  <span>{page.fields[4].label}</span>
+                  <Textarea
+                    className="min-h-[72px]"
+                    value={state.preserveText}
+                    onChange={event => updateLesson3(current => ({ ...current, preserveText: event.target.value }))}
+                    placeholder={page.fields[4].placeholder}
+                  />
+                </label>
+                <EditableCopyPromptControl
+                  label={page.buttons[1]}
+                  disabled={!state.revisionInstruction.trim() || !inspectReady}
+                  disabledReason={!state.revisionInstruction.trim() ? MODULE1_LESSON3_SHARED_COPY.missingRevision : undefined}
+                  customText={state.customPrompts.p5}
+                  onCustomTextChange={value => updateLesson3(current => ({
+                    ...current,
+                    customPrompts: { ...current.customPrompts, p5: value },
+                  }))}
+                  buildText={() => buildModule1Lesson3Prompt("P5", portfolio)}
+                  onCopied={detail => updateLesson3(current => patchModule1Lesson3AiProcess(
+                    current,
+                    "p5",
+                    recordModule1Lesson3AiCopy(current.aiProcess.p5, detail.generatedPrompt, detail.copiedPrompt),
+                  ))}
+                />
+                <Lesson3AiReplyField
+                  copySucceeded={p5.copySucceeded}
+                  value={p5.aiReply}
+                  onChange={value => updateLesson3(current => patchModule1Lesson3AiProcess(current, "p5", { aiReply: value }))}
+                />
+                <p className="text-xs text-muted-foreground">请把 AI 返回的开头正文贴进确认稿，改动说明不要混进小说。</p>
+              </details>
+            </CardContent>
+          </Card>
+        )}
+        footer={(
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{page.hint}</p>
+            {(error || (p4.copySucceeded && !p4.aiReply.trim()) || (p5.copySucceeded && !p5.aiReply.trim())) && (
+              <p role="alert" className="text-sm text-destructive">
+                {error || (p4.copySucceeded && !p4.aiReply.trim() ? page.validation[1] : page.validation[2])}
+              </p>
+            )}
+            <Button disabled={!valid} onClick={() => void complete()}>{page.buttons[3]}</Button>
+          </div>
+        )}
+      />
       <Lesson3WritingDrawer lesson1={portfolio.lesson1} lesson2={portfolio.lesson2} lesson3={state} />
 
       <Dialog open={replaceOpen} onOpenChange={setReplaceOpen}>
