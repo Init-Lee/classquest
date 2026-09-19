@@ -39,7 +39,7 @@ import { EditableCopyPromptControl } from "@/modules/module-1-ai-story/features/
 import { Lesson3AiReplyField } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3AiReplyField"
 import { Lesson3OptionalImage } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3OptionalImage"
 import { Lesson3ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3ReviewBanner"
-import { Lesson3WritingSummary } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingSummary"
+import { Lesson3WritingDrawer } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingDrawer"
 import { buildModule1Lesson3Prompt } from "@/modules/module-1-ai-story/lessons/lesson-3/utils/build-lesson3-prompts"
 
 export default function Step4ReviseOpening() {
@@ -130,7 +130,7 @@ export default function Step4ReviseOpening() {
   }
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <div className="space-y-4">
       <div className="min-w-0 space-y-4">
         <Card>
           <CardHeader className="space-y-2 pb-3">
@@ -287,7 +287,7 @@ export default function Step4ReviseOpening() {
           <Button disabled={!valid} onClick={() => void complete()}>{page.buttons[3]}</Button>
         </div>
       </div>
-      <Lesson3WritingSummary lesson1={portfolio.lesson1} lesson2={portfolio.lesson2} lesson3={state} />
+      <Lesson3WritingDrawer lesson1={portfolio.lesson1} lesson2={portfolio.lesson2} lesson3={state} />
 
       <Dialog open={replaceOpen} onOpenChange={setReplaceOpen}>
         <DialogContent>

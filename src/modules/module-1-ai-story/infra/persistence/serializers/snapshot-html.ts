@@ -4,6 +4,7 @@
  * 更新触发：快照字段、课时 1/2/3 外部 AI 过程、文件名规则、转义策略、课时号映射、URL 映射或新增课时快照类型时，需要同步更新本文件。
  */
 
+import { formatModule1SdgTheme } from "@/modules/module-1-ai-story/constants/sdgs"
 import {
   countModule1MeaningfulChars,
   MODULE1_LESSON3_PROMPT_IDS,
@@ -247,6 +248,8 @@ export function buildModule1Lesson3SnapshotHtml(portfolio: Module1Portfolio, now
     <section>
       <h2>继承设定</h2>
       <p class="item"><span class="label">故事年份</span><span class="value">${escapeHtml(MODULE1_STORY_YEAR)}</span></p>
+      <p class="item"><span class="label">SDG主题</span><span class="value">${snapshotValue(formatModule1SdgTheme(lesson1.sdg, ""))}</span></p>
+      <p class="item"><span class="label">选择该主题的理由</span><span class="value">${snapshotValue(lesson1.sdgWhy)}</span></p>
       <p class="item"><span class="label">城市问题</span><span class="value">${snapshotValue(lesson1.cityIssue)}</span></p>
       <p class="item"><span class="label">写给谁及关切</span><span class="value">${snapshotValue(`${lesson1.audience} / ${lesson1.audienceConcern}`)}</span></p>
       <p class="item"><span class="label">课时 2 写法</span><span class="value">${snapshotValue(lesson2.writingPlan)}</span></p>

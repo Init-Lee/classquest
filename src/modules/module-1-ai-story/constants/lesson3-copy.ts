@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 3 定稿文案、课堂自编开头、P1—P5 提示词与公共状态句。
- * 职责：集中保存内容包逐字教学文字，供四关页面、提示词拼装、右栏摘要和完成弹窗读取。
+ * 职责：集中保存内容包逐字教学文字，供四关页面、提示词拼装、侧栏摘要和完成弹窗读取。
  * 更新触发：课时 3 关卡文案、案例、提示词、复制成功句或完成提示变化时，需要同步更新本文件。
  */
 
@@ -11,6 +11,8 @@ export const MODULE1_LESSON3_SHARED_COPY = {
   summaryTitle: "我的写作设定",
   summaryIntro: "这里只整理你已经确认的内容，便于后续写作时继续使用。",
   notFilled: "尚未填写",
+  pendingSelect: "待选择",
+  pendingFill: "待填写",
   fullSetting: "查看前两课的完整设定",
   aiAssistNote: "需要帮助时，可以复制提示词到你常用的AI工具，再把自己确认的结果填回来。也可以直接完成本关。",
   copied: "已复制，请到你常用的AI工具中使用。",
@@ -48,6 +50,9 @@ export const MODULE1_LESSON3_SHARED_COPY = {
   defaultPreserve: "保留与本次修改无关的原有内容",
   yearNote: "沿用课程背景",
   notFactNote: "这不是已经发生的事实。",
+  writingDrawerHandle: "写作设定",
+  closeWritingDrawer: "收起写作设定",
+  openWritingDrawer: "打开写作设定",
 } as const
 
 export const MODULE1_LESSON3_CASES = [

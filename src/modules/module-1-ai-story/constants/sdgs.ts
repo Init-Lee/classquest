@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 联合国可持续发展目标常量。
- * 职责：保存原型中的 17 项 SDG 课程内容，供课时 1 主题选择使用。
- * 更新触发：课程采用的 SDG 名称、编号、展示顺序或第 2 关支架资料路径变化时，需要同步更新本文件。
+ * 职责：保存原型中的 17 项 SDG 课程内容，供课时 1 主题选择与后续汇总展示使用。
+ * 更新触发：课程采用的 SDG 名称、编号、展示顺序、第 2 关支架资料路径或编号+中文名格式化规则变化时，需要同步更新本文件。
  */
 
 /** 课时 1 第 2 关新窗口打开的 SDG 支架资料静态路径（Vite public/ 原样映射到站点根）。 */
@@ -26,3 +26,24 @@ export const MODULE1_SDGS = [
   "16 和平、正义与强大机构",
   "17 促进目标实现的伙伴关系",
 ] as const
+
+const SDG_CODE_PATTERN = /(?:SDG\s*)?(\d{1,2})/i
+
+/**
+ * 把课时 1 存档的 SDG 取值规范成「编号 + 中文名」。
+ * 空值返回占位，不把未选主题写成已选。
+ */
+export function formatModule1SdgTheme(value: string, emptyLabel = "待选择"): string {
+  const trimmed = value.trim()
+  if (!trimmed) return emptyLabel
+
+  const exact = MODULE1_SDGS.find(item => item === trimmed || `SDG ${item}` === trimmed)
+  if (exact) return exact
+
+  const codeMatch = trimmed.match(SDG_CODE_PATTERN)
+  if (!codeMatch) return trimmed
+
+  const paddedCode = codeMatch[1].padStart(2, "0")
+  const byCode = MODULE1_SDGS.find(item => item.startsWith(`${paddedCode} `))
+  return byCode ?? trimmed
+}

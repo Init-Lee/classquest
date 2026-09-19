@@ -22,7 +22,7 @@ import {
 import { EditableCopyPromptControl } from "@/modules/module-1-ai-story/features/lesson3-support/EditableCopyPromptControl"
 import { Lesson3AiReplyField } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3AiReplyField"
 import { Lesson3ReviewBanner } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3ReviewBanner"
-import { Lesson3WritingSummary } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingSummary"
+import { Lesson3WritingDrawer } from "@/modules/module-1-ai-story/lessons/lesson-3/components/Lesson3WritingDrawer"
 import {
   buildModule1Lesson3Prompt,
   hasModule1Lesson3PromptContext,
@@ -71,7 +71,7 @@ export default function Step2ChooseOpening() {
   }
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <div className="space-y-4">
       <div className="min-w-0 space-y-4">
         <Card>
           <CardHeader className="space-y-2 pb-3">
@@ -163,7 +163,7 @@ export default function Step2ChooseOpening() {
           <Button disabled={!valid} onClick={() => void continueNext()}>{page.buttons[1]}</Button>
         </div>
       </div>
-      <Lesson3WritingSummary lesson1={portfolio.lesson1} lesson2={portfolio.lesson2} lesson3={state} />
+      <Lesson3WritingDrawer lesson1={portfolio.lesson1} lesson2={portfolio.lesson2} lesson3={state} />
     </div>
   )
 }
