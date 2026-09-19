@@ -57,7 +57,9 @@ module-1-ai-story/
 │   ├── lesson3-support/
 │   │   └── EditableCopyPromptControl.tsx
 │   └── writing-drawer/
-│       └── Module1WritingDrawer.tsx
+│       ├── Module1WritingDrawer.tsx
+│       ├── Module1WritingSummaryGroup.tsx
+│       └── module1-writing-summary-groups.ts
 ├── infra/persistence/
 │   ├── indexeddb/connection.ts
 │   ├── repositories/portfolio.repository.ts
@@ -127,7 +129,7 @@ module-1-ai-story/
 - `features/progress-ui` 是模块 1 内部可复用的课时 Step 进度能力；各课时传入 Guard 派生的完成、可访问与锁定集合，不得跨模块引用。
 - `features/lesson2-support` 提供课堂虚构示例弹层与外部 AI 提示词复制控件；只生成并复制提示词，不得暗示站内调用模型。
 - `features/lesson3-support` 提供课时 3 可编辑提示词复制控件；复制成功后记录基础过程，不暗示站内调用模型。
-- `features/writing-drawer` 提供课时 2/3 共用的右侧写作设定抽屉壳：默认收起、右侧标签、Esc 关闭、有内容小圆点、约 380px，开合不落盘。课时各自只挂汇总内容，不复制整套交互。
+- `features/writing-drawer` 提供课时 2/3 共用的右侧写作设定抽屉壳：默认收起、右侧标签、Esc 关闭、有内容小圆点、约 380px，开合不落盘。课时各自只挂汇总内容，不复制整套交互。`Module1WritingSummaryGroup` 与 `module1-writing-summary-groups.ts` 提供课时 2/3 共用的课组标题与交替浅底，只改展示，不参与存档或完成判定。
 - `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏视觉与文案；学生模式为保存进度 / 导入进度 / 重置，顶栏不再提供阶段快照。教师模式仅在课时 1/2/3 页保留当前课快照，供投影使用。首页已开放课卡提供「下载本课阶段快照（交作业用）」；该课 `completed` 才可点，未完成已解锁则禁用并旁注「完成本课后可下载」，待开发/未解锁不出现按钮。身份卡不再提供「只下最新已完成课」的快照。课时 1/2/3 完成弹窗再提供一次本课快照。可用性规则放在纯函数中，导出统一走 `downloadModule1SnapshotByLessonId`。
 - `infra/persistence/serializers/snapshot-html.ts` 按课时号生成不可导入的课时 1 主题设定、课时 2 风格与人物或课时 3 开头 HTML；课时 3 快照转义展示外部 AI 过程。首页课卡、完成弹窗和教师顶栏共用 `downloadModule1SnapshotByLessonId`。导入器必须拒绝 HTML/非继续学习包。
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。

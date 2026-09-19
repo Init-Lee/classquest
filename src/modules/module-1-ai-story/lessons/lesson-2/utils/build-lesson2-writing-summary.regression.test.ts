@@ -15,6 +15,8 @@ describe("模块 1 课时 2 写作设定汇总", () => {
   it("未填写时保留结构并显示尚未填写", () => {
     const portfolio = createNewModule1Portfolio()
     const summary = buildModule1Lesson2WritingSummary(portfolio.lesson1, createEmptyModule1Lesson2State())
+    expect(summary.lesson1GroupTitle).toBe("课时 1 主题设定")
+    expect(summary.lesson2GroupTitle).toBe("课时 2 风格与人物")
     expect(summary.workTitle).toBe("尚未填写")
     expect(summary.who).toBe("尚未填写")
     expect(summary.complete).toBe(false)

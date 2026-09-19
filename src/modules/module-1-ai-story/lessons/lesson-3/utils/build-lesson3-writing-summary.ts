@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 3 写作设定汇总 selector。
  * 职责：按课时 1/2/3 顺序派生抽屉只读字段，必须包含 SDG 主题（编号+名称）与主题核心；空项给出待填写/待选择，不落盘。
- * 更新触发：抽屉字段顺序、占位口径、SDG/主题核心或课时 3 已填摘要规则变化时，需要同步更新本文件。
+ * 更新触发：抽屉字段顺序、占位口径、课组标题、SDG/主题核心或课时 3 已填摘要规则变化时，需要同步更新本文件。
  */
 
 import { formatModule1SdgTheme } from "@/modules/module-1-ai-story/constants/sdgs"
@@ -20,6 +20,9 @@ const DRAFT_EXCERPT_LIMIT = 80
 export interface Module1Lesson3WritingSummary {
   title: string
   intro: string
+  lesson1GroupTitle: string
+  lesson2GroupTitle: string
+  lesson3GroupTitle: string
   year: string
   sdg: string
   sdgWhy: string
@@ -72,6 +75,9 @@ export function buildModule1Lesson3WritingSummary(
   return {
     title: MODULE1_LESSON3_SHARED_COPY.summaryTitle,
     intro: MODULE1_LESSON3_SHARED_COPY.summaryIntro,
+    lesson1GroupTitle: MODULE1_LESSON3_SHARED_COPY.summaryLesson1Group,
+    lesson2GroupTitle: MODULE1_LESSON3_SHARED_COPY.summaryLesson2Group,
+    lesson3GroupTitle: MODULE1_LESSON3_SHARED_COPY.summaryLesson3Group,
     year: MODULE1_STORY_YEAR || MODULE1_LESSON3_SHARED_COPY.pendingFill,
     sdg: formatModule1SdgTheme(lesson1.sdg, MODULE1_LESSON3_SHARED_COPY.pendingSelect),
     sdgWhy: displayFill(lesson1.sdgWhy),

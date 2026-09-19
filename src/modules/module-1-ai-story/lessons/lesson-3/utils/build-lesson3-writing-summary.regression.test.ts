@@ -20,6 +20,9 @@ describe("模块 1 课时 3 写作设定汇总", () => {
       portfolio.lesson2,
       portfolio.lesson3,
     )
+    expect(summary.lesson1GroupTitle).toBe("课时 1 主题设定")
+    expect(summary.lesson2GroupTitle).toBe("课时 2 风格与人物")
+    expect(summary.lesson3GroupTitle).toBe("课时 3 开头")
     expect(summary.sdg).toBe("待选择")
     expect(summary.sdgWhy).toBe("待填写")
     expect(summary.cityIssue).toBe("待填写")

@@ -100,7 +100,8 @@ const SNAPSHOT_STYLES = `
       margin-top: 18px;
       background: rgba(255, 255, 255, 0.92);
     }
-    section h2 { font-size: 18px; margin-bottom: 12px; color: #0f766e; }
+    section h2 { font-size: 18px; margin-bottom: 12px; color: #0f766e; font-weight: 700; }
+    section h3 { font-size: 16px; margin: 16px 0 8px; color: var(--ink); font-weight: 700; }
     .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .info-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
     .label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
@@ -179,7 +180,7 @@ export function buildModule1Lesson2SnapshotHtml(portfolio: Module1Portfolio, now
     "课时 2：风格与人物 · 阶段快照",
     `${identitySection(portfolio, now)}
     <section>
-      <h2>课时 1 故事主题</h2>
+      <h2>课时 1 主题设定</h2>
       <p class="item"><span class="label">故事年份</span><span class="value">${escapeHtml(MODULE1_STORY_YEAR)}</span></p>
       <p class="item"><span class="label">SDG主题</span><span class="value">${snapshotValue(lesson1.sdg)}</span></p>
       <p class="item"><span class="label">选择理由</span><span class="value">${snapshotValue(lesson1.sdgWhy)}</span></p>
@@ -188,7 +189,8 @@ export function buildModule1Lesson2SnapshotHtml(portfolio: Module1Portfolio, now
       <p class="item"><span class="label">对方关心的事</span><span class="value">${snapshotValue(lesson1.audienceConcern)}</span></p>
     </section>
     <section>
-      <h2>文学参照与写法</h2>
+      <h2>课时 2 风格与人物</h2>
+      <h3>文学参照与写法</h3>
       <p class="item"><span class="label">作品</span><span class="value">${snapshotValue(lesson2.reference.workTitle)}</span></p>
       <p class="item"><span class="label">作者</span><span class="value">${snapshotValue(lesson2.reference.author)}</span></p>
       <p class="item"><span class="label">片段位置</span><span class="value">${snapshotValue(lesson2.reference.location)}</span></p>
@@ -246,12 +248,13 @@ export function buildModule1Lesson3SnapshotHtml(portfolio: Module1Portfolio, now
     "课时 3：写一个吸引人的开头 · 阶段快照",
     `${identitySection(portfolio, now)}
     <section>
-      <h2>继承设定</h2>
+      <h2>课时 1 主题设定</h2>
       <p class="item"><span class="label">故事年份</span><span class="value">${escapeHtml(MODULE1_STORY_YEAR)}</span></p>
       <p class="item"><span class="label">SDG主题</span><span class="value">${snapshotValue(formatModule1SdgTheme(lesson1.sdg, ""))}</span></p>
       <p class="item"><span class="label">选择该主题的理由</span><span class="value">${snapshotValue(lesson1.sdgWhy)}</span></p>
       <p class="item"><span class="label">城市问题</span><span class="value">${snapshotValue(lesson1.cityIssue)}</span></p>
       <p class="item"><span class="label">写给谁及关切</span><span class="value">${snapshotValue(`${lesson1.audience} / ${lesson1.audienceConcern}`)}</span></p>
+      <h2>课时 2 风格与人物</h2>
       <p class="item"><span class="label">课时 2 写法</span><span class="value">${snapshotValue(lesson2.writingPlan)}</span></p>
       <p class="item"><span class="label">选择理由</span><span class="value">${snapshotValue(lesson2.reason)}</span></p>
       <p class="item"><span class="label">我是谁</span><span class="value">${snapshotValue(lesson2.character.who)}</span></p>

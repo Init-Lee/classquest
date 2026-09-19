@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 2 已确认写作设定汇总 selector。
  * 职责：按内容包第 7 节格式整理主题、参照、写法、理由和人物五项，不落盘、不自动添加因果结论。
- * 更新触发：汇总字段、占位口径、复制稿待复核提示或课时 1 上下文格式变化时，需要同步更新本文件。
+ * 更新触发：汇总字段、课组标题、占位口径、复制稿待复核提示或课时 1 上下文格式变化时，需要同步更新本文件。
  */
 
 import {
@@ -20,6 +20,8 @@ import {
 export interface Module1Lesson2WritingSummary {
   title: string
   intro: string
+  lesson1GroupTitle: string
+  lesson2GroupTitle: string
   year: string
   sdg: string
   sdgWhy: string
@@ -57,6 +59,8 @@ export function buildModule1Lesson2WritingSummary(
   return {
     title: MODULE1_LESSON2_SHARED_COPY.summaryTitle,
     intro: MODULE1_LESSON2_SHARED_COPY.summaryIntro,
+    lesson1GroupTitle: MODULE1_LESSON2_SHARED_COPY.summaryLesson1Group,
+    lesson2GroupTitle: MODULE1_LESSON2_SHARED_COPY.summaryLesson2Group,
     year: MODULE1_STORY_YEAR,
     sdg: displayValue(lesson1.sdg),
     sdgWhy: lesson1Optional(lesson1.sdgWhy),
