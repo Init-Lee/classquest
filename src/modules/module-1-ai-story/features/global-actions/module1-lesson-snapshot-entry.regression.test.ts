@@ -21,6 +21,7 @@ import {
   buildModule1Lesson1SnapshotHtml,
   buildModule1Lesson2SnapshotHtml,
   buildModule1Lesson3SnapshotHtml,
+  buildModule1Lesson4SnapshotHtml,
   isModule1SnapshotReady,
   resolveModule1SnapshotKindFromLessonId,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
@@ -63,10 +64,19 @@ function completeLesson2(portfolio: ReturnType<typeof createStudent>) {
 }
 
 function cardSnapshot(portfolio: ReturnType<typeof createStudent>, lessonId: number) {
+  const completed = lessonId === 1
+    ? portfolio.lesson1.completed
+    : lessonId === 2
+      ? portfolio.lesson2.completed
+      : lessonId === 3
+        ? portfolio.lesson3.completed
+        : lessonId === 4
+          ? portfolio.lesson4.completed
+          : false
   return getModule1LessonCardSnapshotButton(lessonId, {
-    available: lessonId <= 3,
+    available: lessonId <= 4,
     accessible: canAccessModule1Lesson(portfolio, lessonId),
-    completed: lessonId === 1 ? portfolio.lesson1.completed : lessonId === 2 ? portfolio.lesson2.completed : false,
+    completed,
   })
 }
 
@@ -93,9 +103,11 @@ describe("模块 1 阶段快照入口", () => {
     expect(cardSnapshot(portfolio, 1)).toMatchObject({ visible: true, enabled: true, kind: "lesson1" })
     expect(cardSnapshot(portfolio, 2)).toMatchObject({ visible: true, enabled: true, kind: "lesson2" })
     expect(cardSnapshot(portfolio, 3)).toMatchObject({ visible: true, enabled: false, kind: "lesson3", hint: "完成本课后可下载" })
+    expect(cardSnapshot(portfolio, 4).visible).toBe(false)
     expect(resolveModule1SnapshotKindFromLessonId(1)).toBe("lesson1")
     expect(resolveModule1SnapshotKindFromLessonId(2)).toBe("lesson2")
     expect(resolveModule1SnapshotKindFromLessonId(3)).toBe("lesson3")
+    expect(resolveModule1SnapshotKindFromLessonId(4)).toBe("lesson4")
     const html1 = buildModule1Lesson1SnapshotHtml(portfolio)
     const html2 = buildModule1Lesson2SnapshotHtml(portfolio)
     expect(html1).toContain("课时 1")
@@ -162,6 +174,17 @@ describe("模块 1 阶段快照入口", () => {
       visible: true,
       enabled: true,
       kind: "lesson3",
+    })
+    expect(getModule1LessonCardSnapshotButton(4, {
+      available: true,
+      accessible: true,
+      completed: demo.lesson4.completed,
+    })).toMatchObject({ visible: true, enabled: true, kind: "lesson4" })
+    expect(buildModule1Lesson4SnapshotHtml(demo)).toContain("写出事情的发展")
+    expect(getModule1TeacherTopBarSnapshotState("/module/1/lesson/4/step/4", demo)).toMatchObject({
+      visible: true,
+      enabled: true,
+      kind: "lesson4",
     })
     expect(getModule1TeacherTopBarSnapshotState("/module/1", demo).visible).toBe(false)
     expect(getModule1TeacherTopBarSnapshotState("/module/1/lesson/1/step/1", null).visible).toBe(false)

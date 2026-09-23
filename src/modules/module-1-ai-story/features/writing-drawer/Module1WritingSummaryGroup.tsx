@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 写作设定按课时分组的展示壳。
- * 职责：给课时 2/3 汇总提供统一的课组标题、分课色条和块内交替浅底，不参与存档或完成判定。
+ * 职责：给课时 2/3/4 汇总提供统一的课组标题、分课色条和块内交替浅底，不参与存档或完成判定。
  * 更新触发：课组标题、分课色条、块交替底色或分组结构变化时，需要同步更新本文件。
  */
 
@@ -34,6 +34,12 @@ const LESSON_TONE: Record<Module1WritingSummaryLessonKey, {
     header: "bg-muted/70 text-foreground",
     blockEven: "bg-background/90",
     blockOdd: "bg-muted/50",
+  },
+  lesson4: {
+    group: "rounded-lg border border-sky-200/70 border-l-4 border-l-sky-600 bg-sky-50/30",
+    header: "bg-sky-50 text-sky-900",
+    blockEven: "bg-background/90",
+    blockOdd: "bg-sky-50/80",
   },
 }
 

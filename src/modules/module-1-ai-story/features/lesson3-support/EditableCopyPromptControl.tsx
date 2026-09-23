@@ -33,6 +33,10 @@ interface EditableCopyPromptControlProps {
   onCustomTextChange: (value: string) => void
   buildText: () => { ok: boolean; text: string; error: string }
   onCopied?: (detail: Module1Lesson3CopiedPromptDetail) => void
+  copiedLabel?: string
+  copyFailedLabel?: string
+  restoreLabel?: string
+  onRestore?: () => void
 }
 
 export function EditableCopyPromptControl({
@@ -43,6 +47,10 @@ export function EditableCopyPromptControl({
   onCustomTextChange,
   buildText,
   onCopied,
+  copiedLabel = MODULE1_LESSON3_SHARED_COPY.copied,
+  copyFailedLabel = MODULE1_LESSON3_SHARED_COPY.copyFailed,
+  restoreLabel,
+  onRestore,
 }: EditableCopyPromptControlProps) {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
   const [error, setError] = useState("")
@@ -77,7 +85,7 @@ export function EditableCopyPromptControl({
     } catch {
       setFallbackText(copiedPrompt)
       setStatus("error")
-      setError(MODULE1_LESSON3_SHARED_COPY.copyFailed)
+      setError(copyFailedLabel)
     }
   }
 
@@ -85,7 +93,7 @@ export function EditableCopyPromptControl({
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" disabled={disabled} onClick={() => void copyPrompt()}>
-          {status === "success" ? MODULE1_LESSON3_SHARED_COPY.copied : label}
+          {status === "success" ? copiedLabel : label}
         </Button>
         <Button
           type="button"
@@ -98,6 +106,11 @@ export function EditableCopyPromptControl({
         >
           {editing ? MODULE1_LESSON3_SHARED_COPY.cancelEditPrompt : MODULE1_LESSON3_SHARED_COPY.editPrompt}
         </Button>
+        {onRestore && restoreLabel && (
+          <Button type="button" variant="ghost" disabled={disabled || !customText.trim()} onClick={onRestore}>
+            {restoreLabel}
+          </Button>
+        )}
       </div>
       {disabled && disabledReason && (
         <p className="text-xs text-muted-foreground">{disabledReason}</p>
@@ -116,7 +129,7 @@ export function EditableCopyPromptControl({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>复制文本</DialogTitle>
-            <DialogDescription>{MODULE1_LESSON3_SHARED_COPY.copyFailed}</DialogDescription>
+            <DialogDescription>{copyFailedLabel}</DialogDescription>
           </DialogHeader>
           <Textarea className="min-h-[240px] font-mono text-xs" readOnly value={fallbackText} />
           <DialogFooter>

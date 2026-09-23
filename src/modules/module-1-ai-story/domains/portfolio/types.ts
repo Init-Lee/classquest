@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 学习档案领域模型。
  * 职责：定义六课时聚合、身份、进度与安全归一化，是模块 1 持久化数据的唯一结构真相。
- * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽、课时 3 初稿冻结 / 外部 AI 过程或归一化规则变化时，需要同步更新本文件。
+ * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽、课时 3/4 初稿冻结 / 外部 AI 过程或归一化规则变化时，需要同步更新本文件。
  */
 
 export const MODULE1_ID = "module-1-ai-story" as const
@@ -9,8 +9,10 @@ export const MODULE1_APP_VERSION = "0.1.0"
 export const MODULE1_CUSTOM_STYLE_ID = "custom"
 export const MODULE1_LESSON2_CONTENT_VERSION = 2
 export const MODULE1_LESSON3_CONTENT_VERSION = 1
+export const MODULE1_LESSON4_CONTENT_VERSION = 1
 export const MODULE1_STORY_YEAR = "2035"
 export type Module1Lesson3PromptId = "p1" | "p2" | "p3" | "p4" | "p5"
+export type Module1Lesson4PromptId = "p1" | "p2" | "p3" | "p4" | "p5"
 
 export type Module1LessonId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -182,6 +184,44 @@ export interface Module1Lesson3State extends Module1BaseLessonState {
   legacyLesson3: Record<string, unknown> | null
 }
 
+/** 课时 4 单条外部提示词过程：沿用课时 3 基础字段，并记录复制时的上下文键，供第 3/4 关判断旧轮次是否仍匹配。 */
+export interface Module1Lesson4AiProcess extends Module1Lesson3AiProcess {
+  contextKey: string
+}
+
+export type Module1Lesson4AiProcessMap = Record<Module1Lesson4PromptId, Module1Lesson4AiProcess>
+
+export type Module1Lesson4CustomPrompts = Record<Module1Lesson4PromptId, string>
+
+export interface Module1Lesson4ReviewNeeded {
+  plan: boolean
+  draft: boolean
+  final: boolean
+}
+
+export interface Module1Lesson4State extends Module1BaseLessonState {
+  contentVersion: number
+  step1Completed: boolean
+  step2Completed: boolean
+  step3Completed: boolean
+  step4Completed: boolean
+  observation: string
+  plotPlan: string
+  planReason: string
+  draftText: string
+  draftFrozenText: string
+  finalText: string
+  previousFinalText: string
+  decisionNote: string
+  revisionInstruction: string
+  preserveText: string
+  selfCheck: boolean
+  customPrompts: Module1Lesson4CustomPrompts
+  aiProcess: Module1Lesson4AiProcessMap
+  reviewNeeded: Module1Lesson4ReviewNeeded
+  legacyLesson4: Record<string, unknown> | null
+}
+
 export interface Module1Portfolio {
   id: string
   moduleId: typeof MODULE1_ID
@@ -193,7 +233,7 @@ export interface Module1Portfolio {
   lesson1: Module1Lesson1State
   lesson2: Module1Lesson2State
   lesson3: Module1Lesson3State
-  lesson4: Module1EmptyLessonState
+  lesson4: Module1Lesson4State
   lesson5: Module1EmptyLessonState
   lesson6: Module1EmptyLessonState
 }
@@ -535,6 +575,97 @@ export function hasMeaningfulModule1Lesson3Fields(state: Module1Lesson3State): b
     && !state.reviewNeeded.final
 }
 
+export const MODULE1_LESSON4_PROMPT_IDS: Module1Lesson4PromptId[] = ["p1", "p2", "p3", "p4", "p5"]
+
+export function createEmptyModule1Lesson4AiProcess(): Module1Lesson4AiProcess {
+  return { ...createEmptyModule1Lesson3AiProcess(), contextKey: "" }
+}
+
+export function createEmptyModule1Lesson4CustomPrompts(): Module1Lesson4CustomPrompts {
+  return { p1: "", p2: "", p3: "", p4: "", p5: "" }
+}
+
+export function createEmptyModule1Lesson4AiProcessMap(): Module1Lesson4AiProcessMap {
+  return {
+    p1: createEmptyModule1Lesson4AiProcess(),
+    p2: createEmptyModule1Lesson4AiProcess(),
+    p3: createEmptyModule1Lesson4AiProcess(),
+    p4: createEmptyModule1Lesson4AiProcess(),
+    p5: createEmptyModule1Lesson4AiProcess(),
+  }
+}
+
+export function createEmptyModule1Lesson4ReviewNeeded(): Module1Lesson4ReviewNeeded {
+  return { plan: false, draft: false, final: false }
+}
+
+export function createEmptyModule1Lesson4State(): Module1Lesson4State {
+  return {
+    step: 1,
+    completed: false,
+    completedAt: null,
+    contentVersion: MODULE1_LESSON4_CONTENT_VERSION,
+    step1Completed: false,
+    step2Completed: false,
+    step3Completed: false,
+    step4Completed: false,
+    observation: "",
+    plotPlan: "",
+    planReason: "",
+    draftText: "",
+    draftFrozenText: "",
+    finalText: "",
+    previousFinalText: "",
+    decisionNote: "",
+    revisionInstruction: "",
+    preserveText: "",
+    selfCheck: false,
+    customPrompts: createEmptyModule1Lesson4CustomPrompts(),
+    aiProcess: createEmptyModule1Lesson4AiProcessMap(),
+    reviewNeeded: createEmptyModule1Lesson4ReviewNeeded(),
+    legacyLesson4: null,
+  }
+}
+
+export function hasModule1Lesson4AiReplyIfUsed(process: Module1Lesson4AiProcess): boolean {
+  return !process.copySucceeded || Boolean(process.aiReply.trim())
+}
+
+export function hasModule1Lesson4RequiredAi(process: Module1Lesson4AiProcess): boolean {
+  return process.copySucceeded && Boolean(process.aiReply.trim())
+}
+
+export function hasModule1Lesson4Observation(state: Module1Lesson4State): boolean {
+  return Boolean(state.observation.trim()) && hasModule1Lesson4AiReplyIfUsed(state.aiProcess.p1)
+}
+
+export function hasModule1Lesson4Plan(state: Module1Lesson4State): boolean {
+  return Boolean(state.plotPlan.trim() && state.planReason.trim())
+    && hasModule1Lesson4AiReplyIfUsed(state.aiProcess.p2)
+}
+
+export function hasModule1Lesson4Draft(state: Module1Lesson4State): boolean {
+  return Boolean(state.draftText.trim())
+    && hasModule1Lesson4RequiredAi(state.aiProcess.p3)
+}
+
+export function hasModule1Lesson4Final(state: Module1Lesson4State): boolean {
+  return Boolean(state.finalText.trim() && state.decisionNote.trim())
+    && state.selfCheck
+    && hasModule1Lesson4RequiredAi(state.aiProcess.p4)
+    && hasModule1Lesson4AiReplyIfUsed(state.aiProcess.p5)
+}
+
+export function hasMeaningfulModule1Lesson4Fields(state: Module1Lesson4State): boolean {
+  return hasModule1Lesson4Observation(state)
+    && !state.reviewNeeded.plan
+    && hasModule1Lesson4Plan(state)
+    && !state.reviewNeeded.draft
+    && hasModule1Lesson4Draft(state)
+    && hasModule1Lesson4Final(state)
+    && !state.reviewNeeded.final
+}
+
 export function hasMeaningfulModule1Lesson1Fields(state: Module1Lesson1State): boolean {
   return [state.sdg, state.sdgWhy, state.cityIssue, state.audience, state.audienceConcern]
     .every(value => value.trim().length > 0)
@@ -680,7 +811,7 @@ export function createNewModule1Portfolio(
     },
     lesson2: createEmptyModule1Lesson2State(),
     lesson3: createEmptyModule1Lesson3State(),
-    lesson4: createEmptyLesson(),
+    lesson4: createEmptyModule1Lesson4State(),
     lesson5: createEmptyLesson(),
     lesson6: createEmptyLesson(),
   }
@@ -1074,6 +1205,116 @@ function normalizeLesson3State(raw: unknown): Module1Lesson3State {
   }
 }
 
+function normalizeLesson4AiProcess(raw: unknown): Module1Lesson4AiProcess {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    ...normalizeLesson3AiProcess(raw),
+    contextKey: stringValue(source.contextKey),
+  }
+}
+
+function normalizeLesson4CustomPrompts(raw: unknown): Module1Lesson4CustomPrompts {
+  return normalizeLesson3CustomPrompts(raw)
+}
+
+function normalizeLesson4AiProcessMap(raw: unknown): Module1Lesson4AiProcessMap {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    p1: normalizeLesson4AiProcess(source.p1),
+    p2: normalizeLesson4AiProcess(source.p2),
+    p3: normalizeLesson4AiProcess(source.p3),
+    p4: normalizeLesson4AiProcess(source.p4),
+    p5: normalizeLesson4AiProcess(source.p5),
+  }
+}
+
+function normalizeLesson4ReviewNeeded(
+  raw: unknown,
+  fallback: Module1Lesson4ReviewNeeded,
+): Module1Lesson4ReviewNeeded {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    plan: booleanValue(source.plan, fallback.plan),
+    draft: booleanValue(source.draft, fallback.draft),
+    final: booleanValue(source.final, fallback.final),
+  }
+}
+
+function cloneLegacyLesson4(raw: Record<string, unknown>): Record<string, unknown> {
+  const archived = { ...raw }
+  delete archived.legacyLesson4
+  return archived
+}
+
+function hasNewLesson4Shape(source: Record<string, unknown>): boolean {
+  return numberValue(source.contentVersion, 0) >= MODULE1_LESSON4_CONTENT_VERSION
+    || typeof source.observation === "string"
+    || typeof source.plotPlan === "string"
+    || typeof source.draftText === "string"
+    || typeof source.finalText === "string"
+    || isRecord(source.aiProcess)
+}
+
+function hasLegacyLesson4Content(source: Record<string, unknown>): boolean {
+  return Boolean(
+    stringValue(source.chengOut)
+    || stringValue(source.chengPrompt)
+    || stringValue(source.sectionText),
+  )
+}
+
+function normalizeLesson4State(raw: unknown): Module1Lesson4State {
+  const source = isRecord(raw) ? raw : {}
+  const empty = createEmptyModule1Lesson4State()
+  const alreadyArchived = isRecord(source.legacyLesson4) ? source.legacyLesson4 : null
+  const isLegacyRecord = Boolean(alreadyArchived)
+    || (!hasNewLesson4Shape(source) && hasLegacyLesson4Content(source))
+  const legacyLesson4 = alreadyArchived
+    ?? (isLegacyRecord && hasLegacyLesson4Content(source) ? cloneLegacyLesson4(source) : null)
+
+  const draft: Module1Lesson4State = {
+    ...empty,
+    observation: stringValue(source.observation),
+    plotPlan: stringValue(source.plotPlan),
+    planReason: stringValue(source.planReason),
+    draftText: stringValue(source.draftText),
+    draftFrozenText: stringValue(source.draftFrozenText),
+    finalText: stringValue(source.finalText),
+    previousFinalText: stringValue(source.previousFinalText),
+    decisionNote: stringValue(source.decisionNote),
+    revisionInstruction: stringValue(source.revisionInstruction),
+    preserveText: stringValue(source.preserveText),
+    selfCheck: booleanValue(source.selfCheck),
+    customPrompts: normalizeLesson4CustomPrompts(source.customPrompts),
+    aiProcess: normalizeLesson4AiProcessMap(source.aiProcess),
+    reviewNeeded: normalizeLesson4ReviewNeeded(source.reviewNeeded, empty.reviewNeeded),
+    legacyLesson4,
+  }
+
+  const observationReady = hasModule1Lesson4Observation(draft)
+  const planReady = hasModule1Lesson4Plan(draft) && !draft.reviewNeeded.plan
+  const draftReady = hasModule1Lesson4Draft(draft) && !draft.reviewNeeded.draft
+  const finalReady = hasModule1Lesson4Final(draft) && !draft.reviewNeeded.final
+  const step1Completed = booleanValue(source.step1Completed) && observationReady
+  const step2Completed = step1Completed && booleanValue(source.step2Completed) && planReady
+  const step3Completed = step2Completed && booleanValue(source.step3Completed) && draftReady
+  const step4Completed = step3Completed && booleanValue(source.step4Completed) && finalReady
+  const completed = step4Completed && booleanValue(source.completed)
+  const safeStep = !step1Completed ? 1 : !step2Completed ? 2 : !step3Completed ? 3 : 4
+
+  return {
+    ...draft,
+    step: safeStep,
+    completed,
+    completedAt: completed ? stringValue(source.completedAt) || null : null,
+    contentVersion: MODULE1_LESSON4_CONTENT_VERSION,
+    step1Completed,
+    step2Completed,
+    step3Completed,
+    step4Completed,
+  }
+}
+
 export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
   const source = isRecord(raw) ? raw : {}
   const student = isRecord(source.student) ? source.student : {}
@@ -1134,7 +1375,7 @@ export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
     },
     lesson2: normalizeLesson2State(source.lesson2),
     lesson3: normalizeLesson3State(source.lesson3),
-    lesson4: normalizeEmptyLesson(source.lesson4),
+    lesson4: normalizeLesson4State(source.lesson4),
     lesson5: normalizeEmptyLesson(source.lesson5),
     lesson6: normalizeEmptyLesson(source.lesson6),
   }

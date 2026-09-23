@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 首页。
  * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及已开放课卡上的本课阶段快照。
- * 更新触发：身份字段、课时开放状态（含课时 3）、教师入口、课卡阶段快照入口或课程状态文案变化时，需要同步更新本文件。
+ * 更新触发：身份字段、课时开放状态（含课时 4）、教师入口、课卡阶段快照入口或课程状态文案变化时，需要同步更新本文件。
  */
 
 import { useState, type FormEvent } from "react"
@@ -241,27 +241,30 @@ export default function Module1HomePage() {
   const pointer = resolveModule1PortfolioPointer(portfolio)
   const lesson2Done = portfolio.lesson2.completed
   const lesson3Done = portfolio.lesson3.completed
+  const lesson4Done = portfolio.lesson4.completed
   const canContinue = canAccessModule1Lesson(portfolio, pointer.lessonId, isTeacherMode)
   const continuePath = canContinue
     ? getModule1LessonResumePath(portfolio, pointer.lessonId)
-    : lesson3Done
-      ? getModule1LessonResumePath(portfolio, 3)
-      : lesson2Done
-        ? getModule1LessonResumePath(portfolio, 2)
-        : getModule1LessonResumePath(portfolio, 1)
+    : lesson4Done
+      ? getModule1LessonResumePath(portfolio, 4)
+      : lesson3Done
+        ? getModule1LessonResumePath(portfolio, 3)
+        : lesson2Done
+          ? getModule1LessonResumePath(portfolio, 2)
+          : getModule1LessonResumePath(portfolio, 1)
   const continueLabel = isTeacherMode
     ? "浏览本课"
     : canContinue
       ? "继续学习"
-      : lesson3Done
-        ? "等待课时 4 开放"
+      : lesson4Done
+        ? "等待课时 5 开放"
         : "等待下一课时开放"
   const statusText = isTeacherMode
     ? "当前是课堂演示档案，不会写入本机学生档案。"
     : canContinue
       ? `继续课时 ${pointer.lessonId} 第 ${pointer.stepId} 关。`
-      : lesson3Done
-        ? "课时 3 已完成；课时 4—6 将在后续阶段开放。"
+      : lesson4Done
+        ? "课时 4 已完成；课时 5—6 将在后续阶段开放。"
         : "请先完成已开放课时，再进入后续内容。"
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8">
@@ -276,7 +279,7 @@ export default function Module1HomePage() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               disabled={!isTeacherMode && !canContinue}
-              onClick={() => navigate(isTeacherMode && !canContinue ? getModule1LessonResumePath(portfolio, 3) : continuePath)}
+              onClick={() => navigate(isTeacherMode && !canContinue ? getModule1LessonResumePath(portfolio, lesson4Done ? 4 : 3) : continuePath)}
             >
               {continueLabel}
               <ArrowRight className="ml-1 h-4 w-4" />

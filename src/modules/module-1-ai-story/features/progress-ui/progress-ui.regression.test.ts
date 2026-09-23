@@ -10,6 +10,7 @@ import { createNewModule1Portfolio } from "@/modules/module-1-ai-story/domains/p
 import { getModule1Lesson1RouteRedirect } from "@/modules/module-1-ai-story/lessons/lesson-1/guards"
 import { getModule1Lesson2RouteRedirect } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
 import { getModule1Lesson3RouteRedirect } from "@/modules/module-1-ai-story/lessons/lesson-3/guards"
+import { getModule1Lesson4RouteRedirect } from "@/modules/module-1-ai-story/lessons/lesson-4/guards"
 import { buildModule1InnerStepItems } from "@/modules/module-1-ai-story/features/progress-ui/inner-step-progress-state"
 
 function createPortfolio() {
@@ -33,6 +34,7 @@ describe("模块 1 顶部课时进度", () => {
     expect(getModule1Lesson1RouteRedirect(null, 4, true)).toBe("/module/1")
     expect(getModule1Lesson2RouteRedirect(null, 1)).toBe("/module/1")
     expect(getModule1Lesson3RouteRedirect(null, 1)).toBe("/module/1")
+    expect(getModule1Lesson4RouteRedirect(null, 1)).toBe("/module/1")
   })
 
   it("有档案时标出当前课时且遵守开放规则", () => {
@@ -59,7 +61,18 @@ describe("模块 1 顶部课时进度", () => {
     expect(items[1]).toMatchObject({ status: "completed", clickable: true })
     expect(items[2]).toMatchObject({ status: "current", clickable: true, target: "/module/1/lesson/3/step/1" })
     expect(items[3]).toMatchObject({ status: "locked", target: null, clickable: false })
-    expect(items[3].subtitle).toContain("未开放")
+  })
+
+  it("完成课时 3 后开放课时 4，课时 5 仍锁定", () => {
+    const portfolio = createPortfolio()
+    portfolio.lesson1.completed = true
+    portfolio.lesson2.completed = true
+    portfolio.lesson3.completed = true
+    const items = buildModule1TopProgressItems(portfolio, 4)
+    expect(items[2]).toMatchObject({ status: "completed", clickable: true })
+    expect(items[3]).toMatchObject({ status: "current", clickable: true, target: "/module/1/lesson/4/step/1" })
+    expect(items[4]).toMatchObject({ status: "locked", target: null, clickable: false })
+    expect(items[4].subtitle).toContain("未开放")
   })
 })
 
