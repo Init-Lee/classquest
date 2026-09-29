@@ -1,0 +1,191 @@
+/**
+ * 文件说明：模块 1 课时 5 字段更新、初稿冻结与复核标记。
+ * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；导出前由保存协调器 flush。
+ * 更新触发：课时 5 复核范围、初稿冻结时机或上下游失效规则变化时，需要同步更新本文件。
+ */
+
+import {
+  type Module1Lesson1State,
+  type Module1Lesson2State,
+  type Module1Lesson3State,
+  type Module1Lesson4State,
+  type Module1Lesson5AiProcess,
+  type Module1Lesson5PromptId,
+  type Module1Lesson5ReviewNeeded,
+  type Module1Lesson5State,
+  type Module1Portfolio,
+  createEmptyModule1Lesson5AiProcess,
+  hasModule1Lesson5AiReplyIfUsed,
+} from "@/modules/module-1-ai-story/domains/portfolio/types"
+
+function hasText(value: string): boolean {
+  return value.trim().length > 0
+}
+
+function lesson1ContextChanged(previous: Module1Lesson1State, next: Module1Lesson1State): boolean {
+  return previous.sdg !== next.sdg
+    || previous.sdgWhy !== next.sdgWhy
+    || previous.cityIssue !== next.cityIssue
+    || previous.audience !== next.audience
+    || previous.audienceConcern !== next.audienceConcern
+}
+
+function lesson2ContextChanged(previous: Module1Lesson2State, next: Module1Lesson2State): boolean {
+  const prevChar = previous.character
+  const nextChar = next.character
+  return previous.writingPlan !== next.writingPlan
+    || previous.reason !== next.reason
+    || prevChar.who !== nextChar.who
+    || prevChar.want !== nextChar.want
+    || prevChar.blocked !== nextChar.blocked
+    || prevChar.firstAction !== nextChar.firstAction
+    || prevChar.possibleChange !== nextChar.possibleChange
+}
+
+function lesson3OpeningChanged(previous: Module1Lesson3State, next: Module1Lesson3State): boolean {
+  return previous.finalText !== next.finalText
+}
+
+function lesson4DevelopmentChanged(previous: Module1Lesson4State, next: Module1Lesson4State): boolean {
+  return previous.finalText !== next.finalText
+}
+
+function hasLesson5DownstreamWork(state: Module1Lesson5State): boolean {
+  return hasText(state.plotPlan)
+    || hasText(state.planReason)
+    || hasText(state.draftText)
+    || hasText(state.finalText)
+}
+
+export function recordModule1Lesson5AiCopy(
+  process: Module1Lesson5AiProcess,
+  generatedPrompt: string,
+  copiedPrompt: string,
+  contextKey = "",
+  copiedAt = new Date().toISOString(),
+): Module1Lesson5AiProcess {
+  return {
+    generatedPromptSnapshot: generatedPrompt,
+    copiedPrompt,
+    aiReply: process.aiReply,
+    promptEdited: generatedPrompt.trim() !== copiedPrompt.trim(),
+    copySucceeded: true,
+    copiedAt,
+    copyCount: process.copyCount + 1,
+    contextKey,
+  }
+}
+
+export function hasModule1Lesson5CurrentRequiredAi(
+  process: Module1Lesson5AiProcess,
+  currentContextKey: string,
+): boolean {
+  return process.copySucceeded
+    && Boolean(process.aiReply.trim())
+    && Boolean(process.contextKey.trim())
+    && process.contextKey === currentContextKey
+}
+
+export function patchModule1Lesson5AiProcess(
+  state: Module1Lesson5State,
+  promptId: Module1Lesson5PromptId,
+  patch: Partial<Module1Lesson5AiProcess>,
+): Module1Lesson5State {
+  return {
+    ...state,
+    aiProcess: {
+      ...state.aiProcess,
+      [promptId]: {
+        ...createEmptyModule1Lesson5AiProcess(),
+        ...state.aiProcess[promptId],
+        ...patch,
+      },
+    },
+  }
+}
+
+export function freezeModule1Lesson5Draft(state: Module1Lesson5State): Module1Lesson5State {
+  if (hasText(state.draftFrozenText) || !hasText(state.draftText)) return state
+  return { ...state, draftFrozenText: state.draftText }
+}
+
+export function finalizeModule1Lesson5State(
+  previous: Module1Lesson5State,
+  draft: Module1Lesson5State,
+): Module1Lesson5State {
+  const reviewNeeded: Module1Lesson5ReviewNeeded = { ...draft.reviewNeeded }
+  const planChanged = previous.plotPlan !== draft.plotPlan || previous.planReason !== draft.planReason
+  if (planChanged && (hasText(previous.plotPlan) || hasText(previous.planReason))) {
+    if (hasText(draft.draftText)) reviewNeeded.draft = true
+    if (hasText(draft.finalText)) reviewNeeded.final = true
+  }
+  if (previous.draftText !== draft.draftText && hasText(previous.draftText) && hasText(draft.finalText)) {
+    reviewNeeded.final = true
+  }
+  return { ...draft, reviewNeeded }
+}
+
+export function applyModule1Lesson5UpstreamReview(
+  previous: Module1Portfolio,
+  next: Module1Portfolio,
+): Module1Portfolio {
+  const lesson5 = next.lesson5
+  if (!hasLesson5DownstreamWork(lesson5)) return next
+  const reviewNeeded = { ...lesson5.reviewNeeded }
+  const upstreamChanged = lesson1ContextChanged(previous.lesson1, next.lesson1)
+    || lesson2ContextChanged(previous.lesson2, next.lesson2)
+    || lesson3OpeningChanged(previous.lesson3, next.lesson3)
+    || lesson4DevelopmentChanged(previous.lesson4, next.lesson4)
+  if (upstreamChanged) {
+    if (hasText(lesson5.plotPlan) || hasText(lesson5.planReason)) reviewNeeded.plan = true
+    if (hasText(lesson5.draftText)) reviewNeeded.draft = true
+    if (hasText(lesson5.finalText)) reviewNeeded.final = true
+  }
+  if (
+    reviewNeeded.plan === lesson5.reviewNeeded.plan
+    && reviewNeeded.draft === lesson5.reviewNeeded.draft
+    && reviewNeeded.final === lesson5.reviewNeeded.final
+  ) {
+    return next
+  }
+  return {
+    ...next,
+    lesson5: { ...lesson5, reviewNeeded },
+  }
+}
+
+export function clearModule1Lesson5Review(
+  state: Module1Lesson5State,
+  keys: Array<keyof Module1Lesson5ReviewNeeded>,
+): Module1Lesson5State {
+  const reviewNeeded = { ...state.reviewNeeded }
+  for (const key of keys) reviewNeeded[key] = false
+  return { ...state, reviewNeeded }
+}
+
+export function matchesModule1Lesson5CopiedContext(
+  process: Module1Lesson5AiProcess,
+  currentContextKey: string,
+): boolean {
+  if (!process.copySucceeded) return false
+  if (!process.contextKey.trim() || !currentContextKey.trim()) return false
+  return process.contextKey === currentContextKey
+}
+
+export function hasModule1Lesson5CurrentDraft(
+  state: Module1Lesson5State,
+  currentContextKey: string,
+): boolean {
+  return Boolean(state.draftText.trim())
+    && hasModule1Lesson5CurrentRequiredAi(state.aiProcess.p3, currentContextKey)
+}
+
+export function hasModule1Lesson5CurrentFinal(
+  state: Module1Lesson5State,
+  currentContextKey: string,
+): boolean {
+  return Boolean(state.finalText.trim() && state.decisionNote.trim())
+    && state.selfCheck
+    && hasModule1Lesson5CurrentRequiredAi(state.aiProcess.p4, currentContextKey)
+    && hasModule1Lesson5AiReplyIfUsed(state.aiProcess.p5)
+}

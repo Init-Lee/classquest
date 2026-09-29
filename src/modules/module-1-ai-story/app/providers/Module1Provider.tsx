@@ -22,6 +22,7 @@ import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-stor
 import { applyModule1Lesson1UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson2-update"
 import { applyModule1Lesson3UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson3-update"
 import { applyModule1Lesson4UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson4-update"
+import { applyModule1Lesson5UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson5-update"
 
 interface Module1ContextValue {
   portfolio: Module1Portfolio | null
@@ -110,11 +111,14 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const updatePortfolio = useCallback((updater: (current: Module1Portfolio) => Module1Portfolio) => {
-    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson4UpstreamReview(
+    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson5UpstreamReview(
       current,
-      applyModule1Lesson3UpstreamReview(
+      applyModule1Lesson4UpstreamReview(
         current,
-        applyModule1Lesson1UpstreamReview(current, updater(current)),
+        applyModule1Lesson3UpstreamReview(
+          current,
+          applyModule1Lesson1UpstreamReview(current, updater(current)),
+        ),
       ),
     )
     if (isTeacherMode) {

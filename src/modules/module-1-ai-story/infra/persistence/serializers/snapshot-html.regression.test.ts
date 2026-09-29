@@ -15,6 +15,8 @@ import {
   buildModule1Lesson3SnapshotHtml,
   buildModule1Lesson4SnapshotFilename,
   buildModule1Lesson4SnapshotHtml,
+  buildModule1Lesson5SnapshotFilename,
+  buildModule1Lesson5SnapshotHtml,
   resolveModule1SnapshotKind,
   resolveModule1SnapshotKindFromLessonId,
   safeModule1SnapshotFilenamePart,
@@ -149,11 +151,13 @@ describe("模块 1 课时 2 阶段快照", () => {
     expect(resolveModule1SnapshotKind("/module/1/lesson/2/step/4")).toBe("lesson2")
     expect(resolveModule1SnapshotKind("/module/1/lesson/3/step/4")).toBe("lesson3")
     expect(resolveModule1SnapshotKind("/module/1/lesson/4/step/4")).toBe("lesson4")
+    expect(resolveModule1SnapshotKind("/module/1/lesson/5/step/4")).toBe("lesson5")
     expect(resolveModule1SnapshotKind("/module/1")).toBeNull()
     expect(resolveModule1SnapshotKindFromLessonId(1)).toBe("lesson1")
     expect(resolveModule1SnapshotKindFromLessonId(2)).toBe("lesson2")
     expect(resolveModule1SnapshotKindFromLessonId(3)).toBe("lesson3")
     expect(resolveModule1SnapshotKindFromLessonId(4)).toBe("lesson4")
+    expect(resolveModule1SnapshotKindFromLessonId(5)).toBe("lesson5")
     expect(buildModule1Lesson2SnapshotFilename("李:四", new Date("2026-09-05T00:00:00.000Z")))
       .toBe("模块1_李-四_课时2风格与人物快照_2026-09-05.html")
   })
@@ -250,5 +254,52 @@ describe("模块 1 课时 4 阶段快照", () => {
     expect(html).toContain("已连着开头读过")
     expect(buildModule1Lesson4SnapshotFilename("李:四", new Date("2026-09-05T00:00:00.000Z")))
       .toBe("模块1_李-四_课时4写出事情的发展快照_2026-09-05.html")
+  })
+})
+
+describe("模块 1 课时 5 阶段快照", () => {
+  it("转义转段正文和 AI 过程，并清洗文件名", () => {
+    const portfolio = createSnapshotPortfolio()
+    portfolio.lesson3 = {
+      ...portfolio.lesson3,
+      storyTitle: "关灯这件事",
+      finalText: "确认开头",
+    }
+    portfolio.lesson4 = {
+      ...portfolio.lesson4,
+      finalText: "确认承段",
+    }
+    portfolio.lesson5 = {
+      ...portfolio.lesson5,
+      completed: true,
+      observation: "观察<script>",
+      plotPlan: "安排<img src=x>",
+      planReason: "理由&说明",
+      draftText: "初稿\"一",
+      finalText: "确认稿</div>",
+      decisionNote: "我保留了台阶边沿",
+      selfCheck: true,
+      aiProcess: {
+        ...portfolio.lesson5.aiProcess,
+        p3: {
+          ...portfolio.lesson5.aiProcess.p3,
+          copySucceeded: true,
+          promptEdited: true,
+          copyCount: 1,
+          copiedAt: "2026-09-29T00:00:00.000Z",
+          copiedPrompt: "请写转段<script>",
+          aiReply: "一版转段</div>",
+        },
+      },
+    }
+    const html = buildModule1Lesson5SnapshotHtml(portfolio)
+    expect(html).not.toContain("<script>")
+    expect(html).toContain("&lt;script&gt;")
+    expect(html).toContain("课时 4 承段")
+    expect(html).toContain("课时 5 写出故事的关键变化")
+    expect(html).toContain("使用了外部 AI 辅助")
+    expect(html).toContain("已连着起、承读过")
+    expect(buildModule1Lesson5SnapshotFilename("李:四", new Date("2026-09-05T00:00:00.000Z")))
+      .toBe("模块1_李-四_课时5写出故事的关键变化快照_2026-09-05.html")
   })
 })

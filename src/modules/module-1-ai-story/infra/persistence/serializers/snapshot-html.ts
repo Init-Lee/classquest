@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时阶段快照 HTML 生成器。
  * 职责：按指定课时号把身份与已完成字段渲染为不可导入的 HTML；首页课卡、完成弹窗和教师顶栏共用同一套导出，下载前转义全部可控字段。
- * 更新触发：快照字段、课时 1/2/3/4 外部 AI 过程、文件名规则、转义策略、课时号映射、URL 映射或新增课时快照类型时，需要同步更新本文件。
+ * 更新触发：快照字段、课时 1/2/3/4/5 外部 AI 过程、文件名规则、转义策略、课时号映射、URL 映射或新增课时快照类型时，需要同步更新本文件。
  */
 
 import { formatModule1SdgTheme } from "@/modules/module-1-ai-story/constants/sdgs"
@@ -9,6 +9,7 @@ import {
   countModule1MeaningfulChars,
   MODULE1_LESSON3_PROMPT_IDS,
   MODULE1_LESSON4_PROMPT_IDS,
+  MODULE1_LESSON5_PROMPT_IDS,
   MODULE1_STORY_YEAR,
   type Module1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
@@ -17,7 +18,7 @@ function snapshotValue(value: string): string {
   return escapeHtml(value.trim() || "未填写")
 }
 
-export type Module1SnapshotKind = "lesson1" | "lesson2" | "lesson3" | "lesson4"
+export type Module1SnapshotKind = "lesson1" | "lesson2" | "lesson3" | "lesson4" | "lesson5"
 
 function escapeHtml(value: string): string {
   return value
@@ -33,6 +34,7 @@ export function safeModule1SnapshotFilenamePart(value: string): string {
 }
 
 export function resolveModule1SnapshotKind(pathname: string): Module1SnapshotKind | null {
+  if (/\/module\/1\/lesson\/5/.test(pathname)) return "lesson5"
   if (/\/module\/1\/lesson\/4/.test(pathname)) return "lesson4"
   if (/\/module\/1\/lesson\/3/.test(pathname)) return "lesson3"
   if (/\/module\/1\/lesson\/2/.test(pathname)) return "lesson2"
@@ -45,6 +47,7 @@ export function resolveModule1SnapshotKindFromLessonId(lessonId: number): Module
   if (lessonId === 2) return "lesson2"
   if (lessonId === 3) return "lesson3"
   if (lessonId === 4) return "lesson4"
+  if (lessonId === 5) return "lesson5"
   return null
 }
 
@@ -79,6 +82,13 @@ export function buildModule1Lesson4SnapshotFilename(
   now = new Date(),
 ): string {
   return `模块1_${safeModule1SnapshotFilenamePart(studentName)}_课时4写出事情的发展快照_${now.toISOString().slice(0, 10)}.html`
+}
+
+export function buildModule1Lesson5SnapshotFilename(
+  studentName: string,
+  now = new Date(),
+): string {
+  return `模块1_${safeModule1SnapshotFilenamePart(studentName)}_课时5写出故事的关键变化快照_${now.toISOString().slice(0, 10)}.html`
 }
 
 const SNAPSHOT_STYLES = `
@@ -237,6 +247,14 @@ const LESSON4_PROMPT_LABELS: Record<(typeof MODULE1_LESSON4_PROMPT_IDS)[number],
   p1: "P1 观察推进",
   p2: "P2 安排下一步",
   p3: "P3 起草承段",
+  p4: "P4 检查意见",
+  p5: "P5 局部修改",
+}
+
+const LESSON5_PROMPT_LABELS: Record<(typeof MODULE1_LESSON5_PROMPT_IDS)[number], string> = {
+  p1: "P1 看懂变化",
+  p2: "P2 确定关键变化",
+  p3: "P3 起草转段",
   p4: "P4 检查意见",
   p5: "P5 局部修改",
 }
@@ -400,6 +418,81 @@ export function downloadModule1Lesson3Snapshot(portfolio: Module1Portfolio): voi
   )
 }
 
+export function buildModule1Lesson5SnapshotHtml(portfolio: Module1Portfolio, now = new Date()): string {
+  const lesson1 = portfolio.lesson1
+  const lesson2 = portfolio.lesson2
+  const lesson3 = portfolio.lesson3
+  const lesson4 = portfolio.lesson4
+  const lesson5 = portfolio.lesson5
+  const usedProcesses = MODULE1_LESSON5_PROMPT_IDS.filter(id => lesson5.aiProcess[id].copySucceeded)
+  const processSections = usedProcesses.length === 0
+    ? "<p class=\"item\">本课未使用外部 AI 辅助。</p>"
+    : usedProcesses.map(id => {
+      const process = lesson5.aiProcess[id]
+      return `<div class="item">
+        <p><span class="label">${escapeHtml(LESSON5_PROMPT_LABELS[id])}</span></p>
+        <p class="item"><span class="label">是否编辑过提示词</span><span class="value">${process.promptEdited ? "是" : "否"}</span></p>
+        <p class="item"><span class="label">复制次数</span><span class="value">${escapeHtml(String(process.copyCount))}</span></p>
+        <p class="item"><span class="label">最近复制时间</span><span class="value">${snapshotValue(process.copiedAt ?? "")}</span></p>
+        <p class="item"><span class="label">系统生成的原始提示词</span><span class="value">${snapshotValue(process.generatedPromptSnapshot)}</span></p>
+        <p class="item"><span class="label">实际复制的提示词</span><span class="value">${snapshotValue(process.copiedPrompt)}</span></p>
+        <p class="item"><span class="label">贴回的 AI 回复</span><span class="value">${snapshotValue(process.aiReply)}</span></p>
+      </div>`
+    }).join("")
+
+  return wrapSnapshotHtml(
+    "模块一课时5写出故事的关键变化快照",
+    "课时 5：写出故事的关键变化 · 阶段快照",
+    `${identitySection(portfolio, now)}
+    <section>
+      <h2>课时 1 主题设定</h2>
+      <p class="item"><span class="label">故事年份</span><span class="value">${escapeHtml(MODULE1_STORY_YEAR)}</span></p>
+      <p class="item"><span class="label">SDG主题</span><span class="value">${snapshotValue(formatModule1SdgTheme(lesson1.sdg, ""))}</span></p>
+      <p class="item"><span class="label">选择该主题的理由</span><span class="value">${snapshotValue(lesson1.sdgWhy)}</span></p>
+      <p class="item"><span class="label">城市问题</span><span class="value">${snapshotValue(lesson1.cityIssue)}</span></p>
+      <p class="item"><span class="label">写给谁及关切</span><span class="value">${snapshotValue(`${lesson1.audience} / ${lesson1.audienceConcern}`)}</span></p>
+      <h2>课时 2 风格与人物</h2>
+      <p class="item"><span class="label">课时 2 写法</span><span class="value">${snapshotValue(lesson2.writingPlan)}</span></p>
+      <p class="item"><span class="label">选择理由</span><span class="value">${snapshotValue(lesson2.reason)}</span></p>
+      <p class="item"><span class="label">我是谁</span><span class="value">${snapshotValue(lesson2.character.who)}</span></p>
+      <p class="item"><span class="label">我想要</span><span class="value">${snapshotValue(lesson2.character.want)}</span></p>
+      <p class="item"><span class="label">我卡在</span><span class="value">${snapshotValue(lesson2.character.blocked)}</span></p>
+      <p class="item"><span class="label">准备先尝试的行动</span><span class="value">${snapshotValue(lesson2.character.firstAction)}</span></p>
+      <p class="item"><span class="label">可能发生的变化</span><span class="value">${snapshotValue(lesson2.character.possibleChange)}</span></p>
+      <h2>课时 3 开头</h2>
+      <p class="item"><span class="label">小说题目</span><span class="value">${snapshotValue(lesson3.storyTitle)}</span></p>
+      <p class="item"><span class="label">确认开头</span><span class="value">${snapshotValue(lesson3.finalText)}</span></p>
+      <h2>课时 4 承段</h2>
+      <p class="item"><span class="label">确认承段</span><span class="value">${snapshotValue(lesson4.finalText)}</span></p>
+    </section>
+    <section>
+      <h2>课时 5 写出故事的关键变化</h2>
+      <p class="item"><span class="label">观察</span><span class="value">${snapshotValue(lesson5.observation)}</span></p>
+      <p class="item"><span class="label">转折安排</span><span class="value">${snapshotValue(lesson5.plotPlan)}</span></p>
+      <p class="item"><span class="label">安排理由</span><span class="value">${snapshotValue(lesson5.planReason)}</span></p>
+      <p class="item"><span class="label">转段初稿</span><span class="value">${snapshotValue(lesson5.draftText)}</span></p>
+      <p class="item"><span class="label">初稿字数</span><span class="value">${countModule1MeaningfulChars(lesson5.draftText)}</span></p>
+      <p class="item"><span class="label">确认稿</span><span class="value">${snapshotValue(lesson5.finalText)}</span></p>
+      <p class="item"><span class="label">确认稿字数</span><span class="value">${countModule1MeaningfulChars(lesson5.finalText)}</span></p>
+      <p class="item"><span class="label">处理说明</span><span class="value">${snapshotValue(lesson5.decisionNote)}</span></p>
+      <p class="item"><span class="label">已连着起、承读过</span><span class="value">${lesson5.selfCheck ? "是" : "否"}</span></p>
+    </section>
+    <section>
+      <h2>外部 AI 过程</h2>
+      ${usedProcesses.length > 0 ? '<p class="item"><span class="label">使用情况</span><span class="value">使用了外部 AI 辅助</span></p>' : ""}
+      ${processSections}
+      <p class="note">阶段快照不能恢复进度。需要继续学习时，请选择继续学习包。</p>
+    </section>`,
+  )
+}
+
+export function downloadModule1Lesson5Snapshot(portfolio: Module1Portfolio): void {
+  triggerHtmlDownload(
+    buildModule1Lesson5SnapshotHtml(portfolio),
+    buildModule1Lesson5SnapshotFilename(portfolio.student.studentName),
+  )
+}
+
 export function downloadModule1Lesson4Snapshot(portfolio: Module1Portfolio): void {
   triggerHtmlDownload(
     buildModule1Lesson4SnapshotHtml(portfolio),
@@ -408,6 +501,7 @@ export function downloadModule1Lesson4Snapshot(portfolio: Module1Portfolio): voi
 }
 
 export function isModule1SnapshotReady(portfolio: Module1Portfolio, kind: Module1SnapshotKind): boolean {
+  if (kind === "lesson5") return portfolio.lesson5.completed
   if (kind === "lesson4") return portfolio.lesson4.completed
   if (kind === "lesson3") return portfolio.lesson3.completed
   if (kind === "lesson2") return portfolio.lesson2.completed
@@ -415,6 +509,10 @@ export function isModule1SnapshotReady(portfolio: Module1Portfolio, kind: Module
 }
 
 export function downloadModule1Snapshot(portfolio: Module1Portfolio, kind: Module1SnapshotKind): void {
+  if (kind === "lesson5") {
+    downloadModule1Lesson5Snapshot(portfolio)
+    return
+  }
   if (kind === "lesson4") {
     downloadModule1Lesson4Snapshot(portfolio)
     return

@@ -22,6 +22,7 @@ import {
   buildModule1Lesson2SnapshotHtml,
   buildModule1Lesson3SnapshotHtml,
   buildModule1Lesson4SnapshotHtml,
+  buildModule1Lesson5SnapshotHtml,
   isModule1SnapshotReady,
   resolveModule1SnapshotKindFromLessonId,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/snapshot-html"
@@ -185,6 +186,17 @@ describe("模块 1 阶段快照入口", () => {
       visible: true,
       enabled: true,
       kind: "lesson4",
+    })
+    expect(getModule1LessonCardSnapshotButton(5, {
+      available: true,
+      accessible: true,
+      completed: demo.lesson5.completed,
+    })).toMatchObject({ visible: true, enabled: true, kind: "lesson5" })
+    expect(buildModule1Lesson5SnapshotHtml(demo)).toContain("写出故事的关键变化")
+    expect(getModule1TeacherTopBarSnapshotState("/module/1/lesson/5/step/4", demo)).toMatchObject({
+      visible: true,
+      enabled: true,
+      kind: "lesson5",
     })
     expect(getModule1TeacherTopBarSnapshotState("/module/1", demo).visible).toBe(false)
     expect(getModule1TeacherTopBarSnapshotState("/module/1/lesson/1/step/1", null).visible).toBe(false)

@@ -52,6 +52,12 @@ export function getModule1SnapshotDisabledReason(
 ): string {
   if (!hasPortfolio) return "需要先有学习档案，完成当前课时后才能下载阶段快照。"
   if (!snapshotReady) {
+    if (kind === "lesson5") {
+      return "完成课时 5 后即可下载阶段快照。阶段快照不能恢复进度，请用「保存进度」下载学习包。"
+    }
+    if (kind === "lesson4") {
+      return "完成课时 4 后即可下载阶段快照。阶段快照不能恢复进度，请用「保存进度」下载学习包。"
+    }
     if (kind === "lesson3") {
       return "完成课时 3 后即可下载阶段快照。阶段快照不能恢复进度，请用「保存进度」下载学习包。"
     }

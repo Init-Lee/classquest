@@ -63,7 +63,7 @@ describe("模块 1 顶部课时进度", () => {
     expect(items[3]).toMatchObject({ status: "locked", target: null, clickable: false })
   })
 
-  it("完成课时 3 后开放课时 4，课时 5 仍锁定", () => {
+  it("完成课时 3 后开放课时 4，未完成课时 4 时课时 5 仍锁定", () => {
     const portfolio = createPortfolio()
     portfolio.lesson1.completed = true
     portfolio.lesson2.completed = true
@@ -72,7 +72,19 @@ describe("模块 1 顶部课时进度", () => {
     expect(items[2]).toMatchObject({ status: "completed", clickable: true })
     expect(items[3]).toMatchObject({ status: "current", clickable: true, target: "/module/1/lesson/4/step/1" })
     expect(items[4]).toMatchObject({ status: "locked", target: null, clickable: false })
-    expect(items[4].subtitle).toContain("未开放")
+  })
+
+  it("完成课时 4 后开放课时 5，课时 6 仍锁定", () => {
+    const portfolio = createPortfolio()
+    portfolio.lesson1.completed = true
+    portfolio.lesson2.completed = true
+    portfolio.lesson3.completed = true
+    portfolio.lesson4.completed = true
+    const items = buildModule1TopProgressItems(portfolio, 5)
+    expect(items[3]).toMatchObject({ status: "completed", clickable: true })
+    expect(items[4]).toMatchObject({ status: "current", clickable: true, target: "/module/1/lesson/5/step/1" })
+    expect(items[5]).toMatchObject({ status: "locked", target: null, clickable: false })
+    expect(items[5].subtitle).toContain("未开放")
   })
 })
 

@@ -13,6 +13,7 @@ import { getCurrentModule1Lesson1Step } from "@/modules/module-1-ai-story/lesson
 import { getCurrentModule1Lesson2Step } from "@/modules/module-1-ai-story/lessons/lesson-2/guards"
 import { getCurrentModule1Lesson3Step } from "@/modules/module-1-ai-story/lessons/lesson-3/guards"
 import { getCurrentModule1Lesson4Step } from "@/modules/module-1-ai-story/lessons/lesson-4/guards"
+import { getCurrentModule1Lesson5Step } from "@/modules/module-1-ai-story/lessons/lesson-5/guards"
 
 export interface Module1LessonEntry {
   id: Module1LessonId
@@ -28,7 +29,7 @@ export const MODULE1_LESSON_REGISTRY: Module1LessonEntry[] = [
   { id: 2, title: "风格与人物", subtitle: "从文学片段确定写法并完成人物设定", path: "/module/1/lesson/2/step/1", available: true, isComplete: p => Boolean(p?.lesson2.completed) },
   { id: 3, title: "起：写一个吸引人的开头", subtitle: "选定开场，写出初稿并确认开头", path: "/module/1/lesson/3/step/1", available: true, isComplete: p => Boolean(p?.lesson3.completed) },
   { id: 4, title: "承：写出事情的发展", subtitle: "主角做了一件事，事情因此有了新的发展", path: "/module/1/lesson/4/step/1", available: true, isComplete: p => Boolean(p?.lesson4.completed) },
-  { id: 5, title: "转：冲突与反转", subtitle: "后续阶段开放", path: "/module/1/lesson/5/step/1", available: false, isComplete: p => Boolean(p?.lesson5.completed) },
+  { id: 5, title: "转：写出故事的关键变化", subtitle: "接着已经发生的事情，写清变化的来由和影响", path: "/module/1/lesson/5/step/1", available: true, isComplete: p => Boolean(p?.lesson5.completed) },
   { id: 6, title: "合：落点回响", subtitle: "后续阶段开放", path: "/module/1/lesson/6/step/1", available: false, isComplete: p => Boolean(p?.lesson6.completed) },
 ]
 
@@ -77,6 +78,9 @@ export function getModule1LessonResumePath(
   }
   if (lessonId === 4) {
     return `/module/1/lesson/4/step/${portfolio.lesson4.completed ? 4 : getCurrentModule1Lesson4Step(portfolio.lesson4)}`
+  }
+  if (lessonId === 5) {
+    return `/module/1/lesson/5/step/${portfolio.lesson5.completed ? 4 : getCurrentModule1Lesson5Step(portfolio.lesson5)}`
   }
   return entry.path
 }

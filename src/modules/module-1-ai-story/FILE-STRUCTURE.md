@@ -30,6 +30,7 @@ module-1-ai-story/
 │   ├── lesson2-copy.ts
 │   ├── lesson3-copy.ts
 │   ├── lesson4-copy.ts
+│   ├── lesson5-copy.ts
 │   ├── story-options.ts
 │   ├── story-options.regression.test.ts
 │   ├── teacher-passphrase.ts
@@ -40,7 +41,9 @@ module-1-ai-story/
 │   ├── lesson3-update.ts
 │   ├── lesson3-update.regression.test.ts
 │   ├── lesson4-update.ts
-│   └── lesson4-update.regression.test.ts
+│   ├── lesson4-update.regression.test.ts
+│   ├── lesson5-update.ts
+│   └── lesson5-update.regression.test.ts
 ├── features/
 │   ├── global-actions/
 │   │   ├── Module1GlobalActions.tsx
@@ -108,6 +111,19 @@ module-1-ai-story/
 │       ├── build-lesson4-prompts.regression.test.ts
 │       ├── build-lesson4-writing-summary.ts
 │       └── build-lesson4-writing-summary.regression.test.ts
+├── lessons/lesson-5/
+│   ├── components/
+│   │   ├── Lesson5WritingDrawer.tsx
+│   │   └── Lesson5WritingSummary.tsx
+│   ├── config.ts
+│   ├── guards.ts
+│   ├── routes.tsx
+│   ├── steps/
+│   └── utils/
+│       ├── build-lesson5-prompts.ts
+│       ├── build-lesson5-prompts.regression.test.ts
+│       ├── build-lesson5-writing-summary.ts
+│       └── build-lesson5-writing-summary.regression.test.ts
 ├── lessons/lesson-2/
 │   ├── components/
 │   │   ├── Lesson2LegacyNotice.tsx
@@ -140,22 +156,23 @@ module-1-ai-story/
 
 - `Module1Provider` 是页面唯一状态入口；保存协调器负责乐观更新、串行写入、flush 与代次失效，只有 repository 可直接访问 IndexedDB。
 - 教师讲解模式使用独立内存 coordinator：`effectivePortfolio` 为演示档案，update/flush/import/clear 不写真实仓库；导入与重置对真实档案 no-op。不使用 URL flag，也不把讲解状态写入 localStorage。
-- `constants/demo-portfolio.ts` 提供课堂演示档案，预填课时 1 至课时 4；`constants/teacher-passphrase.ts` 只做授课入口校验。
-- `Module1TopProgress` 负责六课时模块级导航；无档案时课时 1 只回模块首页，状态计算留在纯函数文件中。课时 1 完成后课时 2 可点，课时 2 完成后课时 3 可点，课时 3 完成后课时 4 可点，课时 5—6 仍锁定。
+- `constants/demo-portfolio.ts` 提供课堂演示档案，预填课时 1 至课时 5；`constants/teacher-passphrase.ts` 只做授课入口校验。
+- `Module1TopProgress` 负责六课时模块级导航；无档案时课时 1 只回模块首页，状态计算留在纯函数文件中。课时 1 完成后课时 2 可点，课时 2 完成后课时 3 可点，课时 3 完成后课时 4 可点，课时 4 完成后课时 5 可点，课时 6 仍锁定。
 - `features/progress-ui` 是模块 1 内部可复用的课时 Step 进度能力；各课时传入 Guard 派生的完成、可访问与锁定集合，不得跨模块引用。
 - `features/lesson2-support` 提供课堂虚构示例弹层与外部 AI 提示词复制控件；只生成并复制提示词，不得暗示站内调用模型。
 - `features/lesson3-support` 提供课时 3 可编辑提示词复制控件；复制成功后记录基础过程，不暗示站内调用模型。
-- `features/writing-drawer` 提供课时 2/3/4 共用的右侧写作设定抽屉壳：默认收起、右侧标签、Esc 关闭、有内容小圆点、约 380px，开合不落盘。课时各自只挂汇总内容，不复制整套交互。`Module1WritingSummaryGroup` 与 `module1-writing-summary-groups.ts` 提供课时 2/3/4 共用的课组标题与交替浅底，只改展示，不参与存档或完成判定。
-- `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏视觉与文案；学生模式为保存进度 / 导入进度 / 重置，顶栏不再提供阶段快照。教师模式仅在课时 1/2/3/4 页保留当前课快照，供投影使用。首页已开放课卡提供「下载本课阶段快照（交作业用）」；该课 `completed` 才可点，未完成已解锁则禁用并旁注「完成本课后可下载」，待开发/未解锁不出现按钮。身份卡不再提供「只下最新已完成课」的快照。课时 1/2/3/4 完成弹窗再提供一次本课快照。可用性规则放在纯函数中，导出统一走 `downloadModule1SnapshotByLessonId`。
-- `infra/persistence/serializers/snapshot-html.ts` 按课时号生成不可导入的课时 1 主题设定、课时 2 风格与人物、课时 3 开头或课时 4 写出事情的发展 HTML；课时 3/4 快照转义展示各自外部 AI 过程。首页课卡、完成弹窗和教师顶栏共用 `downloadModule1SnapshotByLessonId`。导入器必须拒绝 HTML/非继续学习包。
+- `features/writing-drawer` 提供课时 2/3/4/5 共用的右侧写作设定抽屉壳：默认收起、右侧标签、Esc 关闭、有内容小圆点、约 380px，开合不落盘。课时各自只挂汇总内容，不复制整套交互。`Module1WritingSummaryGroup` 与 `module1-writing-summary-groups.ts` 提供课时 2/3/4/5 共用的课组标题与交替浅底，只改展示，不参与存档或完成判定。
+- `features/global-actions` 在模块 1 内复刻模块 3/4 顶栏视觉与文案；学生模式为保存进度 / 导入进度 / 重置，顶栏不再提供阶段快照。教师模式仅在课时 1/2/3/4/5 页保留当前课快照，供投影使用。首页已开放课卡提供「下载本课阶段快照（交作业用）」；该课 `completed` 才可点，未完成已解锁则禁用并旁注「完成本课后可下载」，待开发/未解锁不出现按钮。身份卡不再提供「只下最新已完成课」的快照。课时 1/2/3/4/5 完成弹窗再提供一次本课快照。可用性规则放在纯函数中，导出统一走 `downloadModule1SnapshotByLessonId`。
+- `infra/persistence/serializers/snapshot-html.ts` 按课时号生成不可导入的课时 1 主题设定、课时 2 风格与人物、课时 3 开头、课时 4 写出事情的发展或课时 5 写出故事的关键变化 HTML；课时 3/4/5 快照转义展示各自外部 AI 过程。首页课卡、完成弹窗和教师顶栏共用 `downloadModule1SnapshotByLessonId`。导入器必须拒绝 HTML/非继续学习包。
 - 课时 1 的 `utils/build-lesson1-theme-outline.ts` 是五字段到结构化大纲、主题核心和 Step 4 复制 payload 的唯一派生入口；主复制文本是 `themeCore` 完整句子。组件只负责展示和复制反馈，大纲不进入档案。
 - 课时 2 的 `utils/build-lesson2-writing-summary.ts` 是已确认写作设定汇总的唯一派生入口；`utils/build-lesson2-prompts.ts` 拼装 P1—P4 外部提示词。汇总与提示词都不进入档案。
 - 课时 2 第 2 关路由仍是 `/module/1/lesson/2/step/2`，关内用 `?round=1|2` 分成两步：第一步选参照（课堂案例或自己的作品，选定后桌面左 1/3 为课堂选用或第一轮找参照、右 2/3 为填写框，课堂选用与第一轮找候选都留在第一步），第二步只做拆解写法与第二轮提示词。左右箭头贴主内容区两侧，只在本关两步间翻页；第一步左箭头禁用、右箭头进入第二轮，第二步不渲染右箭头，改用右下角「下一关」并按整关必填校验后进入课时 2 第 3 关。`utils/step2-round.ts` 负责子页解析、第一步门禁与整关缺项提示。未选定参照时直连 `?round=2` 拦回。`round1PromptCopied` / `round2PromptCopied` 与第 1 关 `study.aiAssistUsed` 分开，旧包缺字段视为 false。课堂案例与自选作品分槽存放（`classroomDraft` / `foundDraft`），切换来源只改 `origin`、不互相覆盖；完成判定、第二步摘要、阶段快照和写作设定抽屉只读当前 origin 槽。
 - 第 2 关右侧写作设定改为 `Lesson2WritingDrawer`（共用 `features/writing-drawer/Module1WritingDrawer`）：默认收起，点右侧标签滑出只读汇总，开合不落盘。第 3/4 关桌面左主区 2/3、右栏固定写作设定 1/3（不是抽屉），窄屏上下堆叠。
-- 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。课时 3 使用 `Module1Lesson3State`：初稿与确认稿分存，`draftFrozenText` 冻结首次确认初稿；`aiProcess` 记录各条提示词的基础过程，不复用课时 2 的 `reasonAiAssistUsed` 等字段。旧包缺课时 3 新字段时补空，不丢课时 1/2。课时 4 使用 `Module1Lesson4State`：自有 `aiProcess` 与 `contextKey`，初稿/确认稿分存，`draftFrozenText` 冻结首次确认初稿；旧包缺字段补空，不丢课时 1—3，不产生 `lesson7` / `fullStory`。
-- 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3；课时 3 完成后指针指向课时 4；课时 4 完成后指针指向课时 5。课时 5 已确认口径：四关、第 7 问按课时 4 的 B（不加「我已手动复制」）、不配图、字数不锁关、不实现结构自检 / CONFLICTS / TWISTS；本分支将开放课时 5 路由，课时 6 仍锁定；`phase4-lesson56` 保持 pending。
+- 聚合根固定显式包含 `lesson1` 至 `lesson6`，不持久化完整小说副本。课时 2 使用 `Module1Lesson2State`：新字段承载文学参照与人物五项，旧风格卡字段保留兼容；旧学习包归档到 `legacyLesson2`，缺新字段时安全空态，不丢课时 1 数据。课时 3 使用 `Module1Lesson3State`：初稿与确认稿分存，`draftFrozenText` 冻结首次确认初稿；`aiProcess` 记录各条提示词的基础过程，不复用课时 2 的 `reasonAiAssistUsed` 等字段。旧包缺课时 3 新字段时补空，不丢课时 1/2。课时 4 使用 `Module1Lesson4State`：自有 `aiProcess` 与 `contextKey`，初稿/确认稿分存，`draftFrozenText` 冻结首次确认初稿；旧包缺字段补空，不丢课时 1—3，不产生 `lesson7` / `fullStory`。课时 5 使用 `Module1Lesson5State`：形状对齐课时 4，自有 `aiProcess` 与 `contextKey`；旧包缺字段补空，不丢课时 1—4，不落盘 `conflictType`/`twistType`/`fullStory`/`lesson7`。
+- 学习包先校验、归一化和修复指针，再经确认原子替换。课时 1 完成后指针停在课时 2 对应关；课时 2 完成后指针指向课时 3；课时 3 完成后指针指向课时 4；课时 4 完成后指针指向课时 5；课时 5 完成后指针指向课时 6。课时 5 已开放：四关、第 7 问按课时 4 的 B（不加「我已手动复制」）、不配图、字数不锁关、不实现结构自检 / CONFLICTS / TWISTS；课时 6 仍锁定；`phase4-lesson56` 保持 pending。
 - 课时 3 的 `utils/build-lesson3-prompts.ts` 拼装 P1—P5；`utils/build-lesson3-writing-summary.ts` 派生抽屉摘要，必须列出 SDG 主题（编号+名称）。四关经 `Lesson3StepSplit` 统一栅格：第 1/2 关 `aiPlacement: 'end'`，桌面左主任务 2/3、右可选外部 AI 1/3，窄屏 AI 在下；第 3/4 关必用外部 AI、`aiPlacement: 'start'`，桌面左 1/3、主任务右 2/3，窄屏 AI 在上。右侧写作设定仍用与课时 2 相同的 `Module1WritingDrawer` 抽屉（`Lesson3WritingDrawer` 薄封装），默认收起，开合不落盘，不是固定右栏。提示词可编辑后复制；第 1/2 关无 AI 可通关，第 3/4 关必须复制成功并贴回回复（`aiProcess.p3` / `p4`，`p5` 仍为选用后必贴）。题目必填；字数 200—300 只作引导。内容包未提供案例 png，页内只展示文字案例，不挂空图槽、不建 `public/module-1/lesson-3/`。
 - 课时 4 的 `utils/build-lesson4-prompts.ts` 拼装 P1—P5；`openingText` 只用课时 3 确认稿。四关复用 `Lesson3StepSplit`：第 1/2 关可选外部 AI（右 1/3），第 3/4 关必用（左 1/3）。只认自动复制成功，**不加「我已手动复制」**。字数 200—300 只引导不锁关；本课不改题，只读课时 3 `storyTitle`；不实现结构自检 / 证据锚点；不配图、不建 `public/module-1/lesson-4/`。第 3/4 关 `contextKey` 不含当前正文，改稿不强制重检；前文或情节安排变了才需重复制。右侧写作设定用 `Lesson4WritingDrawer`，含 SDG 与三课分组底色。
+- 课时 5 的 `utils/build-lesson5-prompts.ts` 拼装 P1—P5；`openingText` 用课时 3 确认稿，`developmentText` 用课时 4 确认稿。四关复用 `Lesson3StepSplit`：第 1/2 关可选（右 1/3），第 3/4 关必用（左 1/3）。只认自动复制成功，**不加「我已手动复制」**。字数 200—300 只引导不锁关；本课不改题，只读课时 3 `storyTitle`；不实现结构自检 / CONFLICTS / TWISTS；不配图、不建 `public/module-1/lesson-5/`。右侧写作设定用 `Lesson5WritingDrawer`，含 SDG 与课时 1—5 分组底色。
 - 新增课时应自带 `config.ts`、`guards.ts`、`routes.tsx` 和 `steps/`，并同步注册表与本文。
 - `/module/1/story` 属于模块结果视图，不进入课时注册表。
 - 课时 1 第 2 关左侧填写区提供「查看 SDG 介绍资料」入口，用新窗口打开仓库根 `public/module-1/sdg-intro.html`（站点路径 `/module-1/sdg-intro.html`）；该页是自有支架资料，不 iframe 嵌进课时。
