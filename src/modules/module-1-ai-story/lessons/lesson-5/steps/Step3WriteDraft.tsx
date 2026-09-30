@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 5 第三关用 AI 起草转段。
  * 职责：只读课时 3 题目与前序确认稿，学生保存转段初稿；本关必须复制 P3 并贴回回复；完成后初稿硬锁只读，顶栏仍可回看。
- * 更新触发：第 3 关必用外部 AI、初稿硬锁、题目只读或字数引导规则变化时，需要同步更新本文件。
+ * 更新触发：第 3 关必用外部 AI、初稿硬锁、锁定灰态、题目只读或字数引导规则变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -135,10 +135,16 @@ export default function Step3WriteDraft() {
                 confirmEnabled={valid}
                 onConfirm={() => updateLesson5(current => clearModule1Lesson5Review(current, ["draft"]))}
               />
+              {draftLocked && (
+                <p className="text-sm text-muted-foreground">{MODULE1_LESSON5_SHARED_COPY.draftLockedHint}</p>
+              )}
               <label className="space-y-1.5 text-sm font-medium">
                 <span>{page.fields[0].label}</span>
                 <Textarea
-                  className="min-h-[220px] border-2"
+                  className={cn(
+                    "min-h-[220px] border-2",
+                    draftLocked && "cursor-default border-muted bg-muted text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0",
+                  )}
                   value={state.draftText}
                   readOnly={draftLocked}
                   onChange={event => {
@@ -148,9 +154,6 @@ export default function Step3WriteDraft() {
                   placeholder={page.fields[0].placeholder}
                 />
               </label>
-              {draftLocked && (
-                <p className="text-sm text-muted-foreground">{MODULE1_LESSON5_SHARED_COPY.draftLockedHint}</p>
-              )}
               <p className="text-sm text-muted-foreground">
                 {MODULE1_LESSON5_SHARED_COPY.wordCountLabel}：{charCount}。{MODULE1_LESSON5_SHARED_COPY.wordCountHint}
                 {charCount > 0 && (charCount < 200 || charCount > 300) ? " 未落在区间也可以继续，不判定质量不合格。" : ""}
@@ -159,7 +162,7 @@ export default function Step3WriteDraft() {
           </Card>
         )}
         ai={(
-          <Card className={cn("flex h-full min-w-0 flex-col overflow-hidden", process.copySucceeded && "border-primary")}>
+          <Card className={cn("flex h-full min-w-0 flex-col overflow-hidden", process.copySucceeded && !draftLocked && "border-primary")}>
             <CardHeader>
               <CardTitle className="leading-snug">{MODULE1_LESSON5_SHARED_COPY.aiAssistRequiredTitleDraft}</CardTitle>
             </CardHeader>
@@ -203,6 +206,7 @@ export default function Step3WriteDraft() {
               )}
               <Lesson3AiReplyField
                 copySucceeded={process.copySucceeded}
+                readOnly={draftLocked}
                 value={process.aiReply}
                 optionalLabel={MODULE1_LESSON5_SHARED_COPY.aiReplyRequiredLabel}
                 onChange={value => {
