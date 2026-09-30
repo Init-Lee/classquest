@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 5 字段更新、初稿冻结与复核标记。
- * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；第 3 关改稿且确认稿仍为旧初稿镜像时同步确认稿，并作废过期的 P4/P5 自定义提示词。
- * 更新触发：课时 5 复核范围、初稿冻结时机、检查提示词刷新或上下游失效规则变化时，需要同步更新本文件。
+ * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；第 3 关完成后硬锁初稿（忽略 draftText 回写），第 4 关只改确认稿；确认稿变化时作废过期的 P4/P5 自定义提示词。
+ * 更新触发：课时 5 复核范围、初稿硬锁时机、检查提示词刷新或上下游失效规则变化时，需要同步更新本文件。
  */
 
 import {
@@ -117,24 +117,16 @@ export function finalizeModule1Lesson5State(
   previous: Module1Lesson5State,
   draft: Module1Lesson5State,
 ): Module1Lesson5State {
-  const reviewNeeded: Module1Lesson5ReviewNeeded = { ...draft.reviewNeeded }
-  let next: Module1Lesson5State = { ...draft, reviewNeeded }
-  const planChanged = previous.plotPlan !== draft.plotPlan || previous.planReason !== draft.planReason
+  // 第 3 关完成后初稿硬锁：忽略任何 draftText 回写，避免回看时改稿带动确认稿。
+  const lockedDraft = previous.step3Completed
+    ? { ...draft, draftText: previous.draftText }
+    : draft
+  const reviewNeeded: Module1Lesson5ReviewNeeded = { ...lockedDraft.reviewNeeded }
+  let next: Module1Lesson5State = { ...lockedDraft, reviewNeeded }
+  const planChanged = previous.plotPlan !== lockedDraft.plotPlan || previous.planReason !== lockedDraft.planReason
   if (planChanged && (hasText(previous.plotPlan) || hasText(previous.planReason))) {
-    if (hasText(draft.draftText)) reviewNeeded.draft = true
-    if (hasText(draft.finalText)) reviewNeeded.final = true
-  }
-  const draftChanged = previous.draftText !== draft.draftText
-  if (draftChanged && hasText(previous.draftText) && hasText(draft.finalText)) {
-    reviewNeeded.final = true
-  }
-  // 第 3 关改稿：确认稿若仍是旧初稿镜像（或为空），跟进新初稿，避免第 4 关仍检查旧稿。
-  if (draftChanged && hasText(draft.draftText)) {
-    const finalWasMirrorOfOldDraft = !hasText(previous.finalText) || previous.finalText === previous.draftText
-    if (finalWasMirrorOfOldDraft) {
-      next = { ...next, finalText: draft.draftText }
-      reviewNeeded.final = false
-    }
+    if (hasText(lockedDraft.draftText)) reviewNeeded.draft = true
+    if (hasText(lockedDraft.finalText)) reviewNeeded.final = true
   }
   // 进入 P4/P5 的正文或安排变了：作废已编辑的检查类提示词，预览回到按最新稿生成。
   const inspectChanged = resolveLesson5InspectText(previous) !== resolveLesson5InspectText(next)

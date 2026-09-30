@@ -1,7 +1,7 @@
 /**
- * 文件说明：模块 1 课时 5 复核、初稿冻结与 AI 过程回归测试。
- * 职责：锁定第 1/2 关无 AI 可过、第 3/4 关必须复制并贴回、检查上下文键失效、镜像确认稿随第 3 关改稿同步。
- * 更新触发：课时 5 完成判定、冻结字段、复核、contextKey 或 AI 过程口径变化时，需要同步更新本文件。
+ * 文件说明：模块 1 课时 5 复核、初稿硬锁与 AI 过程回归测试。
+ * 职责：锁定第 1/2 关无 AI 可过、第 3/4 关必须复制并贴回、第 3 关完成后忽略 draft 回写、「恢复初稿」替换确认稿并作废检查轮次。
+ * 更新触发：课时 5 完成判定、初稿硬锁、复核、contextKey 或 AI 过程口径变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -149,43 +149,33 @@ describe("模块 1 课时 5 完成与防丢", () => {
     expect(second.finalText).toBe("已经确认的转段")
   })
 
-  it("改初稿会提示核对确认稿，但不改 finalText", () => {
-    const previous = { ...filledLesson5(), draftText: "旧初稿" }
-    const next = finalizeModule1Lesson5State(previous, {
-      ...previous,
-      draftText: "新初稿",
-    })
-    expect(next.finalText).toBe(MODULE1_LESSON5_EXAMPLE.finalText)
-    expect(next.reviewNeeded.final).toBe(true)
-  })
-
-  it("确认稿仍是旧初稿镜像时，改第 3 关稿会同步确认稿并作废自定义检查提示词", () => {
+  it("第 3 关完成后写入 draftText 被忽略，且不亮确认稿复核", () => {
     const previous = {
       ...filledLesson5(),
-      draftText: "旧初稿镜像A",
-      finalText: "旧初稿镜像A",
-      customPrompts: {
-        ...createEmptyModule1Lesson5State().customPrompts,
-        p4: "学生改过的旧检查提示词，含旧初稿镜像A",
-        p5: "学生改过的旧局部修改提示词",
-      },
+      step3Completed: true,
+      draftText: "已锁定初稿",
+      finalText: "已改过的确认稿",
+      reviewNeeded: { plan: false, draft: false, final: false },
     }
     const next = finalizeModule1Lesson5State(previous, {
       ...previous,
-      draftText: "新初稿镜像B",
+      draftText: "试图回改的初稿",
     })
-    expect(next.finalText).toBe("新初稿镜像B")
+    expect(next.draftText).toBe("已锁定初稿")
+    expect(next.finalText).toBe("已改过的确认稿")
     expect(next.reviewNeeded.final).toBe(false)
-    expect(next.customPrompts.p4).toBe("")
-    expect(next.customPrompts.p5).toBe("")
   })
 
-  it("context 变化后，旧的 copied+reply 不能再算第 4 关已完成", () => {
+  it("恢复初稿把 finalText 设回 draftText，且检查轮次因正文变化失效", () => {
     const portfolio = createNewModule1Portfolio()
+    const draftText = "【夹具】转段初稿正文"
+    const editedFinal = "【夹具】学生改过的确认稿"
     portfolio.lesson5 = {
       ...filledLesson5(),
-      draftText: "【夹具A】转段旧稿",
-      finalText: "【夹具A】转段旧稿",
+      step3Completed: true,
+      draftText,
+      draftFrozenText: draftText,
+      finalText: editedFinal,
     }
     const oldKey = buildModule1Lesson5CheckContextKey(portfolio)
     const withAi = {
@@ -197,17 +187,34 @@ describe("模块 1 课时 5 完成与防丢", () => {
     }
     expect(hasModule1Lesson5CurrentFinal(withAi, oldKey)).toBe(true)
 
-    const revised = finalizeModule1Lesson5State(withAi, {
+    const restored = finalizeModule1Lesson5State(withAi, {
       ...withAi,
-      draftText: "【夹具B】转段新稿",
+      previousFinalText: withAi.finalText,
+      finalText: withAi.draftText,
     })
+    expect(restored.finalText).toBe(draftText)
+    expect(restored.previousFinalText).toBe(editedFinal)
+    expect(restored.draftText).toBe(draftText)
+    expect(restored.draftFrozenText).toBe(draftText)
+
     const newKey = buildModule1Lesson5CheckContextKey({
       ...portfolio,
-      lesson5: revised,
+      lesson5: restored,
     })
     expect(newKey).not.toBe(oldKey)
-    expect(hasModule1Lesson5CurrentRequiredAi(revised.aiProcess.p4, newKey)).toBe(false)
-    expect(hasModule1Lesson5CurrentFinal(revised, newKey)).toBe(false)
+    expect(hasModule1Lesson5CurrentRequiredAi(restored.aiProcess.p4, newKey)).toBe(false)
+    expect(hasModule1Lesson5CurrentFinal(restored, newKey)).toBe(false)
+  })
+
+  it("文案主按钮为恢复初稿，并含用初稿替换当前确认稿说明", async () => {
+    const { MODULE1_LESSON5_PAGES, MODULE1_LESSON5_SHARED_COPY } = await import(
+      "@/modules/module-1-ai-story/constants/lesson5-copy"
+    )
+    expect(MODULE1_LESSON5_PAGES.step4.buttons[2]).toBe("恢复初稿")
+    expect(MODULE1_LESSON5_SHARED_COPY.keepDraft).toBe("恢复初稿")
+    expect(MODULE1_LESSON5_SHARED_COPY.keepDraftHint).toContain("用初稿替换当前确认稿")
+    expect(MODULE1_LESSON5_SHARED_COPY.keepDraftConfirmTitle).toContain("用初稿替换当前确认稿")
+    expect(MODULE1_LESSON5_PAGES.step4.buttons[2]).not.toBe("保留初稿")
   })
 
   it("上游开头变化时保留课时 5 正文并标记复核", () => {

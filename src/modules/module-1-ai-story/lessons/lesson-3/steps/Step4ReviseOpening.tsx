@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 3 第四关检查与修改。
- * 职责：独立确认稿、四个阅读问题、保留初稿防丢；本关必须复制 P4 并贴回回复，P5 仍可选；完成后指向课时 4。
- * 更新触发：第 4 关完成条件、必用外部 AI、保留初稿确认框或完成弹窗快照入口变化时，需要同步更新本文件。
+ * 职责：独立确认稿、四个阅读问题、「恢复初稿」用初稿替换确认稿（不打开第 3 关）；本关必须复制 P4 并贴回回复，P5 仍可选；完成后指向课时 4。
+ * 更新触发：第 4 关完成条件、必用外部 AI、恢复初稿确认框或完成弹窗快照入口变化时，需要同步更新本文件。
  */
 
 import { useEffect, useState } from "react"
@@ -182,21 +182,32 @@ export default function Step4ReviseOpening() {
                   placeholder={page.fields[2].placeholder}
                 />
               </label>
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" onClick={keepDraft}>{page.buttons[2]}</Button>
-                {state.previousFinalText.trim() && (
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
-                    variant="ghost"
-                    onClick={() => updateLesson3(current => ({
-                      ...current,
-                      finalText: current.previousFinalText,
-                      previousFinalText: "",
-                    }))}
+                    variant="outline"
+                    title={MODULE1_LESSON3_SHARED_COPY.keepDraftHint}
+                    aria-label={`${page.buttons[2]}${MODULE1_LESSON3_SHARED_COPY.keepDraftHint}`}
+                    onClick={keepDraft}
                   >
-                    {MODULE1_LESSON3_SHARED_COPY.restoreFinal}
+                    {page.buttons[2]}
                   </Button>
-                )}
+                  {state.previousFinalText.trim() && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => updateLesson3(current => ({
+                        ...current,
+                        finalText: current.previousFinalText,
+                        previousFinalText: "",
+                      }))}
+                    >
+                      {MODULE1_LESSON3_SHARED_COPY.restoreFinal}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{MODULE1_LESSON3_SHARED_COPY.keepDraftHint}</p>
               </div>
             </CardContent>
           </Card>

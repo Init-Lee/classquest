@@ -99,7 +99,7 @@ describe("模块 1 课时 5 提示词", () => {
     expect(buildModule1Lesson5DraftContextKey(portfolio)).toBe(draftKeyBefore)
   })
 
-  it("第 3 关稿从 A 改成 B 后，第 4 关 P4 含 B 不含仅属于 A 的句子", () => {
+  it("确认稿从 A 改成 B 后，第 4 关 P4 含 B 不含仅属于 A 的句子", () => {
     const draftA = "【夹具A】路灯忽然灭了，林禾停在旧桥口。"
     const draftB = "【夹具B】小川把开关拨回，走廊重新亮起来。"
     const portfolio = createReadyPortfolio()

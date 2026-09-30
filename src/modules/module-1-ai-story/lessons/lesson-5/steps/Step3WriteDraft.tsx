@@ -1,7 +1,7 @@
 /**
- * 文件说明：模块 1 课时 5 第三关用 AI 起草承段。
- * 职责：只读课时 3 题目，学生保存承段初稿；本关必须复制 P3 并贴回回复，过程入档，字数只引导不锁关。
- * 更新触发：第 3 关必用外部 AI、初稿冻结、题目只读或字数引导规则变化时，需要同步更新本文件。
+ * 文件说明：模块 1 课时 5 第三关用 AI 起草转段。
+ * 职责：只读课时 3 题目与前序确认稿，学生保存转段初稿；本关必须复制 P3 并贴回回复；完成后初稿硬锁只读，顶栏仍可回看。
+ * 更新触发：第 3 关必用外部 AI、初稿硬锁、题目只读或字数引导规则变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -41,8 +41,9 @@ export default function Step3WriteDraft() {
   const page = MODULE1_LESSON5_PAGES.step3
   const state = portfolio.lesson5
   const process = state.aiProcess.p3
+  const draftLocked = state.step3Completed
   const draftContextKey = buildModule1Lesson5DraftContextKey(portfolio)
-  const valid = hasModule1Lesson5CurrentDraft(state, draftContextKey)
+  const valid = draftLocked || hasModule1Lesson5CurrentDraft(state, draftContextKey)
   const charCount = countModule1MeaningfulChars(state.draftText)
   const planReady = Boolean(state.plotPlan.trim() && state.planReason.trim())
   const contextStale = process.copySucceeded
@@ -57,6 +58,22 @@ export default function Step3WriteDraft() {
   }
 
   const continueNext = async () => {
+    // 已完成后只回看：直接进第 4 关，不重写初稿、不因只读态清空。
+    if (draftLocked) {
+      setError("")
+      updatePortfolio(current => ({
+        ...current,
+        progress: { lessonId: 5, stepId: 4 },
+        lesson5: {
+          ...current.lesson5,
+          step: 4,
+          step3Completed: true,
+        },
+      }))
+      await flushPortfolio()
+      navigate("/module/1/lesson/5/step/4")
+      return
+    }
     if (!state.draftText.trim()) {
       setError(page.validation[0])
       return
@@ -123,10 +140,17 @@ export default function Step3WriteDraft() {
                 <Textarea
                   className="min-h-[220px] border-2"
                   value={state.draftText}
-                  onChange={event => updateLesson5(current => ({ ...current, draftText: event.target.value }))}
+                  readOnly={draftLocked}
+                  onChange={event => {
+                    if (draftLocked) return
+                    updateLesson5(current => ({ ...current, draftText: event.target.value }))
+                  }}
                   placeholder={page.fields[0].placeholder}
                 />
               </label>
+              {draftLocked && (
+                <p className="text-sm text-muted-foreground">{MODULE1_LESSON5_SHARED_COPY.draftLockedHint}</p>
+              )}
               <p className="text-sm text-muted-foreground">
                 {MODULE1_LESSON5_SHARED_COPY.wordCountLabel}：{charCount}。{MODULE1_LESSON5_SHARED_COPY.wordCountHint}
                 {charCount > 0 && (charCount < 200 || charCount > 300) ? " 未落在区间也可以继续，不判定质量不合格。" : ""}
@@ -150,13 +174,18 @@ export default function Step3WriteDraft() {
                   ...current,
                   customPrompts: { ...current.customPrompts, p3: "" },
                 }))}
-                disabled={!planReady}
-                disabledReason={planReady ? undefined : MODULE1_LESSON5_SHARED_COPY.missingPlan}
+                disabled={draftLocked || !planReady}
+                disabledReason={draftLocked
+                  ? MODULE1_LESSON5_SHARED_COPY.draftLockedHint
+                  : (planReady ? undefined : MODULE1_LESSON5_SHARED_COPY.missingPlan)}
                 customText={state.customPrompts.p3}
-                onCustomTextChange={value => updateLesson5(current => ({
-                  ...current,
-                  customPrompts: { ...current.customPrompts, p3: value },
-                }))}
+                onCustomTextChange={value => {
+                  if (draftLocked) return
+                  updateLesson5(current => ({
+                    ...current,
+                    customPrompts: { ...current.customPrompts, p3: value },
+                  }))
+                }}
                 buildText={() => buildModule1Lesson5Prompt("P3", portfolio)}
                 onCopied={detail => updateLesson5(current => patchModule1Lesson5AiProcess(
                   current,
@@ -169,14 +198,17 @@ export default function Step3WriteDraft() {
                   ),
                 ))}
               />
-              {contextStale && (
+              {contextStale && !draftLocked && (
                 <p className="text-sm text-amber-800">{MODULE1_LESSON5_SHARED_COPY.promptChanged}</p>
               )}
               <Lesson3AiReplyField
                 copySucceeded={process.copySucceeded}
                 value={process.aiReply}
                 optionalLabel={MODULE1_LESSON5_SHARED_COPY.aiReplyRequiredLabel}
-                onChange={value => updateLesson5(current => patchModule1Lesson5AiProcess(current, "p3", { aiReply: value }))}
+                onChange={value => {
+                  if (draftLocked) return
+                  updateLesson5(current => patchModule1Lesson5AiProcess(current, "p3", { aiReply: value }))
+                }}
               />
             </CardContent>
           </Card>
@@ -185,7 +217,7 @@ export default function Step3WriteDraft() {
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{page.teacher}</p>
             <p className="text-sm text-muted-foreground">{MODULE1_LESSON5_SHARED_COPY.newContextNote}</p>
-            {(error || (process.copySucceeded && !process.aiReply.trim())) && (
+            {(error || (!draftLocked && process.copySucceeded && !process.aiReply.trim())) && (
               <p role="alert" className="text-sm text-destructive">{error || page.validation[1]}</p>
             )}
             <Button disabled={!valid} onClick={() => void continueNext()}>{page.buttons[1]}</Button>
