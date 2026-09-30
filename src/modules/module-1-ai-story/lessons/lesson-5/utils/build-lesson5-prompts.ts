@@ -187,7 +187,7 @@ export function module1Lesson5PromptContainsUnresolvedVars(text: string): boolea
   return /\{\{[a-zA-Z0-9.]+}}/.test(text)
 }
 
-/** 第 3 关起草依赖：设定、开头、承段确认稿、写法、转折安排。不含初稿编辑。 */
+/** 第 3 关起草依赖：设定、开头、承段确认稿、写法、转折安排。不含初稿编辑（P3 也不带初稿）。 */
 export function buildModule1Lesson5DraftContextKey(portfolio: Module1Portfolio): string {
   return [
     buildModule1Lesson5ConfirmedSetting(portfolio.lesson1, portfolio.lesson2),
@@ -199,7 +199,13 @@ export function buildModule1Lesson5DraftContextKey(portfolio: Module1Portfolio):
   ].join("\n---\n")
 }
 
-/** 第 4 关检查依赖：与起草相同，不含屏幕当前稿，避免每改一字就失效。 */
+/**
+ * 第 4 关检查依赖：起草上下文 + 当前待检查正文（进入 P4/P5 的 currentText）。
+ * 第 3 关改稿或确认稿变更后 contextKey 必须变化，旧复制轮次不能继续算完成。
+ */
 export function buildModule1Lesson5CheckContextKey(portfolio: Module1Portfolio): string {
-  return buildModule1Lesson5DraftContextKey(portfolio)
+  return [
+    buildModule1Lesson5DraftContextKey(portfolio),
+    resolveModule1Lesson5InspectText(portfolio.lesson5),
+  ].join("\n---\n")
 }

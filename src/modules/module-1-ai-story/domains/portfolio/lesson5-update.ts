@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 5 字段更新、初稿冻结与复核标记。
- * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；导出前由保存协调器 flush。
- * 更新触发：课时 5 复核范围、初稿冻结时机或上下游失效规则变化时，需要同步更新本文件。
+ * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；第 3 关改稿且确认稿仍为旧初稿镜像时同步确认稿，并作废过期的 P4/P5 自定义提示词。
+ * 更新触发：课时 5 复核范围、初稿冻结时机、检查提示词刷新或上下游失效规则变化时，需要同步更新本文件。
  */
 
 import {
@@ -109,20 +109,45 @@ export function freezeModule1Lesson5Draft(state: Module1Lesson5State): Module1Le
   return { ...state, draftFrozenText: state.draftText }
 }
 
+function resolveLesson5InspectText(state: Module1Lesson5State): string {
+  return state.finalText.trim() || state.draftText
+}
+
 export function finalizeModule1Lesson5State(
   previous: Module1Lesson5State,
   draft: Module1Lesson5State,
 ): Module1Lesson5State {
   const reviewNeeded: Module1Lesson5ReviewNeeded = { ...draft.reviewNeeded }
+  let next: Module1Lesson5State = { ...draft, reviewNeeded }
   const planChanged = previous.plotPlan !== draft.plotPlan || previous.planReason !== draft.planReason
   if (planChanged && (hasText(previous.plotPlan) || hasText(previous.planReason))) {
     if (hasText(draft.draftText)) reviewNeeded.draft = true
     if (hasText(draft.finalText)) reviewNeeded.final = true
   }
-  if (previous.draftText !== draft.draftText && hasText(previous.draftText) && hasText(draft.finalText)) {
+  const draftChanged = previous.draftText !== draft.draftText
+  if (draftChanged && hasText(previous.draftText) && hasText(draft.finalText)) {
     reviewNeeded.final = true
   }
-  return { ...draft, reviewNeeded }
+  // 第 3 关改稿：确认稿若仍是旧初稿镜像（或为空），跟进新初稿，避免第 4 关仍检查旧稿。
+  if (draftChanged && hasText(draft.draftText)) {
+    const finalWasMirrorOfOldDraft = !hasText(previous.finalText) || previous.finalText === previous.draftText
+    if (finalWasMirrorOfOldDraft) {
+      next = { ...next, finalText: draft.draftText }
+      reviewNeeded.final = false
+    }
+  }
+  // 进入 P4/P5 的正文或安排变了：作废已编辑的检查类提示词，预览回到按最新稿生成。
+  const inspectChanged = resolveLesson5InspectText(previous) !== resolveLesson5InspectText(next)
+  if (
+    (inspectChanged || planChanged)
+    && (next.customPrompts.p4.trim() || next.customPrompts.p5.trim())
+  ) {
+    next = {
+      ...next,
+      customPrompts: { ...next.customPrompts, p4: "", p5: "" },
+    }
+  }
+  return { ...next, reviewNeeded }
 }
 
 export function applyModule1Lesson5UpstreamReview(

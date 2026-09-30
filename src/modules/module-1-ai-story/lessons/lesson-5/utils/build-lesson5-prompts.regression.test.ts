@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 5 提示词拼装回归测试。
- * 职责：锁定 P1 只带课堂短例、P2—P5 不残留花括号、P3 不含当前初稿，以及 P5 缺修改理由时拒绝复制。
- * 更新触发：课时 5 提示词模板、白名单、开头来源或变量替换规则变化时，需要同步更新本文件。
+ * 职责：锁定 P1 只带课堂短例、P2—P5 不残留花括号、P3 不含当前初稿，以及改第 3 关稿后 P4 与检查上下文键刷新。
+ * 更新触发：课时 5 提示词模板、白名单、开头来源、检查上下文键或变量替换规则变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -88,14 +88,36 @@ describe("模块 1 课时 5 提示词", () => {
     expect(result.text).not.toContain(MODULE1_LESSON5_EXAMPLE.draftText)
   })
 
-  it("P4 优先带确认稿全文，改确认稿不改变检查上下文键", () => {
+  it("P4 优先带确认稿全文，改确认稿会改变检查上下文键", () => {
     const portfolio = createReadyPortfolio()
     const before = buildModule1Lesson5CheckContextKey(portfolio)
+    const draftKeyBefore = buildModule1Lesson5DraftContextKey(portfolio)
     const result = buildModule1Lesson5Prompt("P4", portfolio)
     expect(result.text).toContain(MODULE1_LESSON5_EXAMPLE.finalText)
     portfolio.lesson5.finalText = "改过一字的确认稿"
-    expect(buildModule1Lesson5CheckContextKey(portfolio)).toBe(before)
-    expect(buildModule1Lesson5DraftContextKey(portfolio)).toBe(before)
+    expect(buildModule1Lesson5CheckContextKey(portfolio)).not.toBe(before)
+    expect(buildModule1Lesson5DraftContextKey(portfolio)).toBe(draftKeyBefore)
+  })
+
+  it("第 3 关稿从 A 改成 B 后，第 4 关 P4 含 B 不含仅属于 A 的句子", () => {
+    const draftA = "【夹具A】路灯忽然灭了，林禾停在旧桥口。"
+    const draftB = "【夹具B】小川把开关拨回，走廊重新亮起来。"
+    const portfolio = createReadyPortfolio()
+    portfolio.lesson5.draftText = draftA
+    portfolio.lesson5.finalText = draftA
+    const beforeKey = buildModule1Lesson5CheckContextKey(portfolio)
+    const promptA = buildModule1Lesson5Prompt("P4", portfolio)
+    expect(promptA.ok).toBe(true)
+    expect(promptA.text).toContain(draftA)
+    expect(promptA.text).not.toContain(draftB)
+
+    portfolio.lesson5.draftText = draftB
+    portfolio.lesson5.finalText = draftB
+    const promptB = buildModule1Lesson5Prompt("P4", portfolio)
+    expect(promptB.ok).toBe(true)
+    expect(promptB.text).toContain(draftB)
+    expect(promptB.text).not.toContain("【夹具A】")
+    expect(buildModule1Lesson5CheckContextKey(portfolio)).not.toBe(beforeKey)
   })
 
   it("P5 未写修改理由时拒绝复制", () => {

@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 4 复核、初稿冻结与 AI 过程回归测试。
- * 职责：锁定第 1/2 关无 AI 可过、第 3/4 关必须复制并贴回、上下文键失效、改初稿不冲确认稿。
+ * 职责：锁定第 1/2 关无 AI 可过、第 3/4 关必须复制并贴回、检查上下文键失效、镜像确认稿随第 3 关改稿同步。
  * 更新触发：课时 4 完成判定、冻结字段、复核、contextKey 或 AI 过程口径变化时，需要同步更新本文件。
  */
 
@@ -21,9 +21,11 @@ import {
   finalizeModule1Lesson4State,
   freezeModule1Lesson4Draft,
   hasModule1Lesson4CurrentDraft,
+  hasModule1Lesson4CurrentFinal,
   hasModule1Lesson4CurrentRequiredAi,
   recordModule1Lesson4AiCopy,
 } from "@/modules/module-1-ai-story/domains/portfolio/lesson4-update"
+import { buildModule1Lesson4CheckContextKey } from "@/modules/module-1-ai-story/lessons/lesson-4/utils/build-lesson4-prompts"
 
 function usedAiProcess(reply: string, contextKey = "ctx") {
   return {
@@ -155,6 +157,57 @@ describe("模块 1 课时 4 完成与防丢", () => {
     })
     expect(next.finalText).toBe(MODULE1_LESSON4_EXAMPLE.finalText)
     expect(next.reviewNeeded.final).toBe(true)
+  })
+
+  it("确认稿仍是旧初稿镜像时，改第 3 关稿会同步确认稿并作废自定义检查提示词", () => {
+    const previous = {
+      ...filledLesson4(),
+      draftText: "旧初稿镜像A",
+      finalText: "旧初稿镜像A",
+      customPrompts: {
+        ...createEmptyModule1Lesson4State().customPrompts,
+        p4: "学生改过的旧检查提示词，含旧初稿镜像A",
+        p5: "学生改过的旧局部修改提示词",
+      },
+    }
+    const next = finalizeModule1Lesson4State(previous, {
+      ...previous,
+      draftText: "新初稿镜像B",
+    })
+    expect(next.finalText).toBe("新初稿镜像B")
+    expect(next.reviewNeeded.final).toBe(false)
+    expect(next.customPrompts.p4).toBe("")
+    expect(next.customPrompts.p5).toBe("")
+  })
+
+  it("context 变化后，旧的 copied+reply 不能再算第 4 关已完成", () => {
+    const portfolio = createNewModule1Portfolio()
+    portfolio.lesson4 = {
+      ...filledLesson4(),
+      draftText: "【夹具A】承段旧稿",
+      finalText: "【夹具A】承段旧稿",
+    }
+    const oldKey = buildModule1Lesson4CheckContextKey(portfolio)
+    const withAi = {
+      ...portfolio.lesson4,
+      aiProcess: {
+        ...portfolio.lesson4.aiProcess,
+        p4: usedAiProcess("检查意见", oldKey),
+      },
+    }
+    expect(hasModule1Lesson4CurrentFinal(withAi, oldKey)).toBe(true)
+
+    const revised = finalizeModule1Lesson4State(withAi, {
+      ...withAi,
+      draftText: "【夹具B】承段新稿",
+    })
+    const newKey = buildModule1Lesson4CheckContextKey({
+      ...portfolio,
+      lesson4: revised,
+    })
+    expect(newKey).not.toBe(oldKey)
+    expect(hasModule1Lesson4CurrentRequiredAi(revised.aiProcess.p4, newKey)).toBe(false)
+    expect(hasModule1Lesson4CurrentFinal(revised, newKey)).toBe(false)
   })
 
   it("上游开头变化时保留课时 4 正文并标记复核", () => {
