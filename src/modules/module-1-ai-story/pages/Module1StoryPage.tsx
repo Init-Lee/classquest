@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1「我的小说」作品页。
- * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，段落固定带课时来源标签，并提供复制全文、下载 JSON 和返回修改；不是第 7 课。
- * 更新触发：解锁条件、确认版本展示、来源标签、复制范围或返回修改入口变化时，需要同步更新本文件。
+ * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，段落固定带课时来源标签，并提供复制全文、整篇 TXT/Markdown/HTML 下载、下载 JSON 和返回修改；不是第 7 课。
+ * 更新触发：解锁条件、确认版本展示、来源标签、复制范围、整篇下载或返回修改入口变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -20,6 +20,11 @@ import {
   resolveModule1StoryAccess,
 } from "@/modules/module-1-ai-story/features/story/module1-story-access"
 import { Module1StoryReading } from "@/modules/module-1-ai-story/features/story/Module1StoryReading"
+import {
+  buildModule1StoryExport,
+  downloadModule1StoryExport,
+  type Module1StoryExportFormat,
+} from "@/modules/module-1-ai-story/features/story/module1-story-export"
 
 export default function Module1StoryPage() {
   const { portfolio, loading, isTeacherMode, flushPortfolio } = useModule1Portfolio()
@@ -79,6 +84,9 @@ export default function Module1StoryPage() {
   const edition = portfolio.lesson6.confirmedEdition
   const parts = buildModule1ConfirmedStoryParts(edition)
   const needsReview = module1StoryNeedsReview(portfolio)
+  const downloadStory = (format: Module1StoryExportFormat) => {
+    downloadModule1StoryExport(buildModule1StoryExport(portfolio.student, edition, format))
+  }
   const copyFullText = async () => {
     const text = buildModule1ConfirmedStoryCopyText(edition)
     setCopyText(text)
@@ -118,6 +126,11 @@ export default function Module1StoryPage() {
         untitledLabel={MODULE1_LESSON6_NOVEL_UI.noTitle}
         parts={parts}
       />
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Button type="button" variant="outline" onClick={() => downloadStory("txt")}>{MODULE1_LESSON6_NOVEL_UI.downloadTxt}</Button>
+        <Button type="button" variant="outline" onClick={() => downloadStory("markdown")}>{MODULE1_LESSON6_NOVEL_UI.downloadMarkdown}</Button>
+        <Button type="button" variant="outline" onClick={() => downloadStory("html")}>{MODULE1_LESSON6_NOVEL_UI.downloadHtml}</Button>
+      </div>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => setEditOpen(open => !open)}>{MODULE1_LESSON6_NOVEL_UI.edit}</Button>
         <Button type="button" variant="outline" onClick={() => void copyFullText()}>{MODULE1_LESSON6_NOVEL_UI.copy}</Button>

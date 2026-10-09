@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1「我的小说」解锁与派生回归测试。
- * 职责：锁定未完成不可读、确认版本与当前稿分离、复制全文不含过程字段，且不落盘 fullStory；阅读区固定带课时来源标签。
- * 更新触发：作品解锁条件、确认版本字段、复制范围或来源标签展示变化时，需要同步更新本文件。
+ * 职责：锁定未完成不可读、确认版本与当前稿分离、复制全文不含过程字段，且不落盘 fullStory；阅读区固定带课时来源标签；未完成时首页不渲染小说入口。
+ * 更新触发：作品解锁条件、首页入口、确认版本字段、复制范围或来源标签展示变化时，需要同步更新本文件。
  */
 
 import { createElement } from "react"
@@ -17,10 +17,12 @@ import {
   createNewModule1Portfolio,
   normalizeModule1Portfolio,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
+import { Module1NovelHomeButton } from "@/modules/module-1-ai-story/features/story/Module1NovelHomeButton"
 import { Module1StoryReading } from "@/modules/module-1-ai-story/features/story/Module1StoryReading"
 import {
   buildModule1ConfirmedStoryCopyText,
   buildModule1ConfirmedStoryParts,
+  isModule1NovelHomeEntryVisible,
   module1StoryNeedsReview,
   resolveModule1StoryAccess,
 } from "@/modules/module-1-ai-story/features/story/module1-story-access"
@@ -29,8 +31,20 @@ describe("模块 1 我的小说", () => {
   it("未完成课时 6 时锁定，演示完成档案可读且不含 fullStory", () => {
     const fresh = createNewModule1Portfolio()
     expect(resolveModule1StoryAccess(fresh)).toBe("locked")
+    expect(isModule1NovelHomeEntryVisible(fresh)).toBe(false)
+    const hiddenEntry = renderToStaticMarkup(createElement(Module1NovelHomeButton, {
+      visible: isModule1NovelHomeEntryVisible(fresh),
+      onOpen: () => undefined,
+    }))
+    expect(hiddenEntry).not.toContain("我的小说")
     const demo = createModule1TeacherLecturePortfolio()
     expect(resolveModule1StoryAccess(demo)).toBe("readable")
+    expect(isModule1NovelHomeEntryVisible(demo)).toBe(true)
+    const visibleEntry = renderToStaticMarkup(createElement(Module1NovelHomeButton, {
+      visible: isModule1NovelHomeEntryVisible(demo),
+      onOpen: () => undefined,
+    }))
+    expect(visibleEntry).toContain("我的小说")
     expect(module1StoryNeedsReview(demo)).toBe(false)
     expect(demo).not.toHaveProperty("fullStory")
     const copied = buildModule1ConfirmedStoryCopyText(demo.lesson6.confirmedEdition!)

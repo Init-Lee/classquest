@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1「我的小说」解锁与正文派生。
  * 职责：用同一套判定决定档案按钮、路由和作品页读哪一版四段；不落盘 fullStory。
- * 更新触发：解锁条件、确认版本与当前稿是否一致、或复制全文范围变化时，需要同步更新本文件。
+ * 更新触发：解锁条件、首页入口是否渲染、确认版本与当前稿是否一致、或复制全文范围变化时，需要同步更新本文件。
  */
 
 import {
@@ -33,6 +33,11 @@ export function resolveModule1StoryAccess(portfolio: Module1Portfolio | null): M
   if (!portfolio?.lesson6.completed) return "locked"
   if (!isModule1Lesson6EditionResolvable(portfolio.lesson6.confirmedEdition)) return "integrity"
   return "readable"
+}
+
+/** 未完成课时 6 时首页不渲染「我的小说」；完成但正文待核对时仍给入口。 */
+export function isModule1NovelHomeEntryVisible(portfolio: Module1Portfolio | null): boolean {
+  return resolveModule1StoryAccess(portfolio) !== "locked"
 }
 
 export function module1StoryNeedsReview(portfolio: Module1Portfolio): boolean {

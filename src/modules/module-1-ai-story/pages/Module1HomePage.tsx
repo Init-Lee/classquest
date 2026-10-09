@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 首页。
  * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及已开放课卡上的本课阶段快照。
- * 更新触发：身份字段、课时开放状态（含课时 6）、教师入口、「我的小说」入口、课卡阶段快照或课程状态文案变化时，需要同步更新本文件。
+ * 更新触发：身份字段、课时开放状态（含课时 6）、教师入口、「我的小说」入口是否渲染、课卡阶段快照或课程状态文案变化时，需要同步更新本文件。
  */
 
 import { useState, type FormEvent } from "react"
@@ -22,8 +22,8 @@ import {
 import { verifyModule1TeacherPassphrase } from "@/modules/module-1-ai-story/constants/teacher-passphrase"
 import { Module1LessonSnapshotDownloadButton } from "@/modules/module-1-ai-story/features/global-actions/Module1LessonSnapshotDownloadButton"
 import { getModule1LessonCardSnapshotButton } from "@/modules/module-1-ai-story/features/global-actions/module1-lesson-snapshot-entry"
-import { MODULE1_LESSON6_NOVEL_UI } from "@/modules/module-1-ai-story/constants/lesson6-copy"
-import { resolveModule1StoryAccess } from "@/modules/module-1-ai-story/features/story/module1-story-access"
+import { Module1NovelHomeButton } from "@/modules/module-1-ai-story/features/story/Module1NovelHomeButton"
+import { isModule1NovelHomeEntryVisible } from "@/modules/module-1-ai-story/features/story/module1-story-access"
 
 function TeacherModeEntry() {
   const { enterTeacherMode } = useModule1Portfolio()
@@ -265,7 +265,7 @@ export default function Module1HomePage() {
       : canContinue
         ? "继续学习"
         : "等待下一课时开放"
-  const novelUnlocked = resolveModule1StoryAccess(portfolio) !== "locked"
+  const novelEntryVisible = isModule1NovelHomeEntryVisible(portfolio)
   const statusText = isTeacherMode
     ? "当前是课堂演示档案，不会写入本机学生档案。"
     : moduleComplete
@@ -291,18 +291,11 @@ export default function Module1HomePage() {
               {continueLabel}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              disabled={!novelUnlocked}
-              onClick={() => { if (novelUnlocked) navigate("/module/1/story") }}
-            >
-              {novelUnlocked ? <BookOpen className="mr-1 h-4 w-4" /> : <Lock className="mr-1 h-4 w-4" />}
-              {MODULE1_LESSON6_NOVEL_UI.button}
-            </Button>
+            <Module1NovelHomeButton
+              visible={novelEntryVisible}
+              onOpen={() => navigate("/module/1/story")}
+            />
           </div>
-          {!novelUnlocked && (
-            <p className="text-xs text-muted-foreground">{MODULE1_LESSON6_NOVEL_UI.lockedHint}</p>
-          )}
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
