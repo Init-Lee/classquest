@@ -84,7 +84,7 @@ describe("模块 1 顶部课时进度", () => {
     expect(items[3]).toMatchObject({ status: "completed", clickable: true })
     expect(items[4]).toMatchObject({ status: "current", clickable: true, target: "/module/1/lesson/5/step/1" })
     expect(items[5]).toMatchObject({ status: "locked", target: null, clickable: false })
-    expect(items[5].subtitle).toContain("未开放")
+    expect(items[5].title).toContain("恰当的结尾")
   })
 })
 

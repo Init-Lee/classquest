@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 教师讲解演示档案。
  * 职责：生成课堂演示用的 Module1Portfolio，供教师模式初始化和重置讲解状态使用，只存在于内存。
- * 更新触发：课时 1/2/3/4/5 演示字段、第 3/4 关必用外部 AI 过程、身份口径、进度指针或后续课时空态策略变化时，需要同步更新本文件。
+ * 更新触发：课时 1/2/3/4/5/6 演示字段、第 3/4 关必用外部 AI 过程、作品确认版本、身份口径或进度指针变化时，需要同步更新本文件。
  */
 
 import {
@@ -11,6 +11,8 @@ import {
   createEmptyModule1Lesson4State,
   createEmptyModule1Lesson5AiProcess,
   createEmptyModule1Lesson5State,
+  createEmptyModule1Lesson6AiProcess,
+  createEmptyModule1Lesson6State,
   createNewModule1Portfolio,
   normalizeModule1Portfolio,
   patchModule1Lesson2ActiveReference,
@@ -22,6 +24,7 @@ import { MODULE1_LESSON2_EXAMPLE } from "@/modules/module-1-ai-story/constants/l
 import { MODULE1_LESSON3_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson3-copy"
 import { MODULE1_LESSON4_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson4-copy"
 import { MODULE1_LESSON5_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson5-copy"
+import { MODULE1_LESSON6_EXAMPLE } from "@/modules/module-1-ai-story/constants/lesson6-copy"
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 
 const DEMO_COMPLETED_AT = "2026-09-05T02:00:00.000Z"
@@ -41,6 +44,19 @@ function createDemoRequiredAiProcess(aiReply: string): Module1Lesson3AiProcess {
 function createDemoLesson4AiProcess(aiReply: string, contextKey = "demo"): Module1Lesson4AiProcess {
   return {
     ...createEmptyModule1Lesson4AiProcess(),
+    generatedPromptSnapshot: "课堂演示提示词",
+    copiedPrompt: "课堂演示提示词",
+    aiReply,
+    copySucceeded: true,
+    copiedAt: DEMO_COMPLETED_AT,
+    copyCount: 1,
+    contextKey,
+  }
+}
+
+function createDemoLesson6AiProcess(aiReply: string, contextKey = "demo") {
+  return {
+    ...createEmptyModule1Lesson6AiProcess(),
     generatedPromptSnapshot: "课堂演示提示词",
     copiedPrompt: "课堂演示提示词",
     aiReply,
@@ -76,7 +92,7 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
     id: "module1-teacher-demo-portfolio",
     createdAt: DEMO_COMPLETED_AT,
     updatedAt: DEMO_COMPLETED_AT,
-    progress: { lessonId: 5, stepId: 4 },
+    progress: { lessonId: 6, stepId: 4 },
     lesson1: {
       step: 4,
       completed: true,
@@ -199,9 +215,45 @@ export function createModule1TeacherLecturePortfolio(): Module1Portfolio {
         p4: createDemoLesson5AiProcess("演示用的检查意见回复。"),
       },
     },
+    lesson6: {
+      ...createEmptyModule1Lesson6State(),
+      step: 4,
+      completed: true,
+      completedAt: DEMO_COMPLETED_AT,
+      step1Completed: true,
+      step2Completed: true,
+      step3Completed: true,
+      step4Completed: true,
+      observation: MODULE1_LESSON6_EXAMPLE.observation,
+      endingType: MODULE1_LESSON6_EXAMPLE.endingType,
+      customEndingRequirement: MODULE1_LESSON6_EXAMPLE.customEndingRequirement,
+      plotPlan: MODULE1_LESSON6_EXAMPLE.plotPlan,
+      planReason: MODULE1_LESSON6_EXAMPLE.planReason,
+      draftText: MODULE1_LESSON6_EXAMPLE.draftText,
+      draftFrozenText: MODULE1_LESSON6_EXAMPLE.draftText,
+      finalText: MODULE1_LESSON6_EXAMPLE.finalText,
+      decisionNote: MODULE1_LESSON6_EXAMPLE.decisionNote,
+      revisionInstruction: MODULE1_LESSON6_EXAMPLE.revisionInstruction,
+      preserveText: MODULE1_LESSON6_EXAMPLE.preserveText,
+      selfCheck: true,
+      previewSeenKey: "demo-preview",
+      confirmedEdition: {
+        confirmedAt: DEMO_COMPLETED_AT,
+        storyTitle: MODULE1_LESSON3_EXAMPLE.storyTitle,
+        openingText: MODULE1_LESSON3_EXAMPLE.finalText,
+        developmentText: MODULE1_LESSON4_EXAMPLE.finalText,
+        turnText: MODULE1_LESSON5_EXAMPLE.finalText,
+        endingText: MODULE1_LESSON6_EXAMPLE.finalText,
+      },
+      aiProcess: {
+        ...createEmptyModule1Lesson6State().aiProcess,
+        p3: createDemoLesson6AiProcess("演示用的合段初稿回复。"),
+        p4: createDemoLesson6AiProcess("演示用的全文检查回复。"),
+      },
+    },
   })
   return {
     ...normalized,
-    progress: { lessonId: 5, stepId: 4 },
+    progress: { lessonId: 6, stepId: 4 },
   }
 }

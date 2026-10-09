@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 学习档案 Provider。
  * 职责：集中负责乐观更新、串行保存、flush、新建、导入替换、清档，以及教师讲解模式的内存演示档案。
- * 更新触发：模块 1 状态容器、仓库边界、导入流程、清档保护或教师模式旁路规则变化时，需要同步更新本文件。
+ * 更新触发：模块 1 状态容器、仓库边界、导入流程、清档保护、课时 6 上游复核或教师模式旁路规则变化时，需要同步更新本文件。
  */
 /* eslint-disable react-refresh/only-export-components */
 
@@ -23,6 +23,7 @@ import { applyModule1Lesson1UpstreamReview } from "@/modules/module-1-ai-story/d
 import { applyModule1Lesson3UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson3-update"
 import { applyModule1Lesson4UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson4-update"
 import { applyModule1Lesson5UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson5-update"
+import { applyModule1Lesson6UpstreamReview } from "@/modules/module-1-ai-story/domains/portfolio/lesson6-update"
 
 interface Module1ContextValue {
   portfolio: Module1Portfolio | null
@@ -111,13 +112,16 @@ export function Module1Provider({ children }: { children: React.ReactNode }) {
   }, [reload])
 
   const updatePortfolio = useCallback((updater: (current: Module1Portfolio) => Module1Portfolio) => {
-    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson5UpstreamReview(
+    const withUpstreamReview = (current: Module1Portfolio) => applyModule1Lesson6UpstreamReview(
       current,
-      applyModule1Lesson4UpstreamReview(
+      applyModule1Lesson5UpstreamReview(
         current,
-        applyModule1Lesson3UpstreamReview(
+        applyModule1Lesson4UpstreamReview(
           current,
-          applyModule1Lesson1UpstreamReview(current, updater(current)),
+          applyModule1Lesson3UpstreamReview(
+            current,
+            applyModule1Lesson1UpstreamReview(current, updater(current)),
+          ),
         ),
       ),
     )

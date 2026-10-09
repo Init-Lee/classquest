@@ -162,7 +162,7 @@ describe("模块 1 档案与进度", () => {
     expect(canAccessModule1Lesson(portfolio, 3, true)).toBe(true)
     expect(canAccessModule1Lesson(portfolio, 4, true)).toBe(true)
     expect(canAccessModule1Lesson(portfolio, 5, true)).toBe(true)
-    expect(canAccessModule1Lesson(portfolio, 6, true)).toBe(false)
+    expect(canAccessModule1Lesson(portfolio, 6, true)).toBe(true)
     const demo = createModule1TeacherLecturePortfolio()
     expect(getModule1Lesson1RouteRedirect(demo, 1, true)).toBeNull()
     expect(getModule1Lesson1RouteRedirect(demo, 4, true)).toBeNull()
@@ -394,7 +394,7 @@ describe("模块 1 档案与进度", () => {
     expect(canAccessModule1Lesson(complete, 6)).toBe(false)
   })
 
-  it("课时 5 完成后指针指向课时 6 且课时 6 仍锁", () => {
+  it("课时 5 完成后指针指向课时 6 且课时 6 可进入", () => {
     const portfolio = fillLesson2Content(completeLesson1(createStudent()))
     const emptyLesson3 = createEmptyModule1Lesson3State()
     const emptyLesson4 = createEmptyModule1Lesson4State()
@@ -470,7 +470,7 @@ describe("模块 1 档案与进度", () => {
     expect(complete.lesson5.completed).toBe(true)
     expect(resolveModule1PortfolioPointer(complete)).toEqual({ lessonId: 6, stepId: 1 })
     expect(canAccessModule1Lesson(complete, 5)).toBe(true)
-    expect(canAccessModule1Lesson(complete, 6)).toBe(false)
+    expect(canAccessModule1Lesson(complete, 6)).toBe(true)
   })
 
   it("课时 3 点过复制但未贴回回复时不能完成", () => {

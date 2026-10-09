@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 学习档案领域模型。
  * 职责：定义六课时聚合、身份、进度与安全归一化，是模块 1 持久化数据的唯一结构真相。
- * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽、课时 3/4/5 初稿冻结 / 外部 AI 过程或归一化规则变化时，需要同步更新本文件。
+ * 更新触发：模块 1 课时字段、完成状态、数据版本、参照分槽、课时 3/4/5/6 初稿冻结 / 外部 AI 过程、作品确认版本或归一化规则变化时，需要同步更新本文件。
  */
 
 export const MODULE1_ID = "module-1-ai-story" as const
@@ -11,10 +11,14 @@ export const MODULE1_LESSON2_CONTENT_VERSION = 2
 export const MODULE1_LESSON3_CONTENT_VERSION = 1
 export const MODULE1_LESSON4_CONTENT_VERSION = 1
 export const MODULE1_LESSON5_CONTENT_VERSION = 1
+export const MODULE1_LESSON6_CONTENT_VERSION = 1
 export const MODULE1_STORY_YEAR = "2035"
 export type Module1Lesson3PromptId = "p1" | "p2" | "p3" | "p4" | "p5"
 export type Module1Lesson4PromptId = "p1" | "p2" | "p3" | "p4" | "p5"
 export type Module1Lesson5PromptId = "p1" | "p2" | "p3" | "p4" | "p5"
+export type Module1Lesson6PromptId = "p1" | "p2" | "p3" | "p4" | "p5"
+export const MODULE1_LESSON6_ENDING_TYPES = ["结果收束", "主题回响", "开放余味", "自定义"] as const
+export type Module1Lesson6EndingType = typeof MODULE1_LESSON6_ENDING_TYPES[number]
 
 export type Module1LessonId = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -137,8 +141,6 @@ export interface Module1Lesson2State extends Module1BaseLessonState {
   obstacle: string
   changeAction: string
 }
-
-export type Module1EmptyLessonState = Module1BaseLessonState
 
 /** 单条外部提示词的基础过程，供教师判断学生如何使用 AI。 */
 export interface Module1Lesson3AiProcess {
@@ -263,6 +265,62 @@ export interface Module1Lesson5State extends Module1BaseLessonState {
   legacyLesson5: Record<string, unknown> | null
 }
 
+/** 课时 6 单条外部提示词过程：自有 contextKey，不复用课时 5。 */
+export interface Module1Lesson6AiProcess extends Module1Lesson3AiProcess {
+  contextKey: string
+}
+
+export type Module1Lesson6AiProcessMap = Record<Module1Lesson6PromptId, Module1Lesson6AiProcess>
+
+export type Module1Lesson6CustomPrompts = Record<Module1Lesson6PromptId, string>
+
+export interface Module1Lesson6ReviewNeeded {
+  plan: boolean
+  draft: boolean
+  final: boolean
+}
+
+/**
+ * 上次整体确认时的四段只读快照。
+ * 不是可编辑全文，也不是 fullStory；作品页只用来展示这一版，当前工作稿仍在各课确认稿。
+ */
+export interface Module1Lesson6ConfirmedEdition {
+  confirmedAt: string
+  storyTitle: string
+  openingText: string
+  developmentText: string
+  turnText: string
+  endingText: string
+}
+
+export interface Module1Lesson6State extends Module1BaseLessonState {
+  contentVersion: number
+  step1Completed: boolean
+  step2Completed: boolean
+  step3Completed: boolean
+  step4Completed: boolean
+  observation: string
+  endingType: Module1Lesson6EndingType | ""
+  customEndingRequirement: string
+  plotPlan: string
+  planReason: string
+  draftText: string
+  draftFrozenText: string
+  finalText: string
+  previousFinalText: string
+  decisionNote: string
+  revisionInstruction: string
+  preserveText: string
+  selfCheck: boolean
+  /** 最近一次打开「预览全文」时的校对版本；正文变了就必须再打开。 */
+  previewSeenKey: string
+  confirmedEdition: Module1Lesson6ConfirmedEdition | null
+  customPrompts: Module1Lesson6CustomPrompts
+  aiProcess: Module1Lesson6AiProcessMap
+  reviewNeeded: Module1Lesson6ReviewNeeded
+  legacyLesson6: Record<string, unknown> | null
+}
+
 export interface Module1Portfolio {
   id: string
   moduleId: typeof MODULE1_ID
@@ -276,7 +334,7 @@ export interface Module1Portfolio {
   lesson3: Module1Lesson3State
   lesson4: Module1Lesson4State
   lesson5: Module1Lesson5State
-  lesson6: Module1EmptyLessonState
+  lesson6: Module1Lesson6State
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -298,10 +356,6 @@ function numberValue(value: unknown, fallback: number): number {
 function stringArrayValue(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is string => typeof item === "string").slice(0, 2)
-}
-
-function createEmptyLesson(): Module1EmptyLessonState {
-  return { step: 1, completed: false, completedAt: null }
 }
 
 export function createEmptyModule1Lesson2Study(): Module1Lesson2Study {
@@ -799,6 +853,137 @@ export function hasMeaningfulModule1Lesson5Fields(state: Module1Lesson5State): b
     && !state.reviewNeeded.final
 }
 
+export const MODULE1_LESSON6_PROMPT_IDS: Module1Lesson6PromptId[] = ["p1", "p2", "p3", "p4", "p5"]
+
+export function isModule1Lesson6EndingType(value: string): value is Module1Lesson6EndingType {
+  return (MODULE1_LESSON6_ENDING_TYPES as readonly string[]).includes(value)
+}
+
+export function createEmptyModule1Lesson6AiProcess(): Module1Lesson6AiProcess {
+  return { ...createEmptyModule1Lesson3AiProcess(), contextKey: "" }
+}
+
+export function createEmptyModule1Lesson6CustomPrompts(): Module1Lesson6CustomPrompts {
+  return { p1: "", p2: "", p3: "", p4: "", p5: "" }
+}
+
+export function createEmptyModule1Lesson6AiProcessMap(): Module1Lesson6AiProcessMap {
+  return {
+    p1: createEmptyModule1Lesson6AiProcess(),
+    p2: createEmptyModule1Lesson6AiProcess(),
+    p3: createEmptyModule1Lesson6AiProcess(),
+    p4: createEmptyModule1Lesson6AiProcess(),
+    p5: createEmptyModule1Lesson6AiProcess(),
+  }
+}
+
+export function createEmptyModule1Lesson6ReviewNeeded(): Module1Lesson6ReviewNeeded {
+  return { plan: false, draft: false, final: false }
+}
+
+export function createEmptyModule1Lesson6ConfirmedEdition(): Module1Lesson6ConfirmedEdition {
+  return {
+    confirmedAt: "",
+    storyTitle: "",
+    openingText: "",
+    developmentText: "",
+    turnText: "",
+    endingText: "",
+  }
+}
+
+export function isModule1Lesson6EditionResolvable(
+  edition: Module1Lesson6ConfirmedEdition | null | undefined,
+): edition is Module1Lesson6ConfirmedEdition {
+  if (!edition) return false
+  return Boolean(
+    edition.confirmedAt.trim()
+    && edition.openingText.trim()
+    && edition.developmentText.trim()
+    && edition.turnText.trim()
+    && edition.endingText.trim(),
+  )
+}
+
+export function createEmptyModule1Lesson6State(): Module1Lesson6State {
+  return {
+    step: 1,
+    completed: false,
+    completedAt: null,
+    contentVersion: MODULE1_LESSON6_CONTENT_VERSION,
+    step1Completed: false,
+    step2Completed: false,
+    step3Completed: false,
+    step4Completed: false,
+    observation: "",
+    endingType: "",
+    customEndingRequirement: "",
+    plotPlan: "",
+    planReason: "",
+    draftText: "",
+    draftFrozenText: "",
+    finalText: "",
+    previousFinalText: "",
+    decisionNote: "",
+    revisionInstruction: "",
+    preserveText: "",
+    selfCheck: false,
+    previewSeenKey: "",
+    confirmedEdition: null,
+    customPrompts: createEmptyModule1Lesson6CustomPrompts(),
+    aiProcess: createEmptyModule1Lesson6AiProcessMap(),
+    reviewNeeded: createEmptyModule1Lesson6ReviewNeeded(),
+    legacyLesson6: null,
+  }
+}
+
+export function hasModule1Lesson6AiReplyIfUsed(process: Module1Lesson6AiProcess): boolean {
+  return !process.copySucceeded || Boolean(process.aiReply.trim())
+}
+
+export function hasModule1Lesson6RequiredAi(process: Module1Lesson6AiProcess): boolean {
+  return process.copySucceeded && Boolean(process.aiReply.trim())
+}
+
+export function hasModule1Lesson6Ending(state: Module1Lesson6State): boolean {
+  if (!isModule1Lesson6EndingType(state.endingType)) return false
+  if (state.endingType === "自定义") return Boolean(state.customEndingRequirement.trim())
+  return true
+}
+
+export function hasModule1Lesson6Observation(state: Module1Lesson6State): boolean {
+  return Boolean(state.observation.trim()) && hasModule1Lesson6AiReplyIfUsed(state.aiProcess.p1)
+}
+
+export function hasModule1Lesson6Plan(state: Module1Lesson6State): boolean {
+  return Boolean(state.plotPlan.trim() && state.planReason.trim())
+    && hasModule1Lesson6Ending(state)
+    && hasModule1Lesson6AiReplyIfUsed(state.aiProcess.p2)
+}
+
+export function hasModule1Lesson6Draft(state: Module1Lesson6State): boolean {
+  return Boolean(state.draftText.trim())
+    && hasModule1Lesson6RequiredAi(state.aiProcess.p3)
+}
+
+export function hasModule1Lesson6Final(state: Module1Lesson6State): boolean {
+  return Boolean(state.finalText.trim() && state.decisionNote.trim())
+    && state.selfCheck
+    && Boolean(state.previewSeenKey.trim())
+    && hasModule1Lesson6RequiredAi(state.aiProcess.p4)
+    && hasModule1Lesson6AiReplyIfUsed(state.aiProcess.p5)
+}
+
+export function hasMeaningfulModule1Lesson6Fields(state: Module1Lesson6State): boolean {
+  return hasModule1Lesson6Observation(state)
+    && !state.reviewNeeded.plan
+    && hasModule1Lesson6Plan(state)
+    && !state.reviewNeeded.draft
+    && hasModule1Lesson6Draft(state)
+    && hasModule1Lesson6Final(state)
+    && !state.reviewNeeded.final
+}
+
 export function hasMeaningfulModule1Lesson1Fields(state: Module1Lesson1State): boolean {
   return [state.sdg, state.sdgWhy, state.cityIssue, state.audience, state.audienceConcern]
     .every(value => value.trim().length > 0)
@@ -946,16 +1131,7 @@ export function createNewModule1Portfolio(
     lesson3: createEmptyModule1Lesson3State(),
     lesson4: createEmptyModule1Lesson4State(),
     lesson5: createEmptyModule1Lesson5State(),
-    lesson6: createEmptyLesson(),
-  }
-}
-
-function normalizeEmptyLesson(raw: unknown): Module1EmptyLessonState {
-  const source = isRecord(raw) ? raw : {}
-  return {
-    step: Math.max(1, numberValue(source.step, 1)),
-    completed: booleanValue(source.completed),
-    completedAt: source.completedAt === null ? null : stringValue(source.completedAt) || null,
+    lesson6: createEmptyModule1Lesson6State(),
   }
 }
 
@@ -1576,6 +1752,159 @@ function normalizeLesson5State(raw: unknown): Module1Lesson5State {
   }
 }
 
+function normalizeLesson6AiProcess(raw: unknown): Module1Lesson6AiProcess {
+  const source = isRecord(raw) ? raw : {}
+  const base = createEmptyModule1Lesson6AiProcess()
+  return {
+    generatedPromptSnapshot: stringValue(source.generatedPromptSnapshot, base.generatedPromptSnapshot),
+    copiedPrompt: stringValue(source.copiedPrompt, base.copiedPrompt),
+    aiReply: stringValue(source.aiReply, base.aiReply),
+    promptEdited: booleanValue(source.promptEdited, base.promptEdited),
+    copySucceeded: booleanValue(source.copySucceeded, base.copySucceeded),
+    copiedAt: typeof source.copiedAt === "string" ? source.copiedAt : null,
+    copyCount: numberValue(source.copyCount, base.copyCount),
+    contextKey: stringValue(source.contextKey, base.contextKey),
+  }
+}
+
+function normalizeLesson6AiProcessMap(raw: unknown): Module1Lesson6AiProcessMap {
+  const source = isRecord(raw) ? raw : {}
+  const empty = createEmptyModule1Lesson6AiProcessMap()
+  return {
+    p1: normalizeLesson6AiProcess(source.p1 ?? empty.p1),
+    p2: normalizeLesson6AiProcess(source.p2 ?? empty.p2),
+    p3: normalizeLesson6AiProcess(source.p3 ?? empty.p3),
+    p4: normalizeLesson6AiProcess(source.p4 ?? empty.p4),
+    p5: normalizeLesson6AiProcess(source.p5 ?? empty.p5),
+  }
+}
+
+function normalizeLesson6CustomPrompts(raw: unknown): Module1Lesson6CustomPrompts {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    p1: stringValue(source.p1),
+    p2: stringValue(source.p2),
+    p3: stringValue(source.p3),
+    p4: stringValue(source.p4),
+    p5: stringValue(source.p5),
+  }
+}
+
+function normalizeLesson6ReviewNeeded(
+  raw: unknown,
+  fallback: Module1Lesson6ReviewNeeded,
+): Module1Lesson6ReviewNeeded {
+  const source = isRecord(raw) ? raw : {}
+  return {
+    plan: booleanValue(source.plan, fallback.plan),
+    draft: booleanValue(source.draft, fallback.draft),
+    final: booleanValue(source.final, fallback.final),
+  }
+}
+
+function normalizeLesson6ConfirmedEdition(raw: unknown): Module1Lesson6ConfirmedEdition | null {
+  if (!isRecord(raw)) return null
+  const edition: Module1Lesson6ConfirmedEdition = {
+    confirmedAt: stringValue(raw.confirmedAt),
+    storyTitle: stringValue(raw.storyTitle),
+    openingText: stringValue(raw.openingText),
+    developmentText: stringValue(raw.developmentText),
+    turnText: stringValue(raw.turnText),
+    endingText: stringValue(raw.endingText),
+  }
+  return isModule1Lesson6EditionResolvable(edition) ? edition : null
+}
+
+function cloneLegacyLesson6(raw: Record<string, unknown>): Record<string, unknown> {
+  const archived = { ...raw }
+  delete archived.legacyLesson6
+  return archived
+}
+
+function hasNewLesson6Shape(source: Record<string, unknown>): boolean {
+  return numberValue(source.contentVersion, 0) >= MODULE1_LESSON6_CONTENT_VERSION
+    || typeof source.observation === "string"
+    || typeof source.plotPlan === "string"
+    || typeof source.draftText === "string"
+    || typeof source.finalText === "string"
+    || isRecord(source.aiProcess)
+}
+
+function hasLegacyLesson6Content(source: Record<string, unknown>): boolean {
+  return Boolean(
+    stringValue(source.he)
+    || stringValue(source.heOut)
+    || stringValue(source.customEnding)
+    || stringValue(source.sectionText),
+  )
+}
+
+function normalizeLesson6State(raw: unknown): Module1Lesson6State {
+  const source = isRecord(raw) ? raw : {}
+  const empty = createEmptyModule1Lesson6State()
+  const alreadyArchived = isRecord(source.legacyLesson6) ? source.legacyLesson6 : null
+  const isLegacyRecord = Boolean(alreadyArchived)
+    || (!hasNewLesson6Shape(source) && hasLegacyLesson6Content(source))
+  const legacyLesson6 = alreadyArchived
+    ?? (isLegacyRecord && hasLegacyLesson6Content(source) ? cloneLegacyLesson6(source) : null)
+  const endingRaw = stringValue(source.endingType)
+  const confirmedEdition = normalizeLesson6ConfirmedEdition(source.confirmedEdition)
+
+  const draft: Module1Lesson6State = {
+    ...empty,
+    observation: stringValue(source.observation),
+    endingType: isModule1Lesson6EndingType(endingRaw) ? endingRaw : "",
+    customEndingRequirement: stringValue(source.customEndingRequirement),
+    plotPlan: stringValue(source.plotPlan),
+    planReason: stringValue(source.planReason),
+    draftText: stringValue(source.draftText),
+    draftFrozenText: stringValue(source.draftFrozenText),
+    finalText: stringValue(source.finalText),
+    previousFinalText: stringValue(source.previousFinalText),
+    decisionNote: stringValue(source.decisionNote),
+    revisionInstruction: stringValue(source.revisionInstruction),
+    preserveText: stringValue(source.preserveText),
+    selfCheck: booleanValue(source.selfCheck),
+    previewSeenKey: stringValue(source.previewSeenKey),
+    confirmedEdition,
+    customPrompts: normalizeLesson6CustomPrompts(source.customPrompts),
+    aiProcess: normalizeLesson6AiProcessMap(source.aiProcess),
+    reviewNeeded: normalizeLesson6ReviewNeeded(source.reviewNeeded, empty.reviewNeeded),
+    legacyLesson6,
+  }
+
+  const observationReady = hasModule1Lesson6Observation(draft)
+  const planReady = hasModule1Lesson6Plan(draft) && !draft.reviewNeeded.plan
+  const draftReady = hasModule1Lesson6Draft(draft) && !draft.reviewNeeded.draft
+  const finalReady = hasModule1Lesson6Final(draft) && !draft.reviewNeeded.final
+  let step1Completed = booleanValue(source.step1Completed) && observationReady
+  let step2Completed = step1Completed && booleanValue(source.step2Completed) && planReady
+  let step3Completed = step2Completed && booleanValue(source.step3Completed) && draftReady
+  let step4Completed = step3Completed && booleanValue(source.step4Completed) && finalReady
+  // 已有可解析的作品确认版本时，保留历史完成，避免改工作稿后把「我的小说」重新锁死。
+  const historical = booleanValue(source.completed) && isModule1Lesson6EditionResolvable(confirmedEdition)
+  if (historical) {
+    step1Completed = true
+    step2Completed = true
+    step3Completed = true
+    step4Completed = true
+  }
+  const completed = historical || (step4Completed && booleanValue(source.completed))
+  const safeStep = !step1Completed ? 1 : !step2Completed ? 2 : !step3Completed ? 3 : 4
+
+  return {
+    ...draft,
+    step: safeStep,
+    completed,
+    completedAt: completed ? stringValue(source.completedAt) || confirmedEdition?.confirmedAt || null : null,
+    contentVersion: MODULE1_LESSON6_CONTENT_VERSION,
+    step1Completed,
+    step2Completed,
+    step3Completed,
+    step4Completed,
+  }
+}
+
 export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
   const source = isRecord(raw) ? raw : {}
   const student = isRecord(source.student) ? source.student : {}
@@ -1638,6 +1967,6 @@ export function normalizeModule1Portfolio(raw: unknown): Module1Portfolio {
     lesson3: normalizeLesson3State(source.lesson3),
     lesson4: normalizeLesson4State(source.lesson4),
     lesson5: normalizeLesson5State(source.lesson5),
-    lesson6: normalizeEmptyLesson(source.lesson6),
+    lesson6: normalizeLesson6State(source.lesson6),
   }
 }

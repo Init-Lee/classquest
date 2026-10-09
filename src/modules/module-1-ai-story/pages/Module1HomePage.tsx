@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 首页。
  * 职责：承载建档入口、身份与续学信息、六课时状态卡、教师讲解口令入口，以及已开放课卡上的本课阶段快照。
- * 更新触发：身份字段、课时开放状态（含课时 5）、教师入口、课卡阶段快照入口或课程状态文案变化时，需要同步更新本文件。
+ * 更新触发：身份字段、课时开放状态（含课时 6）、教师入口、「我的小说」入口、课卡阶段快照或课程状态文案变化时，需要同步更新本文件。
  */
 
 import { useState, type FormEvent } from "react"
@@ -22,6 +22,8 @@ import {
 import { verifyModule1TeacherPassphrase } from "@/modules/module-1-ai-story/constants/teacher-passphrase"
 import { Module1LessonSnapshotDownloadButton } from "@/modules/module-1-ai-story/features/global-actions/Module1LessonSnapshotDownloadButton"
 import { getModule1LessonCardSnapshotButton } from "@/modules/module-1-ai-story/features/global-actions/module1-lesson-snapshot-entry"
+import { MODULE1_LESSON6_NOVEL_UI } from "@/modules/module-1-ai-story/constants/lesson6-copy"
+import { resolveModule1StoryAccess } from "@/modules/module-1-ai-story/features/story/module1-story-access"
 
 function TeacherModeEntry() {
   const { enterTeacherMode } = useModule1Portfolio()
@@ -191,7 +193,7 @@ export default function Module1HomePage() {
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />输入会保存在本机；换设备前请点击「保存进度」下载最新学习包。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成对应课时后，可在首页该课时卡下载「阶段快照」交作业；阶段快照不能恢复进度。</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关，可从进度条回看已完成内容。</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段开放课时 1 至课时 3，其余课时会清楚标记为待开发。</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前阶段开放课时 1 至课时 6。完成六课后可从「我的小说」阅读确认作品。</li>
             </ul>
           </CardContent>
         </Card>
@@ -243,11 +245,12 @@ export default function Module1HomePage() {
   const lesson3Done = portfolio.lesson3.completed
   const lesson4Done = portfolio.lesson4.completed
   const lesson5Done = portfolio.lesson5.completed
+  const moduleComplete = portfolio.lesson6.completed
   const canContinue = canAccessModule1Lesson(portfolio, pointer.lessonId, isTeacherMode)
   const continuePath = canContinue
     ? getModule1LessonResumePath(portfolio, pointer.lessonId)
     : lesson5Done
-      ? getModule1LessonResumePath(portfolio, 5)
+      ? getModule1LessonResumePath(portfolio, 6)
       : lesson4Done
         ? getModule1LessonResumePath(portfolio, 4)
         : lesson3Done
@@ -257,17 +260,18 @@ export default function Module1HomePage() {
             : getModule1LessonResumePath(portfolio, 1)
   const continueLabel = isTeacherMode
     ? "浏览本课"
-    : canContinue
-      ? "继续学习"
-      : lesson5Done
-        ? "等待课时 6 开放"
+    : moduleComplete
+      ? "查看课时 6"
+      : canContinue
+        ? "继续学习"
         : "等待下一课时开放"
+  const novelUnlocked = resolveModule1StoryAccess(portfolio) !== "locked"
   const statusText = isTeacherMode
     ? "当前是课堂演示档案，不会写入本机学生档案。"
-    : canContinue
-      ? `继续课时 ${pointer.lessonId} 第 ${pointer.stepId} 关。`
-      : lesson5Done
-        ? "课时 5 已完成；课时 6 将在后续阶段开放。"
+    : moduleComplete
+      ? "六个课时都已完成。可以从「我的小说」阅读已确认作品。"
+      : canContinue
+        ? `继续课时 ${pointer.lessonId} 第 ${pointer.stepId} 关。`
         : "请先完成已开放课时，再进入后续内容。"
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8">
@@ -281,13 +285,24 @@ export default function Module1HomePage() {
           <p>{portfolio.student.clazz} · {portfolio.student.studentName} · {portfolio.student.classSeatCode}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
-              disabled={!isTeacherMode && !canContinue}
-              onClick={() => navigate(isTeacherMode && !canContinue ? getModule1LessonResumePath(portfolio, lesson4Done ? 4 : 3) : continuePath)}
+              disabled={!isTeacherMode && !canContinue && !moduleComplete}
+              onClick={() => navigate(isTeacherMode && !canContinue ? getModule1LessonResumePath(portfolio, lesson5Done ? 5 : 4) : continuePath)}
             >
               {continueLabel}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
+            <Button
+              variant="outline"
+              disabled={!novelUnlocked}
+              onClick={() => { if (novelUnlocked) navigate("/module/1/story") }}
+            >
+              {novelUnlocked ? <BookOpen className="mr-1 h-4 w-4" /> : <Lock className="mr-1 h-4 w-4" />}
+              {MODULE1_LESSON6_NOVEL_UI.button}
+            </Button>
           </div>
+          {!novelUnlocked && (
+            <p className="text-xs text-muted-foreground">{MODULE1_LESSON6_NOVEL_UI.lockedHint}</p>
+          )}
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
