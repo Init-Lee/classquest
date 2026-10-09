@@ -243,7 +243,7 @@ export function buildModule1Lesson6DraftContextKey(portfolio: Module1Portfolio):
 
 /**
  * 第 4 关检查依赖：起草上下文 + 当前待检查合段。
- * 确认稿一变，contextKey 必须变化，旧复制不能继续算完成。
+ * 正文一变，这个键仍会变化，供快照记录当时复制了什么；完成判定不拿它比对。
  */
 export function buildModule1Lesson6CheckContextKey(portfolio: Module1Portfolio): string {
   return [

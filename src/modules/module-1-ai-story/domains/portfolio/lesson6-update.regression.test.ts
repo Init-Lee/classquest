@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 6 复核、初稿硬锁与 AI 过程回归测试。
- * 职责：锁定第 1/2 关无 AI 可过、第 3/4 关必须复制并贴回、第 3 关完成后忽略 draft 回写、「恢复初稿」替换确认稿并作废检查轮次。
+ * 职责：锁定第 1/2 关无 AI 可过、第 3/4 关复制并贴回一次即可、改确认稿不清预览与通读、第 3 关完成后忽略 draft 回写、「恢复初稿」替换确认稿但不作废已完成的检查。
  * 更新触发：课时 6 完成判定、初稿硬锁、复核、contextKey 或 AI 过程口径变化时，需要同步更新本文件。
  */
 
@@ -129,12 +129,20 @@ describe("模块 1 课时 6 完成与防丢", () => {
     expect(hasMeaningfulModule1Lesson6Fields(filledLesson6())).toBe(true)
   })
 
-  it("旧轮次 contextKey 不匹配时不能当作本轮必用 AI", () => {
+  it("contextKey 与当前正文不一致时，复制成功且回复非空仍算必用 AI", () => {
     const state = filledLesson6()
-    expect(hasModule1Lesson6CurrentRequiredAi(state.aiProcess.p3, "ctx")).toBe(true)
-    expect(hasModule1Lesson6CurrentRequiredAi(state.aiProcess.p3, "new-ctx")).toBe(false)
-    expect(hasModule1Lesson6CurrentDraft(state, "new-ctx")).toBe(false)
+    state.aiProcess.p3.contextKey = "过期的起草上下文"
+    state.endingType = "结果收束"
+    state.draftText = "改过的初稿"
+    expect(hasModule1Lesson6CurrentRequiredAi(state.aiProcess.p3)).toBe(true)
+    expect(hasModule1Lesson6CurrentDraft(state)).toBe(true)
     expect(hasModule1Lesson6Draft(state)).toBe(true)
+    state.aiProcess.p3.aiReply = ""
+    expect(hasModule1Lesson6CurrentDraft(state)).toBe(false)
+    state.aiProcess.p3.aiReply = "一版转段草稿"
+    state.aiProcess.p3.copySucceeded = false
+    expect(hasModule1Lesson6CurrentRequiredAi(state.aiProcess.p3)).toBe(false)
+    expect(hasModule1Lesson6CurrentDraft(state)).toBe(false)
   })
 
   it("首次确认初稿写入冻结字段，之后改 draftText 不覆盖冻结稿和确认稿", () => {
@@ -169,7 +177,55 @@ describe("模块 1 课时 6 完成与防丢", () => {
     expect(next.reviewNeeded.final).toBe(false)
   })
 
-  it("恢复初稿把 finalText 设回 draftText，且检查轮次因正文变化失效", () => {
+  it("改确认稿后，已复制且有回复、已预览已勾选仍可完成；没复制或回复空不能完成", () => {
+    const previous = filledLesson6()
+    const edited = finalizeModule1Lesson6State(previous, {
+      ...previous,
+      finalText: "改过一字的确认稿",
+      decisionNote: "处理说明也改了",
+    })
+    expect(edited.selfCheck).toBe(true)
+    expect(edited.previewSeenKey).toBe("seen")
+    expect(hasModule1Lesson6CurrentFinal(edited)).toBe(true)
+    expect(hasModule1Lesson6Final(edited)).toBe(true)
+
+    const noCopy = {
+      ...edited,
+      aiProcess: {
+        ...edited.aiProcess,
+        p4: createEmptyModule1Lesson6State().aiProcess.p4,
+      },
+    }
+    expect(hasModule1Lesson6CurrentFinal(noCopy)).toBe(false)
+
+    const emptyReply = {
+      ...edited,
+      aiProcess: {
+        ...edited.aiProcess,
+        p4: { ...edited.aiProcess.p4, aiReply: "" },
+      },
+    }
+    expect(hasModule1Lesson6CurrentFinal(emptyReply)).toBe(false)
+
+    expect(hasModule1Lesson6CurrentFinal({ ...edited, previewSeenKey: "" })).toBe(false)
+    expect(hasModule1Lesson6CurrentFinal({ ...edited, selfCheck: false })).toBe(false)
+    expect(hasModule1Lesson6CurrentFinal({ ...edited, finalText: "  " })).toBe(false)
+    expect(hasModule1Lesson6CurrentFinal({ ...edited, decisionNote: "" })).toBe(false)
+
+    const p5CopiedEmpty = {
+      ...edited,
+      aiProcess: {
+        ...edited.aiProcess,
+        p5: recordModule1Lesson6AiCopy(edited.aiProcess.p5, "局部修改", "局部修改", "p5"),
+      },
+    }
+    expect(hasModule1Lesson6CurrentFinal(p5CopiedEmpty)).toBe(false)
+    p5CopiedEmpty.aiProcess.p5.aiReply = "改好的合段"
+    p5CopiedEmpty.finalText = "又改了一个字"
+    expect(hasModule1Lesson6CurrentFinal(p5CopiedEmpty)).toBe(true)
+  })
+
+  it("恢复初稿把 finalText 设回 draftText，已复制且有回复、已预览已勾选仍可完成", () => {
     const portfolio = createNewModule1Portfolio()
     const draftText = "【夹具】转段初稿正文"
     const editedFinal = "【夹具】学生改过的确认稿"
@@ -188,7 +244,7 @@ describe("模块 1 课时 6 完成与防丢", () => {
         p4: usedAiProcess("检查意见", oldKey),
       },
     }
-    expect(hasModule1Lesson6CurrentFinal(withAi, oldKey, "seen")).toBe(true)
+    expect(hasModule1Lesson6CurrentFinal(withAi)).toBe(true)
 
     const restored = finalizeModule1Lesson6State(withAi, {
       ...withAi,
@@ -199,14 +255,17 @@ describe("模块 1 课时 6 完成与防丢", () => {
     expect(restored.previousFinalText).toBe(editedFinal)
     expect(restored.draftText).toBe(draftText)
     expect(restored.draftFrozenText).toBe(draftText)
+    expect(restored.selfCheck).toBe(true)
+    expect(restored.previewSeenKey).toBe("seen")
 
     const newKey = buildModule1Lesson6CheckContextKey({
       ...portfolio,
       lesson6: restored,
     })
     expect(newKey).not.toBe(oldKey)
-    expect(hasModule1Lesson6CurrentRequiredAi(restored.aiProcess.p4, newKey)).toBe(false)
-    expect(hasModule1Lesson6CurrentFinal(restored, newKey)).toBe(false)
+    expect(restored.aiProcess.p4.contextKey).toBe(oldKey)
+    expect(hasModule1Lesson6CurrentRequiredAi(restored.aiProcess.p4)).toBe(true)
+    expect(hasModule1Lesson6CurrentFinal(restored)).toBe(true)
   })
 
   it("文案主按钮为恢复初稿，并含用初稿替换当前确认稿说明", async () => {
@@ -218,6 +277,8 @@ describe("模块 1 课时 6 完成与防丢", () => {
     expect(MODULE1_LESSON6_SHARED_COPY.keepDraftHint).toContain("用初稿替换当前确认稿")
     expect(MODULE1_LESSON6_SHARED_COPY.keepDraftConfirmTitle).toContain("用初稿替换当前确认稿")
     expect(MODULE1_LESSON6_PAGES.step4.buttons[2]).not.toBe("保留初稿")
+    expect(MODULE1_LESSON6_SHARED_COPY.recheckNote).toContain("不必重新复制")
+    expect(MODULE1_LESSON6_SHARED_COPY).not.toHaveProperty("promptChanged")
   })
 
   it("上游开头变化时保留课时 6 正文并标记复核", () => {
@@ -234,6 +295,8 @@ describe("模块 1 课时 6 完成与防丢", () => {
     expect(reviewed.lesson6.reviewNeeded.plan).toBe(true)
     expect(reviewed.lesson6.reviewNeeded.draft).toBe(true)
     expect(reviewed.lesson6.reviewNeeded.final).toBe(true)
+    expect(reviewed.lesson6.selfCheck).toBe(true)
+    expect(reviewed.lesson6.previewSeenKey).toBe("seen")
   })
 
   it("旧包只有空课时 6 时补齐新字段且不丢课时 1—3", () => {

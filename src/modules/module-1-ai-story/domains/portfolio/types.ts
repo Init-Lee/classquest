@@ -265,7 +265,7 @@ export interface Module1Lesson5State extends Module1BaseLessonState {
   legacyLesson5: Record<string, unknown> | null
 }
 
-/** 课时 6 单条外部提示词过程：自有 contextKey，不复用课时 5。 */
+/** 课时 6 单条外部提示词过程：自有 contextKey，复制时写入供快照；完成判定不与当前正文比对。 */
 export interface Module1Lesson6AiProcess extends Module1Lesson3AiProcess {
   contextKey: string
 }

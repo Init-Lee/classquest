@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 6 第三关用 AI 起草合段。
- * 职责：只读课时 3 题目与起承转确认稿，学生保存合段初稿；本关必须复制 P3 并贴回回复；完成后初稿硬锁只读，顶栏仍可回看。
+ * 职责：只读课时 3 题目与起承转确认稿，学生保存合段初稿；本关复制 P3 成功并贴回一次即可，之后改稿不再要求重新复制；完成后初稿硬锁只读，顶栏仍可回看。
  * 更新触发：第 3 关必用外部 AI、初稿硬锁、锁定灰态、题目只读或字数引导规则变化时，需要同步更新本文件。
  */
 
@@ -42,13 +42,9 @@ export default function Step3WriteDraft() {
   const state = portfolio.lesson6
   const process = state.aiProcess.p3
   const draftLocked = state.step3Completed
-  const draftContextKey = buildModule1Lesson6DraftContextKey(portfolio)
-  const valid = draftLocked || hasModule1Lesson6CurrentDraft(state, draftContextKey)
+  const valid = draftLocked || hasModule1Lesson6CurrentDraft(state)
   const charCount = countModule1MeaningfulChars(state.draftText)
   const planReady = Boolean(state.plotPlan.trim() && state.planReason.trim())
-  const contextStale = process.copySucceeded
-    && Boolean(process.contextKey.trim())
-    && process.contextKey !== draftContextKey
 
   const updateLesson6 = (updater: (current: typeof state) => typeof state) => {
     updatePortfolio(current => ({
@@ -78,8 +74,8 @@ export default function Step3WriteDraft() {
       setError(page.validation[0])
       return
     }
-    if (!hasModule1Lesson6CurrentRequiredAi(process, draftContextKey)) {
-      setError(contextStale ? MODULE1_LESSON6_SHARED_COPY.promptChanged : page.validation[1])
+    if (!hasModule1Lesson6CurrentRequiredAi(process)) {
+      setError(page.validation[1])
       return
     }
     setError("")
@@ -207,9 +203,6 @@ export default function Step3WriteDraft() {
                   ),
                 ))}
               />
-              {contextStale && !draftLocked && (
-                <p className="text-sm text-amber-800">{MODULE1_LESSON6_SHARED_COPY.promptChanged}</p>
-              )}
               <Lesson3AiReplyField
                 copySucceeded={process.copySucceeded}
                 readOnly={draftLocked}

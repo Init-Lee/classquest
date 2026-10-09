@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 6 第四关通读全文并确认。
- * 职责：独立确认稿、四个阅读问题、校对预览、「恢复初稿」用初稿替换确认稿；本关必须复制 P4 并贴回回复，P5 仍可选；确认后进入我的小说。
+ * 职责：独立确认稿、四个阅读问题、校对预览、「恢复初稿」用初稿替换确认稿；本关复制 P4 成功并贴回一次即可，改合段不再要求重新复制；P5 仍可选；确认后进入我的小说。
  * 更新触发：第 4 关完成条件、全文预览、必用外部 AI、恢复初稿确认框或完成弹窗变化时，需要同步更新本文件。
  */
 
@@ -96,15 +96,11 @@ export default function Step4CheckConfirm() {
   const state = portfolio.lesson6
   const p4 = state.aiProcess.p4
   const p5 = state.aiProcess.p5
-  const checkContextKey = buildModule1Lesson6CheckContextKey(portfolio)
   const previewKey = buildModule1Lesson6PreviewKey(portfolio)
-  const previewReady = state.previewSeenKey === previewKey
+  const previewReady = Boolean(state.previewSeenKey.trim())
   const previewChanged = previewOpen && Boolean(openedPreviewKey) && openedPreviewKey !== previewKey
-  const valid = hasModule1Lesson6CurrentFinal(state, checkContextKey, previewKey)
+  const valid = hasModule1Lesson6CurrentFinal(state)
   const inspectReady = Boolean((state.finalText.trim() || state.draftText.trim()))
-  const contextStale = p4.copySucceeded
-    && Boolean(p4.contextKey.trim())
-    && p4.contextKey !== checkContextKey
 
   const updateLesson6 = (updater: (current: typeof state) => typeof state) => {
     updatePortfolio(current => ({
@@ -143,8 +139,8 @@ export default function Step4CheckConfirm() {
       setError(MODULE1_LESSON6_PREVIEW_UI.missingPart)
       return
     }
-    if (!hasModule1Lesson6CurrentRequiredAi(p4, checkContextKey)) {
-      setError(contextStale ? MODULE1_LESSON6_SHARED_COPY.promptChanged : page.validation[1])
+    if (!hasModule1Lesson6CurrentRequiredAi(p4)) {
+      setError(page.validation[1])
       return
     }
     if (p5.copySucceeded && !p5.aiReply.trim()) {
@@ -329,9 +325,6 @@ export default function Step4CheckConfirm() {
                   ),
                 ))}
               />
-              {contextStale && (
-                <p className="text-sm text-amber-800">{MODULE1_LESSON6_SHARED_COPY.promptChanged}</p>
-              )}
               <Lesson3AiReplyField
                 copySucceeded={p4.copySucceeded}
                 value={p4.aiReply}

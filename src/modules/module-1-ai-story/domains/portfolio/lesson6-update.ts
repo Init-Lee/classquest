@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 课时 6 字段更新、初稿冻结与复核标记。
- * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；第 3 关完成后硬锁初稿（忽略 draftText 回写），第 4 关只改确认稿；确认稿变化时作废过期的 P4/P5 自定义提示词。
- * 更新触发：课时 6 复核范围、初稿硬锁时机、检查提示词刷新或上下游失效规则变化时，需要同步更新本文件。
+ * 职责：在写入情节安排、初稿或确认稿时保留另一版正文，并按内容包规则标记待复核；第 3 关完成后硬锁初稿（忽略 draftText 回写），第 4 关只改确认稿。必用 AI 复制成功并贴回一次即满足，改稿不清预览和通读勾选；正文或安排变化只清空已编辑的 P4/P5 自定义提示词。
+ * 更新触发：课时 6 复核范围、初稿硬锁时机、复制完成口径或上下游复核规则变化时，需要同步更新本文件。
  */
 
 import {
@@ -17,7 +17,9 @@ import {
   type Module1Lesson6State,
   type Module1Portfolio,
   createEmptyModule1Lesson6AiProcess,
-  hasModule1Lesson6AiReplyIfUsed,
+  hasModule1Lesson6Draft,
+  hasModule1Lesson6Final,
+  hasModule1Lesson6RequiredAi,
   isModule1Lesson6EditionResolvable,
 } from "@/modules/module-1-ai-story/domains/portfolio/types"
 
@@ -83,14 +85,14 @@ export function recordModule1Lesson6AiCopy(
   }
 }
 
+/**
+ * 课时 6 必用 AI：该关复制成功过一次且回复非空即可。
+ * contextKey 仍在复制时写入，供快照看当时复制了什么；这里不拿它和当前正文比对。
+ */
 export function hasModule1Lesson6CurrentRequiredAi(
   process: Module1Lesson6AiProcess,
-  currentContextKey: string,
 ): boolean {
-  return process.copySucceeded
-    && Boolean(process.aiReply.trim())
-    && Boolean(process.contextKey.trim())
-    && process.contextKey === currentContextKey
+  return hasModule1Lesson6RequiredAi(process)
 }
 
 export function patchModule1Lesson6AiProcess(
@@ -138,7 +140,7 @@ export function finalizeModule1Lesson6State(
     if (hasText(lockedDraft.draftText)) reviewNeeded.draft = true
     if (hasText(lockedDraft.finalText)) reviewNeeded.final = true
   }
-  // 进入 P4/P5 的正文或安排变了：作废已编辑的检查类提示词，必须重新复制。
+  // 正文或安排变了：清空已编辑的 P4/P5，避免下次复制仍用旧编辑稿。已成功的复制、预览和通读勾选保留。
   const inspectChanged = resolveLesson6InspectText(previous) !== resolveLesson6InspectText(next)
   if (
     (inspectChanged || planChanged)
@@ -148,9 +150,6 @@ export function finalizeModule1Lesson6State(
       ...next,
       customPrompts: { ...next.customPrompts, p4: "", p5: "" },
     }
-  }
-  if (inspectChanged) {
-    next = { ...next, selfCheck: false, previewSeenKey: "" }
   }
   return { ...next, reviewNeeded }
 }
@@ -172,27 +171,22 @@ export function applyModule1Lesson6UpstreamReview(
     if (hasText(lesson6.draftText)) reviewNeeded.draft = true
     if (hasText(lesson6.finalText)) reviewNeeded.final = true
   }
-  const storyTextChanged = lesson3StoryChanged(previous.lesson3, next.lesson3)
-    || lesson4DevelopmentChanged(previous.lesson4, next.lesson4)
-    || lesson5TurnChanged(previous.lesson5, next.lesson5)
   if (
     !upstreamChanged
     || (
       reviewNeeded.plan === lesson6.reviewNeeded.plan
       && reviewNeeded.draft === lesson6.reviewNeeded.draft
       && reviewNeeded.final === lesson6.reviewNeeded.final
-      && !storyTextChanged
     )
   ) {
     return next
   }
+  // 前文变化只标记复核。已打开的预览和通读勾选保留，不要求重来。
   return {
     ...next,
     lesson6: {
       ...lesson6,
       reviewNeeded,
-      selfCheck: storyTextChanged ? false : lesson6.selfCheck,
-      previewSeenKey: storyTextChanged ? "" : lesson6.previewSeenKey,
     },
   }
 }
@@ -230,6 +224,7 @@ export function clearModule1Lesson6Review(
   return { ...state, reviewNeeded }
 }
 
+/** 仅供快照对照当时复制的上下文。第 3/4 关完成判定不要调用它。 */
 export function matchesModule1Lesson6CopiedContext(
   process: Module1Lesson6AiProcess,
   currentContextKey: string,
@@ -239,23 +234,11 @@ export function matchesModule1Lesson6CopiedContext(
   return process.contextKey === currentContextKey
 }
 
-export function hasModule1Lesson6CurrentDraft(
-  state: Module1Lesson6State,
-  currentContextKey: string,
-): boolean {
-  return Boolean(state.draftText.trim())
-    && hasModule1Lesson6CurrentRequiredAi(state.aiProcess.p3, currentContextKey)
+export function hasModule1Lesson6CurrentDraft(state: Module1Lesson6State): boolean {
+  return hasModule1Lesson6Draft(state)
 }
 
-export function hasModule1Lesson6CurrentFinal(
-  state: Module1Lesson6State,
-  currentContextKey: string,
-  previewKey = "",
-): boolean {
-  return Boolean(state.finalText.trim() && state.decisionNote.trim())
-    && state.selfCheck
-    && Boolean(previewKey.trim())
-    && state.previewSeenKey === previewKey
-    && hasModule1Lesson6CurrentRequiredAi(state.aiProcess.p4, currentContextKey)
-    && hasModule1Lesson6AiReplyIfUsed(state.aiProcess.p5)
+/** 合段与处理说明非空、打开过预览、勾过通读，且 P4 复制并贴回一次；P5 仅在点过复制时要求回复。 */
+export function hasModule1Lesson6CurrentFinal(state: Module1Lesson6State): boolean {
+  return hasModule1Lesson6Final(state)
 }
