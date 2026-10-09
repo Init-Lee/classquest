@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1「我的小说」作品页。
- * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，段落固定带课时来源标签，并提供复制全文、整篇 TXT/Markdown/HTML 下载、下载 JSON 和返回修改；不是第 7 课。三种整篇下载锚在小说正文题目右侧。
- * 更新触发：解锁条件、确认版本展示、来源标签、复制范围、整篇下载的位置与颜色，或返回修改入口变化时，需要同步更新本文件。
+ * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，段落固定带课时来源标签，并提供复制全文、整篇 TXT/Markdown/HTML 下载、下载 JSON 和返回修改；不是第 7 课。三种整篇下载锚在小说正文题目右侧；正文下方返回修改、复制全文、下载 JSON 为蓝框，返回档案为蓝底。
+ * 更新触发：解锁条件、确认版本展示、来源标签、复制范围、整篇下载或正文下方按钮的位置与颜色，或返回修改入口变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -31,6 +31,12 @@ const MODULE1_STORY_DOWNLOAD_BUTTON_CLASS = {
   txt: "border-slate-600 bg-slate-600 text-white hover:bg-slate-700 hover:text-white",
   markdown: "border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:text-white",
   html: "border-green-600 bg-green-600 text-white hover:bg-green-700 hover:text-white",
+} as const
+
+/** 正文下方操作：前三个蓝边蓝字，返回档案为蓝底白字。 */
+const MODULE1_STORY_ACTION_BUTTON_CLASS = {
+  outline: "border-blue-600 bg-white text-blue-700 hover:bg-blue-50 hover:text-blue-800",
+  back: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white",
 } as const
 
 export default function Module1StoryPage() {
@@ -141,12 +147,13 @@ export default function Module1StoryPage() {
         )}
       />
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={() => setEditOpen(open => !open)}>{MODULE1_LESSON6_NOVEL_UI.edit}</Button>
-        <Button type="button" variant="outline" onClick={() => void copyFullText()}>{MODULE1_LESSON6_NOVEL_UI.copy}</Button>
+        <Button type="button" variant="outline" className={MODULE1_STORY_ACTION_BUTTON_CLASS.outline} onClick={() => setEditOpen(open => !open)}>{MODULE1_LESSON6_NOVEL_UI.edit}</Button>
+        <Button type="button" variant="outline" className={MODULE1_STORY_ACTION_BUTTON_CLASS.outline} onClick={() => void copyFullText()}>{MODULE1_LESSON6_NOVEL_UI.copy}</Button>
         {!isTeacherMode && (
           <Button
             type="button"
             variant="outline"
+            className={MODULE1_STORY_ACTION_BUTTON_CLASS.outline}
             onClick={() => {
               void flushPortfolio().then(latest => {
                 if (latest) downloadModule1ContinuePackage(latest)
@@ -156,7 +163,7 @@ export default function Module1StoryPage() {
             {MODULE1_LESSON6_NOVEL_UI.save}
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={() => navigate("/module/1")}>{MODULE1_LESSON6_NOVEL_UI.backArchive}</Button>
+        <Button type="button" className={MODULE1_STORY_ACTION_BUTTON_CLASS.back} onClick={() => navigate("/module/1")}>{MODULE1_LESSON6_NOVEL_UI.backArchive}</Button>
       </div>
       {copyState === "success" && <p className="text-sm text-green-700">{MODULE1_LESSON6_NOVEL_UI.copySuccess}</p>}
       {copyState === "fail" && (
