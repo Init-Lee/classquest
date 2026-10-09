@@ -162,5 +162,5 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 - 当前课时分支发布：`module4-lesson6-v0.7.7`，模块 4 课时 6 发布审核、学生三步流、匿名公共挑战、教师端统计与文档口径收口。
 - 上一课时里程碑：`module4-lesson6-v0.7.6`（课时 6 功能合入）、`module4-lesson5-v0.7.5`（课时 5 Live Lesson Session 联调闭环）。
 - 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-6 已开放；课时 4 可联调 peer-review / moderation / SQLite routes；课时 5 已完成 Live Lesson Session 学生端四步流与教师控制台同步课堂收口；课时 6 已完成教师端发布审核与统计、学生端三步流和匿名访客公共挑战。
-- 模块 1 已建立独立 app / domains / infra / lessons 结构，固定六课时；课时 1—6 已开放，并接入独立 IndexedDB、version 1 继续学习包、课时阶段快照与模块内教师讲解模式。`/module/1/story` 是派生的「我的小说」，不是第七课。`phase4-lesson56` 仍 pending，等用户看完再勾。
+- 模块 1 已建立独立 app / domains / infra / lessons 结构，固定六课时；课时 1—6 已开放，并接入独立 IndexedDB、version 1 继续学习包、课时阶段快照与模块内教师讲解模式。`/module/1/story` 是派生的「我的小说」，不是第七课。课时 6 已收口，可打包 OSS；阶段 5 未开始。
 
