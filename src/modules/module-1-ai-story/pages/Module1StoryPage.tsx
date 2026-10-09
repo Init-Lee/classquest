@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1「我的小说」作品页。
- * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，并提供复制全文、下载 JSON 和返回修改；不是第 7 课。
- * 更新触发：解锁条件、确认版本展示、复制范围或返回修改入口变化时，需要同步更新本文件。
+ * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，段落固定带课时来源标签，并提供复制全文、下载 JSON 和返回修改；不是第 7 课。
+ * 更新触发：解锁条件、确认版本展示、来源标签、复制范围或返回修改入口变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -24,7 +24,6 @@ import { Module1StoryReading } from "@/modules/module-1-ai-story/features/story/
 export default function Module1StoryPage() {
   const { portfolio, loading, isTeacherMode, flushPortfolio } = useModule1Portfolio()
   const navigate = useNavigate()
-  const [showSources, setShowSources] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [copyState, setCopyState] = useState<"idle" | "success" | "fail">("idle")
   const [copyText, setCopyText] = useState("")
@@ -118,14 +117,7 @@ export default function Module1StoryPage() {
         title={edition.storyTitle}
         untitledLabel={MODULE1_LESSON6_NOVEL_UI.noTitle}
         parts={parts}
-        showSources={showSources}
       />
-      <div className="flex flex-wrap gap-2">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={showSources} onChange={event => setShowSources(event.target.checked)} />
-          {MODULE1_LESSON6_NOVEL_UI.sourceToggle}
-        </label>
-      </div>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => setEditOpen(open => !open)}>{MODULE1_LESSON6_NOVEL_UI.edit}</Button>
         <Button type="button" variant="outline" onClick={() => void copyFullText()}>{MODULE1_LESSON6_NOVEL_UI.copy}</Button>

@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 1 课时 6 第四关通读全文并确认。
- * 职责：独立确认稿、四个阅读问题、校对预览、「恢复初稿」用初稿替换确认稿；本关复制 P4 成功并贴回一次即可，改合段不再要求重新复制；P5 仍可选；确认后进入我的小说。
+ * 职责：独立确认稿、四个阅读问题、校对预览（始终显示课时来源标签）、「恢复初稿」用初稿替换确认稿；本关复制 P4 成功并贴回一次即可，改合段不再要求重新复制；P5 仍可选；确认后进入我的小说。
  * 更新触发：第 4 关完成条件、全文预览、必用外部 AI、恢复初稿确认框或完成弹窗变化时，需要同步更新本文件。
  */
 
@@ -57,7 +57,6 @@ export default function Step4CheckConfirm() {
   const [replaceOpen, setReplaceOpen] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [openedPreviewKey, setOpenedPreviewKey] = useState("")
-  const [showSources, setShowSources] = useState(false)
   const [wasComplete, setWasComplete] = useState(false)
 
   useEffect(() => {
@@ -442,14 +441,9 @@ export default function Step4CheckConfirm() {
           {(!portfolio.lesson3.finalText.trim() || !portfolio.lesson4.finalText.trim() || !portfolio.lesson5.finalText.trim()) && (
             <p className="text-sm text-muted-foreground">{MODULE1_LESSON6_PREVIEW_UI.missingPart}</p>
           )}
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={showSources} onChange={event => setShowSources(event.target.checked)} />
-            {MODULE1_LESSON6_PREVIEW_UI.sourceToggle}
-          </label>
           <Module1StoryReading
             title={portfolio.lesson3.storyTitle}
             untitledLabel={MODULE1_LESSON6_NOVEL_UI.noTitle}
-            showSources={showSources}
             parts={[
               { id: "opening", label: MODULE1_LESSON6_NOVEL_UI.partOpening, text: portfolio.lesson3.finalText },
               { id: "development", label: MODULE1_LESSON6_NOVEL_UI.partDevelopment, text: portfolio.lesson4.finalText },
