@@ -47,6 +47,7 @@ import { MODULE1_LESSON5_EXAMPLE } from "@/modules/module-1-ai-story/constants/l
 import { buildModule1ClassroomReference } from "@/modules/module-1-ai-story/constants/story-options"
 import {
   buildModule1ContinuePackage,
+  deserializeModule1ContinuePackage,
   deserializeModule1ContinuePackageText,
 } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
 import { prepareModule1ImportedReplacement } from "@/modules/module-1-ai-story/infra/persistence/repositories/portfolio.repository"
@@ -536,6 +537,11 @@ describe("模块 1 继续学习包", () => {
       .toThrow("阶段快照不能恢复进度，请选择继续学习包")
     expect(() => deserializeModule1ContinuePackageText("{}", "模块1_演示学生_课时2风格与人物快照_2026-09-05.html"))
       .toThrow("阶段快照不能恢复进度，请选择继续学习包")
+  })
+
+  it("HTML 文件不能导入（点选与拖入共用，不测 DOM）", async () => {
+    const html = new File(["<!doctype html><html><body>阶段快照</body></html>"], "阶段快照.html", { type: "text/html" })
+    await expect(deserializeModule1ContinuePackage(html)).rejects.toThrow("阶段快照不能恢复进度，请选择继续学习包")
   })
 
   it("不同学生替换只保留导入档案字段", () => {

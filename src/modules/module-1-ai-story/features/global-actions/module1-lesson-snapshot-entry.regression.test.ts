@@ -132,6 +132,7 @@ describe("模块 1 阶段快照入口", () => {
     expect(cardSnapshot(unfinished, 6).visible).toBe(false)
   })
 
+  // 点选与拖入共用同一套拒绝规则，拖拽不另做 DOM 测试。
   it("导入 HTML 仍拒绝恢复进度", () => {
     expect(() => deserializeModule1ContinuePackageText("<!doctype html><html><body>阶段快照</body></html>"))
       .toThrow("阶段快照不能恢复进度，请选择继续学习包")

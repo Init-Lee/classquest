@@ -1,10 +1,10 @@
 /**
  * 文件说明：模块 1 全局档案操作区。
- * 职责：学生模式提供保存进度、导入进度与重置；教师模式仅在课时 1/2 页保留当前课阶段快照，方便投影。
- * 更新触发：模块 1 学习包交互、教师顶栏阶段快照入口、教师模式按钮策略或顶栏口径变化时，需要同步更新本文件。
+ * 职责：学生模式提供保存进度、导入进度与重置；导入对话框左侧拖入或点选继续学习包，右侧显示结果。教师模式仅在课时 1/2 页保留当前课阶段快照，方便投影。
+ * 更新触发：模块 1 学习包交互、导入拖拽或结果区、教师顶栏阶段快照入口、教师模式按钮策略或顶栏口径变化时，需要同步更新本文件。
  */
 
-import { useRef, useState, type ChangeEvent } from "react"
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react"
 import { Camera, Download, Loader2, RotateCcw, Upload } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
@@ -28,6 +28,72 @@ import {
   getModule1SnapshotDisabledReason,
 } from "@/modules/module-1-ai-story/features/global-actions/module1-global-actions-state"
 import { getModule1TeacherTopBarSnapshotState } from "@/modules/module-1-ai-story/features/global-actions/module1-lesson-snapshot-entry"
+import type { Module1Portfolio } from "@/modules/module-1-ai-story/domains/portfolio/types"
+
+function dataTransferHasDirectory(dataTransfer: DataTransfer): boolean {
+  return Array.from(dataTransfer.items ?? []).some(item => {
+    if (typeof item.webkitGetAsEntry !== "function") return false
+    return Boolean(item.webkitGetAsEntry()?.isDirectory)
+  })
+}
+
+function formatCompletedLessons(portfolio: Module1Portfolio): string {
+  const done = [
+    portfolio.lesson1.completed ? "课时1" : "",
+    portfolio.lesson2.completed ? "课时2" : "",
+    portfolio.lesson3.completed ? "课时3" : "",
+    portfolio.lesson4.completed ? "课时4" : "",
+    portfolio.lesson5.completed ? "课时5" : "",
+    portfolio.lesson6.completed ? "课时6" : "",
+  ].filter(Boolean)
+  return done.length > 0 ? done.join("、") : "还没有完成的课"
+}
+
+function formatExportedAt(value: string): string {
+  if (!value) return "学习包未记录"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString("zh-CN", { hour12: false })
+}
+
+function ImportPackageFacts({
+  portfolio,
+  exportedAt,
+  replacingName,
+}: {
+  portfolio: Module1Portfolio
+  exportedAt: string
+  replacingName?: string
+}) {
+  const rows = [
+    ["姓名", portfolio.student.studentName],
+    ["班级座位", `${portfolio.student.clazz} · ${portfolio.student.classSeatCode}`],
+    ["当前课时", `课时 ${portfolio.progress.lessonId} 第 ${portfolio.progress.stepId} 关`],
+    ["已完成", formatCompletedLessons(portfolio)],
+    ["导出时间", formatExportedAt(exportedAt)],
+  ]
+  return (
+    <div className="mt-3 space-y-2 text-sm">
+      {rows.map(([label, value]) => (
+        <p key={label} className="grid grid-cols-[4.5rem_1fr] gap-2">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="font-medium">{value}</span>
+        </p>
+      ))}
+      {replacingName && <p className="font-medium text-destructive">将替换本机档案：{replacingName}</p>}
+    </div>
+  )
+}
+
+function swallowClickAfterDrop(zone: HTMLElement) {
+  const swallow = (clickEvent: MouseEvent) => {
+    clickEvent.preventDefault()
+    clickEvent.stopPropagation()
+    zone.removeEventListener("click", swallow, true)
+  }
+  zone.addEventListener("click", swallow, true)
+  window.setTimeout(() => zone.removeEventListener("click", swallow, true), 100)
+}
 
 function SnapshotButton({
   enabled,
@@ -64,7 +130,9 @@ export function Module1GlobalActions() {
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [pendingImport, setPendingImport] = useState<ParsedModule1ContinuePackage | null>(null)
+  const [importDone, setImportDone] = useState<ParsedModule1ContinuePackage | null>(null)
   const [importError, setImportError] = useState("")
+  const [dragOver, setDragOver] = useState(false)
   const teacherSnapshot = getModule1TeacherTopBarSnapshotState(location.pathname, portfolio)
   const showSnapshot = isTeacherMode && teacherSnapshot.visible
   const snapshotReady = teacherSnapshot.enabled
@@ -109,34 +177,85 @@ export function Module1GlobalActions() {
     downloadModule1SnapshotByLessonId(portfolio, snapshotLessonId)
   }
 
-  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const resetImportDialog = () => {
+    setPendingImport(null)
+    setImportDone(null)
+    setImportError("")
+    setDragOver(false)
+  }
+
+  const readImportFile = async (file: File) => {
     setBusy(true)
     setMessage("")
     setImportError("")
+    setImportDone(null)
+    setPendingImport(null)
     try {
       setPendingImport(await deserializeModule1ContinuePackage(file))
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "导入失败，当前档案未发生变化。")
     } finally {
       setBusy(false)
-      event.target.value = ""
     }
   }
 
+  const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file || busy) return
+    await readImportFile(file)
+  }
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.dataTransfer.dropEffect = "copy"
+    setDragOver(true)
+  }
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const next = event.relatedTarget
+    if (next instanceof Node && event.currentTarget.contains(next)) return
+    setDragOver(false)
+  }
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    swallowClickAfterDrop(event.currentTarget)
+    setDragOver(false)
+    if (busy) return
+    if (dataTransferHasDirectory(event.dataTransfer)) {
+      setPendingImport(null)
+      setImportDone(null)
+      setImportError("请拖入继续学习包文件，不要拖文件夹。")
+      return
+    }
+    const file = event.dataTransfer.files?.[0]
+    if (!file) {
+      setPendingImport(null)
+      setImportDone(null)
+      setImportError("请拖入继续学习包文件。")
+      return
+    }
+    await readImportFile(file)
+  }
+
   const confirmImport = async () => {
+    // 教师讲解模式导入不写学生库；拖拽只解析，确认时同样直接返回。
     if (!pendingImport || isTeacherMode) return
     setBusy(true)
     try {
       const imported = await importPortfolio(pendingImport.portfolio)
+      setImportDone({ portfolio: imported, exportedAt: pendingImport.exportedAt })
       setPendingImport(null)
-      setShowImportDialog(false)
-      setMessage(`已恢复 ${imported.student.studentName} 的学习进度。`)
+      setImportError("")
       navigate("/module/1")
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error)
-      setImportError(`恢复失败：${detail}。本机当前档案未被替换。`)
+      setImportError(`恢复失败：${detail}。本机档案未替换。`)
     } finally {
       setBusy(false)
     }
@@ -202,41 +321,121 @@ export function Module1GlobalActions() {
 
       <Dialog open={showImportDialog} onOpenChange={(open) => {
         setShowImportDialog(open)
-        if (!open) {
-          setPendingImport(null)
-          setImportError("")
-        }
+        if (!open) resetImportDialog()
       }}>
-        <DialogContent>
+        <DialogContent
+          className="max-h-[90vh] overflow-y-auto sm:max-w-3xl"
+          onDragOver={event => event.preventDefault()}
+          onDrop={event => event.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>导入进度</DialogTitle>
-            <DialogDescription>
-              选择之前导出的模块一继续学习包；阶段快照不能恢复进度，请选择继续学习包。确认身份和恢复位置后才会替换本机档案。
+            <DialogDescription className="sr-only">
+              {importDone ? "导入成功" : importError ? "无法导入" : "把继续学习包拖到左边，或点选文件。"}
             </DialogDescription>
           </DialogHeader>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg border-2 border-dashed p-8 text-center transition-colors hover:border-primary"
-          >
-            <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-            <span className="block text-sm text-muted-foreground">点击选择继续学习包文件</span>
-            <span className="mt-1 block text-xs text-muted-foreground">格式：模块1_姓名_课时N第M关_日期（学习包）</span>
-          </button>
-          <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleFile} />
-          {busy && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />正在读取学习包...</p>}
-          {importError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{importError}</p>}
-          {pendingImport && (
-            <div className="space-y-2 rounded-lg bg-muted p-4 text-sm">
-              <p>学生：{pendingImport.portfolio.student.clazz} · {pendingImport.portfolio.student.studentName} · {pendingImport.portfolio.student.classSeatCode}</p>
-              <p>恢复位置：课时 {pendingImport.portfolio.progress.lessonId} 第 {pendingImport.portfolio.progress.stepId} 关</p>
-              <p>导出时间：{pendingImport.exportedAt || "学习包未记录"}</p>
-              {portfolio && <p className="text-destructive">本机当前档案：{portfolio.student.studentName}（确认后将被完整替换）</p>}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_2fr]">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-disabled={busy}
+              onClick={() => {
+                if (!busy) fileInputRef.current?.click()
+              }}
+              onKeyDown={event => {
+                if (busy) return
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  fileInputRef.current?.click()
+                }
+              }}
+              onDragEnter={handleDragOver}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={event => void handleDrop(event)}
+              className={`flex min-h-36 cursor-pointer select-none flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
+                dragOver
+                  ? "border-blue-600 bg-blue-100 ring-2 ring-blue-600 ring-offset-2"
+                  : "border-slate-300 hover:border-blue-600 hover:bg-blue-50"
+              } ${busy ? "pointer-events-none opacity-60" : ""}`}
+            >
+              <Upload className={`mb-2 h-8 w-8 ${dragOver ? "text-blue-600" : "text-slate-500"}`} />
+              <span className="text-sm font-medium">拖入继续学习包，或点击选择</span>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImportDialog(false)}>关闭</Button>
-            {pendingImport && <Button onClick={() => void confirmImport()} disabled={busy}>确认替换</Button>}
+            <div
+              aria-live="polite"
+              className={`flex min-h-36 flex-col justify-center rounded-lg border p-4 ${
+                importDone
+                  ? "border-green-600 bg-green-50"
+                  : importError
+                    ? "border-red-300 bg-red-50"
+                    : pendingImport
+                      ? "border-blue-300 bg-blue-50"
+                      : "border-border bg-muted/40"
+              }`}
+            >
+              {importDone ? (
+                <>
+                  <h2 className="text-lg font-semibold text-green-900">导入成功</h2>
+                  <ImportPackageFacts portfolio={importDone.portfolio} exportedAt={importDone.exportedAt} />
+                </>
+              ) : importError ? (
+                <>
+                  <h2 className="text-lg font-semibold text-red-900">无法导入</h2>
+                  <p role="alert" className="mt-2 text-sm text-red-800">{importError}</p>
+                </>
+              ) : pendingImport ? (
+                <>
+                  <h2 className="text-lg font-semibold text-blue-950">请确认</h2>
+                  <ImportPackageFacts
+                    portfolio={pendingImport.portfolio}
+                    exportedAt={pendingImport.exportedAt}
+                    replacingName={portfolio?.student.studentName}
+                  />
+                </>
+              ) : busy ? (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  正在读取…
+                </p>
+              ) : (
+                <div className="space-y-1 text-sm text-foreground">
+                  <p>把继续学习包拖到左边，或点选文件。</p>
+                  <p>阶段快照不能用来恢复。</p>
+                </div>
+              )}
+            </div>
+          </div>
+          <input ref={fileInputRef} type="file" accept=".json,application/json" className="hidden" onChange={event => void handleFile(event)} />
+          <DialogFooter className="gap-2 sm:space-x-0">
+            {!importDone && (
+              <Button
+                variant="outline"
+                onClick={() => setShowImportDialog(false)}
+                disabled={busy}
+                className="border-slate-500 bg-white text-slate-900 hover:bg-slate-100"
+              >
+                取消
+              </Button>
+            )}
+            {pendingImport && !importDone && (
+              <Button
+                onClick={() => void confirmImport()}
+                disabled={busy}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                确认导入
+              </Button>
+            )}
+            {importDone && (
+              <Button
+                onClick={() => setShowImportDialog(false)}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                知道了
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
