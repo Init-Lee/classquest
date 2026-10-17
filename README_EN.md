@@ -24,6 +24,7 @@ src/
 ├── platform/                         # Platform portal, global routes, module registry
 ├── modules/
 │   ├── module-1-ai-story/             # Module 1: Future Letter, Lessons 1-2 open
+│   ├── module-2-ai-comic/             # Module 2: AI Four-Panel Comic, under construction (skeleton)
 │   ├── module-3-ai-science-station/   # Completed Module 3: AI Science Station
 │   └── module-4-ai-info-detective/    # Module 4: AI Information Detective, Lessons 1-6 open
 └── shared/                            # Business-neutral UI and pure utilities
@@ -34,6 +35,7 @@ backend/                              # V1.5 lightweight FastAPI backend for Mod
 ## Module Status
 
 - **Module 1 · Future Letter**: a six-lesson AI storytelling project. Phase 2 opens Lessons 1 and 2 for choosing an SDG, a concrete city issue, an audience, a writing style, and a four-part character arc. It includes an independent local portfolio, version 1 continuation package, passphrase-gated teacher lecture mode, and per-lesson stage snapshots downloaded from completed home-page lesson cards for homework; Lessons 3-6 and the derived complete-story view remain locked for later phases. See `src/modules/module-1-ai-story/README.md`.
+- **Module 2 · AI Four-Panel Comic (under construction)**: a six-lesson image-generation project that adapts each student's Module 1 story into a four-panel comic; images are generated in external AI tools. Only the module skeleton exists so far: the `/module/2` entry, a six-lesson preview (Lesson 1 entry open, Lessons 2-6 coming later), the home page, passphrase-gated teacher lecture mode, and placeholder pages for Lesson 1's four steps. Local saving, story import, the learning-package save/import buttons, and the actual step content are not implemented yet. See `src/modules/module-2-ai-comic/README.md`.
 - **Module 3 · AI Science Station**: completed with 6 lessons and 24 steps. It preserves local-first progress, continue packages, cross-role file flow, stage snapshots, and teacher demo mode. See `src/modules/module-3-ai-science-station/README.md`.
 - **Module 4 · AI Information Detective**: Lessons 1-6 are open. Lessons 1-4 cover local authoring and peer review; Lesson 5 covers the Live Lesson Session student flow and teacher console; Lesson 6 covers V3 publication review, the student three-step flow, and the anonymous public challenge. See `src/modules/module-4-ai-info-detective/README.md`.
 - **V1.5 Backend**: provides the health check, Module 4 Lesson 3 AI review, Lesson 4 peer-review APIs, Lesson 5 Live Lesson Session APIs, and Lesson 6 publication review / public-challenge / stats APIs. See `backend/README.md`.

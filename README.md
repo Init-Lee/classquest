@@ -30,6 +30,10 @@ Platform Portal → Module → Lesson → Step
 
 七年级 AI 讲故事项目，固定包含六个课时。阶段 4 已开放课时 1（主题）、课时 2（风格与人物）、课时 3（起：写一个吸引人的开头）、课时 4（承：写出事情的发展）、课时 5（转：写出故事的关键变化）和课时 6（合：让故事有一个恰当的结尾）。六课完成后可从首页进入 `/module/1/story` 阅读「我的小说」（由各课确认稿派生，不是第七课）。可读小说页可下载 TXT、Markdown、HTML 整篇作品；未完成课时 6 时首页不显示「我的小说」按钮。阶段 5 已收口，可打包 OSS。使用独立本地档案、version 1 继续学习包、口令教师讲解模式，并在完成对应课时后从首页课时卡下载阶段快照交作业。详见 [模块 1 README](src/modules/module-1-ai-story/README.md)。
 
+### 模块 2 · AI 四格漫画（建设中）
+
+七年级图像生成项目，固定六课时：学生把模块 1 完成的小说改编成四格漫画，图片在外部 AI 工具中生成，平台负责规划画面、记录提示词与版本、比较修改。当前仅完成模块骨架：入口 `/module/2`、六课时预览（课时 1 入口开放、课时 2—6 后续开放）、首页、教师讲解模式与课时 1 四关占位框架；本地保存、小说导入、「保存学习包」「导入学习包」与四关内容尚未实现。详见 [模块 2 README](src/modules/module-2-ai-comic/README.md)。
+
 ### 模块 3 · AI 科学传播站
 
 已完成 6 个课时、24 个关卡。本地优先的学习进度、继续学习包、阶段快照与教师演示模式。详见 [模块 3 README](src/modules/module-3-ai-science-station/README.md)。
@@ -152,7 +156,7 @@ npm run build:oss
 src/
 ├── platform/              # 平台门户、全局路由、模块注册
 ├── teacher-console/       # 模块 4 课时 5/课时 6 教师控制台
-├── modules/               # 独立课程模块（module-1、module-3、module-4）
+├── modules/               # 独立课程模块（module-1、module-2 建设中、module-3、module-4）
 └── shared/                # 业务无关 UI 与工具
 
 backend/                   # FastAPI 后端

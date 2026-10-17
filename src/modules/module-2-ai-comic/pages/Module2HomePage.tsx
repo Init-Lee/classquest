@@ -1,0 +1,206 @@
+/**
+ * 文件说明：模块 2 首页。
+ * 职责：介绍模块目标、展示六课时开放状态与“开始课时 1”入口（不要求先登记身份），并提供教师讲解口令入口与当前建设阶段说明。
+ * 更新触发：课时开放状态、建设阶段说明、首页入口、教师入口或身份登记策略变化时，需要同步更新本文件。
+ */
+
+import { useState } from "react"
+import { ArrowRight, CheckCircle2, Clock, Construction, Eye, GraduationCap, Images, Lock } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { Badge } from "@/shared/ui/badge"
+import { Button } from "@/shared/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Input } from "@/shared/ui/input"
+import { useModule2State } from "@/modules/module-2-ai-comic/app/providers/Module2Provider"
+import {
+  canAccessModule2Lesson,
+  isModule2LessonAvailable,
+  MODULE2_LESSON_REGISTRY,
+} from "@/modules/module-2-ai-comic/app/lesson-registry"
+import { verifyModule2TeacherPassphrase } from "@/modules/module-2-ai-comic/constants/teacher-passphrase"
+import { MODULE2_CONFIG } from "@/modules/module-2-ai-comic/module.config"
+
+const LESSON1_ENTRY = "/module/2/lesson/1/step/1"
+
+function TeacherModeEntry() {
+  const { enterTeacherMode } = useModule2State()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [showInput, setShowInput] = useState(false)
+
+  const handleEnter = () => {
+    if (verifyModule2TeacherPassphrase(password)) {
+      enterTeacherMode()
+      navigate("/module/2")
+      return
+    }
+    setError("口令错误，请重试")
+    setPassword("")
+  }
+
+  return (
+    <Card className="mx-auto max-w-md border-amber-200 bg-amber-50">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-amber-800">
+          <GraduationCap className="h-5 w-5" />
+          教师讲解模式
+        </CardTitle>
+        <CardDescription className="text-amber-700/80">
+          可浏览课时 1 全部关卡做课堂演示，不写入学生本机档案
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!showInput ? (
+          <Button
+            variant="outline"
+            className="w-full border-amber-400 text-amber-800 hover:bg-amber-100"
+            onClick={() => setShowInput(true)}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            进入讲解模式
+          </Button>
+        ) : (
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label htmlFor="module2-teacher-passphrase" className="text-sm font-medium text-amber-800">请输入教师口令</label>
+              <Input
+                id="module2-teacher-passphrase"
+                type="password"
+                placeholder="输入口令后按回车"
+                value={password}
+                onChange={event => { setPassword(event.target.value); setError("") }}
+                onKeyDown={event => { if (event.key === "Enter") handleEnter() }}
+                autoFocus
+                className="border-amber-300 focus:border-amber-500"
+              />
+              {error && <p className="text-xs text-red-600">{error}</p>}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 text-xs"
+                onClick={() => { setShowInput(false); setPassword(""); setError("") }}
+              >
+                取消
+              </Button>
+              <Button
+                className="flex-1 bg-amber-500 text-xs text-white hover:bg-amber-600"
+                onClick={handleEnter}
+                disabled={!password}
+              >
+                确认进入
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function Module2HomePage() {
+  const { portfolio, isTeacherMode } = useModule2State()
+  const navigate = useNavigate()
+
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8">
+      <section className="space-y-3 py-6 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+          <Images className="h-4 w-4" />
+          七年级 · 模块二
+        </div>
+        <h1 className="text-3xl font-bold">{MODULE2_CONFIG.subtitle}</h1>
+        <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          从模块一完成的小说出发，选出起、承、转、合四个关键画面，确定角色与视觉风格，
+          再借助外部 AI 绘图工具生成、比较和修改，完成一部属于自己的四格漫画。
+        </p>
+        <Button size="lg" onClick={() => navigate(LESSON1_ENTRY)}>
+          {isTeacherMode ? "浏览课时 1" : "开始课时 1"}
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+        <p className="text-xs text-muted-foreground">首次进入不需要先登记身份；第 1 关会根据你的小说文件核对班级与姓名。</p>
+      </section>
+
+      <Card className="mx-auto max-w-3xl border-dashed bg-muted/30">
+        <CardContent className="flex gap-3 pt-6 text-sm text-muted-foreground">
+          <Construction className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            本模块正在建设中：课时 1 的四关页面尚未完成，暂时不能导入小说，也不会记录学习进度；
+            「保存学习包」「导入学习包」将在下一阶段开放。
+          </p>
+        </CardContent>
+      </Card>
+
+      <section>
+        <h2 className="mb-4 text-lg font-semibold">本模块包含 6 个课时</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {MODULE2_LESSON_REGISTRY.map((lesson) => {
+            const available = isModule2LessonAvailable(lesson.id)
+            const accessible = canAccessModule2Lesson(portfolio, lesson.id, isTeacherMode)
+            return (
+              <Card key={lesson.id} className={!available ? "opacity-65" : ""}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Badge variant={available ? "default" : "secondary"}>
+                      {available ? "已开放" : "后续开放"}
+                    </Badge>
+                    {available
+                      ? !accessible && <Lock className="h-4 w-4 text-muted-foreground" aria-label="未解锁" />
+                      : <Clock className="h-4 w-4 text-muted-foreground" aria-label="后续开放" />}
+                  </div>
+                  <CardTitle className="mt-2 text-base">课时 {lesson.id}：{lesson.title}</CardTitle>
+                  <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {accessible ? (
+                    <Button variant="outline" className="w-full" onClick={() => navigate(lesson.path)}>
+                      {isTeacherMode ? "浏览本课" : "进入课时"}
+                    </Button>
+                  ) : (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Lock className="h-3 w-3" />
+                      {available ? "完成前一课后解锁" : "后续开放，暂不能进入"}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </section>
+
+      <Card className="bg-muted/30">
+        <CardContent className="pt-6">
+          <h2 className="mb-3 text-sm font-semibold">闯关须知</h2>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />请先在模块一「我的小说」下载自己的小说，课时 1 第 1 关会用到它。</li>
+            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />图片在课堂指定的外部 AI 工具中生成；本模块负责规划画面、记录提示词与版本、比较修改。</li>
+            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关；完成按钮只代表信息填写齐全，作品质量由老师和你一起检查。</li>
+            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前只开放课时 1 的入口，课时 2—6 后续开放。</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      {isTeacherMode ? (
+        <Card className="bg-amber-50">
+          <CardContent className="pt-6 text-sm text-amber-900">
+            教师讲解模式使用独立演示状态，演示操作不会写入、覆盖或清除本机学生档案。
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-muted" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-background px-4 text-xs text-muted-foreground">教师入口</span>
+            </div>
+          </div>
+          <TeacherModeEntry />
+        </>
+      )}
+    </div>
+  )
+}

@@ -17,6 +17,15 @@ export const MODULE_REGISTRY: PlatformModuleEntry[] = [
     grade: "七年级 · 模块一",
   },
   {
+    id: "module-2",
+    slug: "ai-comic",
+    title: "AI 四格漫画",
+    subtitle: "图像生成：把模块一的小说改编成四格漫画。课时 1 建设中，课时 2—6 后续开放。",
+    route: "/module/2",
+    status: "draft",
+    grade: "七年级 · 模块二",
+  },
+  {
     id: "module-3",
     slug: "ai-science-station",
     title: "AI 科学传播站",

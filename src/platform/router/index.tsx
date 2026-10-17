@@ -11,6 +11,7 @@ import { PlatformShell } from "@/platform/layout/PlatformShell"
 import { AppShell as Module3Shell } from "@/modules/module-3-ai-science-station/app/layout/AppShell"
 import { Module4Shell } from "@/modules/module-4-ai-info-detective/app/layout/Module4Shell"
 import { Module1Shell } from "@/modules/module-1-ai-story/app/layout/Module1Shell"
+import { Module2Shell } from "@/modules/module-2-ai-comic/app/layout/Module2Shell"
 
 const PortalHomePage = lazy(() => import("@/platform/pages/PortalHomePage"))
 const PlatformNotFoundPage = lazy(() => import("@/platform/pages/NotFoundPage"))
@@ -24,6 +25,7 @@ const Lesson5Page = lazy(() => import("@/modules/module-3-ai-science-station/les
 const Lesson6Page = lazy(() => import("@/modules/module-3-ai-science-station/lessons/lesson-6/routes"))
 const Module4Routes = lazy(() => import("@/modules/module-4-ai-info-detective/routes"))
 const Module1Routes = lazy(() => import("@/modules/module-1-ai-story/routes"))
+const Module2Routes = lazy(() => import("@/modules/module-2-ai-comic/routes"))
 const Module4PublicChallengePage = lazy(() => import("@/modules/module-4-ai-info-detective/pages/Module4PublicChallengePage"))
 const TeacherConsoleRoutes = lazy(() => import("@/teacher-console/routes"))
 
@@ -59,6 +61,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: withSuspense(<Module1Routes />) },
       { path: "*", element: withSuspense(<Module1Routes />) },
+    ],
+  },
+  {
+    path: "/module/2",
+    element: <Module2Shell />,
+    children: [
+      { index: true, element: withSuspense(<Module2Routes />) },
+      { path: "*", element: withSuspense(<Module2Routes />) },
     ],
   },
   {
