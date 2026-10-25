@@ -1,10 +1,10 @@
 /**
  * 文件说明：模块 2 课时 1 路由入口。
- * 职责：分发四个关卡、渲染 sticky 四关进度、执行关卡门禁，并在越级或无效地址时安全返回。
+ * 职责：首次进入时按需建立本机空草稿档案，分发四个关卡、渲染 sticky 四关进度、执行真实关卡门禁，并在越级、无效地址或本机档案读取失败时安全处理。
  * 更新触发：课时 1 路径、关卡组件、门禁、教师讲解放行或进度展示变化时，需要同步更新本文件。
  */
 
-import { useLayoutEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
@@ -14,6 +14,7 @@ import {
   canEnterModule2Lesson1Step,
   getModule2Lesson1GuardReason,
   getModule2Lesson1RouteRedirect,
+  isModule2Lesson1StepComplete,
   isValidModule2Lesson1Step,
   MODULE2_LESSON1_ENTRY_PATH,
 } from "@/modules/module-2-ai-comic/lessons/lesson-1/guards"
@@ -24,11 +25,12 @@ import Step3PickScenes from "./steps/Step3PickScenes"
 import Step4VisualDirection from "./steps/Step4VisualDirection"
 
 function Lesson1Frame({ children }: { children: React.ReactNode }) {
-  const { loading, isTeacherMode } = useModule2State()
+  const { portfolio, loading, loadError, isTeacherMode, ensureStudentPortfolio } = useModule2State()
   const params = useParams<{ "*": string }>()
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
   const stepId = Number(params["*"]?.replace("step/", "") || "1")
+  const frameReady = !loading && portfolio !== null
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
@@ -36,7 +38,7 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
 
   useLayoutEffect(() => {
     const element = lessonChromeRef.current
-    if (!element) return
+    if (!frameReady || !element) return
     const update = () => {
       document.documentElement.style.setProperty("--module2-lesson-chrome-height", `${element.offsetHeight}px`)
     }
@@ -47,18 +49,36 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
       observer.disconnect()
       document.documentElement.style.removeProperty("--module2-lesson-chrome-height")
     }
-  }, [])
+  }, [frameReady, stepId])
 
-  if (loading) return <div className="py-20 text-center text-sm text-muted-foreground">正在准备学习状态...</div>
+  // 首次进入课时 1 时在本机建立空草稿（身份允许全空），身份在第 1 关核对
+  useEffect(() => {
+    if (!isTeacherMode && !loading && !loadError && !portfolio) void ensureStudentPortfolio()
+  }, [ensureStudentPortfolio, isTeacherMode, loadError, loading, portfolio])
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-12">
+        <Card>
+          <CardHeader><CardTitle>暂时无法继续</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">{loadError}</p>
+            <Button variant="outline" onClick={() => navigate("/module/2")}>返回模块首页</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  if (loading || !portfolio) return <div className="py-20 text-center text-sm text-muted-foreground">正在准备学习档案...</div>
   if (!isValidModule2Lesson1Step(stepId)) return <Navigate to={MODULE2_LESSON1_ENTRY_PATH} replace />
-  if (!canEnterModule2Lesson1Step(stepId, isTeacherMode)) {
+  if (!canEnterModule2Lesson1Step(portfolio, stepId, isTeacherMode)) {
     return (
       <div className="mx-auto max-w-xl px-4 py-12">
         <Card>
           <CardHeader><CardTitle>这一关还没有解锁</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">{getModule2Lesson1GuardReason(stepId)}</p>
-            <Button onClick={() => navigate(getModule2Lesson1RouteRedirect(stepId, isTeacherMode) ?? MODULE2_LESSON1_ENTRY_PATH)}>
+            <Button onClick={() => navigate(getModule2Lesson1RouteRedirect(portfolio, stepId, isTeacherMode) ?? MODULE2_LESSON1_ENTRY_PATH)}>
               回到当前关卡
             </Button>
           </CardContent>
@@ -67,10 +87,11 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // 阶段 A 尚无可完成的关卡，完成集合为空；阶段 B/D 按已保存字段计算。
-  const completedStepIds: number[] = []
+  const completedStepIds = MODULE2_LESSON1_STEPS
+    .filter(step => isModule2Lesson1StepComplete(portfolio, step.id))
+    .map(step => step.id)
   const accessibleStepIds = MODULE2_LESSON1_STEPS
-    .filter(step => canEnterModule2Lesson1Step(step.id, isTeacherMode))
+    .filter(step => canEnterModule2Lesson1Step(portfolio, step.id, isTeacherMode))
     .map(step => step.id)
 
   return (

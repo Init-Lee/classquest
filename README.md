@@ -32,7 +32,7 @@ Platform Portal → Module → Lesson → Step
 
 ### 模块 2 · AI 四格漫画（建设中）
 
-七年级图像生成项目，固定六课时：学生把模块 1 完成的小说改编成四格漫画，图片在外部 AI 工具中生成，平台负责规划画面、记录提示词与版本、比较修改。当前仅完成模块骨架：入口 `/module/2`、六课时预览（课时 1 入口开放、课时 2—6 后续开放）、首页、教师讲解模式与课时 1 四关占位框架；本地保存、小说导入、「保存学习包」「导入学习包」与四关内容尚未实现。详见 [模块 2 README](src/modules/module-2-ai-comic/README.md)。
+七年级图像生成项目，固定六课时：学生把模块 1 完成的小说改编成四格漫画，图片在外部 AI 工具中生成，平台负责规划画面、记录提示词与版本、比较修改。当前已完成模块骨架（入口 `/module/2`、六课时预览、首页、教师讲解模式、课时 1 四关占位框架）与数据底座（数据契约 v1、独立本机数据库自动保存、图片资产服务）；小说导入、「保存学习包」「导入学习包」与四关内容尚未实现。详见 [模块 2 README](src/modules/module-2-ai-comic/README.md)。
 
 ### 模块 3 · AI 科学传播站
 
@@ -149,6 +149,7 @@ npm run build:oss
 - **前端**：React、TypeScript、Vite、React Router v6、Tailwind CSS
 - **本地数据**：浏览器存储 + 继续学习包导出/导入（模块 1 / 3 / 4）
 - **后端**：FastAPI、SQLite、本地文件存储；生产经 Nginx + HTTPS 对外
+- **测试**：Vitest 回归测试（`src/**/*.regression.test.ts`，`npm run test:lesson4-review` 全量运行）；模块 2 本机数据库测试使用开发依赖 `fake-indexeddb` 模拟 IndexedDB
 
 ## 仓库结构（摘要）
 

@@ -8,7 +8,7 @@ import {
   canAccessModule2Lesson,
   MODULE2_LESSON_REGISTRY,
 } from "@/modules/module-2-ai-comic/app/lesson-registry"
-import type { Module2PortfolioSkeleton } from "@/modules/module-2-ai-comic/domains/portfolio/types"
+import type { Module2PortfolioV1 } from "@/modules/module-2-ai-comic/domains/portfolio/types"
 
 /** upcoming = 本站尚未开放（后续开放）；locked = 已开放但前一课未完成。 */
 export type Module2TopLessonStatus = "completed" | "current" | "available" | "locked" | "upcoming"
@@ -33,7 +33,7 @@ const STATUS_LABELS: Record<Module2TopLessonStatus, string> = {
 }
 
 export function buildModule2TopProgressItems(
-  portfolio: Module2PortfolioSkeleton | null,
+  portfolio: Module2PortfolioV1 | null,
   currentLessonId: number,
   isTeacherMode = false,
 ): Module2TopProgressItem[] {

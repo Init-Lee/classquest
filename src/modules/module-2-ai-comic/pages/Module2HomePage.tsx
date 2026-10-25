@@ -126,7 +126,7 @@ export default function Module2HomePage() {
         <CardContent className="flex gap-3 pt-6 text-sm text-muted-foreground">
           <Construction className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            本模块正在建设中：课时 1 的四关页面尚未完成，暂时不能导入小说，也不会记录学习进度；
+            本模块正在建设中：课时 1 的四关页面尚未完成，暂时不能导入小说；进入课时 1 后会在这台电脑上保存一份空白学习记录；
             「保存学习包」「导入学习包」将在下一阶段开放。
           </p>
         </CardContent>

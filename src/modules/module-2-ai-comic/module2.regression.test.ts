@@ -1,6 +1,6 @@
 /**
- * 文件说明：模块 2 阶段 A 骨架回归测试。
- * 职责：验证六课时注册表的两种访问条件、顶部进度状态、课时 1 关卡门禁、四关进度状态、教师口令，以及模块不 import 其他模块业务代码。
+ * 文件说明：模块 2 骨架与门禁回归测试。
+ * 职责：验证六课时注册表的两种访问条件、顶部进度状态、课时 1 关卡门禁（按真实 gate 放行、教师全开）、四关进度状态、教师口令、开发测试页只在开发环境注册，以及模块不 import 其他模块业务代码。
  * 更新触发：模块 2 课时开放范围、访问规则、关卡门禁、进度状态、教师口令或模块边界规则变化时，需要同步更新本文件。
  */
 
@@ -15,14 +15,39 @@ import { buildModule2TopProgressItems } from "@/modules/module-2-ai-comic/app/la
 import {
   canEnterModule2Lesson1Step,
   getModule2Lesson1RouteRedirect,
+  isModule2Lesson1StepComplete,
   isValidModule2Lesson1Step,
 } from "@/modules/module-2-ai-comic/lessons/lesson-1/guards"
 import { buildModule2InnerStepItems } from "@/modules/module-2-ai-comic/features/progress-ui/inner-step-progress-state"
 import { verifyModule2TeacherPassphrase } from "@/modules/module-2-ai-comic/constants/teacher-passphrase"
-import type { Module2PortfolioSkeleton } from "@/modules/module-2-ai-comic/domains/portfolio/types"
+import { createNewModule2Portfolio, type Module2PortfolioV1 } from "@/modules/module-2-ai-comic/domains/portfolio/types"
 
-function lesson1Done(): Module2PortfolioSkeleton {
-  return { lesson1: { step: 4, completed: true } }
+const NOW = "2026-10-25T10:00:00.000Z"
+
+/** 真实确认来源、观察、四句与视觉方向的课时一完成档案（不靠 completed 标记）。 */
+function lesson1Done(): Module2PortfolioV1 {
+  const base = createNewModule2Portfolio({ clazz: "初一（2）班", studentName: "王芳", classSeatCode: "0205" }, NOW)
+  const parts = { opening: "起", development: "承", turn: "转", ending: "合" }
+  return {
+    ...base,
+    sourceSnapshot: {
+      id: "src-1", origin: "classquest-html-v1", filename: "小说.html", sourceFileSha256: null, importedAt: NOW,
+      studentConfirmedAt: NOW, sourceConfirmedAt: null, student: { ...base.student }, storyTitle: "题目", parts,
+      isTeachingSample: false, importNote: "",
+    },
+    lesson1: { ...base.lesson1, sampleViewed: true, sampleObservation: "观察" },
+    storyboard: {
+      sourceSnapshotId: "src-1",
+      frames: { opening: { sceneSentence: "a" }, development: { sceneSentence: "b" }, turn: { sceneSentence: "c" }, ending: { sceneSentence: "d" } },
+      confirmedAt: NOW,
+    },
+    visualDirection: { words: ["冷暖", "线条"], reason: "理由", referenceStyleId: null, confirmedAt: NOW },
+  }
+}
+
+function lesson1StepOneOnly(): Module2PortfolioV1 {
+  const done = lesson1Done()
+  return { ...done, lesson1: { ...done.lesson1, sampleViewed: false } }
 }
 
 describe("模块 2 六课时注册表", () => {
@@ -66,24 +91,44 @@ describe("模块 2 顶部课时进度", () => {
   })
 })
 
-describe("模块 2 课时 1 关卡门禁（阶段 A）", () => {
-  it("学生只能进入第 1 关，越级回到第 1 关", () => {
-    expect(canEnterModule2Lesson1Step(1)).toBe(true)
-    for (const stepId of [2, 3, 4]) {
-      expect(canEnterModule2Lesson1Step(stepId)).toBe(false)
-      expect(getModule2Lesson1RouteRedirect(stepId)).toBe("/module/2/lesson/1/step/1")
+describe("模块 2 课时 1 关卡门禁", () => {
+  it("空档案只能进入第 1 关，越级回到第 1 关", () => {
+    for (const portfolio of [null, createNewModule2Portfolio()]) {
+      expect(canEnterModule2Lesson1Step(portfolio, 1)).toBe(true)
+      for (const stepId of [2, 3, 4]) {
+        expect(canEnterModule2Lesson1Step(portfolio, stepId)).toBe(false)
+        expect(getModule2Lesson1RouteRedirect(portfolio, stepId)).toBe("/module/2/lesson/1/step/1")
+      }
+      expect(getModule2Lesson1RouteRedirect(portfolio, 1)).toBeNull()
     }
-    expect(getModule2Lesson1RouteRedirect(1)).toBeNull()
+  })
+
+  it("按真实 gate 逐关放行，越级回到最远可进关", () => {
+    const stepOne = lesson1StepOneOnly()
+    expect(canEnterModule2Lesson1Step(stepOne, 2)).toBe(true)
+    expect(canEnterModule2Lesson1Step(stepOne, 3)).toBe(false)
+    expect(getModule2Lesson1RouteRedirect(stepOne, 4)).toBe("/module/2/lesson/1/step/2")
+    expect(isModule2Lesson1StepComplete(stepOne, 1)).toBe(true)
+    expect(isModule2Lesson1StepComplete(stepOne, 2)).toBe(false)
+    const done = lesson1Done()
+    expect([1, 2, 3, 4].every(stepId => canEnterModule2Lesson1Step(done, stepId))).toBe(true)
+    expect([1, 2, 3, 4].every(stepId => isModule2Lesson1StepComplete(done, stepId))).toBe(true)
+  })
+
+  it("伪造 completed:true 不能解锁后续关", () => {
+    const forged = createNewModule2Portfolio()
+    forged.lesson1 = { ...forged.lesson1, step: 4, step1Completed: true, step2Completed: true, step3Completed: true, step4Completed: true, completed: true }
+    expect(canEnterModule2Lesson1Step(forged, 2)).toBe(false)
   })
 
   it("教师模式四关全开，但无效关卡仍拒绝", () => {
     for (const stepId of [1, 2, 3, 4]) {
-      expect(canEnterModule2Lesson1Step(stepId, true)).toBe(true)
-      expect(getModule2Lesson1RouteRedirect(stepId, true)).toBeNull()
+      expect(canEnterModule2Lesson1Step(null, stepId, true)).toBe(true)
+      expect(getModule2Lesson1RouteRedirect(null, stepId, true)).toBeNull()
     }
     expect(isValidModule2Lesson1Step(5)).toBe(false)
     expect(isValidModule2Lesson1Step(Number.NaN)).toBe(false)
-    expect(canEnterModule2Lesson1Step(5, true)).toBe(false)
+    expect(canEnterModule2Lesson1Step(null, 5, true)).toBe(false)
   })
 })
 
@@ -111,5 +156,12 @@ describe("模块 2 教师口令与模块边界", () => {
       .map(([path]) => path)
     expect(Object.keys(sources).length).toBeGreaterThan(10)
     expect(offenders).toEqual([])
+  })
+
+  it("开发测试页只在 import.meta.env.DEV 下注册", () => {
+    const routes = import.meta.glob("./routes.tsx", { query: "?raw", import: "default", eager: true }) as Record<string, string>
+    const code = routes["./routes.tsx"]
+    expect(code).toMatch(/import\.meta\.env\.DEV \? lazy\(\(\) => import\("\.\/pages\/dev\/Module2AssetsDevPage"\)\) : null/)
+    expect(code).toContain('{Module2AssetsDevPage && <Route path="dev/assets"')
   })
 })

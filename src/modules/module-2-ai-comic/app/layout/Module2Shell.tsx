@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 顶层应用外壳。
- * 职责：挂载 Provider、模块导航、六课时进度、教师讲解横幅、全局学习包操作位与子路由内容。
- * 更新触发：模块 2 顶栏、教师横幅、身份展示、全局操作或 Provider 边界变化时，需要同步更新本文件。
+ * 职责：挂载 Provider、模块导航、六课时进度、教师讲解横幅、本机保存状态（Module2SaveStatus）、全局学习包操作位与子路由内容。
+ * 更新触发：模块 2 顶栏、教师横幅、身份展示、保存状态展示、全局操作或 Provider 边界变化时，需要同步更新本文件。
  */
 
 import { useLayoutEffect, useRef } from "react"
@@ -9,6 +9,7 @@ import { Outlet, useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Module2Provider, useModule2State } from "@/modules/module-2-ai-comic/app/providers/Module2Provider"
 import { Module2TopProgress } from "@/modules/module-2-ai-comic/app/layout/Module2TopProgress"
+import { Module2SaveStatus } from "@/modules/module-2-ai-comic/app/layout/Module2SaveStatus"
 import { Module2GlobalActions } from "@/modules/module-2-ai-comic/features/global-actions/Module2GlobalActions"
 import { MODULE2_CONFIG } from "@/modules/module-2-ai-comic/module.config"
 
@@ -84,9 +85,10 @@ function Module2ShellInner() {
           <div className="hidden min-w-0 flex-1 justify-center overflow-hidden lg:flex">
             <Module2TopProgress />
           </div>
-          {/* 教师模式隐藏学习包操作，避免演示误碰学生档案 */}
+          {/* 教师模式隐藏保存状态与学习包操作，避免演示误碰学生档案 */}
           {!isTeacherMode && (
-            <div className="shrink-0">
+            <div className="flex shrink-0 items-center gap-3">
+              <Module2SaveStatus />
               <Module2GlobalActions />
             </div>
           )}
