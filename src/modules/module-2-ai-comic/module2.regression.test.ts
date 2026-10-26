@@ -20,6 +20,7 @@ import {
 } from "@/modules/module-2-ai-comic/lessons/lesson-1/guards"
 import { buildModule2InnerStepItems } from "@/modules/module-2-ai-comic/features/progress-ui/inner-step-progress-state"
 import { verifyModule2TeacherPassphrase } from "@/modules/module-2-ai-comic/constants/teacher-passphrase"
+import { setModule2SceneSentence } from "@/modules/module-2-ai-comic/domains/portfolio/lesson1-update"
 import { createNewModule2Portfolio, type Module2PortfolioV1 } from "@/modules/module-2-ai-comic/domains/portfolio/types"
 
 const NOW = "2026-10-25T10:00:00.000Z"
@@ -119,6 +120,15 @@ describe("模块 2 课时 1 关卡门禁", () => {
     const forged = createNewModule2Portfolio()
     forged.lesson1 = { ...forged.lesson1, step: 4, step1Completed: true, step2Completed: true, step3Completed: true, step4Completed: true, completed: true }
     expect(canEnterModule2Lesson1Step(forged, 2)).toBe(false)
+  })
+
+  it("L08 改写四句后第 4 关重新上锁，不相信仍写着的 completed", () => {
+    const next = setModule2SceneSentence(lesson1Done(), "turn", "", NOW)
+    expect(next.lesson1.completed).toBe(false)
+    expect(canEnterModule2Lesson1Step(next, 4)).toBe(false)
+    expect(canEnterModule2Lesson1Step(next, 3)).toBe(true)
+    expect(getModule2Lesson1RouteRedirect(next, 4)).toBe("/module/2/lesson/1/step/3")
+    expect(isModule2Lesson1StepComplete(next, 3)).toBe(false)
   })
 
   it("教师模式四关全开，但无效关卡仍拒绝", () => {

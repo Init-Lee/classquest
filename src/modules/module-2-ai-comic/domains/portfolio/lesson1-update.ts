@@ -99,6 +99,21 @@ export function getModule2Lesson1FurthestStep(portfolio: Module2PortfolioV1 | nu
   return 1
 }
 
+/** 记下最近停下的关，供刷新后回到这一关。超出当前可进入范围时收回，不能靠这个字段放行。 */
+export function rememberModule2Lesson1Step(
+  portfolio: Module2PortfolioV1,
+  step: Module2Lesson1StepId,
+  now: string,
+): Module2PortfolioV1 {
+  const furthest = getModule2Lesson1FurthestStep(portfolio)
+  const bounded: Module2Lesson1StepId = step > furthest ? furthest : step
+  if (portfolio.lesson1.step === bounded) return portfolio
+  return syncModule2Lesson1Flags({
+    ...portfolio,
+    lesson1: { ...portfolio.lesson1, step: bounded },
+  }, now)
+}
+
 /** 把派生完成标记写回档案（只是缓存，读取时仍以 gate 为准）；完成时间只在首次完成时写入，失效即清空。 */
 export function syncModule2Lesson1Flags(portfolio: Module2PortfolioV1, now: string): Module2PortfolioV1 {
   const gates = computeModule2Lesson1Gates(portfolio)

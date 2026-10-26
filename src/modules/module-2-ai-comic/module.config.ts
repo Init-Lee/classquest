@@ -10,7 +10,7 @@ export const MODULE2_CONFIG = {
   title: "AI 四格漫画",
   subtitle: "图像生成：把我的小说改编成四格漫画",
   basePath: "/module/2",
-  /** 阶段 A 仅有骨架，课时一四关尚未实现，因此保持 draft；课时一可用后改为 active。 */
+  /** 课时一四关已实现。门户仍保持 draft，等阶段 D 验收后再改为 active。 */
   status: "draft",
   lessonCount: 6,
 } as const

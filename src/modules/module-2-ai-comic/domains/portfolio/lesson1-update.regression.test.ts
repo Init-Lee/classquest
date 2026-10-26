@@ -13,6 +13,7 @@ import {
   confirmModule2VisualDirection,
   getModule2Lesson1FurthestStep,
   markModule2SampleViewed,
+  rememberModule2Lesson1Step,
   saveModule2SourceImportDraft,
   setModule2ReferenceStyle,
   setModule2SampleObservation,
@@ -280,5 +281,64 @@ describe("第 4 关：视觉方向", () => {
     expect(ok.visualDirection.words).toEqual(["冷暖", "线条"])
     expect(confirmModule2VisualDirection(setModule2VisualWords(ok, ["只有一个"], LATER), LATER).ok).toBe(false)
     expect(confirmModule2VisualDirection(setModule2VisualReason(ok, " ", LATER), LATER).ok).toBe(false)
+  })
+})
+
+describe("L08—L11 完成重算与最近一关", () => {
+  it("L08 不含特定字词的四句可以确认；清空或改写后确认失效，重新确认才通过", () => {
+    const done = completedPortfolio()
+    const rewritten = setModule2SceneSentence(done, "turn", "灯", LATER)
+    expect(rewritten.storyboard.frames.turn.sceneSentence).toBe("灯")
+    expect(rewritten.storyboard.confirmedAt).toBeNull()
+    expect(computeModule2Lesson1Gates(rewritten)).toMatchObject({ step3: false, step4: false, completed: false })
+    expect(rewritten.lesson1.completed).toBe(false)
+    const again = unwrap(confirmModule2Storyboard(rewritten, LATER))
+    expect(computeModule2Lesson1Gates(again).step3).toBe(true)
+    const cleared = setModule2SceneSentence(again, "opening", "   ", LATER)
+    expect(confirmModule2Storyboard(cleared, LATER).ok).toBe(false)
+    expect(cleared.storyboard.frames.opening.sceneSentence).toBe("   ")
+  })
+
+  it("L09 自定义两个视觉词加理由可以通过，不要求预设风格", () => {
+    const done = completedPortfolio()
+    const custom = setModule2VisualReason(setModule2VisualWords(done, ["雾", "纸纹"], LATER), "想让夜晚显得安静。", LATER)
+    expect(custom.visualDirection.referenceStyleId).toBeNull()
+    const confirmed = unwrap(confirmModule2VisualDirection(custom, LATER))
+    expect(computeModule2Lesson1Gates(confirmed).completed).toBe(true)
+    expect(confirmed.visualDirection.words).toEqual(["雾", "纸纹"])
+  })
+
+  it("L10 词少于 2、多于 3 或理由为空时拒绝确认，已填内容保留", () => {
+    const done = completedPortfolio()
+    const tooFew = setModule2VisualWords(done, ["只有一个"], LATER)
+    const tooMany = setModule2VisualWords(done, ["甲", "乙", "丙", "丁"], LATER)
+    const blank = setModule2VisualReason(done, "  ", LATER)
+    expect(confirmModule2VisualDirection(tooFew, LATER).ok).toBe(false)
+    expect(confirmModule2VisualDirection(tooMany, LATER).ok).toBe(false)
+    expect(confirmModule2VisualDirection(blank, LATER).ok).toBe(false)
+    expect(tooFew.visualDirection.words).toEqual(["只有一个"])
+    expect(tooMany.visualDirection.words).toEqual(["甲", "乙", "丙", "丁"])
+    expect(blank.visualDirection.reason).toBe("  ")
+  })
+
+  it("L11 字段变空后不相信旧的 completed:true", () => {
+    const done = completedPortfolio()
+    const forged = {
+      ...done,
+      lesson1: { ...done.lesson1, completed: true, step4Completed: true, completedAt: NOW },
+    }
+    const broken = setModule2VisualReason(forged, "", LATER)
+    expect(computeModule2Lesson1Gates(broken).completed).toBe(false)
+    expect(broken.lesson1.completed).toBe(false)
+    expect(broken.lesson1.completedAt).toBeNull()
+  })
+
+  it("最近停下的关会被记住，但不能越过当前可进入的关", () => {
+    let p = confirmDraft(createNewModule2Portfolio(undefined, NOW), draft(), "src-1").portfolio
+    p = rememberModule2Lesson1Step(p, 2, LATER)
+    expect(p.lesson1.step).toBe(2)
+    expect(rememberModule2Lesson1Step(p, 4, LATER).lesson1.step).toBe(2)
+    expect(rememberModule2Lesson1Step(p, 2, LATER)).toBe(p)
+    expect(rememberModule2Lesson1Step(createNewModule2Portfolio(undefined, NOW), 3, NOW).lesson1.step).toBe(1)
   })
 })

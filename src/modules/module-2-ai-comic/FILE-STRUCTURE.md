@@ -6,7 +6,7 @@
 
 # FILE-STRUCTURE — Module 2
 
-## 当前结构（阶段 C：小说解析与学习包；课时一页面仍是占位）
+## 当前结构（阶段 D：课时一四关与教师样例；门户仍为 draft）
 
 ```text
 module-2-ai-comic/
@@ -76,15 +76,27 @@ module-2-ai-comic/
 │       ├── InnerStepProgress.tsx            # 课时内四关进度组件
 │       └── inner-step-progress-state.ts     # 四关进度纯函数状态
 ├── lessons/lesson-1/
-│   ├── components/Module2StepPlaceholder.tsx  # 「本关将在后续阶段实现」占位卡
+│   ├── components/
+│   │   ├── identity-form.ts             # 第 1 关身份表单与“不静默覆盖”核对
+│   │   ├── lesson1-chrome.tsx           # 关卡标题；下一关前等待保存完成
+│   │   ├── lesson1-commit.ts            # 确认动作等待本机保存完成
+│   │   ├── Lesson1CompletePanel.tsx     # 完成页：三项目标、保存学习包、下一课待开放
+│   │   ├── Lesson1PracticePage.tsx      # 教学样例练习页，不计入本人项目
+│   │   ├── OriginalWorkPanel.tsx        # 已确认原作；窄屏在下，宽屏在右
+│   │   ├── SampleComicBoard.tsx         # 四格整页、单格对照、教师模拟对照
+│   │   ├── SampleFigure.tsx             # 单张样例图与放大
+│   │   ├── SampleMissingNotice.tsx      # 列出缺少的样例文件
+│   │   └── use-guan-deng-sample.ts      # 读取样例清单
+│   ├── sample/load-guan-deng-sample.ts  # 以 sample-manifest.json 为唯一清单
 │   ├── steps/
-│   │   ├── Step1ImportNovel.tsx
-│   │   ├── Step2ReadSample.tsx
-│   │   ├── Step3PickScenes.tsx
-│   │   └── Step4VisualDirection.tsx
+│   │   ├── Step1ImportNovel.tsx         # 选择小说、核对、确认；粘贴补救
+│   │   ├── Step2ReadSample.tsx          # 看懂改编样例并写一条观察
+│   │   ├── Step3PickScenes.tsx          # 起承转合四句
+│   │   └── Step4VisualDirection.tsx     # 2—3 个视觉词与一句理由
 │   ├── config.ts                            # 四关标题与路径
+│   ├── copy.ts                              # 给学生看的固定说明，不含小说正文
 │   ├── guards.ts                            # 关卡门禁：调用 lesson1-update 的真实门禁，教师全开
-│   └── routes.tsx                           # 课时 1 框架：首次进入创建空白档案、四关进度、门禁、未解锁卡片
+│   └── routes.tsx                           # 四关、练习页、最近一关、门禁
 ├── pages/
 │   ├── Module2HomePage.tsx                  # 模块首页
 │   └── dev/Module2AssetsDevPage.tsx         # 仅开发环境：图片资产测试页（独立夹具档案，不切换活动档案）
@@ -95,11 +107,15 @@ module-2-ai-comic/
 └── FILE-STRUCTURE.md
 ```
 
+## 模块外静态素材
+
+`classquest/public/module-2/samples/guan-deng/` 是教师样例的静态文件，从 `build_Plan/module-2/assets/` 原样复制。页面只 fetch `sample-manifest.json` 及其点名的原文、记录和图片。这些图片不是学生资产，不进 assets store，也不进学习包。`sample-viewer.html` 只随素材保留，页面不嵌入它。
+
 ## 计划中的目录（尚未创建）
 
 按后续阶段新增，创建时同步更新本文件：
 
-- 课时 1 四关正式页面与样例图片（阶段 D）。`features/source-import/` 的解析和确认函数保持可被页面直接调用；不要在页面里再写一套解析。
+- 课时 2—6 的关卡页面。课时 1 不再使用占位页。`features/source-import/` 的解析和确认函数由第 1 关直接调用。
 
 ## 依赖方向
 
@@ -125,7 +141,8 @@ domains          → constants；不依赖 app / pages / lessons / features / in
 | 路径 | 内容 |
 |---|---|
 | `/module/2` | 模块首页 |
-| `/module/2/lesson/1/step/1—4` | 课时 1 四关（当前为占位页） |
+| `/module/2/lesson/1/step/1—4` | 课时 1 四关 |
+| `/module/2/lesson/1/practice` | 教师样例练习，不计入本人项目 |
 | `/module/2/dev/assets` | 仅开发环境：图片资产测试页；生产构建不注册 |
 | `/module/2/lesson/2—6/*` | 未开放，回到 `/module/2` |
 | `/module/2/comic` | 预留给「我的漫画」，当前未开放，回到 `/module/2` |

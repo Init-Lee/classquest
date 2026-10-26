@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 2 课时 1 路由入口。
- * 职责：首次进入时按需建立本机空草稿档案，分发四个关卡、渲染 sticky 四关进度、执行真实关卡门禁，并在越级、无效地址或本机档案读取失败时安全处理。
+ * 职责：首次进入时按需建立本机空草稿档案，分发四个关卡与练习页、渲染 sticky 四关进度、记下最近一关，并在越级、无效地址或本机档案读取失败时安全处理。
  * 更新触发：课时 1 路径、关卡组件、门禁、教师讲解放行或进度展示变化时，需要同步更新本文件。
  */
 
@@ -9,7 +9,10 @@ import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-do
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { useModule2State } from "@/modules/module-2-ai-comic/app/providers/Module2Provider"
+import { getModule2Lesson1FurthestStep, rememberModule2Lesson1Step } from "@/modules/module-2-ai-comic/domains/portfolio/lesson1-update"
+import type { Module2Lesson1StepId } from "@/modules/module-2-ai-comic/domains/portfolio/types"
 import { MODULE2_LESSON1_CONFIG, MODULE2_LESSON1_STEPS } from "@/modules/module-2-ai-comic/lessons/lesson-1/config"
+import Lesson1PracticePage from "@/modules/module-2-ai-comic/lessons/lesson-1/components/Lesson1PracticePage"
 import {
   canEnterModule2Lesson1Step,
   getModule2Lesson1GuardReason,
@@ -25,12 +28,20 @@ import Step3PickScenes from "./steps/Step3PickScenes"
 import Step4VisualDirection from "./steps/Step4VisualDirection"
 
 function Lesson1Frame({ children }: { children: React.ReactNode }) {
-  const { portfolio, loading, loadError, isTeacherMode, ensureStudentPortfolio } = useModule2State()
+  const { portfolio, loading, loadError, isTeacherMode, ensureStudentPortfolio, updatePortfolio } = useModule2State()
   const params = useParams<{ "*": string }>()
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
-  const stepId = Number(params["*"]?.replace("step/", "") || "1")
+  const splat = params["*"] ?? ""
+  const stepMatch = /^step\/([1-4])$/.exec(splat)
+  const stepId = stepMatch ? Number(stepMatch[1]) : Number.NaN
   const frameReady = !loading && portfolio !== null
+
+  useEffect(() => {
+    if (!frameReady || !portfolio || !isValidModule2Lesson1Step(stepId)) return
+    if (!canEnterModule2Lesson1Step(portfolio, stepId, isTeacherMode)) return
+    updatePortfolio(current => rememberModule2Lesson1Step(current, stepId as Module2Lesson1StepId, new Date().toISOString()))
+  }, [frameReady, isTeacherMode, portfolio, stepId, updatePortfolio])
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
@@ -70,6 +81,11 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
     )
   }
   if (loading || !portfolio) return <div className="py-20 text-center text-sm text-muted-foreground">正在准备学习档案...</div>
+  if (splat === "") {
+    const furthest = isTeacherMode ? 4 : getModule2Lesson1FurthestStep(portfolio)
+    const target = Math.min(portfolio.lesson1.step, furthest)
+    return <Navigate to={`/module/2/lesson/1/step/${target}`} replace />
+  }
   if (!isValidModule2Lesson1Step(stepId)) return <Navigate to={MODULE2_LESSON1_ENTRY_PATH} replace />
   if (!canEnterModule2Lesson1Step(portfolio, stepId, isTeacherMode)) {
     return (
@@ -123,6 +139,8 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
 }
 
 export default function Module2Lesson1Routes() {
+  const params = useParams<{ "*": string }>()
+  if ((params["*"] ?? "") === "practice") return <Lesson1PracticePage />
   return (
     <Lesson1Frame>
       <Routes>

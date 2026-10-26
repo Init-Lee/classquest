@@ -20,7 +20,7 @@ import {
 import { verifyModule2TeacherPassphrase } from "@/modules/module-2-ai-comic/constants/teacher-passphrase"
 import { MODULE2_CONFIG } from "@/modules/module-2-ai-comic/module.config"
 
-const LESSON1_ENTRY = "/module/2/lesson/1/step/1"
+const LESSON1_ENTRY = "/module/2/lesson/1"
 
 function TeacherModeEntry() {
   const { enterTeacherMode } = useModule2State()
@@ -126,8 +126,8 @@ export default function Module2HomePage() {
         <CardContent className="flex gap-3 pt-6 text-sm text-muted-foreground">
           <Construction className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            本模块正在建设中：已有小说导入解析与学习包，课时一四关页面尚未实现，页面上还不能选择小说。
-            进入课时 1 后会在这台电脑上保存一份空白学习记录。右上角可以保存或导入本模块学习包。
+            课时 1 的四关已经可以在这台电脑上完成。门户仍是架构占位，课时 2 及以后还没开放。
+            进入课时 1 后，学习记录保存在这台电脑上。右上角可以保存或导入本模块学习包。
           </p>
         </CardContent>
       </Card>
@@ -154,7 +154,7 @@ export default function Module2HomePage() {
                 </CardHeader>
                 <CardContent>
                   {accessible ? (
-                    <Button variant="outline" className="w-full" onClick={() => navigate(lesson.path)}>
+                    <Button variant="outline" className="w-full" onClick={() => navigate(lesson.id === 1 ? LESSON1_ENTRY : lesson.path)}>
                       {isTeacherMode ? "浏览本课" : "进入课时"}
                     </Button>
                   ) : (

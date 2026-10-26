@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "sampleId": "guan-deng-lesson1",
+  "title": "关灯这件事",
+  "sampleType": "teacher-instructional-demo",
+  "assetOrigin": "AI-assisted-teacher-example",
+  "sourceNovel": {
+    "html": "source-novel.html",
+    "markdown": "source-novel.md",
+    "json": "source-novel.json"
+  },
+  "record": "sample-learning-record.json",
+  "prompts": "image-prompts.json",
+  "notes": "asset-notes.md",
+  "viewer": "sample-viewer.html",
+  "panels": [
+    {
+      "id": "opening",
+      "label": "起",
+      "image": "comic-panel-01.png",
+      "sourcePart": "opening",
+      "sentence": "夜里，主人公在卧室拉紧窗帘，路灯的亮光仍落在枕头上。",
+      "caption": "窗帘拉紧了，枕头上还是亮的。",
+      "evidence": "我走到窗前，把窗帘往墙边拉紧，白光又从另一侧漏了进来，照在枕头上。",
+      "choice": "保留睡眠受到影响的处境，用亮斑和拉窗帘的动作表现困扰。"
+    },
+    {
+      "id": "development",
+      "label": "承",
+      "image": "comic-panel-02.png",
+      "sourcePart": "development",
+      "sentence": "白天，陈叔叔在楼门口扶着自行车指向台阶，主人公放下手机听他说明情况。",
+      "caption": "“灯暗下来，台阶就看不清了。”",
+      "evidence": "他扶着车把，说以前这里暗，自己下台阶都得先停一下。",
+      "choice": "集中呈现邻居的需要，省略发照片和等待回复的过程，以旁白衔接。"
+    },
+    {
+      "id": "turn",
+      "label": "转",
+      "image": "comic-panel-03.png",
+      "sourcePart": "turn",
+      "sentence": "夜里，主人公蹲在楼门口查看阴影中的台阶，陈叔叔在旁边指向台阶边沿。",
+      "caption": "“灯亮着，台阶仍看不清。能来看看光照到的位置吗？”",
+      "evidence": "我蹲下来，台阶边沿只剩一条模糊的线。",
+      "choice": "用蹲下观察的动作呈现新发现，用文字补充请求的变化。画中窗户亮不能独自证明光源，须结合原文。"
+    },
+    {
+      "id": "ending",
+      "label": "合",
+      "image": "comic-panel-04.png",
+      "sourcePart": "ending",
+      "sentence": "调整后，主人公在卧室放下手机，枕边的亮斑已经淡了。",
+      "caption": "物业调整后，两处都好些了。我们还要再留意几天。",
+      "evidence": "这一回，我不用再把枕头往里面挪了。",
+      "choice": "以枕头照应开头，旁白交代调整和台阶的改善，保留继续观察的余地。"
+    }
+  ],
+  "styles": [
+    {
+      "id": "clear",
+      "image": "comic-panel-03.png",
+      "name": "清晰线条与冷暖对比",
+      "words": [
+        "清晰线条",
+        "冷暖对比"
+      ],
+      "observe": "人物动作和台阶阴影是否容易辨认"
+    },
+    {
+      "id": "watercolor",
+      "image": "style-watercolor.png",
+      "name": "柔和水彩与纸张质感",
+      "words": [
+        "柔和水彩",
+        "低饱和色"
+      ],
+      "observe": "情绪怎样变化，关键暗部是否仍可辨认"
+    },
+    {
+      "id": "ink",
+      "image": "style-ink.png",
+      "name": "黑白线描与强明暗",
+      "words": [
+        "黑白线描",
+        "强明暗"
+      ],
+      "observe": "明暗把注意力引向哪里"
+    }
+  ],
+  "revision": {
+    "label": "教师模拟对照",
+    "before": "revision-before.png",
+    "after": "comic-panel-03.png"
+  },
+  "images": [
+    {
+      "id": "comic-panel-01",
+      "file": "comic-panel-01.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1900635,
+      "sha256": "f43926336645f671808beb79036c4202edae0f561c88b5065a2b6644d7add255"
+    },
+    {
+      "id": "comic-panel-02",
+      "file": "comic-panel-02.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2897893,
+      "sha256": "cbc1964f3cc2017fa8c29ee8977d714fdbb8704514fc54826ff76e77894f1871"
+    },
+    {
+      "id": "comic-panel-03",
+      "file": "comic-panel-03.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2632651,
+      "sha256": "f64b4042bcef91937f0f7e1e2f3e9e00a7b315631049323123dc7abf193c912d"
+    },
+    {
+      "id": "comic-panel-04",
+      "file": "comic-panel-04.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1726111,
+      "sha256": "cc059c99573b766317ab5db84fb9d0cf5b782590a2dd863150502f3533d71d4e"
+    },
+    {
+      "id": "revision-before",
+      "file": "revision-before.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2740762,
+      "sha256": "1f971abf40250663569d626d44be2109d8593ddbefec876e1065c479fee8f493"
+    },
+    {
+      "id": "style-ink",
+      "file": "style-ink.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 4006438,
+      "sha256": "135ea1f9c42a58a7f336b9048ec9a12a8f002c9758d78e86dcd3908c67e62fe0"
+    },
+    {
+      "id": "style-watercolor",
+      "file": "style-watercolor.png",
+      "mime": "image/png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 3428811,
+      "sha256": "b6ff5ea4eec0f4d283b309687b8042933c62c3d3577ff96728c349b04b0641a5"
+    }
+  ]
+}
