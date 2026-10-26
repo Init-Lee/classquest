@@ -1,21 +1,28 @@
 /**
  * 文件说明：课时 1 第 2 关「看懂改编样例」。
  * 职责：展示教师虚构的四格、一次修改和职责顺序，并记录学生看过样例以及一条观察；不要求点开每一格。
- * 更新触发：第 2 关观察题、样例展示顺序或进入下一关的条件变化时，需要同步更新本文件。
+ * 更新触发：第 2 关观察题、样例展示顺序、进入下一关的条件，或“打开本关即记下第 1 关只读记号”变化时，需要同步更新本文件。
  */
 
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { Textarea } from "@/shared/ui/textarea"
 import { useModule2State } from "@/modules/module-2-ai-comic/app/providers/Module2Provider"
 import { markModule2SampleViewed, setModule2SampleObservation } from "@/modules/module-2-ai-comic/domains/portfolio/lesson1-update"
 import { MODULE2_FIELD_LIMITS } from "@/modules/module-2-ai-comic/domains/portfolio/validate"
 import { Lesson1ContinueButton, Lesson1StepHeader } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-chrome"
+import { markLesson1Step2Entered } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-step2-visit"
 import { SampleComicBoard } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleComicBoard"
 import { SampleMissingNotice } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleMissingNotice"
 import { useGuanDengSample } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/use-guan-deng-sample"
 
 export default function Step2ReadSample() {
   const { portfolio, updatePortfolio } = useModule2State()
+  const portfolioId = portfolio?.id ?? null
+  // 打开第 2 关就记一笔。回到第 1 关时小说改为只读，不改档案里的小说内容。
+  useEffect(() => {
+    if (!portfolioId) return
+    markLesson1Step2Entered(portfolioId)
+  }, [portfolioId])
   const sampleState = useGuanDengSample()
   const markReady = useCallback(() => {
     updatePortfolio(current => markModule2SampleViewed(current, new Date().toISOString()))

@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 各关共用的标题、继续按钮和保存等待。
- * 职责：显示关卡标题；进入下一关前先等本机保存完成，失败时留在当前关并保留输入。
- * 更新触发：关卡标题样式、下一关前的保存等待或失败提示变化时，需要同步更新本文件。
+ * 职责：显示关卡标题；进入下一关前先等本机保存完成，失败时留在当前关并保留输入。第 1 关可选择占满课时内容区，其他关标题仍保持较窄宽度。
+ * 更新触发：关卡标题样式、第 1 关宽度或下一关前的保存等待、失败提示变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -11,9 +11,20 @@ import { useModule2State } from "@/modules/module-2-ai-comic/app/providers/Modul
 import { rememberModule2Lesson1Step } from "@/modules/module-2-ai-comic/domains/portfolio/lesson1-update"
 import type { Module2Lesson1StepId } from "@/modules/module-2-ai-comic/domains/portfolio/types"
 
-export function Lesson1StepHeader({ step, title, lead }: { step: number; title: string; lead: string }) {
+export function Lesson1StepHeader({
+  step,
+  title,
+  lead,
+  wide = false,
+}: {
+  step: number
+  title: string
+  lead: string
+  /** 为真时标题随课时内容区拉满；默认仍限制宽度，避免改到其他关。 */
+  wide?: boolean
+}) {
   return (
-    <header className="mb-6 max-w-3xl space-y-2">
+    <header className={`mb-6 space-y-2 ${wide ? "w-full max-w-none" : "max-w-3xl"}`}>
       <h1 className="text-2xl font-bold">第 {step} 关 · {title}</h1>
       <p className="text-sm leading-relaxed text-muted-foreground">{lead}</p>
     </header>

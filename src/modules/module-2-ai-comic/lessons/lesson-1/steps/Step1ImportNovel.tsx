@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 第 1 关「导入我的小说」。
- * 职责：用「导入文件」「直接填写」两个选项卡接入小说。文件解析出的身份、题目和四段只读核对，只有文件里缺的身份项可以补填；直接填写可改，保存为待核对候选后再确认。确认成功后展开已接入小说全文。教师虚构示例不能完成本人项目。
- * 更新触发：第 1 关导入方式、只读核对、缺项补填、换文件提示或确认后的全文展示变化时，需要同步更新本文件。
+ * 职责：用最上方的「导入文件」「直接填写」两个选项卡接入小说，一次只显示一张卡片。四段按田字排列，主内容占满课时内容区。文件解析结果只读，只有缺的身份项可补；直接填写可改。确认并进入下一关时，用当前这张卡片作为已接入小说。进入第 2 关后再回来，全文灰色只读，要点「解锁」或「重新导入」才能改，确认前不清除已接入原作。教师虚构示例不能完成本人项目。
+ * 更新触发：第 1 关选项卡、田字排版、整行宽度、进第 2 关后的只读、解锁、重新导入、缺项补填或确认口径变化时，需要同步更新本文件。
  */
 
 import { useEffect, useRef, useState } from "react"
@@ -55,6 +55,7 @@ import {
   Lesson1ContinueButton,
   Lesson1StepHeader,
 } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-chrome"
+import { hasLesson1Step2Entered } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-step2-visit"
 import { commitLesson1Change } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-commit"
 import { LESSON1_PARTS } from "@/modules/module-2-ai-comic/lessons/lesson-1/copy"
 
@@ -77,6 +78,31 @@ type FillForm = Lesson1IdentityForm & {
 const EMPTY_FORM: Lesson1IdentityForm = { clazz: "", studentName: "", seatOnly: "" }
 const EMPTY_FILL: FillForm = { title: "", ...EMPTY_FORM, opening: "", development: "", turn: "", ending: "" }
 const READONLY_BOX = "whitespace-pre-wrap break-words rounded-md border border-input bg-muted px-3 py-2 text-sm leading-relaxed text-foreground"
+
+/** 四段田字：桌面两列，窄屏改成上下堆叠。顺序是起、承、转、合。 */
+function PartGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{children}</div>
+}
+
+function fillFromSource(source: SourceSnapshot, student: StudentIdentity): FillForm {
+  return {
+    title: source.storyTitle,
+    ...identityToForm(student),
+    opening: source.parts.opening,
+    development: source.parts.development,
+    turn: source.parts.turn,
+    ending: source.parts.ending,
+  }
+}
+
+function sameFill(fill: FillForm, source: SourceSnapshot, student: StudentIdentity): boolean {
+  return fill.title === source.storyTitle
+    && fill.opening === source.parts.opening
+    && fill.development === source.parts.development
+    && fill.turn === source.parts.turn
+    && fill.ending === source.parts.ending
+    && sameIdentity(formToIdentity(fill), student)
+}
 
 function switchImpact(portfolio: Module2PortfolioV1): string[] {
   const title = portfolio.sourceSnapshot?.storyTitle.trim() || "原来的小说"
@@ -113,9 +139,9 @@ function TeachingSampleNotice() {
 /** 只读灰框。正文按原文保留换行，框会随全文变高。 */
 function ReadOnlyText({ label, text, compact = false }: { label: string; text: string; compact?: boolean }) {
   return (
-    <div className="space-y-1">
+    <div className="flex h-full min-w-0 flex-col space-y-1">
       <p className="text-sm font-medium">{label}</p>
-      <div className={`${READONLY_BOX} ${compact ? "min-h-10" : "min-h-[80px]"}`}>{text}</div>
+      <div className={`${READONLY_BOX} flex-1 ${compact ? "min-h-10" : "min-h-[140px]"}`}>{text}</div>
     </div>
   )
 }
@@ -220,7 +246,9 @@ function ConfirmedNovel({
       {teacherMode && connected && <p className="text-sm text-amber-800">这是讲解演示，没有写入学生档案。</p>}
       <ReadOnlyIdentity student={student} />
       <ReadOnlyText label="题目" text={source.storyTitle} compact />
-      {LESSON1_PARTS.map(part => <ReadOnlyText key={part.id} label={part.label} text={source.parts[part.id]} />)}
+      <PartGrid>
+        {LESSON1_PARTS.map(part => <ReadOnlyText key={part.id} label={part.label} text={source.parts[part.id]} />)}
+      </PartGrid>
     </section>
   )
 }
@@ -230,7 +258,7 @@ export default function Step1ImportNovel() {
   const fileRef = useRef<HTMLInputElement>(null)
   const draftRef = useRef<SourceImportDraft | null>(null)
   const studentRef = useRef<StudentIdentity | null>(null)
-  const seenDraftTab = useRef<string | null>(null)
+  const tabChosen = useRef(false)
   const [form, setForm] = useState<Lesson1IdentityForm>(EMPTY_FORM)
   const [notice, setNotice] = useState("")
   const [error, setError] = useState("")
@@ -239,6 +267,9 @@ export default function Step1ImportNovel() {
   const [dialog, setDialog] = useState<PendingDialog>(null)
   const [tab, setTab] = useState<ImportTab>("file")
   const [fillForm, setFillForm] = useState<FillForm>(EMPTY_FILL)
+  const [fillTouched, setFillTouched] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const fillSourceId = useRef<string | null | undefined>(undefined)
 
   const draft = portfolio?.sourceImportDraft ?? null
   const draftToken = draft ? `${draft.origin}|${draft.importedAt}|${draft.sourceFileSha256 ?? ""}|${draft.filename ?? ""}` : ""
@@ -253,11 +284,40 @@ export default function Step1ImportNovel() {
   }, [draftToken])
 
   useEffect(() => {
+    if (tabChosen.current) return
     const currentDraft = draftRef.current
-    if (!currentDraft || !draftToken) return
-    if (seenDraftTab.current === null) setTab(currentDraft.origin === "manual" ? "fill" : "file")
-    seenDraftTab.current = draftToken
-  }, [draftToken])
+    const currentSource = portfolio?.sourceSnapshot ?? null
+    if (currentDraft) {
+      setTab(currentDraft.origin === "manual" ? "fill" : "file")
+      tabChosen.current = true
+      return
+    }
+    if (currentSource) {
+      setTab(currentSource.origin === "manual" ? "fill" : "file")
+      tabChosen.current = true
+    }
+  }, [draftToken, portfolio?.sourceSnapshot])
+
+  useEffect(() => {
+    const id = portfolio?.sourceSnapshot?.id ?? null
+    if (fillSourceId.current === undefined) {
+      fillSourceId.current = id
+      return
+    }
+    if (fillSourceId.current === id) return
+    fillSourceId.current = id
+    setFillTouched(false)
+    setFillForm(EMPTY_FILL)
+  }, [portfolio?.sourceSnapshot?.id])
+
+  const fillBase = (!fillTouched && portfolio?.sourceSnapshot?.origin === "manual" && portfolio.sourceImportDraft?.origin !== "manual")
+    ? fillFromSource(portfolio.sourceSnapshot, portfolio.student)
+    : fillForm
+
+  const updateFill = (patch: Partial<FillForm>) => {
+    setFillTouched(true)
+    setFillForm({ ...fillBase, ...patch })
+  }
 
   if (!portfolio) return null
   const source = portfolio.sourceSnapshot
@@ -303,7 +363,9 @@ export default function Step1ImportNovel() {
     setError("")
     const existing = studentRef.current
     if (existing) setForm(formForDraft(existing, candidate.draft))
+    tabChosen.current = true
     setTab(candidate.draft.origin === "manual" ? "fill" : "file")
+    setEditing(true)
   }
 
   const onFile = async (file: File) => {
@@ -332,13 +394,13 @@ export default function Step1ImportNovel() {
   const stagedFillDraft = (): SourceImportDraft => createManualNovelDraft(
     { filename: null, importedAt: new Date().toISOString(), sourceFileSha256: null },
     {
-      student: formToIdentity(fillForm),
-      storyTitle: fillForm.title,
+      student: formToIdentity(fillBase),
+      storyTitle: fillBase.title,
       parts: {
-        opening: fillForm.opening,
-        development: fillForm.development,
-        turn: fillForm.turn,
-        ending: fillForm.ending,
+        opening: fillBase.opening,
+        development: fillBase.development,
+        turn: fillBase.turn,
+        ending: fillBase.ending,
       },
     },
   )
@@ -358,6 +420,10 @@ export default function Step1ImportNovel() {
 
   const requestConfirm = () => {
     if (!draft) return
+    if ((tab === "file" && draft.origin === "manual") || (tab === "fill" && draft.origin !== "manual")) {
+      setError("请先确认当前这张卡片上的小说。")
+      return
+    }
     if (draft.isTeachingSample) {
       setError("这是教师虚构示例，不能用来完成你的本人项目。请导入自己的小说。")
       return
@@ -427,6 +493,46 @@ export default function Step1ImportNovel() {
     applyCandidate({ kind: "candidate", review: "manual", message: "候选已保存，待核对。", draft: next })
   }
 
+  const enteredStep2 = portfolio.lesson1.sampleViewed || hasLesson1Step2Entered(portfolio.id)
+  const connectedSource = source && gates.step1 ? source : null
+  const showLocked = Boolean(connectedSource && enteredStep2 && !editing)
+  const activeCardConfirmed = !showLocked && !draft && connectedSource !== null && (
+    tab === "fill"
+      ? connectedSource.origin === "manual" && sameFill(fillBase, connectedSource, portfolio.student)
+      : connectedSource.origin !== "manual"
+  )
+  const continueHint = showLocked
+    ? undefined
+    : teachingSample && !activeCardConfirmed
+      ? "教师虚构示例不能完成第 1 关。请导入自己的小说。"
+      : activeCardConfirmed
+        ? undefined
+        : draft
+          ? "请先确认当前这张卡片上的小说，再进入下一关。"
+          : "下一关会使用当前这张卡片。请先在这张卡片里确认你的小说。"
+  const fillAlreadyConnected = Boolean(
+    source
+    && source.origin === "manual"
+    && !draft
+    && sameFill(fillBase, source, portfolio.student),
+  )
+
+  const chooseTab = (next: ImportTab) => {
+    tabChosen.current = true
+    setTab(next)
+  }
+  const unlock = () => {
+    tabChosen.current = true
+    if (source) setTab(source.origin === "manual" ? "fill" : "file")
+    setEditing(true)
+  }
+  const reimport = () => {
+    tabChosen.current = true
+    setTab("file")
+    setEditing(true)
+    fileRef.current?.click()
+  }
+
   const candidateActions = draft && (
     <>
       <div className="flex flex-wrap gap-2">
@@ -440,13 +546,25 @@ export default function Step1ImportNovel() {
   )
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-clip">
+    <div className="min-w-0 w-full max-w-full overflow-x-clip">
+      <input
+        ref={fileRef}
+        id="m2-novel-file"
+        className="sr-only"
+        type="file"
+        accept=".html,.htm,.md,.markdown,.txt,.json,text/html,text/markdown,text/plain,application/json"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          if (file) void onFile(file)
+        }}
+      />
       <Lesson1StepHeader
+        wide
         step={1}
         title="导入我的小说"
-        lead="把模块一完成的小说带进来，或直接填写四段。确认后，我们从中选出四个画面。"
+        lead="一次只看一种方式。确认当前这张卡片后，才能进入下一关。"
       />
-      <div className="max-w-3xl space-y-4">
+      <div className="w-full min-w-0 space-y-4">
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
         {saveStatus.state === "error" && (
@@ -456,10 +574,20 @@ export default function Step1ImportNovel() {
           </p>
         )}
 
-        {source && (
-          <ConfirmedNovel source={source} student={portfolio.student} connected={connected} teacherMode={isTeacherMode} />
+        {showLocked && source ? (
+          <section className="space-y-4" aria-label="已接入的小说">
+            <ConfirmedNovel source={source} student={portfolio.student} connected={connected} teacherMode={isTeacherMode} />
+            <p className="text-sm text-muted-foreground">这篇小说已经接入，框里的文字不能改。要修改请点「解锁」，要换一份文件请点「重新导入」。确认新的内容之前，原来的小说不会被清掉。</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={unlock}>解锁</Button>
+              <Button type="button" variant="outline" onClick={reimport} disabled={reading || busy}>重新导入</Button>
+            </div>
+          </section>
+        ) : (
+        <>
+        {enteredStep2 && source && (
+          <p className="text-sm text-muted-foreground">已经接入的小说还在。确认这张卡片里的新内容之前，不会清掉原来的。</p>
         )}
-
         <div role="tablist" aria-label="导入方式" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
           <button
             type="button"
@@ -468,7 +596,7 @@ export default function Step1ImportNovel() {
             aria-selected={tab === "file"}
             aria-controls="m2-import-panel-file"
             className={`rounded-md px-3 py-2 text-sm font-medium ${tab === "file" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-            onClick={() => setTab("file")}
+            onClick={() => chooseTab("file")}
           >
             导入文件
           </button>
@@ -479,7 +607,7 @@ export default function Step1ImportNovel() {
             aria-selected={tab === "fill"}
             aria-controls="m2-import-panel-fill"
             className={`rounded-md px-3 py-2 text-sm font-medium ${tab === "fill" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-            onClick={() => setTab("fill")}
+            onClick={() => chooseTab("fill")}
           >
             直接填写
           </button>
@@ -488,17 +616,6 @@ export default function Step1ImportNovel() {
         {tab === "file" ? (
           <div role="tabpanel" id="m2-import-panel-file" aria-labelledby="m2-import-tab-file" className="space-y-4">
             <div className="space-y-2">
-              <input
-                ref={fileRef}
-                id="m2-novel-file"
-                className="sr-only"
-                type="file"
-                accept=".html,.htm,.md,.markdown,.txt,.json,text/html,text/markdown,text/plain,application/json"
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-                  if (file) void onFile(file)
-                }}
-              />
               <Button type="button" onClick={() => fileRef.current?.click()} disabled={reading || busy}>
                 {reading ? "正在读取…" : "选择小说文件"}
               </Button>
@@ -541,9 +658,14 @@ export default function Step1ImportNovel() {
                   )}
                 </div>
                 <ReadOnlyText label="题目" text={draft.storyTitle} compact />
-                {LESSON1_PARTS.map(part => <ReadOnlyText key={part.id} label={part.label} text={draft.parts[part.id]} />)}
+                <PartGrid>
+                  {LESSON1_PARTS.map(part => <ReadOnlyText key={part.id} label={part.label} text={draft.parts[part.id]} />)}
+                </PartGrid>
                 {candidateActions}
               </section>
+            )}
+            {!draft && source && source.origin !== "manual" && (
+              <ConfirmedNovel source={source} student={portfolio.student} connected={connected} teacherMode={isTeacherMode} />
             )}
           </div>
         ) : (
@@ -573,67 +695,85 @@ export default function Step1ImportNovel() {
                     })}
                   />
                 </div>
-                {LESSON1_PARTS.map(part => (
-                  <div key={part.id} className="space-y-1">
-                    <label htmlFor={`m2-part-${part.id}`} className="text-sm font-medium">{part.label}</label>
-                    <Textarea
-                      id={`m2-part-${part.id}`}
-                      className="min-h-[120px] whitespace-pre-wrap"
-                      value={draft.parts[part.id]}
-                      maxLength={MODULE2_FIELD_LIMITS.novelPart}
-                      onChange={event => updatePortfolio(current => {
-                        if (!current.sourceImportDraft || current.sourceImportDraft.origin !== "manual") return current
-                        return {
-                          ...current,
-                          sourceImportDraft: editNovelDraft(current.sourceImportDraft, { parts: { [part.id]: event.target.value } }),
-                        }
-                      })}
-                    />
-                  </div>
-                ))}
+                <PartGrid>
+                  {LESSON1_PARTS.map(part => (
+                    <div key={part.id} className="flex h-full min-w-0 flex-col space-y-1">
+                      <label htmlFor={`m2-part-${part.id}`} className="text-sm font-medium">{part.label}</label>
+                      <Textarea
+                        id={`m2-part-${part.id}`}
+                        className="min-h-[140px] flex-1 whitespace-pre-wrap"
+                        value={draft.parts[part.id]}
+                        maxLength={MODULE2_FIELD_LIMITS.novelPart}
+                        onChange={event => updatePortfolio(current => {
+                          if (!current.sourceImportDraft || current.sourceImportDraft.origin !== "manual") return current
+                          return {
+                            ...current,
+                            sourceImportDraft: editNovelDraft(current.sourceImportDraft, { parts: { [part.id]: event.target.value } }),
+                          }
+                        })}
+                      />
+                    </div>
+                  ))}
+                </PartGrid>
                 {candidateActions}
               </section>
             ) : (
               <div className="space-y-3 rounded-lg border p-4">
-                <p className="text-sm text-muted-foreground">填写身份、题目和起承转合。保存为待核对候选后，再确认这篇小说。这里不会自动分段。</p>
+                <p className="text-sm text-muted-foreground">
+                  {fillAlreadyConnected
+                    ? "这张卡片就是已接入的小说。改动后要先保存，再确认，下一关才会换成新的内容。"
+                    : "填写身份、题目和起承转合。保存为待核对候选后，再确认这篇小说。这里不会自动分段。"}
+                </p>
                 <div className="space-y-1">
                   <label htmlFor="m2-fill-title" className="text-sm font-medium">题目</label>
                   <Input
                     id="m2-fill-title"
-                    value={fillForm.title}
+                    value={fillBase.title}
                     maxLength={MODULE2_FIELD_LIMITS.storyTitle}
-                    onChange={event => setFillForm(current => ({ ...current, title: event.target.value }))}
+                    onChange={event => updateFill({ title: event.target.value })}
                   />
                 </div>
                 <IdentityFields
                   idPrefix="m2-fill"
-                  form={fillForm}
+                  form={fillBase}
                   errors={{}}
-                  onChange={next => setFillForm(current => ({ ...current, ...next }))}
+                  onChange={next => updateFill(next)}
                 />
-                {LESSON1_PARTS.map(part => (
-                  <div key={part.id} className="space-y-1">
-                    <label htmlFor={`m2-fill-${part.id}`} className="text-sm font-medium">{part.label}</label>
-                    <Textarea
-                      id={`m2-fill-${part.id}`}
-                      className="min-h-[120px] whitespace-pre-wrap"
-                      value={fillForm[part.id]}
-                      maxLength={MODULE2_FIELD_LIMITS.novelPart}
-                      onChange={event => setFillForm(current => ({ ...current, [part.id]: event.target.value }))}
-                    />
-                  </div>
-                ))}
-                <Button type="button" variant="outline" onClick={stageFill}>保存为待核对候选</Button>
+                <PartGrid>
+                  {LESSON1_PARTS.map(part => (
+                    <div key={part.id} className="flex h-full min-w-0 flex-col space-y-1">
+                      <label htmlFor={`m2-fill-${part.id}`} className="text-sm font-medium">{part.label}</label>
+                      <Textarea
+                        id={`m2-fill-${part.id}`}
+                        className="min-h-[140px] flex-1 whitespace-pre-wrap"
+                        value={fillBase[part.id]}
+                        maxLength={MODULE2_FIELD_LIMITS.novelPart}
+                        onChange={event => {
+                          const value = event.target.value
+                          if (part.id === "opening") updateFill({ opening: value })
+                          else if (part.id === "development") updateFill({ development: value })
+                          else if (part.id === "turn") updateFill({ turn: value })
+                          else updateFill({ ending: value })
+                        }}
+                      />
+                    </div>
+                  ))}
+                </PartGrid>
+                {!fillAlreadyConnected && (
+                  <Button type="button" variant="outline" onClick={stageFill}>保存为待核对候选</Button>
+                )}
               </div>
             )}
           </div>
         )}
+        </>
+        )}
 
         <Lesson1ContinueButton
-          enabled={gates.step1 && !busy}
+          enabled={(showLocked ? gates.step1 : activeCardConfirmed) && !busy}
           toStep={2}
           label="进入下一关"
-          hint={teachingSample && !gates.step1 ? "教师虚构示例不能完成第 1 关。请导入自己的小说。" : "确认这篇小说并保存成功后，才能进入下一关。"}
+          hint={continueHint}
         />
       </div>
 
