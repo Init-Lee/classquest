@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 第 2 关「看懂改编样例」。
  * 职责：展示教师虚构的四格、一次修改和职责顺序，并记录学生看过样例以及一条观察；不要求点开每一格。
- * 更新触发：第 2 关观察题、样例展示顺序、进入下一关的条件，或“打开本关即记下第 1 关只读记号”变化时，需要同步更新本文件。
+ * 更新触发：第 2 关观察题、样例展示顺序、右侧知识卡位置、进入下一关的条件，或“打开本关即记下第 1 关只读记号”变化时，需要同步更新本文件。
  */
 
 import { useCallback, useEffect } from "react"
@@ -12,6 +12,7 @@ import { MODULE2_FIELD_LIMITS } from "@/modules/module-2-ai-comic/domains/portfo
 import { Lesson1ContinueButton, Lesson1StepHeader } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-chrome"
 import { markLesson1Step2Entered } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/lesson1-step2-visit"
 import { SampleComicBoard } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleComicBoard"
+import { SampleResponsibilityCard } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleResponsibilityCard"
 import { SampleMissingNotice } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleMissingNotice"
 import { useGuanDengSample } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/use-guan-deng-sample"
 
@@ -39,29 +40,36 @@ export default function Step2ReadSample() {
         title="看懂改编样例"
         lead="先看完整的四格，再对照原文和一次修改。写下你发现的一项选择即可。"
       />
-      {sampleState === null && <p className="text-sm text-muted-foreground">正在读取改编样例…</p>}
-      {sampleState && !sampleState.ok && <SampleMissingNotice message={sampleState.message} missing={sampleState.missing} />}
-      {sampleState?.ok && <SampleComicBoard sample={sampleState.sample} onPanelsReady={markReady} />}
-      <div className="mt-8 max-w-3xl space-y-2">
-        <label htmlFor="m2-observation" className="text-sm font-medium">
-          你发现作者作出了哪一项选择？它怎样帮助读者理解故事？
-        </label>
-        <Textarea
-          id="m2-observation"
-          className="min-h-[96px]"
-          maxLength={MODULE2_FIELD_LIMITS.sampleObservation}
-          value={observation}
-          placeholder="一两句话即可。"
-          onChange={event => updatePortfolio(current => setModule2SampleObservation(current, event.target.value, new Date().toISOString()))}
-        />
-        <p className="text-xs text-muted-foreground">不需要点开每一格，也不用背定义。</p>
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
+        <div className="min-w-0">
+          {sampleState === null && <p className="text-sm text-muted-foreground">正在读取改编样例…</p>}
+          {sampleState && !sampleState.ok && <SampleMissingNotice message={sampleState.message} missing={sampleState.missing} />}
+          {sampleState?.ok && <SampleComicBoard sample={sampleState.sample} onPanelsReady={markReady} />}
+          <div className="mt-8 max-w-3xl space-y-2">
+            <label htmlFor="m2-observation" className="text-sm font-medium">
+              你发现作者作出了哪一项选择？它怎样帮助读者理解故事？
+            </label>
+            <Textarea
+              id="m2-observation"
+              className="min-h-[96px]"
+              maxLength={MODULE2_FIELD_LIMITS.sampleObservation}
+              value={observation}
+              placeholder="一两句话即可。"
+              onChange={event => updatePortfolio(current => setModule2SampleObservation(current, event.target.value, new Date().toISOString()))}
+            />
+            <p className="text-xs text-muted-foreground">不需要点开每一格，也不用背定义。</p>
+          </div>
+          <Lesson1ContinueButton
+            enabled={ready && Boolean(sampleState?.ok)}
+            toStep={3}
+            label="进入下一关"
+            hint={sampleState && !sampleState.ok ? "样例图片还没显示出来，先不要进入下一关。" : "看完四格，并写下一条观察后，才能进入下一关。"}
+          />
+        </div>
+        <div className="min-w-0 lg:sticky lg:top-[calc(var(--module2-sticky-stack-height,4rem)+var(--module2-lesson-chrome-height,5rem))] lg:self-start">
+          <SampleResponsibilityCard />
+        </div>
       </div>
-      <Lesson1ContinueButton
-        enabled={ready && Boolean(sampleState?.ok)}
-        toStep={3}
-        label="进入下一关"
-        hint={sampleState && !sampleState.ok ? "样例图片还没显示出来，先不要进入下一关。" : "看完四格，并写下一条观察后，才能进入下一关。"}
-      />
     </div>
   )
 }

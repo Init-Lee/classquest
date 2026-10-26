@@ -1,12 +1,11 @@
 /**
  * 文件说明：课时 1《关灯这件事》四格样例展示。
  * 职责：先展示四格整页和独立文字层，再按需展开一格原文与一轮教师模拟对照；四张图都出现后才通知页面可以记“看过样例”。
- * 更新触发：四格版式、对照内容、修改标签或职责说明变化时，需要同步更新本文件。
+ * 更新触发：四格版式、对照内容或修改标签变化时，需要同步更新本文件。职责顺序不在本组件，而在第 2 关右侧知识卡。
  */
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/shared/ui/button"
-import { LESSON1_AARON, LESSON1_RESPONSIBILITIES } from "@/modules/module-2-ai-comic/lessons/lesson-1/copy"
 import { SampleFigure } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleFigure"
 import { SampleMissingNotice } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/SampleMissingNotice"
 import {
@@ -142,26 +141,6 @@ export function SampleComicBoard({
           </div>
         )}
       </section>
-
-      <section aria-label="职责顺序">
-        <h2 className="text-sm font-semibold">谁来做决定</h2>
-        <ol className="mt-2 flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center">
-          {LESSON1_RESPONSIBILITIES.map((item, index) => (
-            <li key={item} className="flex items-center gap-2">
-              <span className="rounded-md bg-secondary px-2 py-1">{index + 1}. {item}</span>
-              {index < LESSON1_RESPONSIBILITIES.length - 1 && <span aria-hidden="true" className="hidden text-muted-foreground sm:inline">→</span>}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <details className="rounded-lg border p-4">
-        <summary className="cursor-pointer text-sm font-medium">{LESSON1_AARON.title}</summary>
-        <p className="mt-2 text-sm leading-relaxed">{LESSON1_AARON.body}</p>
-        <a className="mt-2 inline-block break-all text-sm text-primary underline" href={LESSON1_AARON.href} target="_blank" rel="noreferrer">
-          {LESSON1_AARON.linkLabel}
-        </a>
-      </details>
     </div>
   )
 }
