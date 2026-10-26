@@ -77,7 +77,8 @@ module-2-ai-comic/
 │       └── inner-step-progress-state.ts     # 四关进度纯函数状态
 ├── lessons/lesson-1/
 │   ├── components/
-│   │   ├── identity-form.ts             # 第 1 关身份表单与“不静默覆盖”核对
+│   │   ├── identity-form.ts             # 第 1 关身份：文件已有项只读，缺项才补填
+│   │   ├── identity-form.regression.test.ts # 文件身份锁、合并与确认口径
 │   │   ├── lesson1-chrome.tsx           # 关卡标题；下一关前等待保存完成
 │   │   ├── lesson1-commit.ts            # 确认动作等待本机保存完成
 │   │   ├── Lesson1CompletePanel.tsx     # 完成页：三项目标、保存学习包、下一课待开放
@@ -88,7 +89,7 @@ module-2-ai-comic/
 │   │   └── use-guan-deng-sample.ts      # 读取样例清单
 │   ├── sample/load-guan-deng-sample.ts  # 以 sample-manifest.json 为唯一清单
 │   ├── steps/
-│   │   ├── Step1ImportNovel.tsx         # 选择小说、核对、确认；粘贴补救。不提供练习入口
+│   │   ├── Step1ImportNovel.tsx         # 导入文件 / 直接填写分卡；文件只读核对，确认后展开全文。不提供练习入口
 │   │   ├── Step2ReadSample.tsx          # 看懂改编样例并写一条观察
 │   │   ├── Step3PickScenes.tsx          # 起承转合四句
 │   │   └── Step4VisualDirection.tsx     # 2—3 个视觉词与一句理由
