@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1《关灯这件事》四格样例展示。
  * 职责：先展示四格整页和独立文字层，再按需展开一格原文与一轮教师模拟对照；四张图都出现后才通知页面可以记“看过样例”。
- * 更新触发：四格版式、对照内容或修改标签变化时，需要同步更新本文件。职责顺序不在本组件，而在第 2 关右侧知识卡。
+ * 更新触发：四格版式、「看这一格」按钮外观、对照内容或修改标签变化时，需要同步更新本文件。职责顺序不在本组件，而在第 2 关右侧知识卡。
  */
 
 import { useEffect, useRef, useState } from "react"
@@ -70,11 +70,14 @@ export function SampleComicBoard({
                   onMissing={markMissing}
                 />
                 <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">{panel.caption}</p>
+                {/* 实色主按钮，和上方画面说明拉开 */}
                 <Button
                   type="button"
-                  variant={selected ? "default" : "outline"}
+                  variant={selected ? "outline" : "default"}
                   size="sm"
-                  className="mt-2"
+                  className={selected
+                    ? "mt-2 border-2 border-primary font-semibold text-primary"
+                    : "mt-2 border-2 border-primary font-semibold shadow-sm"}
                   aria-expanded={selected}
                   onClick={() => setOpenId(current => current === panel.id ? null : panel.id)}
                 >
