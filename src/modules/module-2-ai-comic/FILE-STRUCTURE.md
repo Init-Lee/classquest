@@ -86,14 +86,14 @@ module-2-ai-comic/
 │   │   ├── Lesson1CompletePanel.tsx     # 完成页：三项目标、保存学习包、下一课待开放
 │   │   ├── OriginalWorkPanel.tsx        # 已确认原作；窄屏在下，宽屏在右
 │   │   ├── SampleComicBoard.tsx         # 四格整页、单格对照、教师模拟对照
-│   │   ├── SampleResponsibilityCard.tsx # 第 2 关职责与 AARON；窄屏在下可收起，宽屏在右
+│   │   ├── SampleResponsibilityCard.tsx # 第 2 关职责与 AARON；右侧竖标签滑出，默认收起，开合不落盘
 │   │   ├── SampleFigure.tsx             # 单张样例图与放大
 │   │   ├── SampleMissingNotice.tsx      # 列出缺少的样例文件
 │   │   └── use-guan-deng-sample.ts      # 读取样例清单
 │   ├── sample/load-guan-deng-sample.ts  # 以 sample-manifest.json 为唯一清单
 │   ├── steps/
 │   │   ├── Step1ImportNovel.tsx         # 顶部单页选项卡、四段田字、占满内容区；进第 2 关后全文只读，解锁或重新导入才改。不提供练习入口
-│   │   ├── Step2ReadSample.tsx          # 看懂改编样例并写一条观察；职责解说在右侧知识卡
+│   │   ├── Step2ReadSample.tsx          # 看懂改编样例并写一条观察；主区整行，职责解说在右侧滑出栏
 │   │   ├── Step3PickScenes.tsx          # 起承转合四句
 │   │   └── Step4VisualDirection.tsx     # 2—3 个视觉词与一句理由
 │   ├── config.ts                            # 四关标题与路径

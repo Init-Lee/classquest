@@ -14,9 +14,18 @@ export const LESSON1_PARTS: { id: FourPart; label: string; hint: string }[] = [
 ]
 
 export const LESSON1_RESPONSIBILITIES = [
-  "作者选时刻与方向",
-  "AI 按条件生成",
-  "作者对照原作核查与选择",
+  {
+    title: "作者选时刻与方向",
+    detail: "你先选好要画的那一瞬间，并想好这一格让读者看清什么。",
+  },
+  {
+    title: "AI 按条件生成",
+    detail: "AI 按你定好的条件画出画面，不替你决定故事。",
+  },
+  {
+    title: "作者对照原作核查与选择",
+    detail: "你对照原来的小说检查画面，留下合适的，换掉不合适的。",
+  },
 ] as const
 
 export const LESSON1_AARON = {
