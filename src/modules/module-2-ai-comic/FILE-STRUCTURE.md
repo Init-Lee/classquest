@@ -81,7 +81,6 @@ module-2-ai-comic/
 │   │   ├── lesson1-chrome.tsx           # 关卡标题；下一关前等待保存完成
 │   │   ├── lesson1-commit.ts            # 确认动作等待本机保存完成
 │   │   ├── Lesson1CompletePanel.tsx     # 完成页：三项目标、保存学习包、下一课待开放
-│   │   ├── Lesson1PracticePage.tsx      # 教学样例练习页，不计入本人项目
 │   │   ├── OriginalWorkPanel.tsx        # 已确认原作；窄屏在下，宽屏在右
 │   │   ├── SampleComicBoard.tsx         # 四格整页、单格对照、教师模拟对照
 │   │   ├── SampleFigure.tsx             # 单张样例图与放大
@@ -89,14 +88,14 @@ module-2-ai-comic/
 │   │   └── use-guan-deng-sample.ts      # 读取样例清单
 │   ├── sample/load-guan-deng-sample.ts  # 以 sample-manifest.json 为唯一清单
 │   ├── steps/
-│   │   ├── Step1ImportNovel.tsx         # 选择小说、核对、确认；粘贴补救
+│   │   ├── Step1ImportNovel.tsx         # 选择小说、核对、确认；粘贴补救。不提供练习入口
 │   │   ├── Step2ReadSample.tsx          # 看懂改编样例并写一条观察
 │   │   ├── Step3PickScenes.tsx          # 起承转合四句
 │   │   └── Step4VisualDirection.tsx     # 2—3 个视觉词与一句理由
 │   ├── config.ts                            # 四关标题与路径
 │   ├── copy.ts                              # 给学生看的固定说明，不含小说正文
 │   ├── guards.ts                            # 关卡门禁：调用 lesson1-update 的真实门禁，教师全开
-│   └── routes.tsx                           # 四关、练习页、最近一关、门禁
+│   └── routes.tsx                           # 四关、最近一关、门禁；旧练习地址回到第 1 关
 ├── pages/
 │   ├── Module2HomePage.tsx                  # 模块首页
 │   └── dev/Module2AssetsDevPage.tsx         # 仅开发环境：图片资产测试页（独立夹具档案，不切换活动档案）
@@ -141,8 +140,8 @@ domains          → constants；不依赖 app / pages / lessons / features / in
 | 路径 | 内容 |
 |---|---|
 | `/module/2` | 模块首页 |
-| `/module/2/lesson/1/step/1—4` | 课时 1 四关 |
-| `/module/2/lesson/1/practice` | 教师样例练习，不计入本人项目 |
+| `/module/2/lesson/1/step/1—4` | 课时 1 四关。改编样例只在第 2 关；进入第 2 关仍须本人小说已确认且不是教学样例 |
+| `/module/2/lesson/1/practice` | 已收掉。直连回到第 1 关 `/module/2/lesson/1/step/1` |
 | `/module/2/dev/assets` | 仅开发环境：图片资产测试页；生产构建不注册 |
 | `/module/2/lesson/2—6/*` | 未开放，回到 `/module/2` |
 | `/module/2/comic` | 预留给「我的漫画」，当前未开放，回到 `/module/2` |

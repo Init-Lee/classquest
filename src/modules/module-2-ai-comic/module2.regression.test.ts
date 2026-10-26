@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 骨架与门禁回归测试。
- * 职责：验证六课时注册表的两种访问条件、顶部进度状态、课时 1 关卡门禁（按真实 gate 放行、教师全开）、四关进度状态、教师口令、开发测试页只在开发环境注册，以及模块不 import 其他模块业务代码。
- * 更新触发：模块 2 课时开放范围、访问规则、关卡门禁、进度状态、教师口令或模块边界规则变化时，需要同步更新本文件。
+ * 职责：验证六课时注册表的两种访问条件、顶部进度状态、课时 1 关卡门禁（按真实 gate 放行、教师全开）、四关进度状态、教师口令、开发测试页只在开发环境注册、第 1 关不再挂练习页，以及模块不 import 其他模块业务代码。
+ * 更新触发：模块 2 课时开放范围、访问规则、关卡门禁、进度状态、教师口令、练习入口或模块边界规则变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -166,6 +166,21 @@ describe("模块 2 教师口令与模块边界", () => {
       .map(([path]) => path)
     expect(Object.keys(sources).length).toBeGreaterThan(10)
     expect(offenders).toEqual([])
+  })
+
+  it("第 1 关不再挂练习页，样例只留在第 2 关", () => {
+    const sources = import.meta.glob(
+      ["./lessons/lesson-1/**/*.ts", "./lessons/lesson-1/**/*.tsx"],
+      { query: "?raw", import: "default", eager: true },
+    ) as Record<string, string>
+    const offenders = Object.entries(sources)
+      .filter(([, code]) => /\/module\/2\/lesson\/1\/practice|Lesson1PracticePage|练习入口|打开练习|去练习/.test(code))
+      .map(([path]) => path)
+    expect(Object.keys(sources).length).toBeGreaterThan(5)
+    expect(offenders).toEqual([])
+    expect(sources["./lessons/lesson-1/components/Lesson1PracticePage.tsx"]).toBeUndefined()
+    expect(sources["./lessons/lesson-1/steps/Step2ReadSample.tsx"]).toContain("看懂改编样例")
+    expect(sources["./lessons/lesson-1/guards.ts"]).toContain("请先在第 1 关导入并确认你的小说。")
   })
 
   it("开发测试页只在 import.meta.env.DEV 下注册", () => {

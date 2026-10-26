@@ -1,11 +1,10 @@
 /**
  * 文件说明：课时 1 第 1 关「导入我的小说」。
- * 职责：选择小说文件或手工粘贴四段，核对身份、题目和四段后，调用已有解析与确认事务；教学样例只指向练习，不能完成本人项目。
+ * 职责：选择小说文件或手工粘贴四段，核对身份、题目和四段后，调用已有解析与确认事务；教师虚构示例不能完成本人项目，改编样例只在第 2 关观看。
  * 更新触发：第 1 关导入、核对、换小说提示或确认后的放行条件变化时，需要同步更新本文件。
  */
 
 import { useEffect, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Input } from "@/shared/ui/input"
 import { Textarea } from "@/shared/ui/textarea"
@@ -123,7 +122,6 @@ function IdentityFields({
 
 export default function Step1ImportNovel() {
   const { portfolio, updatePortfolio, flushPortfolio, saveStatus, isTeacherMode, retrySave } = useModule2State()
-  const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const draftRef = useRef<SourceImportDraft | null>(null)
   const studentRef = useRef<StudentIdentity | null>(null)
@@ -236,7 +234,7 @@ export default function Step1ImportNovel() {
   const requestConfirm = () => {
     if (!draft) return
     if (draft.isTeachingSample) {
-      setError("这是教师虚构示例，不能用来完成你的本人项目。请导入自己的小说，或从练习入口观看。")
+      setError("这是教师虚构示例，不能用来完成你的本人项目。请导入自己的小说。")
       return
     }
     if (MODULE2_FOUR_PARTS.some(part => draft.parts[part].trim() === "") || draft.storyTitle.trim() === "") {
@@ -340,9 +338,6 @@ export default function Step1ImportNovel() {
               <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
                 <p className="font-medium">教师虚构示例</p>
                 <p className="mt-1">这篇和课堂练习《关灯这件事》相同，不能用来完成你的本人项目。请另选自己的小说。</p>
-                <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => navigate("/module/2/lesson/1/practice")}>
-                  打开练习：看懂改编样例
-                </Button>
               </div>
             )}
             <div className="space-y-1 text-sm">
@@ -431,19 +426,11 @@ export default function Step1ImportNovel() {
           </div>
         </details>
 
-        <aside className="rounded-lg border border-dashed p-4">
-          <h2 className="text-sm font-medium">练习入口</h2>
-          <p className="mt-1 text-sm text-muted-foreground">没有自己的小说时，可以先看教师虚构示例。练习不计入本人项目，也不能代替这一关。</p>
-          <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => navigate("/module/2/lesson/1/practice")}>
-            去练习：看懂改编样例
-          </Button>
-        </aside>
-
         <Lesson1ContinueButton
           enabled={gates.step1 && !busy}
           toStep={2}
           label="进入下一关"
-          hint={teachingSample && !gates.step1 ? "教学样例不能完成第 1 关。请导入自己的小说。" : "确认这篇小说并保存成功后，才能进入下一关。"}
+          hint={teachingSample && !gates.step1 ? "教师虚构示例不能完成第 1 关。请导入自己的小说。" : "确认这篇小说并保存成功后，才能进入下一关。"}
         />
       </div>
 
