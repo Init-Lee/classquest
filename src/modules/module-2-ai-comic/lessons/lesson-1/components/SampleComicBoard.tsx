@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1《关灯这件事》四格样例展示。
- * 职责：先展示四格整页和独立文字层，再按需展开一格原文与一轮教师模拟对照；四张图都出现后才通知页面可以记“看过样例”。
- * 更新触发：四格版式、「看这一格」按钮外观、对照内容或修改标签变化时，需要同步更新本文件。职责顺序不在本组件，而在第 2 关右侧滑出知识栏。
+ * 职责：先展示四格整页和独立文字层，再展示始终可见的一次修改图文；四张四格图都出现后才通知页面可以记“看过样例”。修改图不参与这一记号。
+ * 更新触发：四格版式、「看这一格」按钮外观、一次修改的图文比例或标签变化时，需要同步更新本文件。职责顺序不在本组件，而在第 2 关右侧滑出知识栏。
  */
 
 import { useEffect, useRef, useState } from "react"
@@ -21,7 +21,6 @@ export function SampleComicBoard({
   onPanelsReady?: () => void
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
-  const [showRevision, setShowRevision] = useState(false)
   const [loaded, setLoaded] = useState<string[]>([])
   const [missing, setMissing] = useState<string[]>([])
   const readyRef = useRef(onPanelsReady)
@@ -106,43 +105,40 @@ export function SampleComicBoard({
         )}
       </section>
 
-      <section className="space-y-3">
-        <Button type="button" variant="outline" onClick={() => setShowRevision(value => !value)}>
-          {showRevision ? "收起这次修改" : "看看一次修改"}
-        </Button>
-        {showRevision && (
-          <div className="min-w-0 space-y-3 rounded-lg border p-4">
+      {/* 始终可见。修改图不调用 onMissing，避免缺图时改变“看过四格”的完成记号。 */}
+      <section className="min-w-0 space-y-3" aria-label="一次修改">
+        <h2 className="text-xl font-semibold">一次修改</h2>
+        <div className="grid min-w-0 items-start gap-4 rounded-lg border p-4 md:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
+            <div className="min-w-0">
+              <p className="mb-2 text-sm font-medium">修改前</p>
+              <SampleFigure
+                sample={sample}
+                file={sample.manifest.revision.before}
+                alt={`${sample.manifest.revision.label}：修改前`}
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="mb-2 text-sm font-medium">修改后</p>
+              <SampleFigure
+                sample={sample}
+                file={sample.manifest.revision.after}
+                alt={`${sample.manifest.revision.label}：修改后`}
+              />
+            </div>
+          </div>
+          <div className="min-w-0 space-y-3">
             <p className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-900">
               {sample.manifest.revision.label}
             </p>
-            <div className="grid min-w-0 gap-4 md:grid-cols-2">
-              <div className="min-w-0">
-                <p className="mb-2 text-sm font-medium">修改前</p>
-                <SampleFigure
-                  sample={sample}
-                  file={sample.manifest.revision.before}
-                  alt={`${sample.manifest.revision.label}：修改前`}
-                  onMissing={markMissing}
-                />
-              </div>
-              <div className="min-w-0">
-                <p className="mb-2 text-sm font-medium">修改后</p>
-                <SampleFigure
-                  sample={sample}
-                  file={sample.manifest.revision.after}
-                  alt={`${sample.manifest.revision.label}：修改后`}
-                  onMissing={markMissing}
-                />
-              </div>
-            </div>
-            <p className="text-sm"><span className="font-medium">问题：</span>{sample.problem}</p>
-            <p className="text-sm"><span className="font-medium">改变条件：</span>{sample.proposedChange}</p>
-            <p className="text-sm"><span className="font-medium">检查结果：</span>{sample.judgment}</p>
+            <p className="text-sm leading-relaxed"><span className="font-medium">问题：</span>{sample.problem}</p>
+            <p className="text-sm leading-relaxed"><span className="font-medium">改了什么：</span>{sample.proposedChange}</p>
+            <p className="text-sm leading-relaxed"><span className="font-medium">检查结果：</span>{sample.judgment}</p>
             <p className="text-sm leading-relaxed text-muted-foreground">{sample.productionDisclosure}</p>
             <p className="text-sm leading-relaxed text-muted-foreground">{sample.secondIterationNote}</p>
             <p className="text-sm leading-relaxed text-muted-foreground">{sample.readerFeedbackNote}</p>
           </div>
-        )}
+        </div>
       </section>
     </div>
   )

@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 第 2 关「谁来做决定」右侧滑出知识栏。
- * 职责：默认收起；点右侧竖标签滑出约 380px，再点标签、点关闭或按 Esc 收起。栏内是三步职责和可折叠的 AARON。开合只留在这一页，不写入档案，也不进学习包。窄屏仍从右侧滑出，不把整卡堆到四格下面。
- * 更新触发：职责解说、AARON 折叠内容、滑出宽度、右侧标签位置，或窄屏仍从右侧滑出的规则变化时，需要同步更新本文件。
+ * 职责：默认收起；点右侧竖标签滑出约 380px，再点标签、点关闭或按 Esc 收起。栏内是三步短段、已有教学图和可折叠的 AARON。开合只留在这一页，不写入档案，也不进学习包。窄屏仍从右侧滑出，不把整卡堆到四格下面。
+ * 更新触发：职责短段、配图、AARON 折叠内容、滑出宽度、右侧标签位置，或窄屏仍从右侧滑出的规则变化时，需要同步更新本文件。
  */
 
 import { useEffect, useId, useState } from "react"
@@ -9,8 +9,32 @@ import { X } from "lucide-react"
 import { Button } from "@/shared/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { LESSON1_AARON, LESSON1_RESPONSIBILITIES } from "@/modules/module-2-ai-comic/lessons/lesson-1/copy"
+import { guanDengAssetUrl } from "@/modules/module-2-ai-comic/lessons/lesson-1/sample/load-guan-deng-sample"
 
 const PANEL_WIDTH = "min(100% - 2rem, 380px)"
+
+function ResponsibilityFigures({
+  figures,
+}: {
+  figures: (typeof LESSON1_RESPONSIBILITIES)[number]["figures"]
+}) {
+  return (
+    <div className={figures.length > 1 ? "mt-2 grid grid-cols-2 gap-2" : "mt-2"}>
+      {figures.map(figure => (
+        <figure key={figure.file} className="min-w-0">
+          <img
+            src={guanDengAssetUrl(figure.file)}
+            alt={figure.alt}
+            width={1254}
+            height={1254}
+            className="h-auto w-full rounded-md border bg-muted/30"
+          />
+          <figcaption className="mt-1 text-xs leading-snug text-muted-foreground">{figure.caption}</figcaption>
+        </figure>
+      ))}
+    </div>
+  )
+}
 
 export function SampleResponsibilityCard() {
   // 开合不落盘：只放在本组件状态里，离开页面即消失。
@@ -84,6 +108,7 @@ export function SampleResponsibilityCard() {
                 <li key={item.title} className="text-sm">
                   <p className="font-medium">{index + 1}. {item.title}</p>
                   <p className="mt-1 leading-relaxed">{item.detail}</p>
+                  <ResponsibilityFigures figures={item.figures} />
                 </li>
               ))}
             </ol>

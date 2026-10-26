@@ -85,15 +85,15 @@ module-2-ai-comic/
 │   │   ├── lesson1-commit.ts            # 确认动作等待本机保存完成
 │   │   ├── Lesson1CompletePanel.tsx     # 完成页：三项目标、保存学习包、下一课待开放
 │   │   ├── OriginalWorkPanel.tsx        # 已确认原作；窄屏在下，宽屏在右
-│   │   ├── SampleComicBoard.tsx         # 四格整页、单格对照、教师模拟对照
-│   │   ├── SampleResponsibilityCard.tsx # 第 2 关职责与 AARON；右侧竖标签滑出，默认收起，开合不落盘
+│   │   ├── SampleComicBoard.tsx         # 四格整页、单格对照；一次修改图文始终可见（宽屏左图右文，窄屏上图下文）
+│   │   ├── SampleResponsibilityCard.tsx # 第 2 关三步短段、已有教学图与折叠 AARON；右侧竖标签滑出，默认收起，开合不落盘
 │   │   ├── SampleFigure.tsx             # 单张样例图与放大
 │   │   ├── SampleMissingNotice.tsx      # 列出缺少的样例文件
 │   │   └── use-guan-deng-sample.ts      # 读取样例清单
 │   ├── sample/load-guan-deng-sample.ts  # 以 sample-manifest.json 为唯一清单
 │   ├── steps/
 │   │   ├── Step1ImportNovel.tsx         # 顶部单页选项卡、四段田字、占满内容区；进第 2 关后全文只读，解锁或重新导入才改。不提供练习入口
-│   │   ├── Step2ReadSample.tsx          # 看懂改编样例并写一条观察；主区整行，职责解说在右侧滑出栏
+│   │   ├── Step2ReadSample.tsx          # 主区顺序：四格、一次修改图文、一条观察；职责解说只在右侧滑出栏
 │   │   ├── Step3PickScenes.tsx          # 起承转合四句
 │   │   └── Step4VisualDirection.tsx     # 2—3 个视觉词与一句理由
 │   ├── config.ts                            # 四关标题与路径
@@ -112,7 +112,7 @@ module-2-ai-comic/
 
 ## 模块外静态素材
 
-`classquest/public/module-2/samples/guan-deng/` 是教师样例的静态文件，从 `build_Plan/module-2/assets/` 原样复制。页面只 fetch `sample-manifest.json` 及其点名的原文、记录和图片。这些图片不是学生资产，不进 assets store，也不进学习包。`sample-viewer.html` 只随素材保留，页面不嵌入它。
+`classquest/public/module-2/samples/guan-deng/` 是教师样例的静态文件，从 `build_Plan/module-2/assets/` 原样复制。页面只 fetch `sample-manifest.json` 及其点名的原文、记录和图片。这些图片不是学生资产，不进 assets store，也不进学习包。`sample-viewer.html` 只随素材保留，页面不嵌入它。第 2 关知识栏直接引用同目录已有的四格、`revision-before.png` 和风格图，不另建 `knowledge/`。
 
 ## 计划中的目录（尚未创建）
 
