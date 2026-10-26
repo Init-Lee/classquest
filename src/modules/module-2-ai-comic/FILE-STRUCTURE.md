@@ -6,7 +6,7 @@
 
 # FILE-STRUCTURE — Module 2
 
-## 当前结构（阶段 B）
+## 当前结构（阶段 C：小说解析与学习包；课时一页面仍是占位）
 
 ```text
 module-2-ai-comic/
@@ -54,7 +54,24 @@ module-2-ai-comic/
 │   │   ├── serial-queue.ts                  # 串行／限并发执行器
 │   │   └── assets.regression.test.ts
 │   ├── global-actions/
-│   │   └── Module2GlobalActions.tsx         # 「保存学习包」「导入学习包」禁用占位
+│   │   └── Module2GlobalActions.tsx         # 学生模式保存／导入学习包；教师模式按钮禁用
+│   ├── source-import/                       # 小说字符串解析与候选草稿，不覆盖已确认来源
+│   │   ├── parse-novel.ts                   # 按文件内容分流；阶段快照与模块一进度文件只给指引
+│   │   ├── parse-novel-html.ts              # 新版数据块与旧版 HTML
+│   │   ├── parse-novel-markdown.ts          # 旧版 Markdown；边界不明则转人工
+│   │   ├── novel-draft.ts                   # 候选草稿、人工粘贴与改稿
+│   │   ├── stage-novel.ts                   # 接入课时 1 的保存候选语义
+│   │   ├── teaching-sample.ts               # 教学样例题目与四段正文指纹
+│   │   └── source-import.regression.test.ts
+│   ├── learning-package/                    # .cqpack 打包、校验与下载
+│   │   ├── package-contract.ts              # 路径、体积、文件名与给学生看的文案
+│   │   ├── package-zip.ts                   # fflate 打包与限额解压
+│   │   ├── package-read.ts                  # 清单、图片与门禁重算
+│   │   ├── prepare-learning-package.ts      # 先保存再取快照，自检后才可下载
+│   │   ├── pack.worker.ts                   # Vite 模块 Worker
+│   │   ├── pack-client.ts                   # 页面侧 Worker 调用
+│   │   ├── download-cqpack.ts               # 交给浏览器下载，不声称已写入磁盘
+│   │   └── learning-package.regression.test.ts
 │   └── progress-ui/
 │       ├── InnerStepProgress.tsx            # 课时内四关进度组件
 │       └── inner-step-progress-state.ts     # 四关进度纯函数状态
@@ -82,7 +99,7 @@ module-2-ai-comic/
 
 按后续阶段新增，创建时同步更新本文件：
 
-- `features/source-import/`、`features/learning-package/`（阶段 C）：小说读取与学习包导出导入；`Module2GlobalActions.tsx` 届时接入真实功能。
+- 课时 1 四关正式页面与样例图片（阶段 D）。`features/source-import/` 的解析和确认函数保持可被页面直接调用；不要在页面里再写一套解析。
 
 ## 依赖方向
 

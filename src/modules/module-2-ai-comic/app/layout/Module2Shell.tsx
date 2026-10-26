@@ -85,13 +85,11 @@ function Module2ShellInner() {
           <div className="hidden min-w-0 flex-1 justify-center overflow-hidden lg:flex">
             <Module2TopProgress />
           </div>
-          {/* 教师模式隐藏保存状态与学习包操作，避免演示误碰学生档案 */}
-          {!isTeacherMode && (
-            <div className="flex shrink-0 items-center gap-3">
-              <Module2SaveStatus />
-              <Module2GlobalActions />
-            </div>
-          )}
+          {/* 教师模式仍显示学习包按钮，但按钮本身禁用；保存状态只在学生模式出现 */}
+          <div className="flex shrink-0 items-center gap-3">
+            {!isTeacherMode && <Module2SaveStatus />}
+            <Module2GlobalActions />
+          </div>
         </div>
         <div className="border-t px-2 lg:hidden">
           <Module2TopProgress />

@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1「我的小说」作品页。
  * 职责：在 `/module/1/story` 只读展示上次整体确认的四段，段落固定带课时来源标签，并提供复制全文、整篇 TXT/Markdown/HTML 下载、下载 JSON 和返回修改；不是第 7 课。三种整篇下载锚在小说正文题目右侧；正文下方返回修改、复制全文、下载 JSON 为蓝框，返回档案为蓝底。
- * 更新触发：解锁条件、确认版本展示、来源标签、复制范围、整篇下载或正文下方按钮的位置与颜色，或返回修改入口变化时，需要同步更新本文件。
+ * 更新触发：解锁条件、确认版本展示、来源标签、复制范围、整篇下载或正文下方按钮的位置与颜色、返回修改入口，或 HTML 导出是否传入教师模式时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -98,7 +98,9 @@ export default function Module1StoryPage() {
   const parts = buildModule1ConfirmedStoryParts(edition)
   const needsReview = module1StoryNeedsReview(portfolio)
   const downloadStory = (format: Module1StoryExportFormat) => {
-    downloadModule1StoryExport(buildModule1StoryExport(portfolio.student, edition, format))
+    downloadModule1StoryExport(buildModule1StoryExport(portfolio.student, edition, format, new Date(), {
+      isTeachingSample: isTeacherMode,
+    }))
   }
   const copyFullText = async () => {
     const text = buildModule1ConfirmedStoryCopyText(edition)

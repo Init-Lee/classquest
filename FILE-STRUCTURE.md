@@ -21,7 +21,7 @@ classquest/
 │   ├── teacher-console/            # 模块 4 课时 5/课时 6 教师控制台，独立挂载 /teacher/*
 │   ├── modules/                    # 独立课程模块
 │   │   ├── module-1-ai-story/
-│   │   ├── module-2-ai-comic/          # 建设中：阶段 B 数据底座，/module/2
+│   │   ├── module-2-ai-comic/          # 建设中：已有小说导入解析与学习包，课时一页面尚未实现，/module/2
 │   │   ├── module-3-ai-science-station/
 │   │   └── module-4-ai-info-detective/
 │   └── shared/                     # 业务无关 UI 与纯工具
@@ -165,5 +165,5 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 - 上一课时里程碑：`module4-lesson6-v0.7.6`（课时 6 功能合入）、`module4-lesson5-v0.7.5`（课时 5 Live Lesson Session 联调闭环）。
 - 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-6 已开放；课时 4 可联调 peer-review / moderation / SQLite routes；课时 5 已完成 Live Lesson Session 学生端四步流与教师控制台同步课堂收口；课时 6 已完成教师端发布审核与统计、学生端三步流和匿名访客公共挑战。
 - 模块 1 已建立独立 app / domains / infra / lessons 结构，固定六课时；课时 1—6 已开放，并接入独立 IndexedDB、version 1 继续学习包、课时阶段快照与模块内教师讲解模式。`/module/1/story` 是派生的「我的小说」，不是第七课。课时 6 已收口，可打包 OSS。可读小说页可下载 TXT、Markdown、HTML 整篇作品；未完成课时 6 时首页不显示「我的小说」按钮。阶段 5 已收口，可打包 OSS。
-- 模块 2（AI 四格漫画）建设中：已建立独立目录、六课时注册表（仅课时 1 入口开放）、Shell、首页、教师讲解模式和课时 1 四关占位框架，以及数据契约 v1、独立本机数据库 `classquest-module2-v1` 与图片资产服务，平台门户以「架构占位」展示；尚未实现小说导入、学习包与四关内容。与模块 1 只通过小说文件契约连接，不 import 模块 1 业务代码。
+- 模块 2（AI 四格漫画）建设中：已有小说导入解析与学习包，课时一页面尚未实现。平台门户仍以「架构占位」展示。已有独立目录、六课时注册表（仅课时 1 入口开放）、数据契约 v1、独立本机数据库 `classquest-module2-v1`、图片资产服务，以及学生模式的 `.cqpack` 保存与导入。与模块 1 只通过小说文件契约连接，不 import 模块 1 业务代码。
 

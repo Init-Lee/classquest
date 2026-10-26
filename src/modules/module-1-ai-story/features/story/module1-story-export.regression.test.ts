@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 1 小说页整篇作品导出回归测试。
- * 职责：锁定文件名用小说标题、身份只写档案已有字段、四段来自确认稿，以及 HTML 先转义且不能当进度导入。
- * 更新触发：导出文件名、身份抬头、分段正文、HTML 转义或导入拒绝规则变化时，需要同步更新本文件。
+ * 职责：锁定文件名用小说标题、身份只写档案已有字段、四段来自确认稿；HTML 先转义，并带上可被模块二读取的数据块，仍不能当模块一进度导入。
+ * 更新触发：导出文件名、身份抬头、分段正文、HTML 转义、数据块、教师样例标记或导入拒绝规则变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -9,7 +9,9 @@ import { createModule1TeacherLecturePortfolio } from "@/modules/module-1-ai-stor
 import type { Module1Lesson6ConfirmedEdition, Module1StudentProfile } from "@/modules/module-1-ai-story/domains/portfolio/types"
 import { deserializeModule1ContinuePackageText } from "@/modules/module-1-ai-story/infra/persistence/serializers/continue-package"
 import {
+  MODULE1_NOVEL_DATA_SCRIPT_ID,
   MODULE1_STORY_EXPORT_NOTE,
+  MODULE1_STORY_HTML_EXPORT_NOTE,
   buildModule1StoryExport,
   buildModule1StoryExportFilename,
   buildModule1StoryHtml,
@@ -84,19 +86,80 @@ describe("模块 1 小说页整篇导出", () => {
       turnText: "a < b & c > d",
       endingText: "合段正文",
     }
-    const html = buildModule1StoryHtml(student(), edition)
+    const html = buildModule1StoryHtml(student(), edition, { isTeachingSample: false })
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;")
     expect(html).toContain("乙&lt;br&gt;丙")
     expect(html).toContain("a &lt; b &amp; c &gt; d")
     expect(html).toContain("&quot;你好&quot;")
     expect(html).toContain("甲<br>\n")
-    expect(html).not.toContain("<script>")
     expect(html).toContain("起·课时3")
     expect(html).toContain("合·课时6")
-    expect(html).toContain(MODULE1_STORY_EXPORT_NOTE)
-    const file = buildModule1StoryExport(student(), edition, "html", exportedAt)
+    expect(html).toContain(MODULE1_STORY_HTML_EXPORT_NOTE)
+    expect(html).not.toContain(MODULE1_STORY_EXPORT_NOTE)
+    const file = buildModule1StoryExport(student(), edition, "html", exportedAt, { isTeachingSample: false })
     expect(file.filename).toContain("说-你好")
     expect(file.filename).not.toContain("我的小说")
     expect(() => deserializeModule1ContinuePackageText(file.content, file.filename)).toThrow(/不能恢复进度/)
+  })
+
+  it("HTML 数据块与可见正文使用确认稿，并按参数标记教师样例", () => {
+    const edition: Module1Lesson6ConfirmedEdition = {
+      confirmedAt: "2026-10-09T00:00:00.000Z",
+      storyTitle: `说"你好" <关灯>`,
+      openingText: "甲\n</script>\n🌱\"引号\"",
+      developmentText: "乙<br>丙",
+      turnText: "a < b & c > d",
+      endingText: "冻结合段",
+    }
+    const teacher = buildModule1StoryHtml(
+      student({ studentName: "演示学生" }),
+      edition,
+      { isTeachingSample: true },
+    )
+    const studentFile = buildModule1StoryHtml(student({ studentName: "演示学生" }), edition, { isTeachingSample: false })
+    for (const html of [teacher, studentFile]) {
+      const opens = html.match(new RegExp(`<script\\b[^>]*\\bid="${MODULE1_NOVEL_DATA_SCRIPT_ID}"`, "g")) ?? []
+      expect(opens).toHaveLength(1)
+      expect(html.match(/<\/script>/g)).toHaveLength(1)
+      expect(html).toContain("\\u003c/script>")
+      expect(html).toContain('data-cq-story-title')
+      expect(html).toContain('data-cq-part="opening"')
+      expect(html).toContain('data-cq-part="development"')
+      expect(html).toContain('data-cq-part="turn"')
+      expect(html).toContain('data-cq-part="ending"')
+      const body = html.match(/<script id="classquest-story-data" type="application\/json">([\s\S]*?)<\/script>/)?.[1]
+      expect(body).toBeTruthy()
+      const parsed = JSON.parse(body ?? "{}") as {
+        documentType: string
+        version: number
+        sourceModuleId: string
+        isTeachingSample: boolean
+        confirmedEdition: Module1Lesson6ConfirmedEdition
+      }
+      expect(parsed.documentType).toBe("classquest-novel")
+      expect(parsed.version).toBe(1)
+      expect(parsed.sourceModuleId).toBe("module-1-ai-story")
+      expect(parsed.confirmedEdition).toEqual({
+        confirmedAt: edition.confirmedAt,
+        storyTitle: edition.storyTitle,
+        openingText: edition.openingText,
+        developmentText: edition.developmentText,
+        turnText: edition.turnText,
+        endingText: edition.endingText,
+      })
+      expect(html).toContain("冻结合段")
+      expect(html).not.toContain("工作稿合段")
+    }
+    expect(JSON.parse(teacher.match(/<script id="classquest-story-data" type="application\/json">([\s\S]*?)<\/script>/)?.[1] ?? "{}").isTeachingSample).toBe(true)
+    expect(JSON.parse(studentFile.match(/<script id="classquest-story-data" type="application\/json">([\s\S]*?)<\/script>/)?.[1] ?? "{}").isTeachingSample).toBe(false)
+
+    const demo = createModule1TeacherLecturePortfolio()
+    demo.lesson6.finalText = "这是还没再次确认的新合段。"
+    const frozen = buildModule1StoryHtml(demo.student, demo.lesson6.confirmedEdition!, { isTeachingSample: true })
+    const frozenBody = frozen.match(/<script id="classquest-story-data" type="application\/json">([\s\S]*?)<\/script>/)?.[1] ?? ""
+    const frozenJson = JSON.parse(frozenBody) as { confirmedEdition: Module1Lesson6ConfirmedEdition }
+    expect(frozenJson.confirmedEdition.endingText).toBe(demo.lesson6.confirmedEdition!.endingText)
+    expect(frozenJson.confirmedEdition.endingText).not.toBe(demo.lesson6.finalText)
+    expect(frozen).not.toContain("还没再次确认")
   })
 })
