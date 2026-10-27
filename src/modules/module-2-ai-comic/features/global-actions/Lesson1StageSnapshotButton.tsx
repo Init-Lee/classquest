@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 阶段快照下载按钮。
- * 职责：供完成弹窗、首页课卡和教师课时页共用同一份 HTML 导出。按钮不可点时不下载。下载不写入学生本机档案。
- * 更新触发：按钮文案、禁用旁注或三个下载入口的启用规则变化时，需要同步更新本文件。
+ * 职责：供完成弹窗、首页课卡和教师课时页共用同一份 HTML 导出。外观为描边按钮，绿色边框和文字，与模块一课卡快照按钮一致；是否占满整行由调用方的 className 决定。按钮不可点时不下载。下载不写入学生本机档案。
+ * 更新触发：按钮文案、颜色、禁用旁注或三个下载入口的启用规则变化时，需要同步更新本文件。
  */
 
 import { Camera } from "lucide-react"
@@ -27,7 +27,7 @@ export function Lesson1StageSnapshotButton({
     <Button
       type="button"
       variant="outline"
-      className={cn(className)}
+      className={cn("border-green-600 text-green-800 hover:bg-green-50", className)}
       disabled={!enabled}
       title={enabled ? "交作业用。阶段快照不能恢复学习进度。" : disabledHint}
       onClick={() => {

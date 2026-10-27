@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 首页。
- * 职责：介绍模块目标、展示六课时开放状态与“开始课时 1”入口（不要求先登记身份），并提供教师讲解口令入口与当前建设阶段说明。课时 1 卡片在本课完成后可下载阶段快照。
- * 更新触发：课时开放状态、建设阶段说明、首页入口、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
+ * 职责：介绍模块目标、展示六课时开放状态与“开始课时 1”入口（不要求先登记身份），并提供教师讲解口令入口与当前建设阶段说明。课时 1 卡片的进入按钮与阶段快照都占满整行；快照为绿色描边，未完成时不可点，并在按钮下旁注。
+ * 更新触发：课时开放状态、建设阶段说明、首页入口、课卡按钮样式、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -159,6 +159,7 @@ export default function Module2HomePage() {
                   <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  {/* 课卡按钮外观对齐模块一首页：默认高度、描边、整行。不引用模块一代码。 */}
                   {accessible ? (
                     <Button variant="outline" className="w-full" onClick={() => navigate(lesson.id === 1 ? LESSON1_ENTRY : lesson.path)}>
                       {isTeacherMode ? "浏览本课" : "进入课时"}
@@ -169,16 +170,22 @@ export default function Module2HomePage() {
                       {available ? "完成前一课后解锁" : "后续开放，暂不能进入"}
                     </p>
                   )}
-                  {snapshotButton.visible && portfolio && (
-                    <Lesson1StageSnapshotButton
-                      portfolio={portfolio}
-                      enabled={snapshotButton.enabled}
-                      disabledHint={snapshotButton.hint}
-                      className="w-full"
-                    />
-                  )}
-                  {snapshotButton.visible && !snapshotButton.enabled && (
-                    <p className="text-xs text-muted-foreground">{snapshotButton.hint}</p>
+                  {snapshotButton.visible && (
+                    <div>
+                      {portfolio && (
+                        <Lesson1StageSnapshotButton
+                          portfolio={portfolio}
+                          enabled={snapshotButton.enabled}
+                          disabledHint={snapshotButton.hint}
+                          className="w-full"
+                        />
+                      )}
+                      {!snapshotButton.enabled && (
+                        <p className={portfolio ? "mt-1 text-xs text-muted-foreground" : "text-xs text-muted-foreground"}>
+                          {snapshotButton.hint}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
