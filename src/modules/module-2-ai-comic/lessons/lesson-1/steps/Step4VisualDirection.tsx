@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 第 4 关「确定视觉方向」。
- * 职责：并排展示同一场景的三种风格，让学生自选或自定义 2—3 个视觉词并写一句理由。词和理由合格时「完成本课」可点；保存成功后才打开完成弹窗。本关不要求上传或生成自己的图，也不在页面下铺本课小结。
- * 更新触发：风格对照、视觉词数量、理由、完成本课的可点条件或完成弹窗打开时机变化时，需要同步更新本文件。
+ * 职责：并排展示同一场景的三种风格，让学生自选或自定义 2—3 个视觉词并写一句理由。视觉词分三层：已选标签、可点的建议词、自己写。词和理由合格时「完成本课」可点；保存成功后才打开完成弹窗。本关不要求上传或生成自己的图，也不在页面下铺本课小结。
+ * 更新触发：风格对照、视觉词三层排版、理由、完成本课的可点条件或完成弹窗打开时机变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -60,6 +60,9 @@ export default function Step4VisualDirection() {
 
   if (!portfolio) return null
   const words = portfolio.visualDirection.words
+  const normalizedWords = normalizeModule2VisualWords(words)
+  const selectedWords = new Set(normalizedWords)
+  const atMax = normalizedWords.length >= 3
   const blockReason = finishBlockReason(words, portfolio.visualDirection.reason)
   const canFinish = blockReason === ""
   const sample = sampleState?.ok ? sampleState.sample : null
@@ -148,59 +151,90 @@ export default function Step4VisualDirection() {
         <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">视觉方向需要重新确认。</p>
       )}
 
-      <div className="max-w-3xl space-y-4">
-        <div className="space-y-2">
-          <p className="text-sm font-medium">视觉词（2—3 个，可以自己写，也可以点下面的词）</p>
-          <div className="flex flex-wrap gap-2">
-            {words.map((word, position) => (
-              <span key={`${word}-${position}`} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-sm">
-                {word}
-                <button
-                  type="button"
-                  className="rounded px-1 text-xs"
-                  aria-label={`删除视觉词${word}`}
-                  onClick={() => updatePortfolio(current => setModule2VisualWords(
-                    current,
-                    current.visualDirection.words.filter((_, item) => item !== position),
-                    new Date().toISOString(),
-                  ))}
-                >
-                  删除
-                </button>
-              </span>
-            ))}
-            {words.length === 0 && <span className="text-sm text-muted-foreground">还没有视觉词。</span>}
+      {/* 视觉词三层：已选标签、可点建议、自己写。已选建议只保持按下，不再加出第二个相同的词。 */}
+      <div className="min-w-0 max-w-3xl">
+        <div className="space-y-4">
+          <div className="min-w-0 space-y-2">
+            <p className="text-sm font-medium">视觉词（2—3 个，可以自己写，也可以点下面的词）</p>
+            {words.length === 0 ? (
+              <p className="text-sm text-muted-foreground">还没有视觉词</p>
+            ) : (
+              <div className="flex w-full min-w-0 flex-wrap gap-2">
+                {words.map((word, position) => (
+                  <span key={`${word}-${position}`} className="inline-flex max-w-full items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm">
+                    <span className="min-w-0 break-words">{word}</span>
+                    <button
+                      type="button"
+                      className="shrink-0 rounded px-1 text-xs text-muted-foreground hover:text-foreground"
+                      aria-label={`删除视觉词${word}`}
+                      onClick={() => updatePortfolio(current => setModule2VisualWords(
+                        current,
+                        current.visualDirection.words.filter((_, item) => item !== position),
+                        new Date().toISOString(),
+                      ))}
+                    >
+                      删除
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
+
           {suggestions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map(word => (
-                <Button key={word} type="button" variant="outline" size="sm" onClick={() => addWord(word)}>{word}</Button>
-              ))}
+            <div className="min-w-0 space-y-2">
+              <p id="m2-word-suggestions-label" className="text-sm text-muted-foreground">可以点这些</p>
+              <div className="flex min-w-0 flex-wrap gap-2" role="group" aria-labelledby="m2-word-suggestions-label">
+                {suggestions.map(word => {
+                  const chosen = selectedWords.has(word)
+                  return (
+                    <Button
+                      key={word}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      aria-pressed={chosen}
+                      disabled={chosen}
+                      className={chosen
+                        ? "h-auto max-w-full whitespace-normal break-words border-primary bg-accent shadow-inner disabled:opacity-100"
+                        : "h-auto max-w-full whitespace-normal break-words"}
+                      onClick={() => addWord(word)}
+                    >
+                      {word}
+                    </Button>
+                  )
+                })}
+              </div>
             </div>
           )}
-          <div className="flex flex-wrap gap-2">
-            <label htmlFor="m2-custom-word" className="sr-only">自己写一个视觉词</label>
-            <Input
-              id="m2-custom-word"
-              className="max-w-xs"
-              value={custom}
-              maxLength={MODULE2_FIELD_LIMITS.visualWord}
-              placeholder="自己写一个视觉词"
-              onChange={event => setCustom(event.target.value)}
-              onKeyDown={event => {
-                if (event.key === "Enter") {
+
+          <div className="min-w-0 space-y-2">
+            <div className="flex w-full min-w-0 max-w-md items-center gap-2">
+              <label htmlFor="m2-custom-word" className="sr-only">自己写一个视觉词</label>
+              <Input
+                id="m2-custom-word"
+                className="min-w-0 w-auto flex-1"
+                value={custom}
+                maxLength={MODULE2_FIELD_LIMITS.visualWord}
+                placeholder="自己写一个视觉词"
+                disabled={atMax}
+                aria-describedby={atMax ? "m2-visual-word-max" : undefined}
+                onChange={event => setCustom(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key !== "Enter" || atMax) return
                   event.preventDefault()
                   addWord(custom)
-                }
-              }}
-            />
-            <Button type="button" variant="outline" onClick={() => addWord(custom)}>添加</Button>
+                }}
+              />
+              <Button type="button" variant="outline" className="shrink-0" disabled={atMax} onClick={() => addWord(custom)}>添加</Button>
+            </div>
+            {atMax && <p id="m2-visual-word-max" className="text-sm text-muted-foreground">最多 3 个。</p>}
+            {wordError && <p role="alert" className="text-sm text-red-600">{wordError}</p>}
+            <p className="text-xs text-muted-foreground">不必从三种风格里选一种。第二课还可以再改。</p>
           </div>
-          {wordError && <p role="alert" className="text-sm text-red-600">{wordError}</p>}
-          <p className="text-xs text-muted-foreground">不必从三种风格里选一种。第二课还可以再改。</p>
         </div>
 
-        <div className="space-y-1">
+        <div className="mt-8 space-y-2">
           <label htmlFor="m2-visual-reason" className="text-sm font-medium">理由</label>
           <Textarea
             id="m2-visual-reason"
@@ -210,7 +244,7 @@ export default function Step4VisualDirection() {
             onChange={event => updatePortfolio(current => setModule2VisualReason(current, event.target.value, new Date().toISOString()))}
           />
         </div>
-        <div className="mt-8 space-y-2">
+        <div className="mt-6 space-y-2">
           {blockReason && <p className="text-sm text-muted-foreground">{blockReason}</p>}
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
           <Button type="button" onClick={() => void finish()} disabled={!canFinish || busy}>

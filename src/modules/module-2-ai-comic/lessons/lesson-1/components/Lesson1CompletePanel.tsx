@@ -1,10 +1,11 @@
 /**
  * 文件说明：课时 1 完成弹窗。
- * 职责：在第 4 关保存成功后展示小说题目、四句画面、视觉词和理由；请老师一起检查三项目标，并提供保存学习包与本课阶段快照。只宣布本课任务已保存，不给星级，也不说已经交给老师。
- * 更新触发：完成弹窗展示字段、学习目标表述、学习包按钮、阶段快照按钮或下一课提示变化时，需要同步更新本文件。
+ * 职责：在第 4 关保存成功后展示小说题目、四句画面、视觉词和理由；请老师一起检查三项目标，并提供保存学习包、本课阶段快照和回到模块首页。回到首页只离开本关，不清除本机档案。只宣布本课任务已保存，不给星级，也不说已经交给老师，也不开放下一课。
+ * 更新触发：完成弹窗展示字段、学习目标表述、学习包按钮、阶段快照按钮、回到首页或下一课提示变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import {
   Dialog,
@@ -32,6 +33,7 @@ export function Lesson1CompletePanel({
   onOpenChange: (open: boolean) => void
   portfolio: Module2PortfolioV1
 }) {
+  const navigate = useNavigate()
   const { isTeacherMode, flushPortfolio, saveStatus } = useModule2State()
   const [notice, setNotice] = useState("")
   const [busy, setBusy] = useState(false)
@@ -101,6 +103,8 @@ export function Lesson1CompletePanel({
           <Button type="button" onClick={() => void savePack()} disabled={isTeacherMode || busy}>
             {busy ? "正在准备…" : "保存学习包"}
           </Button>
+          {/* 只导航回模块首页，不重置、不清除档案。 */}
+          <Button type="button" variant="outline" onClick={() => navigate("/module/2")}>回到首页</Button>
         </div>
         {isTeacherMode && <p className="text-sm text-amber-800">讲解模式不能保存学习包，避免和学生作品混在一起。</p>}
         {notice && <p role="status" className="text-sm">{notice}</p>}
