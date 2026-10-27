@@ -1,12 +1,12 @@
 /**
  * 文件说明：课时 1 第 3 关「选出四个关键画面」。
- * 职责：让学生为起承转合各写一句画面，对照自己的原作，确认后写入选景；教师示例只展示，不填进输入框。
- * 更新触发：四句输入、原作对照、确认条件或连读预览变化时，需要同步更新本文件。
+ * 职责：让学生为起承转合各写一句画面（每句一行），对照自己的原作，确认后写入选景；教师示例只展示，不填进输入框。
+ * 更新触发：四句输入的排布、原作对照、确认条件或连读预览变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
 import { Button } from "@/shared/ui/button"
-import { Textarea } from "@/shared/ui/textarea"
+import { Input } from "@/shared/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -68,21 +68,22 @@ export default function Step3PickScenes() {
       <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
         <div className="min-w-0 space-y-4">
           <Button type="button" variant="outline" onClick={() => setExampleOpen(true)}>看看教师示例</Button>
-          {LESSON1_PARTS.map(part => (
-            <section key={part.id} className="space-y-2 rounded-lg border p-4">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <label htmlFor={`m2-scene-${part.id}`} className="text-base font-semibold">{part.label}</label>
-                <p className="text-xs text-muted-foreground">{part.hint}</p>
+          {/* 四句各占一行。窄屏标签在上、输入在下；宽屏同一行。灰色提示只作占位。 */}
+          <div className="divide-y overflow-hidden rounded-lg border">
+            {LESSON1_PARTS.map(part => (
+              <div key={part.id} className="flex flex-col gap-1.5 px-3 py-3 sm:flex-row sm:items-center sm:gap-3">
+                <label htmlFor={`m2-scene-${part.id}`} className="w-8 shrink-0 text-base font-semibold">{part.label}</label>
+                <Input
+                  id={`m2-scene-${part.id}`}
+                  className="min-w-0 flex-1"
+                  value={portfolio.storyboard.frames[part.id].sceneSentence}
+                  maxLength={MODULE2_FIELD_LIMITS.sceneSentence}
+                  placeholder={part.hint}
+                  onChange={event => updatePortfolio(current => setModule2SceneSentence(current, part.id, event.target.value, new Date().toISOString()))}
+                />
               </div>
-              <Textarea
-                id={`m2-scene-${part.id}`}
-                value={portfolio.storyboard.frames[part.id].sceneSentence}
-                maxLength={MODULE2_FIELD_LIMITS.sceneSentence}
-                placeholder={LESSON1_SCENE_PROMPT}
-                onChange={event => updatePortfolio(current => setModule2SceneSentence(current, part.id, event.target.value, new Date().toISOString()))}
-              />
-            </section>
-          ))}
+            ))}
+          </div>
           <section className="rounded-lg bg-muted/40 p-4" aria-label="把四句连起来读">
             <h2 className="text-sm font-semibold">把四句连起来读</h2>
             {sentences.length === 0

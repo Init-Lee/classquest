@@ -94,7 +94,7 @@ module-2-ai-comic/
 │   ├── steps/
 │   │   ├── Step1ImportNovel.tsx         # 顶部单页选项卡、四段田字、占满内容区；进第 2 关后全文只读，解锁或重新导入才改。不提供练习入口
 │   │   ├── Step2ReadSample.tsx          # 主区顺序：四格、一次修改图文、一条观察；职责解说只在右侧滑出栏
-│   │   ├── Step3PickScenes.tsx          # 起承转合四句
+│   │   ├── Step3PickScenes.tsx          # 起承转合四句，每句单行输入
 │   │   └── Step4VisualDirection.tsx     # 2—3 个视觉词与一句理由
 │   ├── config.ts                            # 四关标题与路径
 │   ├── copy.ts                              # 给学生看的固定说明，不含小说正文
