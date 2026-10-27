@@ -55,7 +55,8 @@ module-2-ai-comic/
 │   │   └── assets.regression.test.ts
 │   ├── global-actions/
 │   │   ├── Module2GlobalActions.tsx         # 学生顶栏同一行：保存学习包、导入学习包、重置；教师模式不显示也不执行导入或重置
-│   │   ├── lesson1-stage-snapshot.ts        # 课时 1 阶段快照 HTML、文件名与入口规则；不写学生库
+│   │   ├── lesson1-system-preview.ts        # 课时 1 系统初看纯函数：字段与规则检查，返回档位和事实说明；不实现 agent，不写教师记录
+│   │   ├── lesson1-stage-snapshot.ts        # 课时 1 阶段快照 HTML、文件名与入口规则；只展示系统初看，教师记录留空，不写学生库
 │   │   ├── lesson1-stage-snapshot.regression.test.ts
 │   │   └── Lesson1StageSnapshotButton.tsx   # 完成弹窗、课卡、教师课时页共用的下载按钮
 │   ├── source-import/                       # 小说字符串解析与候选草稿，不覆盖已确认来源
@@ -86,7 +87,7 @@ module-2-ai-comic/
 │   │   ├── lesson1-step2-visit.ts       # 本机记下已打开第 2 关，供第 1 关只读；不写入档案
 │   │   ├── lesson1-step2-visit.regression.test.ts # 第 2 关本机记号按档案分开
 │   │   ├── lesson1-commit.ts            # 确认动作等待本机保存完成
-│   │   ├── Lesson1CompletePanel.tsx     # 完成弹窗：三项目标、保存学习包、阶段快照、下一课待开放；回到首页不改档案
+│   │   ├── Lesson1CompletePanel.tsx     # 完成弹窗：三项目标、系统初看说明、保存学习包、阶段快照、下一课待开放；回到首页不改档案
 │   │   ├── OriginalWorkPanel.tsx        # 已确认原作；窄屏在下，宽屏在右
 │   │   ├── SampleComicBoard.tsx         # 四格整页、单格对照；一次修改图文始终可见（宽屏左图右文，窄屏上图下文）
 │   │   ├── SampleResponsibilityCard.tsx # 第 2 关三步短段、已有教学图与折叠 AARON；右侧竖标签滑出，默认收起，开合不落盘

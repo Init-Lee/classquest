@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 课时 1 阶段快照。
- * 职责：把当前档案里的身份、小说题目、第 2 关观察、四句分镜和视觉词与理由渲染成一份转义过的独立 HTML，并给出文件名与下载入口规则。版式沿用模块四阶段快照的页眉、信息卡和分区；教师快速评价区按课时 1 教案留空，不打分、不勾选。快照只用于交作业，不能恢复学习进度，也不写入学生本机档案。
- * 更新触发：课时 1 快照字段、教师快速评价维度、转义规则、文件名、课卡或教师课时页入口变化时，需要同步更新本文件与回归测试。
+ * 职责：把当前档案里的身份、小说题目、第 2 关观察、四句分镜和视觉词与理由渲染成一份转义过的独立 HTML，并给出文件名与下载入口规则。版式沿用模块四阶段快照的页眉、信息卡和分区。评价表的「系统初看」只展示纯函数返回的档位和事实说明；教师记录留空，由老师手写 √ 或 ×。快照只用于交作业，不能恢复学习进度，也不写入学生本机档案。
+ * 更新触发：课时 1 快照字段、教师快速评价维度、系统初看的展示方式、转义规则、文件名、课卡或教师课时页入口变化时，需要同步更新本文件与回归测试。档位规则本身改 lesson1-system-preview.ts。
  */
 
 import {
@@ -9,6 +9,10 @@ import {
   type FourPart,
   type Module2PortfolioV1,
 } from "@/modules/module-2-ai-comic/domains/portfolio/types"
+import {
+  previewModule2Lesson1SystemLook,
+  type Module2Lesson1SystemLook,
+} from "@/modules/module-2-ai-comic/features/global-actions/lesson1-system-preview"
 
 const PART_LABELS: Record<FourPart, string> = {
   opening: "起",
@@ -19,7 +23,7 @@ const PART_LABELS: Record<FourPart, string> = {
 
 /**
  * 教案「课堂 Quick Check」的三项目标与证据要点。
- * 只列出老师要看的原文，不预填 √、×、分数或星级。
+ * 系统初看另由纯函数给出；这一份不预填 √、×、分数或星级。
  */
 const TEACHER_QUICK_CHECK = [
   {
@@ -146,18 +150,30 @@ function storySection(portfolio: Module2PortfolioV1): string {
     </section>`
 }
 
-function teacherSection(): string {
-  const rows = TEACHER_QUICK_CHECK.map(item => `<tr>
+function systemLookCell(look: Module2Lesson1SystemLook): string {
+  return `<td class="system-look"><p class="level">${escapeHtml(look.level)}</p><p class="fact">${escapeHtml(look.fact)}</p></td>`
+}
+
+/** 教师记录单元格保持空白。档位和事实说明只来自系统初看纯函数，这里不改写、不打勾。 */
+function teacherSection(portfolio: Module2PortfolioV1): string {
+  const preview = previewModule2Lesson1SystemLook(portfolio)
+  const rows = [
+    { item: TEACHER_QUICK_CHECK[0], look: preview.task },
+    { item: TEACHER_QUICK_CHECK[1], look: preview.scenes },
+    { item: TEACHER_QUICK_CHECK[2], look: preview.visual },
+  ].map(({ item, look }) => `<tr>
           <td>${escapeHtml(item.goal)}</td>
           <td>${escapeHtml(item.observe)}</td>
-          <td><div class="handwrite"></div></td>
+          ${systemLookCell(look)}
+          <td class="teacher-record"><div class="handwrite"></div></td>
         </tr>`).join("\n        ")
   return `<section>
       <h2>教师快速评价</h2>
-      <p class="note">教师依据网页回答、四句画面描述、风格理由和口头解释作形成性判断。记录先留空，由老师手写。本页不打勾，也不写分数、等级或星级。</p>
+      <p class="note">系统初看：这是字段与规则检查，不是教师评价，不代表目标已经达成。</p>
+      <p>教师记录由老师手写。√ 表示目前证据支持达成，× 表示尚需改进，没看到证据就留空。这里不打分，也不自动勾选。</p>
       <table>
         <thead>
-          <tr><th>目标</th><th>观察点</th><th>教师记录</th></tr>
+          <tr><th>目标</th><th>观察点</th><th>系统初看</th><th>教师记录（√ / ×）</th></tr>
         </thead>
         <tbody>
         ${rows}
@@ -211,6 +227,8 @@ export function buildModule2Lesson1StageSnapshotHtml(portfolio: Module2Portfolio
     .info-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: #ffffff; }
     .label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
     .value { font-weight: 700; white-space: pre-wrap; }
+    .level { font-weight: 700; margin: 0 0 4px; }
+    .fact { margin: 0; font-weight: 400; }
     .note { border-left: 4px solid #f97316; padding: 10px 12px; border-radius: 12px; background: var(--warm); }
     table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; background: white; }
     th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
@@ -234,7 +252,7 @@ export function buildModule2Lesson1StageSnapshotHtml(portfolio: Module2Portfolio
     </div>
     ${identitySection(portfolio, now)}
     ${storySection(portfolio)}
-    ${teacherSection()}
+    ${teacherSection(portfolio)}
     <footer>
       <p class="note">本页未经教师评阅，没有成绩，也不给出分数或星级。阶段快照不能恢复学习进度。</p>
     </footer>

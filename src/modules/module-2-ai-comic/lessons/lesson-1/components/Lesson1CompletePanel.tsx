@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 完成弹窗。
- * 职责：在第 4 关保存成功后展示小说题目、四句画面、视觉词和理由；请老师一起检查三项目标，并提供保存学习包、本课阶段快照和回到模块首页。回到首页只离开本关，不清除本机档案。只宣布本课任务已保存，不给星级，也不说已经交给老师，也不开放下一课。
- * 更新触发：完成弹窗展示字段、学习目标表述、学习包按钮、阶段快照按钮、回到首页或下一课提示变化时，需要同步更新本文件。
+ * 职责：在第 4 关保存成功后展示小说题目、四句画面、视觉词和理由；请老师一起检查三项目标，并说明阶段快照里的系统初看不是教师记录。提供保存学习包、本课阶段快照和回到模块首页。回到首页只离开本关，不清除本机档案。只宣布本课任务已保存，不给星级，也不说已经交给老师，也不开放下一课。
+ * 更新触发：完成弹窗展示字段、学习目标表述、系统初看说明、学习包按钮、阶段快照按钮、回到首页或下一课提示变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -94,6 +94,7 @@ export function Lesson1CompletePanel({
         <p className="whitespace-pre-wrap break-words text-sm"><span className="font-medium">理由：</span>{portfolio.visualDirection.reason}</p>
         <div>
           <h3 className="text-sm font-semibold">三项学习目标，请与老师一起检查</h3>
+          <p className="mt-1 text-sm text-muted-foreground">阶段快照里有系统初看，教师记录仍由老师填写。</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-relaxed">
             {LESSON1_GOALS.map(goal => <li key={goal}>{goal}</li>)}
           </ol>
