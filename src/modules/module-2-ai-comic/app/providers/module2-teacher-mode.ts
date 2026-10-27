@@ -11,6 +11,7 @@ export function createModule2MemoryPersistence(): Module2PersistenceBoundary {
   return {
     save: async () => ({ revision: (revision += 1) }),
     replace: async () => ({ revision: (revision += 1) }),
+    clear: async () => undefined,
   }
 }
 

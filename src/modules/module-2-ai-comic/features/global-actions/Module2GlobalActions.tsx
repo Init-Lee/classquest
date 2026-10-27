@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 2 顶栏全局学习包操作。
- * 职责：学生模式保存和导入本模块学习包；导入前预览身份、小说、进度和图片数量，确认后才替换本机作品。教师模式两个按钮都不可用，避免覆盖学生作品。
- * 更新触发：学习包导出顺序、导入预览、覆盖提示、教师模式按钮规则或给学生看的文案变化时，需要同步更新本文件。
+ * 职责：学生模式在同一行提供小号的保存学习包、导入学习包和重置。导入前预览身份、小说、进度和图片数量，确认后才替换本机作品。重置前确认，确认后只清除模块二当前档案。教师讲解模式不显示这三颗，也不执行导入或重置。
+ * 更新触发：学习包导出顺序、导入预览、覆盖提示、重置确认文案、教师模式按钮规则或给学生看的文案变化时，需要同步更新本文件。
  */
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react"
-import { Download, Loader2, Upload } from "lucide-react"
+import { Download, Loader2, RotateCcw, Upload } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import {
@@ -93,7 +93,7 @@ function Diagnostic({ text }: { text: string }) {
 }
 
 export function Module2GlobalActions() {
-  const { portfolio, isTeacherMode, flushPortfolio, replaceStudentPortfolio } = useModule2State()
+  const { portfolio, isTeacherMode, flushPortfolio, replaceStudentPortfolio, clearStudentPortfolio } = useModule2State()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -101,6 +101,7 @@ export function Module2GlobalActions() {
   const [notice, setNotice] = useState("")
   const [noticeDetail, setNoticeDetail] = useState("")
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
   const [pending, setPending] = useState<PendingImport | null>(null)
   const [importDone, setImportDone] = useState<LearningPackagePreview | null>(null)
   const [importError, setImportError] = useState("")
@@ -269,33 +270,65 @@ export function Module2GlobalActions() {
     }
   }
 
+  const confirmReset = async () => {
+    if (!portfolio || isTeacherMode || busy) return
+    setBusy(true)
+    setNotice("")
+    setNoticeDetail("")
+    // 先离开课时页，避免档案清空后课时页立刻再建一份空档案。
+    navigate("/module/2")
+    try {
+      const cleared = await clearStudentPortfolio()
+      if (!cleared) return
+      setShowResetDialog(false)
+    } catch (error) {
+      setNotice("重置没有完成，这台电脑上的模块二档案还在。")
+      setNoticeDetail(error instanceof Error ? error.message : "重置没有完成")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (isTeacherMode) return null
+
   return (
     <>
       <div className="flex flex-col items-end gap-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
           <Button
-            variant="outline"
             size="sm"
-            disabled={isTeacherMode || busy}
-            title={isTeacherMode ? LEARNING_PACKAGE_MESSAGES.teacherSave : "把当前作品保存成学习包"}
+            disabled={busy}
+            title="把当前作品保存成学习包"
             onClick={() => void handleSave()}
+            className="gap-1.5 border-blue-600 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700 sm:px-3"
           >
-            {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Download className="mr-1 h-4 w-4" />}
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
             保存学习包
           </Button>
           <Button
-            variant="outline"
             size="sm"
-            disabled={isTeacherMode || busy}
-            title={isTeacherMode ? LEARNING_PACKAGE_MESSAGES.teacherImport : "从学习包恢复作品"}
+            variant="outline"
+            disabled={busy}
+            title="从学习包恢复作品"
             onClick={() => {
-              if (isTeacherMode) return
               resetImportDialog()
               setShowImportDialog(true)
             }}
+            className="gap-1.5 px-2 text-xs sm:px-3"
           >
-            <Upload className="mr-1 h-4 w-4" />
+            <Upload className="h-3.5 w-3.5" />
             导入学习包
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy || !portfolio}
+            title="清除这台电脑上的模块二档案"
+            onClick={() => setShowResetDialog(true)}
+            className="gap-1.5 px-2 text-xs text-destructive hover:text-destructive sm:px-3"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            重置
           </Button>
         </div>
         {notice && (
@@ -417,6 +450,26 @@ export function Module2GlobalActions() {
             {importDone && (
               <Button onClick={() => setShowImportDialog(false)}>完成</Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResetDialog} onOpenChange={open => { if (!busy) setShowResetDialog(open) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>重置模块二档案</DialogTitle>
+            <DialogDescription>
+              会清除这台电脑上的模块二档案。请先保存学习包。
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            确认后只清除这台电脑上模块二的当前档案，不会改动模块一。
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowResetDialog(false)} disabled={busy}>取消</Button>
+            <Button variant="destructive" onClick={() => void confirmReset()} disabled={busy || !portfolio}>
+              {busy ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" />重置中...</> : "确认重置"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

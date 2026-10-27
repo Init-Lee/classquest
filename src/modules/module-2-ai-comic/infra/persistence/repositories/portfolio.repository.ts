@@ -1,8 +1,8 @@
 /**
  * 文件说明：模块 2 学习档案仓库（含跨 store 事务）。
  * 职责：封装档案读写、settings 中的 activePortfolioId、每次成功保存 revision 单调递增；saveImageVersion 在同一事务写入原图 / 主图资产（同哈希只写一次）与档案的版本和库存；
- *       一致快照读取（同一只读事务拿 revision、档案与全部库存 Blob）供导出；原子替换（assets + portfolio + activePortfolioId 同事务）供导入。页面不得直接访问 IndexedDB。
- * 更新触发：档案保存语义、活动档案指针、revision 规则、资产去重 / 冲突规则、快照或替换流程、store 结构变化时，需要同步更新本文件与 persistence 回归测试。
+ *       一致快照读取（同一只读事务拿 revision、档案与全部库存 Blob）供导出；原子替换（assets + portfolio + activePortfolioId 同事务）供导入；清除时只删除当前活动档案。页面不得直接访问 IndexedDB。
+ * 更新触发：档案保存语义、活动档案指针、revision 规则、资产去重 / 冲突规则、快照、替换或清除当前档案流程、store 结构变化时，需要同步更新本文件与 persistence 回归测试。
  *
  * 约定：校验、哈希与 Blob 字节比对都在事务外完成；事务内只同步写入已准备好的数据。
  */
@@ -258,6 +258,61 @@ export class Module2PortfolioRepository {
       (tx, ctx) => {
         this.writeAssetsInTx(tx, ctx, unique, [], [], () => {
           this.writePortfolioInTx(tx, ctx, valid, true, saved => ctx.setResult(saved))
+        })
+      },
+    )
+  }
+
+  /**
+   * 只删除模块二数据库里的当前活动档案，并去掉活动指针。
+   * 同一内容哈希仍被其他档案引用的图片留下；对应缩略图只删不再引用的那些。
+   * 不打开、不写入模块一的数据库。没有活动档案时什么都不改。
+   */
+  async clearActivePortfolio(): Promise<void> {
+    const db = await this.db()
+    await runModule2Transaction<void>(
+      db,
+      [MODULE2_STORES.settings, MODULE2_STORES.portfolios, MODULE2_STORES.assets, MODULE2_STORES.thumbnailCache],
+      "readwrite",
+      (tx, ctx) => {
+        const settings = tx.objectStore(MODULE2_STORES.settings)
+        const portfolios = tx.objectStore(MODULE2_STORES.portfolios)
+        const assets = tx.objectStore(MODULE2_STORES.assets)
+        const thumbs = tx.objectStore(MODULE2_STORES.thumbnailCache)
+        ctx.request(settings.get(MODULE2_ACTIVE_PORTFOLIO_KEY), (pointer: SettingRecord | undefined) => {
+          const activeId = typeof pointer?.value === "string" ? pointer.value : null
+          if (!activeId) {
+            if (pointer) ctx.request(settings.delete(MODULE2_ACTIVE_PORTFOLIO_KEY))
+            return
+          }
+          ctx.request(portfolios.get(activeId), (record: { assetIds?: unknown } | undefined) => {
+            const owned = new Set(
+              Array.isArray(record?.assetIds)
+                ? record.assetIds.filter((id): id is string => typeof id === "string")
+                : [],
+            )
+            ctx.request(portfolios.getAll(), (all: Array<{ id?: unknown; assetIds?: unknown }>) => {
+              const shared = new Set<string>()
+              for (const item of all) {
+                if (!item || item.id === activeId || !Array.isArray(item.assetIds)) continue
+                for (const id of item.assetIds) {
+                  if (typeof id === "string" && owned.has(id)) shared.add(id)
+                }
+              }
+              ctx.request(portfolios.delete(activeId))
+              ctx.request(settings.delete(MODULE2_ACTIVE_PORTFOLIO_KEY))
+              const removable = [...owned].filter(id => !shared.has(id))
+              for (const assetId of removable) ctx.request(assets.delete(assetId))
+              if (removable.length === 0) return
+              const removableSet = new Set(removable)
+              ctx.request(thumbs.openCursor(), (cursor: IDBCursorWithValue | null) => {
+                if (!cursor) return
+                const assetId = Array.isArray(cursor.key) ? String(cursor.key[0]) : ""
+                if (removableSet.has(assetId)) cursor.delete()
+                cursor.continue()
+              })
+            })
+          })
         })
       },
     )

@@ -17,7 +17,7 @@ module-2-ai-comic/
 │   │   ├── Module2TopProgress.tsx           # 顶部六课时进度
 │   │   └── module2-top-progress-state.ts    # 顶部进度纯函数状态
 │   ├── providers/
-│   │   ├── Module2Provider.tsx              # 学生档案加载／自动创建、保存状态、教师模式
+│   │   ├── Module2Provider.tsx              # 学生档案加载／自动创建、保存状态、清除当前档案、教师模式
 │   │   ├── module2-save-coordinator.ts      # 保存协调器：合并保存、事务完成后才报“已保存”、替换时加锁
 │   │   ├── module2-save-coordinator.regression.test.ts
 │   │   └── module2-teacher-mode.ts          # 教师模式内存持久化；教师模式下导入／重置不生效
@@ -39,7 +39,7 @@ module-2-ai-comic/
 │   │   ├── connection.ts                    # 数据库 classquest-module2-v1 与四个 store 的定义、连接
 │   │   └── transaction.ts                   # 事务封装：只在 complete 时成功，异常即 abort；错误分类
 │   ├── repositories/
-│   │   ├── portfolio.repository.ts          # 唯一的档案仓库：保存、图片版本、导出快照、原子替换
+│   │   ├── portfolio.repository.ts          # 唯一的档案仓库：保存、图片版本、导出快照、原子替换、清除当前活动档案
 │   │   ├── asset.repository.ts              # 资产 blob 与缩略图缓存读写
 │   │   └── asset-record.ts                  # 资产记录的读取校验
 │   ├── module2-persistence.ts               # 默认仓库实例（共享一个连接）
@@ -54,7 +54,7 @@ module-2-ai-comic/
 │   │   ├── serial-queue.ts                  # 串行／限并发执行器
 │   │   └── assets.regression.test.ts
 │   ├── global-actions/
-│   │   ├── Module2GlobalActions.tsx         # 学生顶栏只有保存／导入学习包；教师模式这两个按钮禁用
+│   │   ├── Module2GlobalActions.tsx         # 学生顶栏同一行：保存学习包、导入学习包、重置；教师模式不显示也不执行导入或重置
 │   │   ├── lesson1-stage-snapshot.ts        # 课时 1 阶段快照 HTML、文件名与入口规则；不写学生库
 │   │   ├── lesson1-stage-snapshot.regression.test.ts
 │   │   └── Lesson1StageSnapshotButton.tsx   # 完成弹窗、课卡、教师课时页共用的下载按钮
@@ -98,13 +98,15 @@ module-2-ai-comic/
 │   │   ├── Step1ImportNovel.tsx         # 顶部单页选项卡、四段田字、占满内容区；进第 2 关后全文只读，解锁或重新导入才改。不提供练习入口
 │   │   ├── Step2ReadSample.tsx          # 主区顺序：四格、一次修改图文、一条观察；职责解说只在右侧滑出栏
 │   │   ├── Step3PickScenes.tsx          # 起承转合四句，每句单行输入
-│   │   └── Step4VisualDirection.tsx     # 视觉词分三层（已选、可点、自写）与一句理由；点「完成本课」后打开完成弹窗
+│   │   └── Step4VisualDirection.tsx     # 视觉词分三层（已选、可点、自写）与一句理由；「完成本课」在两组下靠右；点后打开完成弹窗
 │   ├── config.ts                            # 四关标题与路径
 │   ├── copy.ts                              # 给学生看的固定说明，不含小说正文
 │   ├── guards.ts                            # 关卡门禁：调用 lesson1-update 的真实门禁，教师全开
 │   └── routes.tsx                           # 四关、最近一关、门禁；旧练习地址回到第 1 关
 ├── pages/
-│   ├── Module2HomePage.tsx                  # 模块首页
+│   ├── Module2HomePage.tsx                  # 模块首页；中间主按钮按课时 1 进度续学
+│   ├── module2-home-continue.ts             # 首页主按钮文案与课时 1 关卡地址
+│   ├── module2-home-continue.regression.test.ts
 │   └── dev/Module2AssetsDevPage.tsx         # 仅开发环境：图片资产测试页（独立夹具档案，不切换活动档案）
 ├── module.config.ts                         # 平台配置（id/slug/basePath/status/lessonCount）
 ├── module2.regression.test.ts               # 骨架纯函数、门禁与模块边界回归测试

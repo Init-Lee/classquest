@@ -2,7 +2,7 @@
  * 文件说明：模块 2 学习档案 Provider。
  * 职责：从本机数据库读取活动档案、学生首次进入课时 1 时按需创建空草稿档案；通过保存协调器提供乐观更新、串行保存、flush、重试与原子替换，并发布 saveState；
  *       教师讲解模式使用独立内存档案与内存 persistence，不碰数据库，替换学生档案一律 no-op。
- * 更新触发：模块 2 状态容器字段、仓库边界、首次建档策略、保存状态展示、导入替换流程或教师模式隔离规则变化时，需要同步更新本文件。
+ * 更新触发：模块 2 状态容器字段、仓库边界、首次建档策略、保存状态展示、导入替换、清除当前档案或教师模式隔离规则变化时，需要同步更新本文件。
  */
 /* eslint-disable react-refresh/only-export-components */
 
@@ -38,6 +38,8 @@ interface Module2ContextValue {
   ensureStudentPortfolio: () => Promise<Module2PortfolioV1 | null>
   /** 阶段 C 导入学习包使用；教师模式下 no-op 返回 false。 */
   replaceStudentPortfolio: (portfolio: Module2PortfolioV1, assets: Module2StoredAsset[]) => Promise<boolean>
+  /** 只清除模块二当前档案；教师模式下 no-op 返回 false，不写数据库。 */
+  clearStudentPortfolio: () => Promise<boolean>
   enterTeacherMode: () => void
   exitTeacherMode: () => void
   resetTeacherMode: () => void
@@ -50,6 +52,7 @@ const IDLE_STATUS: Module2SaveStatus = { state: "idle", error: null }
 const studentPersistence: Module2PersistenceBoundary = {
   save: portfolio => module2PortfolioRepository.savePortfolio(portfolio),
   replace: (portfolio, assets) => module2PortfolioRepository.replaceAtomically(portfolio, assets),
+  clear: () => module2PortfolioRepository.clearActivePortfolio(),
 }
 
 /** 教师演示档案：空草稿，不预置任何完成标记，演示不等于学生完成。 */
@@ -153,6 +156,14 @@ export function Module2Provider({ children }: { children: React.ReactNode }) {
     })
   }, [coordinator, isTeacherMode])
 
+  const clearStudentPortfolio = useCallback(async () => {
+    return runModule2StudentArchiveMutation(isTeacherMode, async () => {
+      await coordinator.clear()
+      setPortfolio(null)
+      setSaveStatus(IDLE_STATUS)
+    })
+  }, [coordinator, isTeacherMode])
+
   const enterTeacherMode = useCallback(() => {
     const demo = createTeacherDemoPortfolio()
     getTeacherCoordinator().hydrate(demo)
@@ -184,6 +195,7 @@ export function Module2Provider({ children }: { children: React.ReactNode }) {
       retrySave,
       ensureStudentPortfolio,
       replaceStudentPortfolio,
+      clearStudentPortfolio,
       enterTeacherMode,
       exitTeacherMode,
       resetTeacherMode,

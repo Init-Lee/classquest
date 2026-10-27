@@ -65,7 +65,7 @@ export function buildModule2Lesson1StageSnapshotFilename(studentName: string, no
   return `模块2_${safeModule2SnapshotFilenamePart(studentName)}_课时1_阶段快照_${day}.html`
 }
 
-/** 学生顶栏不放阶段快照。恢复进度只用「保存学习包」「导入学习包」。 */
+/** 学生顶栏不放阶段快照。恢复进度只用「保存学习包」「导入学习包」；「重置」只清本机模块二档案。 */
 export function shouldShowModule2StudentTopBarSnapshot(): boolean {
   return false
 }

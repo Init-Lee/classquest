@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 本机持久化事务回归测试（fake-indexeddb）。
- * 职责：在 fake-indexeddb 上验证跨 store 提交、注入 QuotaExceeded / abort 后整体回滚（旧档案与活动指针不变）、revision 单调递增、一致快照、资产按哈希去重、同 ID 不同字节拒绝、缩略图缓存读写。
- * 更新触发：portfolio / asset repository、事务运行器、store 结构或回滚语义变化时，需要同步更新本文件。
+ * 职责：在 fake-indexeddb 上验证跨 store 提交、注入 QuotaExceeded / abort 后整体回滚（旧档案与活动指针不变）、revision 单调递增、一致快照、资产按哈希去重、同 ID 不同字节拒绝、缩略图缓存读写，以及只清除当前活动档案。
+ * 更新触发：portfolio / asset repository、事务运行器、store 结构、清除当前档案或回滚语义变化时，需要同步更新本文件。
  *
  * 注意：fake-indexeddb 只证明事务逻辑；真实浏览器的刷新恢复、配额行为仍需手动验证。
  */
@@ -316,6 +316,46 @@ describe("一致快照", () => {
     const snapshot = await repo.readExportSnapshot()
     expect(snapshot?.missingAssetIds).toEqual([a.assetId])
     await expect(repo.savePortfolio({ ...p, revision: 1 })).rejects.toMatchObject({ kind: "missing" })
+  })
+})
+
+describe("清除当前活动档案", () => {
+  it("没有活动档案时不报错", async () => {
+    const { repo } = setup()
+    await expect(repo.clearActivePortfolio()).resolves.toBeUndefined()
+    expect(await repo.getActivePortfolio()).toBeNull()
+  })
+
+  it("只删除活动档案和不再被引用的图片，其他档案留下", async () => {
+    const { repo, assets, getDb } = setup()
+    const keptAsset = await makeAsset(21)
+    const currentAsset = await makeAsset(22)
+    const shared = await makeAsset(23)
+    const kept = withVersion(portfolioWithSource("甲"), "kept", keptAsset)
+    const olderShared = withVersion(portfolioWithSource("丙"), "shared-old", shared)
+    const current = withVersion(withVersion(portfolioWithSource("乙"), "current", currentAsset), "shared-new", shared)
+    await repo.saveImageVersion(kept, [keptAsset])
+    await repo.saveImageVersion(olderShared, [shared])
+    await repo.saveImageVersion(current, [currentAsset, shared])
+    await assets.putThumbnail({
+      assetId: currentAsset.assetId,
+      presetVersion: 1,
+      blob: new Blob([new Uint8Array([9])]),
+      width: 1,
+      height: 1,
+      createdAt: NOW,
+    })
+    await repo.clearActivePortfolio()
+    expect(await repo.getActivePortfolio()).toBeNull()
+    expect(await repo.getActivePortfolioId()).toBeNull()
+    expect(await repo.getPortfolio(current.id)).toBeNull()
+    expect((await repo.getPortfolio(kept.id))?.student.studentName).toBe("甲")
+    expect((await repo.getPortfolio(olderShared.id))?.student.studentName).toBe("丙")
+    expect(await countAssets(getDb)).toBe(2)
+    expect(await assets.getAsset(currentAsset.assetId)).toBeNull()
+    expect(await assets.getAsset(keptAsset.assetId)).not.toBeNull()
+    expect(await assets.getAsset(shared.assetId)).not.toBeNull()
+    expect(await assets.getThumbnail(currentAsset.assetId, 1)).toBeNull()
   })
 })
 

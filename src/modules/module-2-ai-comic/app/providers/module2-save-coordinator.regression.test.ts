@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 保存协调器与教师模式写入策略回归测试。
- * 职责：验证乐观更新与连续保存合并、“saved” 只在持久化完成后发布、失败保留内存输入并可重试、flush 不把旧数据冒充最新、替换使旧排队保存失效、替换失败保留原档案，以及教师模式 no-op。
- * 更新触发：module2-save-coordinator.ts 或 module2-teacher-mode.ts 的队列、状态机、替换或教师旁路语义变化时，需要同步更新本文件。
+ * 职责：验证乐观更新与连续保存合并、“saved” 只在持久化完成后发布、失败保留内存输入并可重试、flush 不把旧数据冒充最新、替换或清除使旧排队保存失效、失败时保留原档案，以及教师模式 no-op。
+ * 更新触发：module2-save-coordinator.ts 或 module2-teacher-mode.ts 的队列、状态机、替换、清除或教师旁路语义变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -29,6 +29,7 @@ describe("Module2SaveCoordinator", () => {
     const boundary: Module2PersistenceBoundary = {
       save: async (p) => { await release.promise; persisted.push(p.lesson1.sampleObservation); return { revision: (revision += 1) } },
       replace: async () => ({ revision: 0 }),
+      clear: async () => undefined,
     }
     const coordinator = new Module2SaveCoordinator(boundary, status => statuses.push(status.state))
     coordinator.hydrate(createNewModule2Portfolio())
@@ -48,7 +49,7 @@ describe("Module2SaveCoordinator", () => {
 
   it("updater 返回原对象时不排队保存", async () => {
     let saves = 0
-    const coordinator = new Module2SaveCoordinator({ save: async () => ({ revision: ++saves }), replace: async () => ({ revision: 0 }) })
+    const coordinator = new Module2SaveCoordinator({ save: async () => ({ revision: ++saves }), replace: async () => ({ revision: 0 }), clear: async () => undefined })
     coordinator.hydrate(createNewModule2Portfolio())
     coordinator.update(p => p)
     await coordinator.flush()
@@ -61,6 +62,7 @@ describe("Module2SaveCoordinator", () => {
     const coordinator = new Module2SaveCoordinator({
       save: async () => { if (fail) throw new DOMException("满了", "QuotaExceededError"); return { revision: 5 } },
       replace: async () => ({ revision: 0 }),
+      clear: async () => undefined,
     }, status => statuses.push(status))
     coordinator.hydrate(createNewModule2Portfolio())
     coordinator.update(p => observe(p, "不能丢的输入"))
@@ -86,6 +88,7 @@ describe("Module2SaveCoordinator", () => {
         return { revision: count }
       },
       replace: async (p) => { events.push(`replace:${p.student.studentName}`); return { revision: 9 } },
+      clear: async () => undefined,
     }
     const coordinator = new Module2SaveCoordinator(boundary)
     coordinator.hydrate(createNewModule2Portfolio({ clazz: "", studentName: "旧", classSeatCode: "" }))
@@ -105,9 +108,51 @@ describe("Module2SaveCoordinator", () => {
     const coordinator = new Module2SaveCoordinator({
       save: async () => ({ revision: 1 }),
       replace: async () => { throw new Error("模拟替换失败") },
+      clear: async () => undefined,
     })
     coordinator.hydrate(createNewModule2Portfolio({ clazz: "", studentName: "原", classSeatCode: "" }))
     await expect(coordinator.replace(createNewModule2Portfolio())).rejects.toThrow("模拟替换失败")
+    expect(coordinator.getCurrent()?.student.studentName).toBe("原")
+  })
+
+  it("清除使尚未执行的排队保存失效，成功后内存档案为空", async () => {
+    const firstStarted = createDeferred()
+    const releaseFirst = createDeferred()
+    const events: string[] = []
+    let count = 0
+    const boundary: Module2PersistenceBoundary = {
+      save: async () => {
+        count += 1
+        events.push("save")
+        if (count === 1) {
+          firstStarted.resolve()
+          await releaseFirst.promise
+        }
+        return { revision: count }
+      },
+      replace: async () => ({ revision: 0 }),
+      clear: async () => { events.push("clear") },
+    }
+    const coordinator = new Module2SaveCoordinator(boundary)
+    coordinator.hydrate(createNewModule2Portfolio())
+    coordinator.update(p => observe(p, "在途"))
+    await firstStarted.promise
+    coordinator.update(p => observe(p, "排队中的旧写入"))
+    const clearing = coordinator.clear()
+    releaseFirst.resolve()
+    await clearing
+    expect(events).toEqual(["save", "clear"])
+    expect(coordinator.getCurrent()).toBeNull()
+  })
+
+  it("清除失败时保留内存档案", async () => {
+    const coordinator = new Module2SaveCoordinator({
+      save: async () => ({ revision: 1 }),
+      replace: async () => ({ revision: 0 }),
+      clear: async () => { throw new Error("模拟清除失败") },
+    })
+    coordinator.hydrate(createNewModule2Portfolio({ clazz: "", studentName: "原", classSeatCode: "" }))
+    await expect(coordinator.clear()).rejects.toThrow("模拟清除失败")
     expect(coordinator.getCurrent()?.student.studentName).toBe("原")
   })
 

@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 第 4 关「确定视觉方向」。
- * 职责：并排展示同一场景的三种风格，让学生自选或自定义 2—3 个视觉词并写一句理由。桌面左半是视觉词三层（已选、可点、自写），右半是理由，两组顶部对齐；窄屏改为视觉词在上、理由在下。「完成本课」在两组下面占满整行。词和理由合格时按钮可点；保存成功后才打开完成弹窗。本关不要求上传或生成自己的图，也不在页面下铺本课小结。
- * 更新触发：风格对照、视觉词与理由的左右排版、完成本课的可点条件或完成弹窗打开时机变化时，需要同步更新本文件。
+ * 职责：并排展示同一场景的三种风格，让学生自选或自定义 2—3 个视觉词并写一句理由。桌面左半是视觉词三层（已选、可点、自写），右半是理由，两组顶部对齐；窄屏改为视觉词在上、理由在下。「完成本课」放在这两组下面，靠右，使用普通主按钮尺寸，窄屏也不撑满整行。词和理由合格时按钮可点；保存成功后才打开完成弹窗。本关不要求上传或生成自己的图，也不在页面下铺本课小结。
+ * 更新触发：风格对照、视觉词与理由的左右排版、完成本课的位置与尺寸、可点条件或完成弹窗打开时机变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -249,9 +249,12 @@ export default function Step4VisualDirection() {
         <div className="mt-6 space-y-2">
           {blockReason && <p className="text-sm text-muted-foreground">{blockReason}</p>}
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-          <Button type="button" className="w-full" onClick={() => void finish()} disabled={!canFinish || busy}>
-            {busy ? "正在保存…" : "完成本课"}
-          </Button>
+          {/* 普通主按钮靠右；窄屏也不拉成整行。 */}
+          <div className="flex justify-end">
+            <Button type="button" onClick={() => void finish()} disabled={!canFinish || busy}>
+              {busy ? "正在保存…" : "完成本课"}
+            </Button>
+          </div>
         </div>
       </div>
       <Lesson1CompletePanel open={summaryOpen} onOpenChange={setSummaryOpen} portfolio={portfolio} />

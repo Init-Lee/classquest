@@ -1,8 +1,8 @@
 /**
  * 文件说明：模块 2 本地优先保存协调器。
- * 职责：同步合并函数式乐观更新、串行写入（合并连续保存，只写最新内存态）、flush、代次失效（替换 / 新建后旧排队保存作废），并对外发布 saveState（idle / saving / saved / error）；
- *       “saved” 只在持久化 Promise（即数据库事务完成）resolve 后才发布，失败时保留内存输入。
- * 更新触发：模块 2 保存队列、flush、替换 / 新建语义、saveState 状态机或错误传播变化时，需要同步更新本文件与协调器回归测试。
+ * 职责：同步合并函数式乐观更新、串行写入（合并连续保存，只写最新内存态）、flush、代次失效（替换 / 新建 / 清除后旧排队保存作废），并对外发布 saveState（idle / saving / saved / error）；
+ *       “saved” 只在持久化 Promise（即数据库事务完成）resolve 后才发布，失败时保留内存输入。清除当前档案不改保存状态条文案。
+ * 更新触发：模块 2 保存队列、flush、替换 / 新建 / 清除语义、saveState 状态机或错误传播变化时，需要同步更新本文件与协调器回归测试。
  */
 
 import type { Module2PortfolioV1, Module2StoredAsset } from "@/modules/module-2-ai-comic/domains/portfolio/types"
@@ -12,6 +12,8 @@ export interface Module2PersistenceBoundary {
   save: (portfolio: Module2PortfolioV1) => Promise<{ revision: number }>
   /** 原子替换活动档案（导入 / 新建），资产与档案同事务提交；resolve 代表事务已完成。 */
   replace: (portfolio: Module2PortfolioV1, assets: Module2StoredAsset[]) => Promise<{ revision: number }>
+  /** 删除模块二数据库里的当前活动档案。失败时不得把内存档案清空。 */
+  clear: () => Promise<void>
 }
 
 export type Module2SaveState = "idle" | "saving" | "saved" | "error"
@@ -101,6 +103,30 @@ export class Module2SaveCoordinator {
     }
   }
 
+  /**
+   * 清除当前档案：先让尚未落盘的旧保存失效，再删库中的活动档案。
+   * 事务成功后内存才变为空；失败则保留内存档案，也不把顶栏标成保存失败。
+   */
+  async clear(): Promise<void> {
+    if (this.mutationLocked) throw new Error("学习记录操作正在进行，请稍后重试。")
+    this.mutationLocked = true
+    this.generation += 1
+    this.saveQueued = false
+    const generation = this.generation
+    try {
+      await this.enqueue(async () => {
+        await this.persistence.clear()
+      }, false)
+      if (generation === this.generation) {
+        this.current = null
+        this.lastError = null
+        this.onStatus({ state: "idle", error: null })
+      }
+    } finally {
+      this.mutationLocked = false
+    }
+  }
+
   private scheduleSave(): Promise<void> {
     if (this.saveQueued) return this.queue
     this.saveQueued = true
@@ -117,20 +143,25 @@ export class Module2SaveCoordinator {
     }).catch(() => undefined)
   }
 
-  private enqueue(task: () => Promise<void>): Promise<void> {
-    this.pendingTasks += 1
-    this.onStatus({ state: "saving", error: null })
+  private enqueue(task: () => Promise<void>, reportStatus = true): Promise<void> {
+    if (reportStatus) {
+      this.pendingTasks += 1
+      this.onStatus({ state: "saving", error: null })
+    }
     const result = this.queue.then(async () => {
       try {
         await task()
-        this.lastError = null
+        if (reportStatus) this.lastError = null
       } catch (cause) {
-        this.lastError = cause instanceof Error ? cause : new Error(String(cause))
-        throw this.lastError
+        const error = cause instanceof Error ? cause : new Error(String(cause))
+        if (reportStatus) this.lastError = error
+        throw error
       } finally {
-        this.pendingTasks -= 1
-        if (this.pendingTasks === 0) {
-          this.onStatus(this.lastError ? { state: "error", error: this.lastError } : { state: "saved", error: null })
+        if (reportStatus) {
+          this.pendingTasks -= 1
+          if (this.pendingTasks === 0) {
+            this.onStatus(this.lastError ? { state: "error", error: this.lastError } : { state: "saved", error: null })
+          }
         }
       }
     })

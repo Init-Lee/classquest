@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 首页。
- * 职责：介绍模块目标、展示六课时开放状态与“开始课时 1”入口（不要求先登记身份），并提供教师讲解口令入口与当前建设阶段说明。课时 1 卡片的进入按钮与阶段快照都占满整行；快照为绿色描边，未完成时不可点，并在按钮下旁注。
- * 更新触发：课时开放状态、建设阶段说明、首页入口、课卡按钮样式、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
+ * 职责：介绍模块目标、展示六课时开放状态，并按课时 1 进度显示中间主按钮（不要求先登记身份）。进行中进入当前可访问的一关，已完成进入第 4 关；课时 2—6 不能从这里跳入。另提供教师讲解口令入口与当前建设阶段说明。课时 1 卡片的进入按钮与阶段快照都占满整行；快照为绿色描边，未完成时不可点，并在按钮下旁注。
+ * 更新触发：课时开放状态、建设阶段说明、首页续学入口、课卡按钮样式、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -21,6 +21,7 @@ import { verifyModule2TeacherPassphrase } from "@/modules/module-2-ai-comic/cons
 import { Lesson1StageSnapshotButton } from "@/modules/module-2-ai-comic/features/global-actions/Lesson1StageSnapshotButton"
 import { getModule2LessonCardSnapshotButton } from "@/modules/module-2-ai-comic/features/global-actions/lesson1-stage-snapshot"
 import { MODULE2_CONFIG } from "@/modules/module-2-ai-comic/module.config"
+import { resolveModule2HomeContinue } from "@/modules/module-2-ai-comic/pages/module2-home-continue"
 
 const LESSON1_ENTRY = "/module/2/lesson/1"
 
@@ -104,6 +105,7 @@ function TeacherModeEntry() {
 export default function Module2HomePage() {
   const { portfolio, isTeacherMode } = useModule2State()
   const navigate = useNavigate()
+  const homeContinue = resolveModule2HomeContinue(isTeacherMode ? null : portfolio)
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8">
@@ -117,10 +119,13 @@ export default function Module2HomePage() {
           从模块一完成的小说出发，选出起、承、转、合四个关键画面，确定角色与视觉风格，
           再借助外部 AI 绘图工具生成、比较和修改，完成一部属于自己的四格漫画。
         </p>
-        <Button size="lg" onClick={() => navigate(LESSON1_ENTRY)}>
-          {isTeacherMode ? "浏览课时 1" : "开始课时 1"}
+        <Button size="lg" onClick={() => navigate(isTeacherMode ? LESSON1_ENTRY : homeContinue.path)}>
+          {isTeacherMode ? "浏览课时 1" : homeContinue.label}
           <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
+        {!isTeacherMode && homeContinue.hint && (
+          <p className="text-xs text-muted-foreground">{homeContinue.hint}</p>
+        )}
         <p className="text-xs text-muted-foreground">首次进入不需要先登记身份；第 1 关会根据你的小说文件核对班级与姓名。</p>
       </section>
 
@@ -129,7 +134,7 @@ export default function Module2HomePage() {
           <Construction className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             课时 1 的四关已经可以在这台电脑上完成。门户仍是架构占位，课时 2 及以后还没开放。
-            进入课时 1 后，学习记录保存在这台电脑上。右上角可以保存或导入本模块学习包。
+            进入课时 1 后，学习记录保存在这台电脑上。右上角可以保存或导入本模块学习包，也可以重置这台电脑上的模块二档案。
           </p>
         </CardContent>
       </Card>
