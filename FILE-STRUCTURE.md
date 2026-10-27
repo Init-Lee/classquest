@@ -165,5 +165,5 @@ import { SomeModule3Component } from '@/modules/module-3-ai-science-station/...'
 - 上一课时里程碑：`module4-lesson6-v0.7.6`（课时 6 功能合入）、`module4-lesson5-v0.7.5`（课时 5 Live Lesson Session 联调闭环）。
 - 模块 4 当前已建立独立 app / domains / infra / lessons 结构，课时 1-6 已开放；课时 4 可联调 peer-review / moderation / SQLite routes；课时 5 已完成 Live Lesson Session 学生端四步流与教师控制台同步课堂收口；课时 6 已完成教师端发布审核与统计、学生端三步流和匿名访客公共挑战。
 - 模块 1 已建立独立 app / domains / infra / lessons 结构，固定六课时；课时 1—6 已开放，并接入独立 IndexedDB、version 1 继续学习包、课时阶段快照与模块内教师讲解模式。`/module/1/story` 是派生的「我的小说」，不是第七课。课时 6 已收口，可打包 OSS。可读小说页可下载 TXT、Markdown、HTML 整篇作品；未完成课时 6 时首页不显示「我的小说」按钮。阶段 5 已收口，可打包 OSS。
-- 模块 2（AI 四格漫画）建设中：课时一四关已实现，门户仍为架构占位，待验收。已有独立目录、六课时注册表（仅课时 1 入口开放）、数据契约 v1、独立本机数据库 `classquest-module2-v1`、图片资产服务、小说导入、学生模式的 `.cqpack` 保存与导入，以及课时 1 四关页面。教师样例图片在 `public/module-2/samples/guan-deng/`，不写入学生资产。与模块 1 只通过小说文件契约连接，不 import 模块 1 业务代码。平台门户的 `status` 仍是 draft。
+- 模块 2（AI 四格漫画）建设中：课时一四关已实现，门户仍为架构占位，待验收。已有独立目录、六课时注册表（仅课时 1 入口开放）、数据契约 v1、独立本机数据库 `classquest-module2-v1`、图片资产服务、小说导入、学生模式的 `.cqpack` 保存与导入，以及课时 1 四关页面。课时 1 完成弹窗、已完成课卡和教师课时页可下载阶段快照；阶段快照只交作业，不能恢复进度，学习包才恢复进度。教师样例图片在 `public/module-2/samples/guan-deng/`，不写入学生资产。与模块 1 只通过小说文件契约连接，不 import 模块 1 业务代码。平台门户的 `status` 仍是 draft。
 

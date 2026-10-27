@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 第 4 关「确定视觉方向」。
- * 职责：并排展示同一场景的三种风格，让学生自选或自定义 2—3 个视觉词并写一句理由；确认后展示本课完成页。本关不要求上传或生成自己的图。
- * 更新触发：风格对照、视觉词数量、理由或完成页出现条件变化时，需要同步更新本文件。
+ * 职责：并排展示同一场景的三种风格，让学生自选或自定义 2—3 个视觉词并写一句理由。词和理由合格时「完成本课」可点；保存成功后才打开完成弹窗。本关不要求上传或生成自己的图，也不在页面下铺本课小结。
+ * 更新触发：风格对照、视觉词数量、理由、完成本课的可点条件或完成弹窗打开时机变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -10,7 +10,6 @@ import { Input } from "@/shared/ui/input"
 import { Textarea } from "@/shared/ui/textarea"
 import { useModule2State } from "@/modules/module-2-ai-comic/app/providers/Module2Provider"
 import {
-  computeModule2Lesson1Gates,
   confirmModule2VisualDirection,
   normalizeModule2VisualWords,
   setModule2VisualReason,
@@ -25,6 +24,17 @@ import { SampleMissingNotice } from "@/modules/module-2-ai-comic/lessons/lesson-
 import { useGuanDengSample } from "@/modules/module-2-ai-comic/lessons/lesson-1/components/use-guan-deng-sample"
 import { LESSON1_REASON_PLACEHOLDER } from "@/modules/module-2-ai-comic/lessons/lesson-1/copy"
 import type { GuanDengSample, GuanDengStyle } from "@/modules/module-2-ai-comic/lessons/lesson-1/sample/load-guan-deng-sample"
+
+/** 词或理由还不合格时，说明为什么「完成本课」不能点。合格则返回空字符串。 */
+function finishBlockReason(words: string[], reason: string): string {
+  const normalized = normalizeModule2VisualWords(words)
+  const wordBad = normalized.length < 2 || normalized.length > 3
+  const reasonBad = reason.trim() === ""
+  if (wordBad && reasonBad) return "请先选出 2—3 个不同的视觉词，并写一句理由。"
+  if (wordBad) return "请先选出 2—3 个不同的视觉词。"
+  if (reasonBad) return "请写一句选择理由。"
+  return ""
+}
 
 function StyleCard({ sample, style }: { sample: GuanDengSample; style: GuanDengStyle }) {
   return (
@@ -46,10 +56,12 @@ export default function Step4VisualDirection() {
   const [error, setError] = useState("")
   const [wordError, setWordError] = useState("")
   const [busy, setBusy] = useState(false)
+  const [summaryOpen, setSummaryOpen] = useState(false)
 
   if (!portfolio) return null
   const words = portfolio.visualDirection.words
-  const gates = computeModule2Lesson1Gates(portfolio)
+  const blockReason = finishBlockReason(words, portfolio.visualDirection.reason)
+  const canFinish = blockReason === ""
   const sample = sampleState?.ok ? sampleState.sample : null
   const styles = sample?.manifest.styles ?? []
   const scene = sample?.manifest.panels.find(panel => panel.sourcePart === "turn")
@@ -80,7 +92,8 @@ export default function Step4VisualDirection() {
     updatePortfolio(current => setModule2VisualWords(current, next, new Date().toISOString()))
   }
 
-  const confirm = async () => {
+  const finish = async () => {
+    if (!canFinish || busy) return
     setBusy(true)
     setError("")
     try {
@@ -89,9 +102,13 @@ export default function Step4VisualDirection() {
         if (!result.ok) return { portfolio: current, error: result.reason }
         return { portfolio: result.portfolio, error: "" }
       })
-      if (failure) setError(failure)
+      if (failure) {
+        setError(failure)
+        return
+      }
+      setSummaryOpen(true)
     } catch {
-      setError("确认还没有保存成功。你写的视觉词和理由还在，请重试。")
+      setError("还没有保存成功。你写的视觉词和理由还在，请重试。")
     } finally {
       setBusy(false)
     }
@@ -193,11 +210,15 @@ export default function Step4VisualDirection() {
             onChange={event => updatePortfolio(current => setModule2VisualReason(current, event.target.value, new Date().toISOString()))}
           />
         </div>
-        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        <Button type="button" onClick={() => void confirm()} disabled={busy}>{busy ? "正在保存…" : "确认视觉方向"}</Button>
-        {gates.completed && <p className="text-sm text-green-700">视觉方向已确认。</p>}
+        <div className="mt-8 space-y-2">
+          {blockReason && <p className="text-sm text-muted-foreground">{blockReason}</p>}
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          <Button type="button" onClick={() => void finish()} disabled={!canFinish || busy}>
+            {busy ? "正在保存…" : "完成本课"}
+          </Button>
+        </div>
       </div>
-      {gates.completed && <Lesson1CompletePanel portfolio={portfolio} />}
+      <Lesson1CompletePanel open={summaryOpen} onOpenChange={setSummaryOpen} portfolio={portfolio} />
     </div>
   )
 }

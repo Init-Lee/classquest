@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 2 课时 1 路由入口。
- * 职责：首次进入时按需建立本机空草稿档案，分发四个关卡、渲染 sticky 四关进度、记下最近一关，并在越级、无效地址或本机档案读取失败时安全处理。已收掉的练习地址按无效关卡回到第 1 关。
- * 更新触发：课时 1 路径、关卡组件、门禁、教师讲解放行或进度展示变化时，需要同步更新本文件。
+ * 职责：首次进入时按需建立本机空草稿档案，分发四个关卡、渲染 sticky 四关进度、记下最近一关，并在越级、无效地址或本机档案读取失败时安全处理。已收掉的练习地址按无效关卡回到第 1 关。教师讲解模式在本页可下载当前课阶段快照，不写学生本机档案。
+ * 更新触发：课时 1 路径、关卡组件、门禁、教师讲解放行、教师阶段快照或进度展示变化时，需要同步更新本文件。
  */
 
 import { useEffect, useLayoutEffect, useRef } from "react"
-import { Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom"
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { useModule2State } from "@/modules/module-2-ai-comic/app/providers/Module2Provider"
@@ -21,6 +21,8 @@ import {
   MODULE2_LESSON1_ENTRY_PATH,
 } from "@/modules/module-2-ai-comic/lessons/lesson-1/guards"
 import { Module2InnerStepProgress } from "@/modules/module-2-ai-comic/features/progress-ui/InnerStepProgress"
+import { Lesson1StageSnapshotButton } from "@/modules/module-2-ai-comic/features/global-actions/Lesson1StageSnapshotButton"
+import { shouldShowModule2TeacherLessonSnapshot } from "@/modules/module-2-ai-comic/features/global-actions/lesson1-stage-snapshot"
 import Step1ImportNovel from "./steps/Step1ImportNovel"
 import Step2ReadSample from "./steps/Step2ReadSample"
 import Step3PickScenes from "./steps/Step3PickScenes"
@@ -29,6 +31,7 @@ import Step4VisualDirection from "./steps/Step4VisualDirection"
 function Lesson1Frame({ children }: { children: React.ReactNode }) {
   const { portfolio, loading, loadError, isTeacherMode, ensureStudentPortfolio, updatePortfolio } = useModule2State()
   const params = useParams<{ "*": string }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const lessonChromeRef = useRef<HTMLDivElement>(null)
   const splat = params["*"] ?? ""
@@ -117,15 +120,25 @@ function Lesson1Frame({ children }: { children: React.ReactNode }) {
         className="sticky z-30 border-b bg-background/95 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/90"
         style={{ top: "var(--module2-sticky-stack-height, 4rem)" }}
       >
-        <div className="mx-auto max-w-7xl space-y-1 px-4">
-          <p className="text-xs font-medium text-primary">课时 1 · {MODULE2_LESSON1_CONFIG.title}</p>
-          <Module2InnerStepProgress
-            steps={MODULE2_LESSON1_STEPS.map(step => ({ id: step.id, label: step.title }))}
-            currentStepId={stepId}
-            completedStepIds={completedStepIds}
-            accessibleStepIds={accessibleStepIds}
-            onStepClick={targetStep => navigate(`/module/2/lesson/1/step/${targetStep}`)}
-          />
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4">
+          <div className="min-w-0 flex-1 space-y-1">
+            <p className="text-xs font-medium text-primary">课时 1 · {MODULE2_LESSON1_CONFIG.title}</p>
+            <Module2InnerStepProgress
+              steps={MODULE2_LESSON1_STEPS.map(step => ({ id: step.id, label: step.title }))}
+              currentStepId={stepId}
+              completedStepIds={completedStepIds}
+              accessibleStepIds={accessibleStepIds}
+              onStepClick={targetStep => navigate(`/module/2/lesson/1/step/${targetStep}`)}
+            />
+          </div>
+          {shouldShowModule2TeacherLessonSnapshot(location.pathname, isTeacherMode) && (
+            <Lesson1StageSnapshotButton
+              portfolio={portfolio}
+              enabled
+              label="下载当前课阶段快照"
+              className="shrink-0"
+            />
+          )}
         </div>
       </div>
       <div

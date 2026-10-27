@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 首页。
- * 职责：介绍模块目标、展示六课时开放状态与“开始课时 1”入口（不要求先登记身份），并提供教师讲解口令入口与当前建设阶段说明。
- * 更新触发：课时开放状态、建设阶段说明、首页入口、教师入口或身份登记策略变化时，需要同步更新本文件。
+ * 职责：介绍模块目标、展示六课时开放状态与“开始课时 1”入口（不要求先登记身份），并提供教师讲解口令入口与当前建设阶段说明。课时 1 卡片在本课完成后可下载阶段快照。
+ * 更新触发：课时开放状态、建设阶段说明、首页入口、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
@@ -18,6 +18,8 @@ import {
   MODULE2_LESSON_REGISTRY,
 } from "@/modules/module-2-ai-comic/app/lesson-registry"
 import { verifyModule2TeacherPassphrase } from "@/modules/module-2-ai-comic/constants/teacher-passphrase"
+import { Lesson1StageSnapshotButton } from "@/modules/module-2-ai-comic/features/global-actions/Lesson1StageSnapshotButton"
+import { getModule2LessonCardSnapshotButton } from "@/modules/module-2-ai-comic/features/global-actions/lesson1-stage-snapshot"
 import { MODULE2_CONFIG } from "@/modules/module-2-ai-comic/module.config"
 
 const LESSON1_ENTRY = "/module/2/lesson/1"
@@ -138,6 +140,10 @@ export default function Module2HomePage() {
           {MODULE2_LESSON_REGISTRY.map((lesson) => {
             const available = isModule2LessonAvailable(lesson.id)
             const accessible = canAccessModule2Lesson(portfolio, lesson.id, isTeacherMode)
+            const snapshotButton = getModule2LessonCardSnapshotButton(lesson.id, {
+              available,
+              completed: lesson.isComplete(portfolio),
+            })
             return (
               <Card key={lesson.id} className={!available ? "opacity-65" : ""}>
                 <CardHeader className="pb-3">
@@ -152,7 +158,7 @@ export default function Module2HomePage() {
                   <CardTitle className="mt-2 text-base">课时 {lesson.id}：{lesson.title}</CardTitle>
                   <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-2">
                   {accessible ? (
                     <Button variant="outline" className="w-full" onClick={() => navigate(lesson.id === 1 ? LESSON1_ENTRY : lesson.path)}>
                       {isTeacherMode ? "浏览本课" : "进入课时"}
@@ -162,6 +168,17 @@ export default function Module2HomePage() {
                       <Lock className="h-3 w-3" />
                       {available ? "完成前一课后解锁" : "后续开放，暂不能进入"}
                     </p>
+                  )}
+                  {snapshotButton.visible && portfolio && (
+                    <Lesson1StageSnapshotButton
+                      portfolio={portfolio}
+                      enabled={snapshotButton.enabled}
+                      disabledHint={snapshotButton.hint}
+                      className="w-full"
+                    />
+                  )}
+                  {snapshotButton.visible && !snapshotButton.enabled && (
+                    <p className="text-xs text-muted-foreground">{snapshotButton.hint}</p>
                   )}
                 </CardContent>
               </Card>
@@ -177,6 +194,7 @@ export default function Module2HomePage() {
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />请先在模块一「我的小说」下载自己的小说，课时 1 第 1 关会用到它。</li>
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />图片在课堂指定的外部 AI 工具中生成；本模块负责规划画面、记录提示词与版本、比较修改。</li>
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关；完成按钮只代表信息填写齐全，作品质量由老师和你一起检查。</li>
+            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成课时 1 后，可以在本课卡片或完成弹窗下载阶段快照交作业。阶段快照不能恢复进度，换设备请用学习包。</li>
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前只开放课时 1 的入口，课时 2—6 后续开放。</li>
           </ul>
         </CardContent>
