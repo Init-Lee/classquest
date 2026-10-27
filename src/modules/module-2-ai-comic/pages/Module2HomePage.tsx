@@ -1,11 +1,11 @@
 /**
  * 文件说明：模块 2 首页。
- * 职责：介绍模块目标、展示六课时开放状态，并按课时 1 进度显示中间主按钮（不要求先登记身份）。进行中进入当前可访问的一关，已完成进入第 4 关；课时 2—6 不能从这里跳入。另提供教师讲解口令入口与当前建设阶段说明。课时 1 卡片的进入按钮与阶段快照都占满整行；快照为绿色描边，未完成时不可点，并在按钮下旁注。
- * 更新触发：课时开放状态、建设阶段说明、首页续学入口、课卡按钮样式、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
+ * 职责：介绍模块目标、按有无本机档案展示六课时课卡，并按课时 1 进度显示中间主按钮（不要求先登记身份）。进行中进入当前可访问的一关，已完成进入第 4 关；课时 2—6 不能从这里跳入。没有档案时提示用右上角导入学习包。另提供教师讲解口令入口。课时 1 卡片在有档案且可进入时，进入按钮与阶段快照都占满整行；快照为绿色描边，未完成时不可点，并在按钮下旁注。
+ * 更新触发：课时开放状态、课卡徽章与标题、首页续学入口、课卡按钮文案、课卡阶段快照、教师入口或身份登记策略变化时，需要同步更新本文件。
  */
 
 import { useState } from "react"
-import { ArrowRight, CheckCircle2, Clock, Construction, Eye, GraduationCap, Images, Lock } from "lucide-react"
+import { ArrowRight, CheckCircle2, Construction, Eye, GraduationCap, Images, Lock } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
@@ -24,6 +24,33 @@ import { MODULE2_CONFIG } from "@/modules/module-2-ai-comic/module.config"
 import { resolveModule2HomeContinue } from "@/modules/module-2-ai-comic/pages/module2-home-continue"
 
 const LESSON1_ENTRY = "/module/2/lesson/1"
+
+/** 没有本机档案时课卡只写课时号；有档案后与模块一相同：已完成、进行中、未解锁、待开发。 */
+function module2LessonCardBadge(
+  hasArchive: boolean,
+  lessonId: number,
+  available: boolean,
+  complete: boolean,
+  accessible: boolean,
+): string {
+  if (!hasArchive) return `课时 ${lessonId}`
+  if (complete) return "已完成"
+  if (accessible) return "进行中"
+  if (available) return "未解锁"
+  return "待开发"
+}
+
+function module2LessonCardBadgeVariant(
+  hasArchive: boolean,
+  available: boolean,
+  complete: boolean,
+  accessible: boolean,
+): "default" | "secondary" | "success" {
+  if (!hasArchive) return available ? "default" : "secondary"
+  if (complete) return "success"
+  if (accessible) return "default"
+  return "secondary"
+}
 
 function TeacherModeEntry() {
   const { enterTeacherMode } = useModule2State()
@@ -103,9 +130,14 @@ function TeacherModeEntry() {
 }
 
 export default function Module2HomePage() {
-  const { portfolio, isTeacherMode } = useModule2State()
+  const { portfolio, isTeacherMode, loading, loadError } = useModule2State()
   const navigate = useNavigate()
   const homeContinue = resolveModule2HomeContinue(isTeacherMode ? null : portfolio)
+  const hasArchive = Boolean(portfolio)
+
+  if (loading && !isTeacherMode) {
+    return <div className="py-24 text-center text-sm text-muted-foreground">正在读取本机学习档案...</div>
+  }
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8">
@@ -126,6 +158,12 @@ export default function Module2HomePage() {
         {!isTeacherMode && homeContinue.hint && (
           <p className="text-xs text-muted-foreground">{homeContinue.hint}</p>
         )}
+        {!isTeacherMode && !portfolio && !loadError && (
+          <p className="text-xs text-muted-foreground">已有学习包请用右上角的「导入学习包」。</p>
+        )}
+        {!isTeacherMode && loadError && (
+          <p className="text-xs text-destructive">{loadError}</p>
+        )}
         <p className="text-xs text-muted-foreground">首次进入不需要先登记身份；第 1 关会根据你的小说文件核对班级与姓名。</p>
       </section>
 
@@ -133,7 +171,7 @@ export default function Module2HomePage() {
         <CardContent className="flex gap-3 pt-6 text-sm text-muted-foreground">
           <Construction className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            课时 1 的四关已经可以在这台电脑上完成。门户仍是架构占位，课时 2 及以后还没开放。
+            课时 1 的四关已经可以在这台电脑上完成。课时 2—6 还没开放。
             进入课时 1 后，学习记录保存在这台电脑上。右上角可以保存或导入本模块学习包，也可以重置这台电脑上的模块二档案。
           </p>
         </CardContent>
@@ -145,54 +183,50 @@ export default function Module2HomePage() {
           {MODULE2_LESSON_REGISTRY.map((lesson) => {
             const available = isModule2LessonAvailable(lesson.id)
             const accessible = canAccessModule2Lesson(portfolio, lesson.id, isTeacherMode)
+            const complete = lesson.isComplete(portfolio)
             const snapshotButton = getModule2LessonCardSnapshotButton(lesson.id, {
               available,
-              completed: lesson.isComplete(portfolio),
+              completed: complete,
             })
+            const showActions = hasArchive && accessible
             return (
               <Card key={lesson.id} className={!available ? "opacity-65" : ""}>
-                <CardHeader className="pb-3">
+                <CardHeader className={hasArchive ? undefined : "pb-3"}>
                   <div className="flex items-center justify-between">
-                    <Badge variant={available ? "default" : "secondary"}>
-                      {available ? "已开放" : "后续开放"}
+                    <Badge variant={module2LessonCardBadgeVariant(hasArchive, available, complete, accessible)}>
+                      {module2LessonCardBadge(hasArchive, lesson.id, available, complete, accessible)}
                     </Badge>
-                    {available
-                      ? !accessible && <Lock className="h-4 w-4 text-muted-foreground" aria-label="未解锁" />
-                      : <Clock className="h-4 w-4 text-muted-foreground" aria-label="后续开放" />}
+                    {!hasArchive
+                      ? !available && <Lock className="h-4 w-4 text-muted-foreground" />
+                      : complete
+                        ? <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        : !accessible && <Lock className="h-4 w-4 text-muted-foreground" />}
                   </div>
-                  <CardTitle className="mt-2 text-base">课时 {lesson.id}：{lesson.title}</CardTitle>
-                  <CardDescription className="text-xs">{lesson.subtitle}</CardDescription>
+                  <CardTitle className={hasArchive ? "text-base" : "mt-2 text-base"}>
+                    {hasArchive ? `课时 ${lesson.id}：${lesson.title}` : lesson.title}
+                  </CardTitle>
+                  <CardDescription className={hasArchive ? undefined : "text-xs"}>{lesson.subtitle}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  {/* 课卡按钮外观对齐模块一首页：默认高度、描边、整行。不引用模块一代码。 */}
-                  {accessible ? (
+                {showActions && (
+                  <CardContent className="space-y-2">
                     <Button variant="outline" className="w-full" onClick={() => navigate(lesson.id === 1 ? LESSON1_ENTRY : lesson.path)}>
-                      {isTeacherMode ? "浏览本课" : "进入课时"}
+                      {isTeacherMode ? "浏览本课" : complete ? "查看本课" : "进入课时"}
                     </Button>
-                  ) : (
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Lock className="h-3 w-3" />
-                      {available ? "完成前一课后解锁" : "后续开放，暂不能进入"}
-                    </p>
-                  )}
-                  {snapshotButton.visible && (
-                    <div>
-                      {portfolio && (
+                    {snapshotButton.visible && portfolio && (
+                      <div>
                         <Lesson1StageSnapshotButton
                           portfolio={portfolio}
                           enabled={snapshotButton.enabled}
                           disabledHint={snapshotButton.hint}
                           className="w-full"
                         />
-                      )}
-                      {!snapshotButton.enabled && (
-                        <p className={portfolio ? "mt-1 text-xs text-muted-foreground" : "text-xs text-muted-foreground"}>
-                          {snapshotButton.hint}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
+                        {!snapshotButton.enabled && (
+                          <p className="mt-1 text-xs text-muted-foreground">{snapshotButton.hint}</p>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                )}
               </Card>
             )
           })}
@@ -207,7 +241,7 @@ export default function Module2HomePage() {
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />图片在课堂指定的外部 AI 工具中生成；本模块负责规划画面、记录提示词与版本、比较修改。</li>
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />每关完成后才会解锁下一关；完成按钮只代表信息填写齐全，作品质量由老师和你一起检查。</li>
             <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />完成课时 1 后，可以在本课卡片或完成弹窗下载阶段快照交作业。阶段快照不能恢复进度，换设备请用学习包。</li>
-            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前只开放课时 1 的入口，课时 2—6 后续开放。</li>
+            <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />当前只开放课时 1 的入口，课时 2—6 还没开放。</li>
           </ul>
         </CardContent>
       </Card>

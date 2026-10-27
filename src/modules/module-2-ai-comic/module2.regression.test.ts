@@ -78,13 +78,13 @@ describe("模块 2 六课时注册表", () => {
 })
 
 describe("模块 2 顶部课时进度", () => {
-  it("无档案时课时 1 可进入课时入口，课时 2—6 为后续开放且不可点击", () => {
+  it("无档案时课时 1 可进入课时入口，课时 2—6 显示待开发且不可点击", () => {
     const items = buildModule2TopProgressItems(null, 0)
     expect(items[0]).toMatchObject({ status: "available", target: "/module/2/lesson/1/step/1", clickable: true })
-    expect(items.slice(1).every(item => item.status === "upcoming" && item.statusLabel === "后续开放" && !item.clickable && item.target === null)).toBe(true)
+    expect(items.slice(1).every(item => item.status === "upcoming" && item.statusLabel === "待开发" && !item.clickable && item.target === null)).toBe(true)
   })
 
-  it("处于课时 1 时标为当前；完成课时 1 后课时 2 仍是后续开放而非可进入", () => {
+  it("处于课时 1 时标为当前；完成课时 1 后课时 2 仍是待开发而非可进入", () => {
     expect(buildModule2TopProgressItems(null, 1)[0].status).toBe("current")
     const items = buildModule2TopProgressItems(lesson1Done(), 1)
     expect(items[0]).toMatchObject({ status: "completed", clickable: true })

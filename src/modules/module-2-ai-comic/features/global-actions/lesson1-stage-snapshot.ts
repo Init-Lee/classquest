@@ -1,7 +1,7 @@
 /**
  * 文件说明：模块 2 课时 1 阶段快照。
- * 职责：把当前档案里的身份、小说题目、第 2 关观察、四句画面和视觉方向渲染成一份转义过的独立 HTML，并给出文件名与下载入口规则。快照只用于交作业，不能恢复学习进度，也不写入学生本机档案。
- * 更新触发：课时 1 快照字段、转义规则、文件名、课卡或教师课时页入口变化时，需要同步更新本文件与回归测试。
+ * 职责：把当前档案里的身份、小说题目、第 2 关观察、四句分镜和视觉词与理由渲染成一份转义过的独立 HTML，并给出文件名与下载入口规则。版式沿用模块四阶段快照的页眉、信息卡和分区；教师快速评价区按课时 1 教案留空，不打分、不勾选。快照只用于交作业，不能恢复学习进度，也不写入学生本机档案。
+ * 更新触发：课时 1 快照字段、教师快速评价维度、转义规则、文件名、课卡或教师课时页入口变化时，需要同步更新本文件与回归测试。
  */
 
 import {
@@ -17,11 +17,23 @@ const PART_LABELS: Record<FourPart, string> = {
   ending: "合",
 }
 
-/** 老师手写的三行。页面只列出题目，不打勾、不写通过。 */
-const TEACHER_LINES = [
-  "能说出作者选取、AI 生成、作者核查。",
-  "四句能让人想象人物、地点和动作。",
-  "视觉词和理由与故事情绪有关。",
+/**
+ * 教案「课堂 Quick Check」的三项目标与证据要点。
+ * 只列出老师要看的原文，不预填 √、×、分数或星级。
+ */
+const TEACHER_QUICK_CHECK = [
+  {
+    goal: "能结合样例说明四格漫画与创作记录的任务要求，并区分作者选取、AI 生成、作者核查三项职责。",
+    observe: "学生能说明最终要交四格漫画与创作记录，并正确区分作者选取、AI 生成、作者核查。仅勾选“我知道了”不作为达成证据。若认为 AI 生成后无需核查，引导其回看样例修改。对照本页「第 2 关观察」。",
+  },
+  {
+    goal: "能从已确认小说中选出起、承、转、合四个关键时刻，写成包含人物、地点和主要动作的四句画面描述。",
+    observe: "四句均含可识别的人物、地点和主要动作；能在原作中找到依据；连读可以辨认起点、推进、变化和最终状态。表达有不同方案，但四句不能只是同一事件的重复描述。对照本页「四句分镜」。",
+  },
+  {
+    goal: "能用 2–3 个视觉词说明初步风格，并用一句话解释该风格与故事情绪的关系。",
+    observe: "能用 2—3 个视觉词描述初步方向，并说明与故事情绪的一处具体关系。选择教师推荐款式或词语数量满足要求，均不能单独证明达成。对照本页「视觉词与理由」。",
+  },
 ] as const
 
 export interface Module2LessonCardSnapshotButton {
@@ -90,13 +102,16 @@ export function getModule2LessonCardSnapshotButton(
   return { visible: true, enabled: true, hint: "" }
 }
 
-function identitySection(portfolio: Module2PortfolioV1): string {
+function identitySection(portfolio: Module2PortfolioV1, now: Date): string {
   const { clazz, studentName, classSeatCode } = portfolio.student
   return `<section>
       <h2>身份</h2>
-      <p><span class="label">班级</span><span class="value">${snapshotText(clazz)}</span></p>
-      <p><span class="label">姓名</span><span class="value">${snapshotText(studentName)}</span></p>
-      <p><span class="label">班学号</span><span class="value">${snapshotText(classSeatCode)}</span></p>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">班级</span><span class="value">${snapshotText(clazz)}</span></div>
+        <div class="info-card"><span class="label">姓名</span><span class="value">${snapshotText(studentName)}</span></div>
+        <div class="info-card"><span class="label">班学号</span><span class="value">${snapshotText(classSeatCode)}</span></div>
+        <div class="info-card"><span class="label">生成时间</span><span class="value">${escapeHtml(now.toLocaleString("zh-CN"))}</span></div>
+      </div>
     </section>`
 }
 
@@ -104,78 +119,124 @@ function storySection(portfolio: Module2PortfolioV1): string {
   const title = portfolio.sourceSnapshot?.storyTitle ?? ""
   const frames = MODULE2_FOUR_PARTS.map(part => {
     const sentence = portfolio.storyboard.frames[part].sceneSentence
-    return `<p><span class="label">${PART_LABELS[part]}</span><span class="value">${snapshotText(sentence)}</span></p>`
-  }).join("\n      ")
+    return `<div class="info-card"><span class="label">${PART_LABELS[part]}</span><span class="value">${snapshotText(sentence)}</span></div>`
+  }).join("\n        ")
   const words = portfolio.visualDirection.words.map(word => word.trim()).filter(Boolean)
-  const wordText = words.length === 0 ? "未填写" : words.join("、")
+  const wordText = words.length === 0 ? "" : words.join("、")
   return `<section>
       <h2>小说题目</h2>
       <p class="value">${snapshotText(title)}</p>
     </section>
     <section>
-      <h2>第 2 关的观察</h2>
+      <h2>第 2 关观察</h2>
       <p class="value">${snapshotText(portfolio.lesson1.sampleObservation)}</p>
     </section>
     <section>
-      <h2>四个画面</h2>
-      ${frames}
+      <h2>四句分镜</h2>
+      <div class="info-grid">
+        ${frames}
+      </div>
     </section>
     <section>
-      <h2>视觉方向</h2>
-      <p><span class="label">视觉词</span><span class="value">${snapshotText(wordText)}</span></p>
-      <p><span class="label">理由</span><span class="value">${snapshotText(portfolio.visualDirection.reason)}</span></p>
+      <h2>视觉词与理由</h2>
+      <div class="info-grid">
+        <div class="info-card"><span class="label">视觉词</span><span class="value">${snapshotText(wordText)}</span></div>
+        <div class="info-card"><span class="label">理由</span><span class="value">${snapshotText(portfolio.visualDirection.reason)}</span></div>
+      </div>
     </section>`
 }
 
-function teacherLines(): string {
-  const items = TEACHER_LINES.map(line => `<li>
-        <p>${escapeHtml(line)}</p>
-        <div class="handwrite"></div>
-      </li>`).join("\n      ")
+function teacherSection(): string {
+  const rows = TEACHER_QUICK_CHECK.map(item => `<tr>
+          <td>${escapeHtml(item.goal)}</td>
+          <td>${escapeHtml(item.observe)}</td>
+          <td><div class="handwrite"></div></td>
+        </tr>`).join("\n        ")
   return `<section>
-      <h2>请老师手写</h2>
-      <p>下面三行留给老师手写。系统不打勾，也不写通过。</p>
-      <ol>
-      ${items}
-      </ol>
+      <h2>教师快速评价</h2>
+      <p class="note">教师依据网页回答、四句画面描述、风格理由和口头解释作形成性判断。记录先留空，由老师手写。本页不打勾，也不写分数、等级或星级。</p>
+      <table>
+        <thead>
+          <tr><th>目标</th><th>观察点</th><th>教师记录</th></tr>
+        </thead>
+        <tbody>
+        ${rows}
+        </tbody>
+      </table>
     </section>`
 }
 
 /** 生成独立 HTML。全部学生字段先转义，页内不引用教师样例图。 */
-export function buildModule2Lesson1StageSnapshotHtml(portfolio: Module2PortfolioV1): string {
+export function buildModule2Lesson1StageSnapshotHtml(portfolio: Module2PortfolioV1, now = new Date()): string {
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>模块二 · 课时 1 · 阶段快照</title>
+  <title>模块二课时1阶段快照</title>
   <style>
-    :root { color-scheme: light; }
+    :root { color-scheme: light; --ink: #172033; --muted: #667085; --line: #d8e2f0; --primary: #2563eb; --soft: #eff6ff; --warm: #fff7ed; }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: "PingFang SC", "Noto Sans SC", "Songti SC", serif; line-height: 1.7; color: #1c1917; background: #fff; }
-    main { max-width: 760px; margin: 0 auto; padding: 32px 20px 48px; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+      line-height: 1.7;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 30%),
+        linear-gradient(135deg, #f8fbff 0%, #f3f7ff 45%, #fff7ed 100%);
+    }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 24px 48px; }
     h1, h2, p { margin-top: 0; }
-    header h1 { font-size: 24px; margin-bottom: 8px; }
-    header p, footer p { color: #44403c; }
-    section { border-top: 1px solid #e7e5e4; margin-top: 20px; padding-top: 12px; }
-    h2 { font-size: 18px; margin-bottom: 8px; }
-    .label { display: inline-block; min-width: 4.5em; color: #57534e; }
-    .value { white-space: pre-wrap; font-weight: 600; }
-    .handwrite { min-height: 2.4em; margin: 4px 0 16px; border-bottom: 1px solid #a8a29e; }
-    footer { margin-top: 28px; border-top: 1px solid #e7e5e4; padding-top: 12px; }
-    @media print { body { background: white; } main { padding: 0; } }
+    .hero {
+      border: 1px solid rgba(37, 99, 235, 0.18);
+      border-radius: 28px;
+      padding: 28px;
+      color: white;
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #f97316 130%);
+      box-shadow: 0 20px 50px rgba(37, 99, 235, 0.22);
+    }
+    .hero h1 { font-size: 30px; margin-bottom: 8px; letter-spacing: 0.04em; }
+    .hero .muted { color: rgba(255, 255, 255, 0.78); }
+    section {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+    section h2 { font-size: 20px; margin-bottom: 12px; color: #1d4ed8; }
+    .muted { color: var(--muted); }
+    .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .info-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: #ffffff; }
+    .label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .value { font-weight: 700; white-space: pre-wrap; }
+    .note { border-left: 4px solid #f97316; padding: 10px 12px; border-radius: 12px; background: var(--warm); }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; background: white; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    th { background: #eef4ff; color: #1e3a8a; }
+    .handwrite { min-height: 3.2em; border: 1px solid #e5e7eb; border-radius: 4px; background: #f9fafb; }
+    footer { margin-top: 18px; }
+    @media print {
+      body { background: white; }
+      main { padding: 0; }
+      section, .hero { box-shadow: none; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <header>
-      <h1>模块二 · 课时 1 · 阶段快照</h1>
-      <p>本文件用于交作业，不能恢复学习进度。换设备继续学习请使用「保存学习包」。</p>
-    </header>
-    ${identitySection(portfolio)}
+    <div class="hero">
+      <h1>ClassQuest 模块二：AI 四格漫画</h1>
+      <p class="muted">课时 1：小说怎样变成漫画 · 阶段快照</p>
+      <p>本文件只用于交作业，不能恢复学习进度。换设备继续学习请使用「保存学习包」。</p>
+    </div>
+    ${identitySection(portfolio, now)}
     ${storySection(portfolio)}
-    ${teacherLines()}
+    ${teacherSection()}
     <footer>
-      <p>本页不代表老师已经检查，也不给出分数或星级。阶段快照不能恢复学习进度。</p>
+      <p class="note">本页未经教师评阅，没有成绩，也不给出分数或星级。阶段快照不能恢复学习进度。</p>
     </footer>
   </main>
 </body>
@@ -184,7 +245,7 @@ export function buildModule2Lesson1StageSnapshotHtml(portfolio: Module2Portfolio
 
 /** 只触发浏览器下载。不读取、不写入学生本机数据库。 */
 export function downloadModule2Lesson1StageSnapshot(portfolio: Module2PortfolioV1, now = new Date()): void {
-  const html = buildModule2Lesson1StageSnapshotHtml(portfolio)
+  const html = buildModule2Lesson1StageSnapshotHtml(portfolio, now)
   const filename = buildModule2Lesson1StageSnapshotFilename(portfolio.student.studentName, now)
   const blob = new Blob([html], { type: "text/html;charset=utf-8" })
   const url = URL.createObjectURL(blob)

@@ -1,7 +1,7 @@
 /**
  * 文件说明：课时 1 阶段快照回归测试。
- * 职责：锁定 HTML 转义、三行手写评价留空、页脚声明不能恢复进度，以及课卡、学生顶栏、教师课时页的入口规则。
- * 更新触发：快照字段、转义、文件名或三个下载入口的可见规则变化时，需要同步更新本文件。
+ * 职责：锁定 HTML 转义、教案三项快速评价留空、页脚声明未经评阅且不能恢复进度，以及课卡、学生顶栏、教师课时页的入口规则。
+ * 更新触发：快照字段、教师评价维度、转义、文件名或三个下载入口的可见规则变化时，需要同步更新本文件。
  */
 
 import { describe, expect, it } from "vitest"
@@ -59,26 +59,37 @@ function portfolioWithMarkup(): Module2PortfolioV1 {
 }
 
 describe("课时 1 阶段快照 HTML", () => {
-  it("含 < 的小说被转义，三行评价为空，页脚声明不能恢复", () => {
+  it("含 < 的小说被转义，三项评价留空，页脚声明未经评阅且不能恢复", () => {
     const html = buildModule2Lesson1StageSnapshotHtml(portfolioWithMarkup())
-    expect(html).toContain("模块二 · 课时 1 · 阶段快照")
+    expect(html).toContain("ClassQuest 模块二：AI 四格漫画")
+    expect(html).toContain("课时 1：小说怎样变成漫画 · 阶段快照")
     expect(html).toContain("交作业")
     expect(html).toContain("不能恢复学习进度")
     expect(html).toContain("夜灯&lt;script&gt;alert(1)&lt;/script&gt;")
     expect(html).not.toContain("<script>alert(1)</script>")
     expect(html).toContain("作者留下了 &lt;选择&gt;。")
     expect(html).toContain("王&lt;芳&gt;")
+    expect(html).toContain("小说题目")
+    expect(html).toContain("第 2 关观察")
+    expect(html).toContain("四句分镜")
+    expect(html).toContain("视觉词与理由")
+    expect(html).toContain("能结合样例说明四格漫画与创作记录的任务要求，并区分作者选取、AI 生成、作者核查三项职责。")
+    expect(html).toContain("能从已确认小说中选出起、承、转、合四个关键时刻，写成包含人物、地点和主要动作的四句画面描述。")
+    expect(html).toContain("能用 2–3 个视觉词说明初步风格，并用一句话解释该风格与故事情绪的关系。")
+    expect(html).toContain("四句均含可识别的人物、地点和主要动作")
     expect(html.match(/<div class="handwrite"><\/div>/g)).toHaveLength(3)
-    expect(html).toContain("系统不打勾，也不写通过。")
+    expect(html).toContain("本页不打勾，也不写分数、等级或星级。")
     expect(html).not.toContain("已通过")
     expect(html).not.toContain("☑")
     expect(html).not.toContain("✓")
+    expect(html).not.toContain("√")
+    expect(html).not.toContain("★")
     expect(html).not.toContain('type="checkbox"')
     expect(html).not.toContain("<img")
     expect(html).not.toContain(".png")
     expect(html).not.toContain("guan-deng")
     const footer = html.slice(html.lastIndexOf("<footer>"))
-    expect(footer).toContain("本页不代表老师已经检查，也不给出分数或星级。")
+    expect(footer).toContain("本页未经教师评阅，没有成绩，也不给出分数或星级。")
     expect(footer).toContain("不能恢复")
   })
 
@@ -120,5 +131,13 @@ describe("课时 1 阶段快照入口", () => {
   it("学生顶栏源码不放阶段快照按钮", () => {
     const sources = import.meta.glob("./Module2GlobalActions.tsx", { query: "?raw", import: "default", eager: true }) as Record<string, string>
     expect(sources["./Module2GlobalActions.tsx"]).not.toContain("阶段快照")
+  })
+
+  it("课卡按钮文案标明交作业，并说明不能恢复进度", () => {
+    const sources = import.meta.glob("./Lesson1StageSnapshotButton.tsx", { query: "?raw", import: "default", eager: true }) as Record<string, string>
+    const code = sources["./Lesson1StageSnapshotButton.tsx"]
+    expect(code).toContain("下载本课阶段快照（交作业用）")
+    expect(code).toContain("交作业用。阶段快照不能恢复进度。")
+    expect(code).toContain("完成本课后可下载")
   })
 })

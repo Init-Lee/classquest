@@ -6,7 +6,7 @@
 
 # FILE-STRUCTURE — Module 2
 
-## 当前结构（阶段 D：课时一四关与教师样例；门户仍为 draft）
+## 当前结构（阶段 D：课时一四关与教师样例；门户已可进入，课时 2—6 未开放）
 
 ```text
 module-2-ai-comic/

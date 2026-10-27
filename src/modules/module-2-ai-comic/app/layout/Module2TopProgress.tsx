@@ -1,6 +1,6 @@
 /**
  * 文件说明：模块 2 顶部六课时进度组件。
- * 职责：紧凑展示完成、当前、可进入、未解锁与后续开放状态（图标与文字区分，不只靠颜色），只允许可访问课时导航。
+ * 职责：紧凑展示完成、当前、可进入、未解锁与待开发状态（图标与文字区分，不只靠颜色），只允许可访问课时导航。
  * 更新触发：模块 2 课时数量、顶栏布局、状态视觉或导航规则变化时，需要同步更新本文件。
  */
 
@@ -51,7 +51,7 @@ export function Module2TopProgress() {
         {items.some(item => item.status === "upcoming") && (
           <span aria-hidden="true" className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            后续开放
+            待开发
           </span>
         )}
       </div>

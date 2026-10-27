@@ -29,7 +29,7 @@ export default function PortalHomePage() {
         </div>
         <h1 className="text-3xl font-bold text-foreground">ClassQuest 程序化教学平台</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm leading-relaxed">
-          从模块门户进入独立课程：模块 1 已开放故事主题课，模块 3 已完成，模块 4 已开放六个课时。
+          从模块门户进入独立课程：模块 1 已开放故事主题课，模块 2 课时 1 已开放，模块 3 已完成，模块 4 已开放六个课时。
         </p>
       </section>
 

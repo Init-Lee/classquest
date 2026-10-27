@@ -10,7 +10,7 @@ import {
 } from "@/modules/module-2-ai-comic/app/lesson-registry"
 import type { Module2PortfolioV1 } from "@/modules/module-2-ai-comic/domains/portfolio/types"
 
-/** upcoming = 本站尚未开放（后续开放）；locked = 已开放但前一课未完成。 */
+/** upcoming = 本站尚未开放（显示「待开发」，与课卡一致）；locked = 已开放但前一课未完成。 */
 export type Module2TopLessonStatus = "completed" | "current" | "available" | "locked" | "upcoming"
 
 export interface Module2TopProgressItem {
@@ -29,7 +29,7 @@ const STATUS_LABELS: Record<Module2TopLessonStatus, string> = {
   current: "当前课时",
   available: "可进入",
   locked: "未解锁",
-  upcoming: "后续开放",
+  upcoming: "待开发",
 }
 
 export function buildModule2TopProgressItems(
