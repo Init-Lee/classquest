@@ -1,0 +1,67 @@
+# 文件说明：ClassQuest 前端静态构建自动部署到阿里云 OSS 的 GitHub Actions 工作流。
+# 职责：在 main 分支推送时自动构建生产静态资源并上传到 OSS，支持手动触发。
+# 更新触发：构建命令、Node 版本、依赖安装方式、OSS 同步策略或必需环境变量变化时，需要同步更新本文件。
+
+name: Deploy to Aliyun OSS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          # 生产环境前端变量：启用 HTTP adapter 连接后端 API
+          VITE_MODULE4_LESSON3_AI_REVIEW_MODE: http
+          VITE_MODULE4_LESSON4_PEER_REVIEW_MODE: http
+          VITE_MODULE4_LESSON4_REVIEW_MODERATION_MODE: http
+          VITE_TEACHER_CONSOLE_MODE: http
+          VITE_MODULE4_LESSON5_MODE: http
+          VITE_MODULE4_LESSON6_MODE: http
+          VITE_API_BASE_URL: https://api.xnwyedu.com
+
+      - name: Install ossutil
+        run: |
+          wget -q https://gosspublic.alicdn.com/ossutil/install.sh
+          sudo bash install.sh
+          rm -f install.sh
+
+      - name: Configure ossutil
+        run: |
+          ossutil config \
+            -e "${{ secrets.OSS_ENDPOINT }}" \
+            -i "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
+            -k "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}"
+
+      - name: Sync to OSS
+        run: |
+          ossutil sync dist/ "oss://${{ secrets.OSS_BUCKET }}/" \
+            --delete \
+            --force \
+            --update
+
+      - name: Deployment summary
+        run: |
+          echo "✅ 部署完成 | Deployment completed"
+          echo "📦 Bucket: ${{ secrets.OSS_BUCKET }}"
+          echo "🌐 Endpoint: ${{ secrets.OSS_ENDPOINT }}"
+          echo "🚀 Build output synced to OSS with old files cleaned"
